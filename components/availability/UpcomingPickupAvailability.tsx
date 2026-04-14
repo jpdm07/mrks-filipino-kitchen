@@ -261,7 +261,7 @@ export function UpcomingPickupAvailability() {
                   const tooSoon = !isPickupYmdAllowed(ymd);
                   const whitelisted = openSet.has(ymd);
                   const bookable =
-                    whitelisted && !past && !tooSoon && ymd <= toYmd;
+                    whitelisted && !past && !tooSoon && ymd <= to;
                   const lockedHighlight = whitelisted && !past && tooSoon;
 
                   const dayNum = Number(ymd.slice(8));
