@@ -106,5 +106,18 @@ export function useAvailabilityWhitelist(
     };
   }, [from, to, applyPayload, fetchOnce, pollMsOnError]);
 
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void fetchOnce();
+    };
+    const onFocus = () => void fetchOnce();
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [fetchOnce]);
+
   return { openDates, notes, loading, loadError, refetch: fetchOnce };
 }

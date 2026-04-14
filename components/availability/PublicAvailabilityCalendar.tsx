@@ -136,10 +136,10 @@ export function PublicAvailabilityCalendar() {
         ) : null}
 
         <p className="mt-3 text-xs text-[var(--text-muted)]">
-          {PICKUP_LEAD_TIME_CUSTOMER_LINE} Gold days are open for pickup. Pickup
-          time windows are <span className="font-semibold">TBD</span>—you&apos;ll
-          choose your slot at checkout. 🔒 means the date is still inside the
-          minimum prep window.
+          {PICKUP_LEAD_TIME_CUSTOMER_LINE} Only <strong>gold</strong> days are on
+          Mr. K&apos;s pickup calendar; gray days are <strong>not</strong> open
+          for pickup here. Pickup times are chosen at checkout. 🔒 means still
+          inside the minimum prep window.
         </p>
 
         <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs font-semibold text-[var(--text-muted)]">
@@ -160,25 +160,41 @@ export function PublicAvailabilityCalendar() {
             const lockedHighlight = whitelisted && !past && tooSoon;
             const selected = selectedYmd === ymd;
 
+            if (past || !whitelisted) {
+              return (
+                <div
+                  key={ymd}
+                  role="presentation"
+                  title={
+                    past
+                      ? "Past date"
+                      : "Not on Mr. K's pickup calendar — not available here"
+                  }
+                  className={[
+                    "relative flex aspect-square flex-col items-center justify-center rounded-lg text-sm font-bold select-none",
+                    past
+                      ? "bg-[var(--bg-section)] text-[var(--text-muted)] opacity-45"
+                      : "bg-[#f3f4f6] text-[var(--text-muted)] ring-1 ring-inset ring-[var(--border)]/50",
+                  ].join(" ")}
+                >
+                  <span aria-hidden>{Number(ymd.slice(8))}</span>
+                </div>
+              );
+            }
+
             return (
               <button
                 key={ymd}
                 type="button"
-                disabled={past || !whitelisted}
                 onClick={() => {
-                  if (past || !whitelisted) return;
                   if (bookable) setPanel({ ymd, kind: "bookable" });
                   else setPanel({ ymd, kind: "locked" });
                 }}
                 className={[
                   "relative flex aspect-square flex-col items-center justify-center rounded-lg text-sm font-bold transition",
-                  past
-                    ? "cursor-not-allowed bg-[var(--bg-section)] text-[var(--text-muted)] opacity-45"
-                    : !whitelisted
-                      ? "cursor-default bg-[#f3f4f6] text-[var(--text-muted)]"
-                      : lockedHighlight
-                        ? "cursor-pointer border-2 border-[#FFC200] bg-[#FFC200] text-[var(--text)] shadow-[0_0_16px_rgba(255,194,0,0.55)]"
-                        : "cursor-pointer border-2 border-[#FFC200] bg-[#FFC200] text-[var(--text)] shadow-[0_0_14px_rgba(255,194,0,0.4)] hover:shadow-[0_0_20px_rgba(255,194,0,0.65)]",
+                  lockedHighlight
+                    ? "cursor-pointer border-2 border-[#FFC200] bg-[#FFC200] text-[var(--text)] shadow-[0_0_16px_rgba(255,194,0,0.55)]"
+                    : "cursor-pointer border-2 border-[#FFC200] bg-[#FFC200] text-[var(--text)] shadow-[0_0_14px_rgba(255,194,0,0.4)] hover:shadow-[0_0_20px_rgba(255,194,0,0.65)]",
                   selected ? "ring-2 ring-[#0038A8] ring-offset-2" : "",
                 ].join(" ")}
               >

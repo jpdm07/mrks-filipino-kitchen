@@ -26,7 +26,7 @@ function syncIntervalMs(): number {
   return minutes * 60 * 1000;
 }
 
-function isGoogleCalendarConfigured(): boolean {
+export function isGoogleCalendarConfigured(): boolean {
   return Boolean(
     process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim() &&
       process.env.GOOGLE_PRIVATE_KEY?.trim() &&
@@ -34,10 +34,53 @@ function isGoogleCalendarConfigured(): boolean {
   );
 }
 
+export function getGoogleAvailabilitySyncEnvSummary(): {
+  autoSyncEnabled: boolean;
+  calendarConfigured: boolean;
+} {
+  return {
+    autoSyncEnabled: process.env.GOOGLE_AVAILABILITY_AUTO_SYNC !== "false",
+    calendarConfigured: isGoogleCalendarConfigured(),
+  };
+}
+
 /**
- * Throttled pull Google Calendar → DB before public availability reads.
- * Concurrent callers share one in-flight sync per server instance.
- * Disabled when GOOGLE_AVAILABILITY_AUTO_SYNC=false or Google env is incomplete.
+ * Throttled Google Calendar → DB sync that does **not** block the caller.
+ * Public routes should call this and then read the database immediately so
+ * admin panel saves appear on the storefront without waiting on Google’s API.
+ */
+export function kickGoogleAvailabilityBackgroundSync(): void {
+  if (process.env.GOOGLE_AVAILABILITY_AUTO_SYNC === "false") return;
+  if (!isGoogleCalendarConfigured()) return;
+
+  const intervalMs = syncIntervalMs();
+  const state = syncState();
+  const now = Date.now();
+
+  if (state.inFlight) return;
+  if (now - state.lastAttemptAt < intervalMs) return;
+
+  const run = (async () => {
+    try {
+      const t = getTodayInPickupTimezoneYMD();
+      const to = addCalendarDaysYMD(t, 120);
+      await syncGoogleCalendarAvailabilityToDatabase(t, to, {
+        closeMissingInRange: false,
+      });
+    } catch (e) {
+      console.warn("[mrk] Google availability background sync failed:", e);
+    } finally {
+      state.inFlight = null;
+    }
+  })();
+
+  state.inFlight = run;
+  state.lastAttemptAt = Date.now();
+}
+
+/**
+ * @deprecated Prefer {@link kickGoogleAvailabilityBackgroundSync} on public routes
+ * so availability JSON is not delayed by Google. Kept for any code that must await.
  */
 export async function maybeSyncGoogleAvailabilityFromPublicRequest(): Promise<void> {
   if (process.env.GOOGLE_AVAILABILITY_AUTO_SYNC === "false") return;
@@ -60,6 +103,8 @@ export async function maybeSyncGoogleAvailabilityFromPublicRequest(): Promise<vo
       await syncGoogleCalendarAvailabilityToDatabase(t, to, {
         closeMissingInRange: false,
       });
+    } catch (e) {
+      console.warn("[mrk] Google availability sync failed:", e);
     } finally {
       state.inFlight = null;
     }

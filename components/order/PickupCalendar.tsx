@@ -69,8 +69,24 @@ export const PickupCalendar = forwardRef<
     setMonth(m);
   }, [anchorYmd]);
 
-  const from = ymdFromParts(year, month, 1);
-  const to = ymdFromParts(year, month, daysInMonth(year, month));
+  const displayedFrom = ymdFromParts(year, month, 1);
+  const displayedTo = ymdFromParts(year, month, daysInMonth(year, month));
+
+  /** Include the selected date’s month so URL/deep links validate even when that month isn’t visible. */
+  const { from, to } = useMemo(() => {
+    let f = displayedFrom;
+    let t = displayedTo;
+    if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const [vy, vm] = value.split("-").map(Number);
+      if (Number.isFinite(vy) && Number.isFinite(vm) && vm >= 1 && vm <= 12) {
+        const vf = ymdFromParts(vy, vm, 1);
+        const vt = ymdFromParts(vy, vm, daysInMonth(vy, vm));
+        if (vf < f) f = vf;
+        if (vt > t) t = vt;
+      }
+    }
+    return { from: f, to: t };
+  }, [displayedFrom, displayedTo, value]);
 
   const { openDates, notes, loading, loadError } = useAvailabilityWhitelist(
     from,
@@ -161,38 +177,57 @@ export const PickupCalendar = forwardRef<
           const past = ymd < todayYmd;
           const tooSoon = !isPickupYmdAllowed(ymd);
           const whitelisted = openSet.has(ymd);
-          const open = whitelisted && !past && !tooSoon;
+          const bookable = whitelisted && !past && !tooSoon;
           const bookingWindowLocked = whitelisted && !past && tooSoon;
           const note = (notes[ymd] ?? "").trim();
           const selected = value === ymd;
-          const disabled = past || tooSoon || !open;
+          const notOffered = !whitelisted && !past;
+          const staticTitle = bookingWindowLocked
+            ? `Booking window: ${PICKUP_LEAD_TIME_CUSTOMER_LINE}${note ? ` · ${note}` : ""}`
+            : past
+              ? "Past date"
+              : notOffered
+                ? "Not available for online pickup — choose a date Mr. K has opened"
+                : note || undefined;
+
+          if (bookable) {
+            return (
+              <button
+                key={ymd}
+                type="button"
+                title={note || undefined}
+                aria-pressed={selected}
+                aria-label={`${ymd} pickup`}
+                onClick={() => onChange(ymd)}
+                className={[
+                  "relative aspect-square rounded-md border border-[var(--border)] text-sm font-semibold text-[var(--text)] transition-colors hover:bg-[#FFC200]",
+                  selected
+                    ? "!border-[#0038A8] !bg-[#0038A8] !text-white hover:!bg-[#0038A8]"
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                <span className="flex h-full w-full items-center justify-center rounded-md">
+                  {Number(ymd.slice(8))}
+                </span>
+              </button>
+            );
+          }
 
           return (
-            <button
+            <div
               key={ymd}
-              type="button"
-              disabled={disabled}
-              title={
-                bookingWindowLocked
-                  ? `Booking window: ${PICKUP_LEAD_TIME_CUSTOMER_LINE}${note ? ` · ${note}` : ""}`
-                  : note || undefined
-              }
-              onClick={() => {
-                if (!disabled) onChange(ymd);
-              }}
+              role="presentation"
+              title={staticTitle}
               className={[
-                "relative aspect-square rounded-md text-sm font-semibold transition-colors",
+                "relative aspect-square select-none rounded-md text-sm font-semibold",
                 past
-                  ? "cursor-not-allowed bg-[var(--bg-section)] text-[var(--text-muted)] opacity-50"
+                  ? "bg-[var(--bg-section)] text-[var(--text-muted)] opacity-50"
                   : bookingWindowLocked
-                    ? "cursor-not-allowed border-2 border-[#FFC200] bg-[#FFC200]/25 text-[var(--text)] shadow-[0_0_12px_rgba(255,194,0,0.35)]"
-                    : disabled
-                      ? "cursor-not-allowed bg-[var(--bg-section)] text-[var(--text-muted)] opacity-60"
-                      : "cursor-pointer border border-[var(--border)] text-[var(--text)] hover:bg-[#FFC200]",
-                selected ? "!border-[#0038A8] !bg-[#0038A8] !text-white hover:!bg-[#0038A8]" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
+                    ? "border-2 border-[#FFC200] bg-[#FFC200]/25 text-[var(--text)] shadow-[0_0_12px_rgba(255,194,0,0.35)]"
+                    : "bg-[var(--bg-section)] text-[var(--text-muted)] opacity-70 ring-1 ring-inset ring-[var(--border)]/60",
+              ].join(" ")}
             >
               <span className="flex h-full w-full items-center justify-center gap-0.5 rounded-md">
                 {bookingWindowLocked ? (
@@ -200,9 +235,9 @@ export const PickupCalendar = forwardRef<
                     🔒
                   </span>
                 ) : null}
-                <span>{Number(ymd.slice(8))}</span>
+                <span aria-hidden>{Number(ymd.slice(8))}</span>
               </span>
-            </button>
+            </div>
           );
         })}
       </div>
@@ -218,8 +253,9 @@ export const PickupCalendar = forwardRef<
         </p>
       ) : (
         <p className="text-xs text-[var(--text-muted)]">
-          Only dates Mr. K has opened in advance can be selected. Hover a date
-          to see any note from the kitchen.
+          Only <strong>clickable</strong> dates can be chosen. Gray cells are not
+          open for pickup. 🔒 means the kitchen marked that day, but it is still
+          inside the prep window. Hover for details.
         </p>
       )}
     </div>

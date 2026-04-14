@@ -23,7 +23,7 @@ export default async function AdminPanelLayout({
   await requireAdmin();
   return (
     <div className="min-h-screen bg-[var(--bg-section)]">
-      <div className="border-b border-[var(--border)] bg-[var(--card)]">
+      <div className="sticky top-0 z-[200] border-b border-[var(--border)] bg-[var(--card)] shadow-sm">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3">
           <Link href="/admin/dashboard" className="font-bold text-[var(--primary)]">
             Mr. K Admin

@@ -53,27 +53,25 @@ export function ZelleBrandIcon({
   );
 }
 
-/** Compact cart strip: both marks + short copy. */
+/** Cart: brand icons only; app names show on hover via native `title` tooltip. */
 export function CartPaymentMethodsStrip() {
   return (
     <div
-      className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-neutral-200 bg-gradient-to-r from-neutral-50 to-white px-3 py-2.5 shadow-sm"
-      role="note"
+      className="mb-4 flex items-center gap-3 rounded-xl border border-neutral-200 bg-gradient-to-r from-neutral-50 to-white px-3 py-2.5 shadow-sm"
+      role="group"
+      aria-label="Accepted payment methods"
     >
-      <span className="text-[11px] font-bold uppercase tracking-wide text-neutral-500">
-        We accept
+      <span
+        title="Venmo"
+        className="inline-flex rounded-lg bg-white p-1.5 shadow-sm ring-1 ring-neutral-100"
+      >
+        <VenmoBrandIcon size={28} />
       </span>
-      <span className="flex items-center gap-2 rounded-lg bg-white px-2 py-1 shadow-sm ring-1 ring-neutral-100">
-        <VenmoBrandIcon size={26} />
-        <span className="text-xs font-semibold text-neutral-800">Venmo</span>
-      </span>
-      <span className="flex items-center gap-2 rounded-lg bg-white px-2 py-1 shadow-sm ring-1 ring-neutral-100">
-        <ZelleBrandIcon size={26} />
-        <span className="text-xs font-semibold text-neutral-800">Zelle</span>
-      </span>
-      <span className="min-w-0 flex-1 text-[11px] leading-snug text-neutral-600">
-        Card checkout isn&apos;t available — you&apos;ll pay on the next step after
-        checkout with your order number.
+      <span
+        title="Zelle"
+        className="inline-flex rounded-lg bg-white p-1.5 shadow-sm ring-1 ring-neutral-100"
+      >
+        <ZelleBrandIcon size={28} />
       </span>
     </div>
   );

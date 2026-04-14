@@ -1,13 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
-import { CartProvider } from "@/components/cart/CartContext";
-import { CartDrawer } from "@/components/cart/CartDrawer";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { AnnouncementBanner } from "@/components/ui/AnnouncementBanner";
-import { CustomCursor } from "@/components/ui/CustomCursor";
-import { SiteBackgroundMusic } from "@/components/music/SiteBackgroundMusic";
+import { AppShell } from "@/components/layout/AppShell";
 import { CATALOG_OG_IMAGE } from "@/lib/menu-catalog";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 
@@ -65,15 +59,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${dmSans.variable}`}>
       <body className="min-h-screen overflow-x-clip antialiased">
-        <CustomCursor />
-        <CartProvider>
-          <Navbar />
-          <AnnouncementBanner />
-          <main className="min-h-[50vh] w-full min-w-0">{children}</main>
-          <Footer />
-          <SiteBackgroundMusic />
-          <CartDrawer />
-        </CartProvider>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

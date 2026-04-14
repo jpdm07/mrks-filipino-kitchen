@@ -90,9 +90,24 @@ export function OrderForm() {
     let cancelled = false;
     setSlotsLoading(true);
     fetch(`/api/availability/${encodeURIComponent(pickupDate)}`)
-      .then((r) => r.json())
-      .then((j: { slots?: unknown }) => {
+      .then(async (r) => {
+        const j = (await r.json().catch(() => ({}))) as {
+          slots?: unknown;
+          isOpen?: boolean;
+        };
         if (cancelled) return;
+        if (!r.ok) {
+          setSlotOptions([]);
+          setPickupTime("");
+          if (r.status === 400) setPickupDate("");
+          return;
+        }
+        if (j.isOpen === false) {
+          setPickupDate("");
+          setPickupTime("");
+          setSlotOptions([]);
+          return;
+        }
         const slots = Array.isArray(j.slots)
           ? j.slots.filter((x): x is string => typeof x === "string")
           : [];

@@ -47,11 +47,31 @@ export function AdminAvailabilityPanel() {
         { credentials: "include" }
       );
       if (!r.ok) {
-        setMsg("Could not load availability.");
+        setMsg(
+          r.status === 401
+            ? "Session expired — open Dashboard, sign out, and log in again."
+            : "Could not load availability. Check the terminal / network tab for errors."
+        );
         return;
       }
-      const j = await r.json();
-      setDays((j.days as DayMap) ?? {});
+      let j: unknown;
+      try {
+        j = await r.json();
+      } catch {
+        setMsg("Server returned an invalid response. Try refreshing the page.");
+        return;
+      }
+      const daysPayload =
+        j && typeof j === "object" && "days" in j
+          ? (j as { days: unknown }).days
+          : null;
+      setDays(
+        daysPayload && typeof daysPayload === "object" && !Array.isArray(daysPayload)
+          ? (daysPayload as DayMap)
+          : {}
+      );
+    } catch {
+      setMsg("Could not load availability (network error). Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -152,15 +172,17 @@ export function AdminAvailabilityPanel() {
     }
   }, [selected, days]);
 
-  const saveNote = () => {
+  const saveSelectedDay = () => {
     if (!selected) return;
+    const isOpen = days[selected]?.isOpen ?? false;
     void post({
       action: "upsert",
       entries: [
         {
           date: selected,
-          isOpen: days[selected]?.isOpen ?? false,
+          isOpen,
           note: noteDraft.trim() || null,
+          ...(isOpen ? { slots: Array.from(slotSelection) } : {}),
         },
       ],
     });
@@ -193,7 +215,16 @@ export function AdminAvailabilityPanel() {
           </select>
         </div>
         {msg ? (
-          <p className="text-sm font-medium text-[var(--primary)]">{msg}</p>
+          <p
+            className={`max-w-md text-sm font-medium ${
+              msg.startsWith("Could not") || msg.startsWith("Session")
+                ? "text-[var(--accent)]"
+                : "text-[var(--primary)]"
+            }`}
+            role="status"
+          >
+            {msg}
+          </p>
         ) : null}
       </div>
 
@@ -286,70 +317,76 @@ export function AdminAvailabilityPanel() {
         </button>
       </div>
 
-      <div>
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <button
-            type="button"
-            className="rounded border px-3 py-1 text-sm font-semibold"
-            onClick={() => {
-              if (month <= 1) {
-                setMonth(12);
-                setYear((y) => y - 1);
-              } else setMonth((m) => m - 1);
-            }}
-          >
-            ←
-          </button>
-          <span className="font-bold">{label}</span>
-          <button
-            type="button"
-            className="rounded border px-3 py-1 text-sm font-semibold"
-            onClick={() => {
-              if (month >= 12) {
-                setMonth(1);
-                setYear((y) => y + 1);
-              } else setMonth((m) => m + 1);
-            }}
-          >
-            →
-          </button>
+      <div className="mx-auto w-full max-w-xl">
+        <div className="mb-2 grid grid-cols-3 items-center gap-2">
+          <div className="flex justify-start">
+            <button
+              type="button"
+              className="rounded border px-3 py-1 text-sm font-semibold"
+              onClick={() => {
+                if (month <= 1) {
+                  setMonth(12);
+                  setYear((y) => y - 1);
+                } else setMonth((m) => m - 1);
+              }}
+            >
+              ←
+            </button>
+          </div>
+          <span className="text-center font-bold">{label}</span>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              className="rounded border px-3 py-1 text-sm font-semibold"
+              onClick={() => {
+                if (month >= 12) {
+                  setMonth(1);
+                  setYear((y) => y + 1);
+                } else setMonth((m) => m + 1);
+              }}
+            >
+              →
+            </button>
+          </div>
         </div>
         {loading ? <p className="text-sm text-[var(--text-muted)]">Loading…</p> : null}
-        <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold">
-          {WEEKDAY_LABELS.map((d) => (
-            <div key={d}>{d}</div>
-          ))}
-        </div>
-        <div className="mt-1 grid max-w-xl grid-cols-7 gap-1">
-          {grid.map((cell, idx) => {
-            if (!cell.ymd) {
-              return <div key={`e-${idx}`} className="aspect-square" />;
-            }
-            const ymd = cell.ymd;
-            const open = days[ymd]?.isOpen === true;
-            const sel = selected === ymd;
-            return (
-              <button
-                key={ymd}
-                type="button"
-                onClick={() => setSelected(ymd)}
-                onDoubleClick={(e) => {
-                  e.preventDefault();
-                  toggleDay(ymd);
-                }}
-                title="Click to select (edit note). Double-click to toggle open/closed."
-                className={[
-                  "aspect-square rounded-md border text-sm font-semibold",
-                  open
-                    ? "border-emerald-600 bg-emerald-100 text-emerald-900"
-                    : "border-[var(--border)] bg-[var(--bg-section)] text-[var(--text-muted)]",
-                  sel ? "ring-2 ring-[var(--primary)]" : "",
-                ].join(" ")}
-              >
-                {Number(ymd.slice(8))}
-              </button>
-            );
-          })}
+        <div>
+          <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold">
+            {WEEKDAY_LABELS.map((d) => (
+              <div key={d}>{d}</div>
+            ))}
+          </div>
+          <div className="mt-1 grid grid-cols-7 gap-1">
+            {grid.map((cell, idx) => {
+              if (!cell.ymd) {
+                return <div key={`e-${idx}`} className="aspect-square" />;
+              }
+              const ymd = cell.ymd;
+              const open = days[ymd]?.isOpen === true;
+              const sel = selected === ymd;
+              return (
+                <button
+                  key={ymd}
+                  type="button"
+                  onClick={() => setSelected(ymd)}
+                  onDoubleClick={(e) => {
+                    e.preventDefault();
+                    toggleDay(ymd);
+                  }}
+                  title="Click to select (edit note). Double-click to toggle open/closed."
+                  className={[
+                    "aspect-square rounded-md border text-sm font-semibold",
+                    open
+                      ? "border-emerald-600 bg-emerald-100 text-emerald-900"
+                      : "border-[var(--border)] bg-[var(--bg-section)] text-[var(--text-muted)]",
+                    sel ? "ring-2 ring-[var(--primary)]" : "",
+                  ].join(" ")}
+                >
+                  {Number(ymd.slice(8))}
+                </button>
+              );
+            })}
+          </div>
         </div>
         <p className="mt-2 text-xs text-[var(--text-muted)]">
           Green = available · Gray = unavailable · Double-click toggles · Click
@@ -371,9 +408,30 @@ export function AdminAvailabilityPanel() {
             <div className="mt-4 border-t border-[var(--border)] pt-4">
               <p className="text-sm font-bold">Pickup time slots (customer checkout)</p>
               <p className="text-xs text-[var(--text-muted)]">
-                Check the windows offered for this date. At least one required for
-                customers to complete checkout.
+                Pick which pickup windows customers see. Use{" "}
+                <strong>Uncheck all</strong>, then turn on only what you need.{" "}
+                <strong>Save</strong> stores the note above and these slots together.
               </p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                Saving with no boxes checked stores every standard slot (same as{" "}
+                <strong>Select all</strong>).
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="rounded border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text)] hover:bg-[var(--gold-light)]"
+                  onClick={() => setSlotSelection(new Set())}
+                >
+                  Uncheck all
+                </button>
+                <button
+                  type="button"
+                  className="rounded border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text)] hover:bg-[var(--gold-light)]"
+                  onClick={() => setSlotSelection(new Set(ALL_SLOT_LABELS))}
+                >
+                  Select all
+                </button>
+              </div>
               <div className="mt-2 grid max-h-48 grid-cols-2 gap-2 overflow-y-auto text-sm sm:grid-cols-3">
                 {ALL_SLOT_LABELS.map((label) => (
                   <label key={label} className="flex items-center gap-2">
@@ -393,34 +451,15 @@ export function AdminAvailabilityPanel() {
                   </label>
                 ))}
               </div>
-              <button
-                type="button"
-                className="mt-3 rounded bg-[#FFC200] px-3 py-2 text-sm font-bold text-[var(--text)]"
-                onClick={() =>
-                  post({
-                    action: "upsert",
-                    entries: [
-                      {
-                        date: selected,
-                        isOpen: true,
-                        note: noteDraft.trim() || null,
-                        slots: Array.from(slotSelection),
-                      },
-                    ],
-                  })
-                }
-              >
-                Save time slots
-              </button>
             </div>
           ) : null}
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
             <button
               type="button"
               className="rounded bg-[var(--primary)] px-3 py-2 text-sm font-bold text-white"
-              onClick={saveNote}
+              onClick={saveSelectedDay}
             >
-              Save note
+              Save
             </button>
             <button
               type="button"

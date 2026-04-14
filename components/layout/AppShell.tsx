@@ -1,0 +1,36 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import { CartProvider } from "@/components/cart/CartContext";
+import { CartDrawer } from "@/components/cart/CartDrawer";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { AnnouncementBanner } from "@/components/ui/AnnouncementBanner";
+import { CustomCursor } from "@/components/ui/CustomCursor";
+import { SiteBackgroundMusic } from "@/components/music/SiteBackgroundMusic";
+
+function isAdminPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  if (isAdminPath(pathname)) {
+    return <>{children}</>;
+  }
+
+  return (
+    <>
+      <CustomCursor />
+      <CartProvider>
+        <Navbar />
+        <AnnouncementBanner />
+        <main className="min-h-[50vh] w-full min-w-0">{children}</main>
+        <Footer />
+        <SiteBackgroundMusic />
+        <CartDrawer />
+      </CartProvider>
+    </>
+  );
+}

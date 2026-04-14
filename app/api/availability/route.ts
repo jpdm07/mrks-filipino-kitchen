@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPublicAvailabilityWhitelistPayload } from "@/lib/availability-server";
-import { maybeSyncGoogleAvailabilityFromPublicRequest } from "@/lib/google-availability-stale-sync";
+import { kickGoogleAvailabilityBackgroundSync } from "@/lib/google-availability-stale-sync";
 import { isDatabaseUnavailableError } from "@/lib/safe-db";
+
+export const dynamic = "force-dynamic";
+
+const NO_STORE = {
+  "Cache-Control": "no-store, no-cache, must-revalidate",
+  Pragma: "no-cache",
+} as const;
 
 /**
  * Public whitelist: only dates with an Availability row where isOpen === true.
@@ -21,19 +28,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "from must be <= to" }, { status: 400 });
   }
   try {
-    try {
-      await maybeSyncGoogleAvailabilityFromPublicRequest();
-    } catch (e) {
-      console.warn("[mrk] Google availability auto-sync:", e);
-    }
+    kickGoogleAvailabilityBackgroundSync();
     const payload = await getPublicAvailabilityWhitelistPayload(from, to);
-    return NextResponse.json(payload);
+    return NextResponse.json(payload, { headers: NO_STORE });
   } catch (e) {
     if (isDatabaseUnavailableError(e)) {
       console.warn(
         "[mrk] DATABASE_URL unreachable — returning empty pickup dates (storefront stays up)."
       );
-      return NextResponse.json({ openDates: [], notes: {} });
+      return NextResponse.json(
+        { openDates: [], notes: {} },
+        { headers: NO_STORE }
+      );
     }
     throw e;
   }

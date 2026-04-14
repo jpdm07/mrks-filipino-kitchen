@@ -94,10 +94,6 @@ export function AcceptedPaymentMethods({ variant, orderNumber }: Props) {
       <p className="text-sm font-semibold text-[var(--text)]">
         Payment methods we accept
       </p>
-      <p className="text-sm leading-relaxed text-[var(--text)]">
-        <strong>Zelle</strong> and <strong>Venmo</strong> only. Online card
-        checkout on this site is <strong>temporarily under renovation</strong>.
-      </p>
       {methodRows}
       <p className="text-sm leading-relaxed text-[var(--text-muted)]">
         After you submit this form, you&apos;ll get an <strong>order number</strong>{" "}
