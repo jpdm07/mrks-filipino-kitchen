@@ -6,9 +6,12 @@
  * For local heroes, export JPEG/WebP at least ~1920–2400px wide for best results.
  */
 
-/** Spring rolls / lumpia-style plate — Unsplash (high-res). */
+/**
+ * Fried spring rolls on a plate — reads as lumpia-style for hero & social previews.
+ * (Previous default read as grilled meat to many viewers.)
+ */
 const SHARP_HERO_STOCK =
-  "https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=2400&q=90&auto=format&fit=crop";
+  "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=2400&q=90&auto=format&fit=crop";
 
 /**
  * Culture FAQ corner — local file (previous default Unsplash URL 404’d).
@@ -18,6 +21,10 @@ const DEFAULT_CULTURE_DECOR = "/images/pancit.jpg";
 
 export const HERO_FULLBLEED_IMAGE_SRC =
   process.env.NEXT_PUBLIC_HERO_FULLBLEED_IMAGE?.trim() || SHARP_HERO_STOCK;
+
+/** Facebook / iMessage / etc. link preview; optional override so OG can differ from homepage hero. */
+export const OPEN_GRAPH_IMAGE_SRC =
+  process.env.NEXT_PUBLIC_OG_IMAGE?.trim() || HERO_FULLBLEED_IMAGE_SRC;
 
 export const CULTURE_DECOR_IMAGE_SRC =
   process.env.NEXT_PUBLIC_CULTURE_DECOR_IMAGE?.trim() || DEFAULT_CULTURE_DECOR;

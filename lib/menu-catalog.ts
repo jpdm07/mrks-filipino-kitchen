@@ -18,7 +18,7 @@ import {
   PANCIT_LIME_COST_USD,
   PANCIT_LIMES_PARTY_TRAY,
 } from "./pancit-limes";
-import { HERO_FULLBLEED_IMAGE_SRC } from "./site-visuals";
+import { HERO_FULLBLEED_IMAGE_SRC, OPEN_GRAPH_IMAGE_SRC } from "./site-visuals";
 
 export {
   PANCIT_LIME_COST_USD,
@@ -56,8 +56,9 @@ export const CATALOG_HERO_IMAGE = HERO_FULLBLEED_IMAGE_SRC;
 
 /**
  * Open Graph / Twitter card (resolved with `metadataBase` in `app/layout.tsx`).
+ * Override with `NEXT_PUBLIC_OG_IMAGE`; otherwise matches hero (`NEXT_PUBLIC_HERO_FULLBLEED_IMAGE` or default stock).
  */
-export const CATALOG_OG_IMAGE = HERO_FULLBLEED_IMAGE_SRC;
+export const CATALOG_OG_IMAGE = OPEN_GRAPH_IMAGE_SRC;
 
 /**
  * Alternate hero (Unsplash). To use: point env or `HERO_FULLBLEED_IMAGE_SRC` in `site-visuals.ts`.
