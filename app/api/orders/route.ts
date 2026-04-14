@@ -167,6 +167,12 @@ export async function POST(req: NextRequest) {
       subscribeUpdates: Boolean(body.subscribeUpdates),
     });
 
+    if (!ownerEmailSent) {
+      console.warn(
+        "[orders] Order saved but owner notification email was not sent. Set Production env EMAIL_USER + EMAIL_PASSWORD (Yahoo app password). Response JSON includes ownerEmailSent for debugging."
+      );
+    }
+
     await syncOrderToSheets({
       orderNumber,
       createdAt: order.createdAt.toISOString(),

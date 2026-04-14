@@ -22,17 +22,25 @@ export async function sendMail(opts: {
   const transport = getTransport();
   const from = process.env.EMAIL_USER;
   if (!transport || !from) {
-    console.warn("Email not configured; skipping send");
+    console.warn(
+      "[mailer] Skipping send: set EMAIL_USER and EMAIL_PASSWORD on the server (Vercel → Production). Yahoo requires an app password, not your normal login password."
+    );
     return false;
   }
-  await transport.sendMail({
-    from: `"Mr. K's Filipino Kitchen" <${from}>`,
-    to: opts.to,
-    subject: opts.subject,
-    html: opts.html,
-    text: opts.text,
-  });
-  return true;
+  try {
+    await transport.sendMail({
+      from: `"Mr. K's Filipino Kitchen" <${from}>`,
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
+      text: opts.text,
+    });
+    return true;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[mailer] SMTP send failed:", msg);
+    return false;
+  }
 }
 
 export function newsletterHtml(params: {
