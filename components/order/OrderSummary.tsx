@@ -28,8 +28,8 @@ export function OrderSummary({
       </h2>
       <ul className="mt-4 space-y-2 text-sm">
         {items.map((i, idx) => (
-          <li key={idx} className="flex justify-between gap-4">
-            <span>
+          <li key={idx} className="flex justify-between gap-3 sm:gap-4">
+            <span className="min-w-0 break-words">
               {i.name}
               {i.size ? ` · ${i.size}` : ""}
               {i.cookedOrFrozen === "frozen" || i.cookedOrFrozen === "cooked"

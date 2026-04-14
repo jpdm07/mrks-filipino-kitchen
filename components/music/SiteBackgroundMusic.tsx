@@ -53,7 +53,8 @@ const TRACKS = [
 const LS_STOPPED = "mrks-opm-stopped";
 const LS_MUTED = "mrks-opm-muted";
 const LS_PANEL_POS = "mrks-opm-panel-pos";
-const LS_COLLAPSED = "mrks-opm-collapsed";
+/** Set to "1" when the visitor has expanded the panel; absent = default collapsed. */
+const LS_EXPANDED = "mrks-opm-panel-expanded";
 const LS_VOLUME = "mrks-opm-volume";
 
 /** Default playback level (~half of the previous 0.35 default). */
@@ -120,7 +121,7 @@ export function SiteBackgroundMusic() {
   const [needsTap, setNeedsTap] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [panelPos, setPanelPos] = useState<PanelPos | null>(null);
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const volumeRef = useRef(volume);
   volumeRef.current = volume;
@@ -134,7 +135,7 @@ export function SiteBackgroundMusic() {
     if (!mounted || typeof window === "undefined") return;
     setMuted(localStorage.getItem(LS_MUTED) === "1");
     setStoppedByUser(localStorage.getItem(LS_STOPPED) === "1");
-    setExpanded(localStorage.getItem(LS_COLLAPSED) !== "1");
+    setExpanded(localStorage.getItem(LS_EXPANDED) === "1");
     setQueue({ deck: shuffleDeck(), pos: 0 });
     try {
       const raw = localStorage.getItem(LS_VOLUME);
@@ -157,11 +158,11 @@ export function SiteBackgroundMusic() {
     }
   }, []);
 
-  const persistCollapsed = useCallback((collapsed: boolean) => {
-    setExpanded(!collapsed);
+  const persistExpanded = useCallback((next: boolean) => {
+    setExpanded(next);
     try {
-      if (collapsed) localStorage.setItem(LS_COLLAPSED, "1");
-      else localStorage.removeItem(LS_COLLAPSED);
+      if (next) localStorage.setItem(LS_EXPANDED, "1");
+      else localStorage.removeItem(LS_EXPANDED);
     } catch {
       /* ignore */
     }
@@ -466,7 +467,7 @@ export function SiteBackgroundMusic() {
 
   const positionStyle: CSSProperties = panelPos
     ? { left: panelPos.left, top: panelPos.top, right: "auto", bottom: "auto" }
-    : { right: "1rem", bottom: "1rem", left: "auto", top: "auto" };
+    : {};
 
   const dragBarKeyHandlers = (e: React.KeyboardEvent) => {
     if (!panelPos || !panelRef.current) return;
@@ -498,7 +499,7 @@ export function SiteBackgroundMusic() {
       ref={panelRef}
       style={positionStyle}
       onPointerDownCapture={onPanelPointerDownCapture}
-      className={`print:hidden fixed z-[8] flex touch-none cursor-grab flex-col rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--card)]/95 shadow-[var(--shadow-lg)] backdrop-blur-sm select-none active:cursor-grabbing [&_button]:cursor-pointer ${
+      className={`print:hidden fixed bottom-4 right-4 z-[40] flex max-w-[calc(100vw-2rem)] touch-none cursor-grab flex-col rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--card)]/95 shadow-[var(--shadow-lg)] backdrop-blur-sm select-none active:cursor-grabbing [&_button]:cursor-pointer sm:bottom-5 sm:right-5 ${
         expanded
           ? "w-[min(100vw-2rem,20rem)] max-w-[min(100vw-2rem,20rem)] gap-3 p-3 pt-0"
           : "w-auto max-w-[min(100vw-1rem,100%)] gap-0 p-0"
@@ -540,7 +541,7 @@ export function SiteBackgroundMusic() {
           </div>
           <button
             type="button"
-            onClick={() => persistCollapsed(true)}
+            onClick={() => persistExpanded(false)}
             className="flex shrink-0 items-center justify-center border-l border-[var(--border)] px-3 py-2 text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-section)] hover:text-[var(--primary)]"
             aria-expanded={expanded}
             aria-label="Collapse music player"
@@ -603,7 +604,7 @@ export function SiteBackgroundMusic() {
           ) : null}
           <button
             type="button"
-            onClick={() => persistCollapsed(false)}
+            onClick={() => persistExpanded(true)}
             className="flex items-center border-l border-[var(--border)] px-2.5 py-2 text-[var(--text-muted)] hover:bg-[var(--card)] hover:text-[var(--primary)]"
             aria-expanded={expanded}
             aria-label="Expand music player"

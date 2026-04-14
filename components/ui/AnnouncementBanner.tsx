@@ -24,7 +24,7 @@ export function AnnouncementBanner() {
   return (
     <div
       data-site-chrome
-      className="sticky top-[var(--nav-h,72px)] z-40 flex flex-wrap items-center justify-center gap-2 border-b border-[var(--gold)]/40 px-3 py-3 text-center text-sm font-medium text-[var(--text)] print:hidden sm:gap-3 sm:px-4"
+      className="relative z-30 flex flex-wrap items-center justify-center gap-2 border-b border-[var(--gold)]/40 px-3 py-3 text-center text-sm font-medium text-[var(--text)] print:hidden sm:gap-3 sm:px-4"
       style={{ background: "var(--gold)" }}
     >
       <p className="min-w-0 flex-1 basis-[min(100%,280px)] leading-snug sm:basis-auto">

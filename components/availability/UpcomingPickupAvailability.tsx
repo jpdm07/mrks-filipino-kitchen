@@ -268,14 +268,15 @@ export function UpcomingPickupAvailability() {
 
                   if (bookable) {
                     return (
-                      <Link
+                      <div
                         key={ymd}
-                        href={`/order?pickupDate=${encodeURIComponent(ymd)}`}
-                        className="flex aspect-square items-center justify-center rounded-lg border-2 border-[#FFC200] bg-[#FFC200] text-sm font-bold text-[var(--text)] shadow-[0_0_10px_rgba(255,194,0,0.35)] transition hover:shadow-[0_0_14px_rgba(255,194,0,0.5)]"
-                        title={`${ymd} · Times TBD — order to choose slot`}
+                        role="img"
+                        aria-label={`${ymd}: open for pickup; choose date at checkout`}
+                        title={`${ymd} — open for pickup. Times are chosen when you check out.`}
+                        className="flex aspect-square cursor-default select-none items-center justify-center rounded-lg border-2 border-[#FFC200] bg-[#FFC200] text-sm font-bold text-[var(--text)] shadow-[0_0_10px_rgba(255,194,0,0.35)]"
                       >
                         {dayNum}
-                      </Link>
+                      </div>
                     );
                   }
 
@@ -315,11 +316,15 @@ export function UpcomingPickupAvailability() {
                 })}
               </div>
 
-              <p className="mt-3 text-center text-[11px] text-[var(--text-muted)] sm:text-xs">
+              <p className="mt-3 text-center text-[11px] leading-snug text-[var(--text-muted)] sm:text-xs">
                 <span className="font-semibold text-[#0038A8]">Gold</span> =
                 open for pickup (times TBD).{" "}
                 <span className="font-semibold text-[var(--text)]">🔒</span> =
-                inside the 3–4 day prep window.
+                inside the 3–4 day prep window.{" "}
+                <span className="block pt-1 text-[var(--text)]">
+                  Preview only — add items to your cart, then use{" "}
+                  <strong>Proceed to Order</strong> to pick your date and time.
+                </span>
               </p>
             </div>
 

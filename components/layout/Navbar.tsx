@@ -66,7 +66,7 @@ export function Navbar() {
             : "border-transparent bg-[var(--card)]/85 backdrop-blur-sm"
         }`}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+        <div className="mx-auto flex max-w-6xl min-w-0 items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-4">
           <Link href="/" className="shrink-0" aria-label="Home">
             <Logo size="sm" />
           </Link>

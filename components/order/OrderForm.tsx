@@ -109,12 +109,6 @@ export function OrderForm() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (samplesOk) {
-      setIssues((p) => (p.samples ? { ...p, samples: false } : p));
-    }
-  }, [samplesOk]);
-
-  useEffect(() => {
     if (!pickupDate) {
       setSlotOptions([]);
       setPickupTime("");
@@ -173,6 +167,12 @@ export function OrderForm() {
 
   const samplesOk = samplesSelectionComplete(cart.samples);
   const canSubmitOrder = basicsOk && samplesOk;
+
+  useEffect(() => {
+    if (samplesOk) {
+      setIssues((p) => (p.samples ? { ...p, samples: false } : p));
+    }
+  }, [samplesOk]);
 
   const showDemoCheckout =
     process.env.NEXT_PUBLIC_ALLOW_DEMO_CHECKOUT === "true";
@@ -344,8 +344,12 @@ export function OrderForm() {
   const hasFieldIssues = Object.keys(issues).length > 0;
 
   return (
-    <form noValidate onSubmit={submit} className="grid gap-10 lg:grid-cols-2">
-      <div className="space-y-4">
+    <form
+      noValidate
+      onSubmit={submit}
+      className="grid min-w-0 gap-10 lg:grid-cols-2 lg:items-start"
+    >
+      <div className="min-w-0 space-y-4">
         <h1 className="font-[family-name:var(--font-playfair)] text-2xl font-bold sm:text-3xl">
           Checkout
         </h1>
@@ -640,15 +644,17 @@ export function OrderForm() {
           {loading ? "Submitting order…" : "Submit order & get order number"}
         </button>
       </div>
-      <OrderSummary
-        items={items}
-        wantsUtensils={cart.wantsUtensils}
-        utensilSets={cart.wantsUtensils ? cart.utensilSets : 0}
-        utensilCharge={cart.utensilCharge}
-        subtotal={cart.subtotalBeforeTax}
-        tax={cart.tax}
-        total={cart.total}
-      />
+      <div className="min-w-0">
+        <OrderSummary
+          items={items}
+          wantsUtensils={cart.wantsUtensils}
+          utensilSets={cart.wantsUtensils ? cart.utensilSets : 0}
+          utensilCharge={cart.utensilCharge}
+          subtotal={cart.subtotalBeforeTax}
+          tax={cart.tax}
+          total={cart.total}
+        />
+      </div>
     </form>
   );
 }
