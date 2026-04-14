@@ -1,6 +1,9 @@
 /**
- * Vercel/CI: apply migrations to Postgres, then generate client, then `next build`.
+ * Vercel/CI: optionally apply migrations, then generate client, then `next build`.
  * Local: skips `migrate deploy` unless RUN_MIGRATE_ON_BUILD=1.
+ *
+ * If DATABASE_URL is missing during the Vercel *build*, we skip migrations so the
+ * deploy can still finish — run `npx prisma migrate deploy` from your PC (same URL).
  */
 import { spawnSync } from "node:child_process";
 import process from "node:process";
@@ -24,12 +27,15 @@ if (onVercel || forceMigrate) {
   console.log("\n========== [build-production] prisma migrate deploy ==========\n");
   const dbUrl = process.env.DATABASE_URL?.trim();
   if (!dbUrl) {
-    console.error(
-      "[build-production] DATABASE_URL is missing or empty. Add it in Vercel → Settings → Environment Variables (Production)."
+    console.warn(
+      "[build-production] DATABASE_URL is not visible during this build — skipping migrations.\n" +
+        "  → Ensure DATABASE_URL exists in Vercel → Settings → Environment Variables (Production).\n" +
+        "  → Then run from your computer (with the same URL in .env.local):\n" +
+        "       npx prisma migrate deploy && npx prisma db seed\n"
     );
-    process.exit(1);
+  } else {
+    run("prisma migrate deploy", "npx", ["prisma", "migrate", "deploy"]);
   }
-  run("prisma migrate deploy", "npx", ["prisma", "migrate", "deploy"]);
 }
 
 console.log("\n========== [build-production] prisma generate ==========\n");
