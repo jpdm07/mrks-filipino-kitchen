@@ -1,3 +1,5 @@
+import { CANONICAL_SITE_ORIGIN } from "@/lib/public-site-url";
+
 export const PRICING = {
   UTENSIL_PER_SET: 0.75,
   UTENSIL_COST_MRK: 0.095,
@@ -16,6 +18,8 @@ export function salesTaxPercentLabel(): string {
 
 export const SITE = {
   name: "Mr. K's Filipino Kitchen",
+  /** Apex URL — matches business cards and QR codes (see `lib/public-site-url.ts`). */
+  publicUrl: CANONICAL_SITE_ORIGIN,
   phoneDisplay: "979-703-3827",
   phoneTel: "tel:+19797033827",
   email: "jpdm07@yahoo.com",

@@ -15,6 +15,7 @@ import {
 import { Logo } from "@/components/ui/Logo";
 import { SITE } from "@/lib/config";
 import { TAKEOUT_SHARE_HOOK } from "@/lib/takeout-share";
+import { canonicalMrksFullUrl } from "@/lib/public-site-url";
 
 type Props = {
   /** Fully qualified URL, e.g. https://mrkskitchen.com/takeout-menu */
@@ -28,7 +29,7 @@ function useAbsoluteShareUrl(href: string) {
   const [abs, setAbs] = useState(href);
   useEffect(() => {
     try {
-      setAbs(new URL(href, window.location.href).href);
+      setAbs(canonicalMrksFullUrl(href, window.location.href));
     } catch {
       setAbs(href);
     }
