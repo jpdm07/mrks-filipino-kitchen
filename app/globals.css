@@ -137,15 +137,30 @@ body[data-page="business-card"] main {
     display: none !important;
   }
 
-  /* Printable takeout menu (/menu): clean sheet, no site gradient */
+  /* Printable takeout menu: light sheet, fit page */
+  @page {
+    size: letter;
+    margin: 10mm 12mm;
+  }
+
   body {
     background: #fff !important;
     background-image: none !important;
   }
+
   .print-menu-paper {
     box-shadow: none !important;
-    border: none !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    color: #171717 !important;
+    background: #fff !important;
   }
+
+  .print-menu-section {
+    break-inside: avoid;
+  }
+
   .print-menu-item {
     break-inside: avoid;
   }

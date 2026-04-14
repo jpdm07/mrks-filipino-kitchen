@@ -16,6 +16,11 @@ export function truncateMenuDescription(raw: string, max = MAX_DESC_LEN): string
   return `${t.slice(0, max - 1).trim()}…`;
 }
 
+/** Full description for print/PDF (no ellipsis). */
+export function normalizePrintMenuDescription(raw: string): string {
+  return raw.replace(/\s+/g, " ").trim();
+}
+
 export function groupItemsForPrintMenu(items: MenuItemDTO[]): PrintMenuSection[] {
   const active = items
     .filter((i) => i.isActive)

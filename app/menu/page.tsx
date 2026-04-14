@@ -44,7 +44,11 @@ export default async function MenuPage({ searchParams }: MenuPageProps) {
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
             Share the printable menu
           </p>
-          <TakeoutMenuShareBar shareUrl={takeoutShareUrl} showPrint={false} />
+          <TakeoutMenuShareBar
+            shareUrl={takeoutShareUrl}
+            showPrint={false}
+            showCopyLink={false}
+          />
         </div>
       </div>
       <div className="print:hidden">

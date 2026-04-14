@@ -54,6 +54,10 @@ const LS_STOPPED = "mrks-opm-stopped";
 const LS_MUTED = "mrks-opm-muted";
 const LS_PANEL_POS = "mrks-opm-panel-pos";
 const LS_COLLAPSED = "mrks-opm-collapsed";
+const LS_VOLUME = "mrks-opm-volume";
+
+/** Default playback level (~half of the previous 0.35 default). */
+const DEFAULT_VOLUME = 0.175;
 
 type QueueState = { deck: number[]; pos: number };
 type PanelPos = { left: number; top: number };
@@ -117,6 +121,9 @@ export function SiteBackgroundMusic() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [panelPos, setPanelPos] = useState<PanelPos | null>(null);
   const [expanded, setExpanded] = useState(true);
+  const [volume, setVolume] = useState(DEFAULT_VOLUME);
+  const volumeRef = useRef(volume);
+  volumeRef.current = volume;
 
   const trackIndex = queue ? queue.deck[queue.pos] : 0;
   const track = TRACKS[trackIndex];
@@ -129,8 +136,26 @@ export function SiteBackgroundMusic() {
     setStoppedByUser(localStorage.getItem(LS_STOPPED) === "1");
     setExpanded(localStorage.getItem(LS_COLLAPSED) !== "1");
     setQueue({ deck: shuffleDeck(), pos: 0 });
+    try {
+      const raw = localStorage.getItem(LS_VOLUME);
+      if (raw != null) {
+        const n = Number(raw);
+        if (Number.isFinite(n) && n >= 0 && n <= 1) setVolume(n);
+      }
+    } catch {
+      /* ignore */
+    }
     setHydrated(true);
   }, [mounted]);
+
+  const persistVolume = useCallback((v: number) => {
+    setVolume(v);
+    try {
+      localStorage.setItem(LS_VOLUME, String(v));
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const persistCollapsed = useCallback((collapsed: boolean) => {
     setExpanded(!collapsed);
@@ -358,7 +383,13 @@ export function SiteBackgroundMusic() {
   useEffect(() => {
     const el = audioRef.current;
     if (!el || loadFailed) return;
-    el.volume = 0.35;
+    el.volume = volume;
+  }, [volume, loadFailed]);
+
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el || loadFailed) return;
+    el.volume = volumeRef.current;
     el.load();
   }, [trackIndex, track.src, loadFailed]);
 
@@ -710,6 +741,34 @@ export function SiteBackgroundMusic() {
             {muted ? "Unmute" : "Mute"}
           </button>
         </div>
+
+        {!loadFailed ? (
+          <div className="mt-3 space-y-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg-section)]/80 px-3 py-2">
+            <label
+              htmlFor="mrks-opm-volume"
+              className="flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]"
+            >
+              <span>Volume</span>
+              <span className="tabular-nums text-[var(--text)]">
+                {Math.round(volume * 100)}%
+              </span>
+            </label>
+            <input
+              id="mrks-opm-volume"
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={volume}
+              onChange={(e) => persistVolume(Number(e.target.value))}
+              className="h-2 w-full cursor-pointer accent-[var(--primary)]"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(volume * 100)}
+              aria-label="Music volume"
+            />
+          </div>
+        ) : null}
       </div>
       ) : null}
     </div>

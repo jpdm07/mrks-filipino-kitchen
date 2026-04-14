@@ -75,7 +75,7 @@ export async function FeaturedItems() {
                   {item.groupCardTitle ?? item.name}
                 </h3>
                 <p className="text-sm text-[var(--text-muted)]">{item.calories}</p>
-                <p className="mt-2 line-clamp-3 text-sm text-[var(--text)]">
+                <p className="mt-2 text-sm text-[var(--text)]">
                   {item.description}
                 </p>
                 <p className="mt-3 text-lg font-bold text-[var(--primary)]">

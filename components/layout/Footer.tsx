@@ -112,9 +112,6 @@ export function Footer() {
               <p className="font-medium text-[var(--text)]">
                 © {new Date().getFullYear()} Mr. K&apos;s Filipino Kitchen · Cypress, TX
               </p>
-              <p className="mt-1">
-                Bulk recurring orders accepted every 2 weeks
-              </p>
             </div>
             <p className="max-w-sm text-xs leading-relaxed text-[var(--text-muted)] md:max-w-xs md:text-right">
               Need a card for the counter or a flyer handout? Use our{" "}

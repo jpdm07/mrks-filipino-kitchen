@@ -22,6 +22,8 @@ type Props = {
   shareUrl: string;
   /** Hide print/PDF on pages where the handout is not shown (e.g. main `/menu`). */
   showPrint?: boolean;
+  /** Hide “Copy link” on `/menu` where only Share is needed. */
+  showCopyLink?: boolean;
 };
 
 /** Relative share URLs + `navigator.share({ text, url })` often yield an empty draft on Windows targets. */
@@ -40,6 +42,7 @@ function useAbsoluteShareUrl(href: string) {
 export function TakeoutMenuShareBar({
   shareUrl,
   showPrint = true,
+  showCopyLink = true,
 }: Props) {
   const absoluteShareUrl = useAbsoluteShareUrl(shareUrl);
   const [mounted, setMounted] = useState(false);
@@ -127,7 +130,7 @@ export function TakeoutMenuShareBar({
     "inline-flex min-h-[48px] min-w-[8.5rem] flex-none items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm font-semibold text-[var(--text)] shadow-sm transition hover:border-[var(--primary)]/40 hover:bg-[var(--bg-section)]";
 
   const rowClass =
-    "flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--bg-section)]";
+    "flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--bg-section)]";
 
   const overlay =
     menuOpen && mounted ? (
@@ -145,75 +148,70 @@ export function TakeoutMenuShareBar({
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
-          className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-lg)]"
+          className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] text-right shadow-[var(--shadow-lg)]"
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] bg-gradient-to-br from-[var(--gold-light)]/40 to-transparent px-4 py-4">
-            <div className="min-w-0 flex-1">
+          <div className="relative border-b border-[var(--border)] bg-gradient-to-bl from-[var(--gold-light)]/40 to-transparent px-4 py-4">
+            <button
+              type="button"
+              onClick={() => setMenuOpen(false)}
+              className="btn-icon absolute left-3 top-3 h-10 w-10"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="min-w-0 pl-14">
               <p id={titleId} className="sr-only">
                 Share {SITE.name} takeout menu
               </p>
-              <div className="flex gap-4">
-                <div className="shrink-0 rounded-xl border border-[var(--border)] bg-white p-2 shadow-sm">
+              <div className="flex flex-col items-end gap-3">
+                <div className="rounded-xl border border-[var(--border)] bg-white p-2 shadow-sm">
                   <Logo size="sm" />
                 </div>
-                <div className="min-w-0 pt-0.5">
+                <div className="w-full">
                   <p className="text-sm font-semibold text-[var(--primary)]">
                     {TAKEOUT_SHARE_HOOK}
                   </p>
                   <p className="mt-1 font-[family-name:var(--font-playfair)] text-lg font-bold leading-tight text-[var(--text)]">
                     {SITE.name}
                   </p>
-                  <p className="mt-2 text-xs leading-relaxed text-[var(--text-muted)]">
-                    Most apps show your logo and name from the link preview when you share the URL
-                    (needs your live site, not localhost).
-                  </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={onCopyFullMessage}
-                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[var(--primary)]/35 bg-[var(--bg)]/80 px-3 py-2 text-xs font-semibold text-[var(--primary)] transition hover:bg-[var(--gold-light)]/50 sm:w-auto"
+                className="mt-4 inline-flex w-full max-w-full items-center justify-end gap-2 rounded-lg border border-dashed border-[var(--primary)]/35 bg-[var(--bg)]/80 px-3 py-2 text-xs font-semibold text-[var(--primary)] transition hover:bg-[var(--gold-light)]/50 sm:ml-auto sm:w-auto"
               >
                 {copiedFull ? (
-                  <Check className="h-3.5 w-3.5 text-[var(--success)]" aria-hidden />
+                  <Check className="h-3.5 w-3.5 shrink-0 text-[var(--success)]" aria-hidden />
                 ) : (
-                  <Copy className="h-3.5 w-3.5" aria-hidden />
+                  <Copy className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 )}
-                {copiedFull ? "Copied — paste in any app" : "Copy hook, name + link"}
+                <span>
+                  {copiedFull ? "Copied — paste in any app" : "Copy hook, name + link"}
+                </span>
               </button>
-              <p className="mt-2 text-[11px] leading-snug text-[var(--text-muted)]">
-                “Share” and “Copy link” send only the URL so chats can unfurl the preview card.
-              </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setMenuOpen(false)}
-              className="btn-icon h-10 w-10 shrink-0"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
           </div>
 
           <div className="max-h-[min(55vh,400px)] overflow-y-auto overscroll-contain px-2 py-2">
             {canNativeShare ? (
               <button type="button" onClick={onNativeShare} className={rowClass}>
+                <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
+                <span className="min-w-0 flex-1 text-right">Share via this device…</span>
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)]/10">
                   <Share2 className="h-5 w-5 text-[var(--primary)]" aria-hidden />
                 </span>
-                <span className="flex-1">Share via this device…</span>
-                <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
               </button>
             ) : null}
 
             <a href={smsHref} className={rowClass} onClick={() => setMenuOpen(false)}>
+              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
+              <span className="min-w-0 flex-1 text-right">SMS / Messages</span>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15">
                 <MessageSquare className="h-5 w-5 text-emerald-700" aria-hidden />
               </span>
-              <span className="flex-1">SMS / Messages</span>
-              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
             </a>
 
             <a
@@ -223,11 +221,11 @@ export function TakeoutMenuShareBar({
               className={rowClass}
               onClick={() => setMenuOpen(false)}
             >
+              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
+              <span className="min-w-0 flex-1 text-right">WhatsApp</span>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#25D366]/20 text-lg" aria-hidden>
                 💬
               </span>
-              <span className="flex-1">WhatsApp</span>
-              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
             </a>
 
             <a
@@ -237,11 +235,11 @@ export function TakeoutMenuShareBar({
               className={rowClass}
               onClick={() => setMenuOpen(false)}
             >
+              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
+              <span className="min-w-0 flex-1 text-right">Facebook</span>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1877F2]/15 text-sm font-bold text-[#1877F2]" aria-hidden>
                 f
               </span>
-              <span className="flex-1">Facebook</span>
-              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
             </a>
 
             <a
@@ -251,19 +249,19 @@ export function TakeoutMenuShareBar({
               className={rowClass}
               onClick={() => setMenuOpen(false)}
             >
+              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
+              <span className="min-w-0 flex-1 text-right">X (Twitter)</span>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neutral-900 text-sm font-bold text-white" aria-hidden>
                 X
               </span>
-              <span className="flex-1">X (Twitter)</span>
-              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
             </a>
 
             <a href={mailHref} className={rowClass} onClick={() => setMenuOpen(false)}>
+              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
+              <span className="min-w-0 flex-1 text-right">Email</span>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)]/10">
                 <Mail className="h-5 w-5 text-[var(--primary)]" aria-hidden />
               </span>
-              <span className="flex-1">Email</span>
-              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
             </a>
 
             <a
@@ -273,11 +271,11 @@ export function TakeoutMenuShareBar({
               className={rowClass}
               onClick={() => setMenuOpen(false)}
             >
+              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
+              <span className="min-w-0 flex-1 text-right">LinkedIn</span>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0A66C2]/15 text-xs font-bold text-[#0A66C2]" aria-hidden>
                 in
               </span>
-              <span className="flex-1">LinkedIn</span>
-              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
             </a>
 
             <a
@@ -287,11 +285,11 @@ export function TakeoutMenuShareBar({
               className={rowClass}
               onClick={() => setMenuOpen(false)}
             >
+              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
+              <span className="min-w-0 flex-1 text-right">Telegram</span>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#229ED9]/15 text-lg" aria-hidden>
                 ✈️
               </span>
-              <span className="flex-1">Telegram</span>
-              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
             </a>
 
             <a
@@ -301,11 +299,11 @@ export function TakeoutMenuShareBar({
               className={rowClass}
               onClick={() => setMenuOpen(false)}
             >
+              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
+              <span className="min-w-0 flex-1 text-right">Reddit</span>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500/15 text-lg font-bold text-orange-600" aria-hidden>
                 r
               </span>
-              <span className="flex-1">Reddit</span>
-              <ExternalLink className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
             </a>
           </div>
         </div>
@@ -329,14 +327,16 @@ export function TakeoutMenuShareBar({
             Print / Save PDF
           </button>
         ) : null}
-        <button type="button" onClick={onCopyUrl} className={primaryBtn}>
-          {copiedUrl ? (
-            <Check className="h-4 w-4 shrink-0 text-[var(--success)]" aria-hidden />
-          ) : (
-            <Copy className="h-4 w-4 shrink-0 text-[var(--primary)]" aria-hidden />
-          )}
-          {copiedUrl ? "Copied" : "Copy link"}
-        </button>
+        {showCopyLink ? (
+          <button type="button" onClick={onCopyUrl} className={primaryBtn}>
+            {copiedUrl ? (
+              <Check className="h-4 w-4 shrink-0 text-[var(--success)]" aria-hidden />
+            ) : (
+              <Copy className="h-4 w-4 shrink-0 text-[var(--primary)]" aria-hidden />
+            )}
+            {copiedUrl ? "Copied" : "Copy link"}
+          </button>
+        ) : null}
       </div>
 
       {mounted && overlay ? createPortal(overlay, document.body) : null}

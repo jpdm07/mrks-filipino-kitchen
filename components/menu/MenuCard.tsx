@@ -71,7 +71,7 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
           {item.name}
         </h3>
         <p className="text-sm text-[var(--text-muted)]">{item.calories}</p>
-        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[var(--text)]">
+        <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
           {item.description}
         </p>
         {item.id === "seed-6" ? (
