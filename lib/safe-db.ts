@@ -23,6 +23,15 @@ function prismaErrorCode(err: unknown): string | null {
   return null;
 }
 
+/** P#### from Prisma errors for logs/response headers (no credentials). */
+export function prismaDiagnosticCode(err: unknown): string | null {
+  const fromField = prismaErrorCode(err);
+  if (fromField && /^P\d{4}$/.test(fromField)) return fromField;
+  const msg = err instanceof Error ? err.message : String(err);
+  const m = msg.match(/\b(P\d{4})\b/);
+  return m?.[1] ?? null;
+}
+
 /** True when the database layer is unreachable (engine, file, or connection). */
 export function isDatabaseUnavailableError(err: unknown): boolean {
   if (isPrismaEngineError(err)) return true;
