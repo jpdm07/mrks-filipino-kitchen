@@ -1,7 +1,8 @@
 generator client {
-  provider   = "prisma-client-js"
-  // Avoid Node-API .dll on Windows (ARM / arch mismatches). Uses a child-process engine instead.
-  engineType = "binary"
+  provider      = "prisma-client-js"
+  // Windows dev: avoid Node-API .dll issues. Vercel/Linux: ship the RHEL engine too.
+  engineType    = "binary"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
