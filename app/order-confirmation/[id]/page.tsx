@@ -218,16 +218,6 @@ export default async function OrderConfirmationPage({
         </div>
       ) : null}
 
-      <div className="mt-6 text-left text-sm">
-        <p>
-          <strong>{order.customerName}</strong>
-        </p>
-        <p>
-          <a href={`tel:${order.phone.replace(/\D/g, "")}`}>{order.phone}</a>
-        </p>
-        <p>{order.email}</p>
-      </div>
-
       <div className="mt-10">
         <ConfirmationShare url={pageUrl} />
       </div>
