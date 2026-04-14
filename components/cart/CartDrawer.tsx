@@ -9,6 +9,7 @@ import { samplesSelectionComplete } from "@/lib/cart-types";
 import { CartItemRow } from "./CartItem";
 import { PRICING, salesTaxPercentLabel } from "@/lib/config";
 import { SalesTaxDisclosure } from "@/components/checkout/SalesTaxDisclosure";
+import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 
 export function CartDrawer() {
   const router = useRouter();
@@ -325,7 +326,7 @@ export function CartDrawer() {
                 />
                 Keep me updated on new menu items and specials
               </label>
-              <label className="mb-8 flex cursor-pointer items-start gap-2 text-sm">
+              <label className="mb-4 flex cursor-pointer items-start gap-2 text-sm">
                 <input
                   type="checkbox"
                   checked={cart.recurringInterest}
@@ -336,6 +337,8 @@ export function CartDrawer() {
                 />
                 I&apos;m interested in bi-weekly recurring bulk orders
               </label>
+
+              <AcceptedPaymentMethods variant="cart" />
             </div>
 
             <div className="border-t border-[var(--border)] bg-[var(--bg)] p-4">

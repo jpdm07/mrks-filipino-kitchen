@@ -22,7 +22,7 @@ import {
 } from "@/lib/order-payment";
 
 function venmoDisplay(): string {
-  return process.env.NEXT_PUBLIC_VENMO_HANDLE ?? "@Mr-Ks-Kitchen";
+  return process.env.NEXT_PUBLIC_VENMO_HANDLE ?? "@jpdm07";
 }
 
 function parseItems(raw: string): OrderItemLine[] {

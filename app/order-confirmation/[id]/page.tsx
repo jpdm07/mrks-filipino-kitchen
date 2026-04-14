@@ -7,7 +7,8 @@ import { ConfirmationShare } from "@/components/order/ConfirmationShare";
 import { AnimatedCheck } from "@/components/order/AnimatedCheck";
 import type { OrderItemLine } from "@/lib/order-types";
 import { orderHasFlan, orderHasFrozenLumpia } from "@/lib/order-types";
-import { PAYMENT_INSTRUCTIONS, salesTaxPercentLabel } from "@/lib/config";
+import { salesTaxPercentLabel } from "@/lib/config";
+import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 import { ORDER_STATUS_CONFIRMED } from "@/lib/order-payment";
 import { SalesTaxDisclosure } from "@/components/checkout/SalesTaxDisclosure";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
@@ -63,9 +64,8 @@ export default async function OrderConfirmationPage({
         #{order.orderNumber}
       </p>
       <p className="mt-2 max-w-md text-xs text-[var(--text-muted)]">
-        Select the order number above and paste it into the{" "}
-        <strong>memo / note</strong> field in Venmo or Zelle so we can match
-        your payment to this order.
+        Use this number in your Zelle/Venmo memo and when you text us after you
+        pay.
       </p>
 
       <div className="mt-8 rounded-[var(--radius)] border-2 border-[var(--primary)] bg-[var(--primary)]/5 p-6 text-left shadow-[var(--shadow)]">
@@ -78,14 +78,12 @@ export default async function OrderConfirmationPage({
             ${order.total.toFixed(2)}
           </span>
         </p>
-        <ul className="mt-3 list-inside list-disc space-y-2 text-sm leading-relaxed text-[var(--text)]">
-          <li>
-            <strong>Zelle:</strong> {PAYMENT_INSTRUCTIONS.zellePhone}
-          </li>
-          <li>
-            <strong>Venmo:</strong> {PAYMENT_INSTRUCTIONS.venmoHandle}
-          </li>
-        </ul>
+        <div className="mt-4">
+          <AcceptedPaymentMethods
+            variant="confirmation"
+            orderNumber={order.orderNumber}
+          />
+        </div>
         <p className="mt-4 rounded-lg border border-[var(--gold)] bg-[var(--gold-light)] px-4 py-3 text-sm font-semibold text-[var(--text)]">
           Memo / note (required): type{" "}
           <span className="font-mono text-[var(--primary)]">
@@ -166,17 +164,15 @@ export default async function OrderConfirmationPage({
             Your order has been received! 🎉
           </p>
           <p className="mt-4">
-            Please send payment using the instructions above and include your
-            order number in the Venmo or Zelle memo. Mr. K will verify your
-            payment and be in touch shortly. If you don&apos;t hear back within a
-            few hours, feel free to call or text{" "}
+            Mr. K will verify your payment and be in touch shortly. If you
+            don&apos;t hear back within a few hours, call or text{" "}
             <a
               href="tel:+19797033827"
               className="font-bold text-[var(--primary)] underline"
             >
               979-703-3827
             </a>{" "}
-            — or leave a voicemail and she will get back to you as soon as
+            — or leave a voicemail and we&apos;ll get back to you as soon as
             possible.
           </p>
           <p className="mt-4 font-medium">

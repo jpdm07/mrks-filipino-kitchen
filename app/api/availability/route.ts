@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPublicAvailabilityWhitelistPayload } from "@/lib/availability-server";
+import { isDatabaseUnavailableError } from "@/lib/safe-db";
 
 /**
  * Public whitelist: only dates with an Availability row where isOpen === true.
@@ -18,6 +19,22 @@ export async function GET(req: NextRequest) {
   if (from > to) {
     return NextResponse.json({ error: "from must be <= to" }, { status: 400 });
   }
-  const payload = await getPublicAvailabilityWhitelistPayload(from, to);
-  return NextResponse.json(payload);
+  try {
+    const payload = await getPublicAvailabilityWhitelistPayload(from, to);
+    return NextResponse.json(payload);
+  } catch (e) {
+    if (isDatabaseUnavailableError(e)) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn(
+          "[mrk] DATABASE_URL unreachable — returning empty pickup dates. Use your Neon (or other) URL in .env.local."
+        );
+        return NextResponse.json({ openDates: [], notes: {} });
+      }
+      return NextResponse.json(
+        { error: "Pickup availability is temporarily unavailable." },
+        { status: 503 }
+      );
+    }
+    throw e;
+  }
 }

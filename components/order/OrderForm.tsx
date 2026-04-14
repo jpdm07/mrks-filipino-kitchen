@@ -22,7 +22,7 @@ import {
   orderFormPickupConfirmationLine,
   PICKUP_LEAD_TIME_CUSTOMER_LINE,
 } from "@/lib/pickup-availability-copy";
-import { PAYMENT_INSTRUCTIONS } from "@/lib/config";
+import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 
 export function OrderForm() {
   const router = useRouter();
@@ -159,7 +159,7 @@ export function OrderForm() {
     }
     if (!paymentMemoAck) {
       setErr(
-        "Please confirm you will put your order number in your Venmo or Zelle memo when you pay."
+        "Please confirm you will use your order number in the payment memo and text it after paying."
       );
       return;
     }
@@ -384,32 +384,12 @@ export function OrderForm() {
           <div className="space-y-4 rounded-xl border-2 border-[var(--primary)]/25 bg-[var(--bg-section)] p-4 text-left">
             <p className="text-sm font-semibold leading-relaxed text-[var(--text)]">
               Next step: submit this page. You&apos;ll land on a confirmation
-              screen with your <strong>order number</strong> and exact payment
-              amount.
+              screen with your <strong>order number</strong> and the exact
+              amount to send: <strong>${cart.total.toFixed(2)}</strong>.
             </p>
+            <AcceptedPaymentMethods variant="checkout" />
             <p className="text-sm leading-relaxed text-[var(--text-muted)]">
-              Send <strong>${cart.total.toFixed(2)}</strong> via Zelle or Venmo
-              after you have that number, and{" "}
-              <strong>
-                type the order number in the payment memo / note
-              </strong>{" "}
-              (for example <code className="rounded bg-white/80 px-1">MRK-1001</code>
-              ). That&apos;s how we match your payment to this order.
-            </p>
-            <p className="text-sm leading-relaxed">
-              💚 Zelle: {PAYMENT_INSTRUCTIONS.zellePhone}
-              <br />
-              💜 Venmo: {PAYMENT_INSTRUCTIONS.venmoHandle}
-            </p>
-            <p className="text-sm leading-relaxed text-[var(--text-muted)]">
-              Prep starts after payment is verified. Questions? Call or text{" "}
-              <a
-                href="tel:+19797033827"
-                className="font-semibold text-[var(--primary)] underline"
-              >
-                979-703-3827
-              </a>
-              .
+              Prep starts after payment is verified.
             </p>
             <label className="flex cursor-pointer items-start gap-3 text-sm font-medium">
               <input
@@ -420,7 +400,7 @@ export function OrderForm() {
               />
               <span>
                 I understand I will put my order number in the Venmo or Zelle
-                memo when I send payment.
+                memo when I pay, and text that same number after payment is sent.
               </span>
             </label>
           </div>

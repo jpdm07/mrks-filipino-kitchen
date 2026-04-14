@@ -20,6 +20,9 @@ export function isDatabaseUnavailableError(err: unknown): boolean {
   if (isPrismaEngineError(err)) return true;
   const msg = err instanceof Error ? err.message : String(err);
   return (
+    msg.includes("Can't reach database server") ||
+    msg.includes("ECONNREFUSED") ||
+    msg.includes("P1001") ||
     msg.includes("SQLITE_CANTOPEN") ||
     msg.includes("unable to open database file")
   );
