@@ -61,7 +61,7 @@ export default async function TakeoutMenuPage() {
       </header>
 
       <div className="mb-8 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 text-center shadow-[var(--shadow)] sm:p-6 print:hidden">
-        <TakeoutMenuShareBar shareUrl={shareUrl} />
+        <TakeoutMenuShareBar shareUrl={shareUrl} showCopyLink={false} />
       </div>
 
       <PrintableMenu items={items} />

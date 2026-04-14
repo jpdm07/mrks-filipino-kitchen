@@ -1,14 +1,12 @@
 import Link from "next/link";
 import { MenuCategoryNav } from "@/components/menu/MenuCategoryNav";
 import { MenuGrid } from "@/components/menu/MenuGrid";
-import { TakeoutMenuShareBar } from "@/components/menu/TakeoutMenuShareBar";
 import { SuggestionPoll } from "@/components/sections/SuggestionPoll";
 import {
   itemVisibleForMenuTab,
   parseMenuCategoryFromSearchParam,
 } from "@/lib/menu-categories";
 import { getPublicMenuItems } from "@/lib/public-menu-items";
-import { getPublicAbsoluteUrl } from "@/lib/site-absolute-url";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +16,6 @@ type MenuPageProps = {
 
 export default async function MenuPage({ searchParams }: MenuPageProps) {
   const items = await getPublicMenuItems();
-  const takeoutShareUrl = getPublicAbsoluteUrl("/takeout-menu");
 
   const activeTab = parseMenuCategoryFromSearchParam(searchParams.cat);
   const visible = items.filter((i) => itemVisibleForMenuTab(i, activeTab));
@@ -40,16 +37,6 @@ export default async function MenuPage({ searchParams }: MenuPageProps) {
             Open printable takeout menu
           </Link>
         </p>
-        <div className="mx-auto mt-6 w-full max-w-xl rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 text-center shadow-sm">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            Share the printable menu
-          </p>
-          <TakeoutMenuShareBar
-            shareUrl={takeoutShareUrl}
-            showPrint={false}
-            showCopyLink={false}
-          />
-        </div>
       </div>
       <div className="print:hidden">
         <div className="mt-8">

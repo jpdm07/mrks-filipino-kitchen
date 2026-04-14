@@ -127,7 +127,16 @@ export function TakeoutMenuShareBar({
   const redditHref = `https://www.reddit.com/submit?url=${encodeURIComponent(absoluteShareUrl)}&title=${encodeURIComponent(shareTitle)}`;
 
   const primaryBtn =
-    "inline-flex min-h-[48px] min-w-[8.5rem] flex-none items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm font-semibold text-[var(--text)] shadow-sm transition hover:border-[var(--primary)]/40 hover:bg-[var(--bg-section)]";
+    "inline-flex min-h-[48px] min-w-0 w-full items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm font-semibold text-[var(--text)] shadow-sm transition hover:border-[var(--primary)]/40 hover:bg-[var(--bg-section)]";
+
+  const actionCount =
+    1 + (showPrint ? 1 : 0) + (showCopyLink ? 1 : 0);
+  const actionGridClass =
+    actionCount >= 3
+      ? "grid grid-cols-1 gap-4 sm:grid-cols-3"
+      : actionCount === 2
+        ? "grid grid-cols-1 gap-4 sm:grid-cols-2"
+        : "grid grid-cols-1 gap-4";
 
   const rowClass =
     "flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--bg-section)]";
@@ -312,7 +321,7 @@ export function TakeoutMenuShareBar({
 
   return (
     <div className="print:hidden">
-      <div className="flex w-full flex-wrap items-center justify-center gap-3">
+      <div className={`mx-auto w-full max-w-lg ${actionGridClass}`}>
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
