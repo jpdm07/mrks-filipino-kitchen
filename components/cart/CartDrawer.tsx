@@ -20,6 +20,8 @@ export function CartDrawer() {
   const [checkoutHint, setCheckoutHint] = useState<string | null>(null);
   const [highlightLumpiaSample, setHighlightLumpiaSample] = useState(false);
   const [highlightPancitSample, setHighlightPancitSample] = useState(false);
+  const [lumpiaNeedProteinNudge, setLumpiaNeedProteinNudge] = useState(false);
+  const [pancitNeedTypeNudge, setPancitNeedTypeNudge] = useState(false);
   const lumpiaSampleRef = useRef<HTMLDivElement>(null);
   const pancitSampleRef = useRef<HTMLDivElement>(null);
 
@@ -30,16 +32,39 @@ export function CartDrawer() {
       setCheckoutHint(null);
       setHighlightLumpiaSample(false);
       setHighlightPancitSample(false);
+      setLumpiaNeedProteinNudge(false);
+      setPancitNeedTypeNudge(false);
     }
   }, [drawerOpen]);
 
   useEffect(() => {
-    if (cart.samples.lumpiaProtein) setHighlightLumpiaSample(false);
+    if (cart.samples.lumpiaProtein) {
+      setHighlightLumpiaSample(false);
+      setLumpiaNeedProteinNudge(false);
+    }
   }, [cart.samples.lumpiaProtein]);
 
   useEffect(() => {
-    if (cart.samples.pancitType) setHighlightPancitSample(false);
+    if (
+      cart.samples.lumpiaQty > 0 &&
+      !cart.samples.lumpiaProtein
+    ) {
+      setLumpiaNeedProteinNudge(false);
+    }
+  }, [cart.samples.lumpiaQty, cart.samples.lumpiaProtein]);
+
+  useEffect(() => {
+    if (cart.samples.pancitType) {
+      setHighlightPancitSample(false);
+      setPancitNeedTypeNudge(false);
+    }
   }, [cart.samples.pancitType]);
+
+  useEffect(() => {
+    if (cart.samples.pancitQty > 0 && !cart.samples.pancitType) {
+      setPancitNeedTypeNudge(false);
+    }
+  }, [cart.samples.pancitQty, cart.samples.pancitType]);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -151,8 +176,10 @@ export function CartDrawer() {
                           !cart.samples.lumpiaProtein &&
                           next > cart.samples.lumpiaQty
                         ) {
+                          setLumpiaNeedProteinNudge(true);
                           return;
                         }
+                        setLumpiaNeedProteinNudge(false);
                         cart.setSamples((s) => ({ ...s, lumpiaQty: next }));
                       }}
                       max={10}
@@ -183,9 +210,18 @@ export function CartDrawer() {
                             </label>
                           ))}
                         </div>
+                        {lumpiaNeedProteinNudge ? (
+                          <p
+                            className="mt-2 text-sm font-medium text-red-600 dark:text-red-400"
+                            role="alert"
+                          >
+                            Choose a protein (beef, pork, or turkey) before
+                            increasing quantity.
+                          </p>
+                        ) : null}
                         {cart.samples.lumpiaQty > 0 &&
                         !cart.samples.lumpiaProtein ? (
-                          <p className="mt-2 text-xs font-medium text-[var(--accent)]">
+                          <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
                             Pick beef, pork, or turkey so we can price and pack
                             your samples.
                           </p>
@@ -223,8 +259,10 @@ export function CartDrawer() {
                           !cart.samples.pancitType &&
                           next > cart.samples.pancitQty
                         ) {
+                          setPancitNeedTypeNudge(true);
                           return;
                         }
+                        setPancitNeedTypeNudge(false);
                         cart.setSamples((s) => ({ ...s, pancitQty: next }));
                       }}
                       max={10}
@@ -255,9 +293,17 @@ export function CartDrawer() {
                             </label>
                           ))}
                         </div>
+                        {pancitNeedTypeNudge ? (
+                          <p
+                            className="mt-2 text-sm font-medium text-red-600 dark:text-red-400"
+                            role="alert"
+                          >
+                            Choose chicken or shrimp before increasing quantity.
+                          </p>
+                        ) : null}
                         {cart.samples.pancitQty > 0 &&
                         !cart.samples.pancitType ? (
-                          <p className="mt-2 text-xs font-medium text-[var(--accent)]">
+                          <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
                             Choose chicken or shrimp for pancit samples.
                           </p>
                         ) : null}
