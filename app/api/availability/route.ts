@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPublicAvailabilityWhitelistPayload } from "@/lib/availability-server";
+import { maybeSyncGoogleAvailabilityFromPublicRequest } from "@/lib/google-availability-stale-sync";
 import { isDatabaseUnavailableError } from "@/lib/safe-db";
 
 /**
@@ -20,20 +21,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "from must be <= to" }, { status: 400 });
   }
   try {
+    try {
+      await maybeSyncGoogleAvailabilityFromPublicRequest();
+    } catch (e) {
+      console.warn("[mrk] Google availability auto-sync:", e);
+    }
     const payload = await getPublicAvailabilityWhitelistPayload(from, to);
     return NextResponse.json(payload);
   } catch (e) {
     if (isDatabaseUnavailableError(e)) {
-      if (process.env.NODE_ENV === "development") {
-        console.warn(
-          "[mrk] DATABASE_URL unreachable — returning empty pickup dates. Use your Neon (or other) URL in .env.local."
-        );
-        return NextResponse.json({ openDates: [], notes: {} });
-      }
-      return NextResponse.json(
-        { error: "Pickup availability is temporarily unavailable." },
-        { status: 503 }
+      console.warn(
+        "[mrk] DATABASE_URL unreachable — returning empty pickup dates (storefront stays up)."
       );
+      return NextResponse.json({ openDates: [], notes: {} });
     }
     throw e;
   }

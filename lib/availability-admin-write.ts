@@ -28,8 +28,10 @@ export type AvailabilityUpsertEntry = {
 };
 
 export async function upsertAvailabilityEntries(
-  entries: AvailabilityUpsertEntry[]
+  entries: AvailabilityUpsertEntry[],
+  options?: { pushToGoogleCalendar?: boolean }
 ): Promise<void> {
+  const push = options?.pushToGoogleCalendar !== false;
   for (const e of entries) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(e.date)) continue;
     const slotsJson = slotsToDb(parseSlotsInput(e.slots), e.isOpen);
@@ -47,6 +49,7 @@ export async function upsertAvailabilityEntries(
         slots: slotsJson,
       },
     });
+    if (!push) continue;
     if (e.isOpen) {
       const slots = JSON.parse(slotsJson) as string[];
       void createAvailabilityEvent(e.date, slots, e.note?.trim() ?? null);

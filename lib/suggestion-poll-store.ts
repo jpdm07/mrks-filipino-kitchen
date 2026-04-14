@@ -4,7 +4,7 @@ import path from "path";
 import type { Suggestion } from "@prisma/client";
 import { SUGGESTION_OPTIONS } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
-import { isPrismaEngineError } from "@/lib/safe-db";
+import { isDatabaseUnavailableError } from "@/lib/safe-db";
 
 const FILE_NAME = "suggestion-poll.json";
 
@@ -120,10 +120,7 @@ export async function listSuggestions(): Promise<Suggestion[]> {
     });
     if (rows.length > 0) return mergePresetSuggestionsWithDb(rows);
     return await suggestionsFromFileOrPresets();
-  } catch (err) {
-    if (isPrismaEngineError(err)) {
-      return await suggestionsFromFileOrPresets();
-    }
+  } catch {
     return await suggestionsFromFileOrPresets();
   }
 }
@@ -158,7 +155,7 @@ export async function addSuggestionVotes(
       }
     });
   } catch (err) {
-    if (!isPrismaEngineError(err)) throw err;
+    if (!isDatabaseUnavailableError(err)) throw err;
     await addVotesToFile(votes, writeIn);
   }
 }
@@ -196,7 +193,7 @@ export async function clearSuggestionPoll(): Promise<void> {
     await prisma.suggestion.deleteMany({ where: { isCustom: true } });
     await prisma.suggestion.updateMany({ data: { count: 0 } });
   } catch (err) {
-    if (!isPrismaEngineError(err)) throw err;
+    if (!isDatabaseUnavailableError(err)) throw err;
     await writeFileState(initialFileState());
   }
 }

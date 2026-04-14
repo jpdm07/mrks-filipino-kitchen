@@ -12,6 +12,7 @@ import {
   createAvailabilityEvent,
   removeAvailabilityEvent,
 } from "@/lib/googleCalendar";
+import { syncGoogleCalendarAvailabilityToDatabase } from "@/lib/availability-google-sync";
 
 function ymdUtcWeekday(ymd: string): number {
   const [y, m, d] = ymd.split("-").map(Number);
@@ -57,7 +58,43 @@ export async function POST(req: NextRequest) {
     isOpen?: boolean;
     until?: string;
     daysOfWeek?: number[];
+    from?: string;
+    to?: string;
+    closeMissingInRange?: boolean;
   };
+
+  if (body.action === "syncFromGoogle") {
+    let fromYmd: string;
+    let toYmd: string;
+    if (body.year && body.month) {
+      const y = body.year;
+      const m = body.month;
+      fromYmd = `${y}-${String(m).padStart(2, "0")}-01`;
+      const last = lastDayOfMonth(y, m - 1);
+      toYmd = `${y}-${String(m).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
+    } else if (
+      body.from &&
+      body.to &&
+      /^\d{4}-\d{2}-\d{2}$/.test(body.from) &&
+      /^\d{4}-\d{2}-\d{2}$/.test(body.to)
+    ) {
+      fromYmd = body.from;
+      toYmd = body.to;
+    } else {
+      const today = getTodayInPickupTimezoneYMD();
+      fromYmd = today;
+      toYmd = addCalendarDaysYMD(today, 120);
+    }
+    const result = await syncGoogleCalendarAvailabilityToDatabase(fromYmd, toYmd, {
+      closeMissingInRange: Boolean(body.closeMissingInRange),
+    });
+    return NextResponse.json({
+      ok: result.error == null,
+      imported: result.imported,
+      closed: result.closed,
+      error: result.error,
+    });
+  }
 
   if (body.action === "upsert" && Array.isArray(body.entries)) {
     await upsertAvailabilityEntries(body.entries);

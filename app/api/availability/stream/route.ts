@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { getPublicAvailabilityWhitelistPayload } from "@/lib/availability-server";
+import { maybeSyncGoogleAvailabilityFromPublicRequest } from "@/lib/google-availability-stale-sync";
 import {
   addCalendarDaysYMD,
   getTodayInPickupTimezoneYMD,
@@ -36,6 +37,11 @@ export async function GET(req: NextRequest) {
       const send = async () => {
         if (closed) return;
         try {
+          try {
+            await maybeSyncGoogleAvailabilityFromPublicRequest();
+          } catch (e) {
+            console.warn("[mrk] Google availability auto-sync (stream):", e);
+          }
           const payload = await getPublicAvailabilityWhitelistPayload(
             fromYmd,
             toYmd

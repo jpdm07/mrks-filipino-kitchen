@@ -36,6 +36,7 @@ export function AdminAvailabilityPanel() {
   const [weekMask, setWeekMask] = useState<number[]>([0, 5, 6]);
   const [msg, setMsg] = useState<string | null>(null);
   const [slotSelection, setSlotSelection] = useState<Set<string>>(new Set());
+  const [syncingGoogle, setSyncingGoogle] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -79,6 +80,46 @@ export function AdminAvailabilityPanel() {
     if (!r.ok) setMsg("Save failed.");
     else setMsg("Saved.");
     await load();
+  };
+
+  const syncFromGoogle = async (closeMissingInRange: boolean) => {
+    setMsg(null);
+    setSyncingGoogle(true);
+    try {
+      const r = await fetch("/api/admin/availability", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "syncFromGoogle",
+          year,
+          month,
+          closeMissingInRange,
+        }),
+      });
+      const j = (await r.json()) as {
+        ok?: boolean;
+        imported?: number;
+        closed?: number;
+        error?: string;
+      };
+      if (j.error) {
+        setMsg(j.error);
+        return;
+      }
+      if (!r.ok) {
+        setMsg("Sync failed.");
+        return;
+      }
+      setMsg(
+        `Synced from Google: ${j.imported ?? 0} open day(s)${
+          (j.closed ?? 0) > 0 ? `, ${j.closed} closed (not on Google)` : ""
+        }.`
+      );
+      await load();
+    } finally {
+      setSyncingGoogle(false);
+    }
   };
 
   const grid = useMemo(() => {
@@ -171,6 +212,46 @@ export function AdminAvailabilityPanel() {
         >
           Clear whole month
         </button>
+      </div>
+
+      <div className="rounded-lg border border-blue-200 bg-blue-50/80 p-4 text-sm text-[var(--text)]">
+        <p className="font-bold text-blue-900">Google Calendar → website</p>
+        <p className="mt-1 text-xs text-[var(--text-muted)]">
+          The storefront pulls Google into the database automatically when customers
+          open the pickup calendar (throttled) and on the daily Vercel cron. This
+          section is for an immediate pull for the <strong>month above</strong>.
+          All-day events should match titles like{" "}
+          <code className="rounded bg-white/90 px-1">🟢 Mr. K&apos;s — Available for Pickup</code>{" "}
+          or <strong>Available for pickup</strong>, or come from this panel.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={syncingGoogle}
+            className="rounded border border-blue-800 bg-white px-4 py-2 text-sm font-semibold text-blue-900 disabled:opacity-50"
+            onClick={() => syncFromGoogle(false)}
+          >
+            {syncingGoogle ? "Syncing…" : "Pull Google now (this month)"}
+          </button>
+          <button
+            type="button"
+            disabled={syncingGoogle}
+            className="rounded border border-blue-800 px-4 py-2 text-sm font-semibold text-blue-900 disabled:opacity-50"
+            onClick={() => {
+              if (
+                typeof window !== "undefined" &&
+                !window.confirm(
+                  "Close on the website every open day in this month that does NOT appear on Google? Use only if Google is your source of truth."
+                )
+              ) {
+                return;
+              }
+              syncFromGoogle(true);
+            }}
+          >
+            Sync + close extras
+          </button>
+        </div>
       </div>
 
       <div>

@@ -1,5 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "npx prisma generate && npx next build"
+  "buildCommand": "npx prisma generate && npx next build",
+  "crons": [
+    {
+      "path": "/api/cron/sync-google-availability",
+      "schedule": "0 13 * * *"
+    }
+  ]
 }

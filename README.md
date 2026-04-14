@@ -49,6 +49,12 @@ If you see **“query_engine-windows.dll.node is not a valid Win32 application�
 4. Copy the Web App URL into `GOOGLE_SHEETS_WEBHOOK_URL` in `.env.local`.
 5. After you change the script in the repo, open Apps Script again and **Deploy → Manage deployments → Edit → New version → Deploy** so **Menu prices** sync works.
 
+## Google Calendar → pickup dates
+
+Pickup availability is stored in Postgres. Google Calendar variables live in **`.env.example`** (`GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`, `GOOGLE_CALENDAR_ID`): dedicated calendar shared with the service account. **All-day** events count for open days when the title matches the patterns in **`lib/googleCalendar.ts`** (`isAvailabilityMarkerEvent`); **Admin → Availability** creates events with the right metadata.
+
+**Sync:** Public **`/api/availability`** (and the SSE stream) triggers a Google → DB pull for today through +120 days, throttled to once per **`GOOGLE_AVAILABILITY_SYNC_MINUTES`** (default 5) per server instance. **`GOOGLE_AVAILABILITY_AUTO_SYNC=false`** disables that path. **`vercel.json`** registers a daily cron to **`/api/cron/sync-google-availability`** as a backup; **`lib/cron-auth.ts`** accepts Vercel’s cron headers when **`CRON_SECRET`** is unset, or **`Authorization: Bearer`** when it is set. **Hobby** cron schedules are limited to once per day; **Pro** allows shorter intervals.
+
 ## Twilio Setup
 
 1. Sign up at [twilio.com](https://www.twilio.com).

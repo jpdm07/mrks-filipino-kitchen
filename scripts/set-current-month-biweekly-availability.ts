@@ -16,6 +16,7 @@ import {
 } from "../lib/pickup-lead-time";
 import { ORDER_FULFILLMENT } from "../lib/config";
 import { pickupTimeSlotLabels } from "../lib/pickup-time-slots";
+import { createAvailabilityEvent } from "../lib/googleCalendar";
 
 const prisma = new PrismaClient();
 const DEFAULT_SLOTS = JSON.stringify(pickupTimeSlotLabels());
@@ -62,15 +63,18 @@ async function main() {
     where: { date: { gte: monthStart, lte: monthEnd } },
   });
 
+  const slotsArr = pickupTimeSlotLabels();
   for (const date of openDates) {
+    const note = `Biweekly slot (${monthStart.slice(0, 7)} schedule; +${lead}d lead, then every 14d).`;
     await prisma.availability.create({
       data: {
         date,
         isOpen: true,
         slots: DEFAULT_SLOTS,
-        note: `Biweekly slot (${monthStart.slice(0, 7)} schedule; +${lead}d lead, then every 14d).`,
+        note,
       },
     });
+    void createAvailabilityEvent(date, slotsArr, note);
   }
 
   console.log(

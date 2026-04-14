@@ -4,6 +4,9 @@
  */
 
 import { google } from "googleapis";
+import type { calendar_v3 } from "googleapis";
+import { addCalendarDaysYMD } from "@/lib/pickup-lead-time";
+import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
 
 function privateKey(): string | null {
   const raw = process.env.GOOGLE_PRIVATE_KEY;
@@ -66,6 +69,116 @@ export async function createAvailabilityEvent(
   } catch (e) {
     console.warn("Google Calendar createAvailabilityEvent:", e);
   }
+}
+
+const ALL_SLOT_LABELS = pickupTimeSlotLabels();
+const SLOT_ALLOW = new Set(ALL_SLOT_LABELS);
+
+/** Parse "Slots: 10:00 AM, 10:30 AM" lines from event descriptions (app-created). */
+export function parseSlotsFromGoogleDescription(
+  description: string | null | undefined
+): string[] {
+  const desc = (description ?? "").trim();
+  const m = desc.match(/Slots:\s*([^\n]+)/i);
+  if (!m) return [...ALL_SLOT_LABELS];
+  const parts = m[1]
+    .split(/,/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const ok = parts.filter((p) => SLOT_ALLOW.has(p));
+  return ok.length > 0 ? ok : [...ALL_SLOT_LABELS];
+}
+
+function expandAllDayEventToYmds(ev: calendar_v3.Schema$Event): string[] {
+  const s = ev.start?.date;
+  const e = ev.end?.date;
+  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return [];
+  if (!e) return [s];
+  const out: string[] = [];
+  let d = s;
+  let guard = 0;
+  while (d < e && guard++ < 400) {
+    out.push(d);
+    d = addCalendarDaysYMD(d, 1);
+  }
+  return out;
+}
+
+/**
+ * True for all-day “open for pickup” markers (app sync or manual copy of the title).
+ * Skips timed pickup orders (type=pickup) and non–all-day events.
+ */
+export function isAvailabilityMarkerEvent(
+  ev: calendar_v3.Schema$Event
+): boolean {
+  const priv = ev.extendedProperties?.private as
+    | Record<string, string | undefined>
+    | undefined;
+  if (priv?.type === "pickup") return false;
+  if (priv?.type === "availability") return true;
+  const sum = (ev.summary ?? "").toLowerCase();
+  if (!ev.start?.date || ev.start.dateTime) return false;
+  if (sum.includes("available for pickup")) return true;
+  if (sum.includes("🟢")) return true;
+  if (sum.includes("mr. k") && sum.includes("available")) return true;
+  return false;
+}
+
+export type GoogleAvailabilityMarker = {
+  date: string;
+  note: string | null;
+  slots: string[];
+};
+
+/** List availability markers in range (for DB sync). */
+/** Null = service account / calendar ID missing or Google API error (do not treat as “no events”). */
+export async function listGoogleAvailabilityMarkers(
+  fromYmd: string,
+  toYmd: string
+): Promise<GoogleAvailabilityMarker[] | null> {
+  const calId = process.env.GOOGLE_CALENDAR_ID;
+  const cal = getCalendarClient();
+  if (!cal || !calId) return null;
+
+  const timeMin = new Date(`${fromYmd}T00:00:00-06:00`).toISOString();
+  const timeMax = new Date(`${toYmd}T23:59:59-06:00`).toISOString();
+
+  const byDate = new Map<string, GoogleAvailabilityMarker>();
+  let pageToken: string | undefined;
+
+  try {
+    do {
+      const res = await cal.events.list({
+        calendarId: calId,
+        timeMin,
+        timeMax,
+        singleEvents: true,
+        maxResults: 500,
+        pageToken,
+      });
+      const items = res.data.items ?? [];
+      for (const ev of items) {
+        if (!isAvailabilityMarkerEvent(ev)) continue;
+        const noteLine = (ev.description ?? "")
+          .split("\n")
+          .find((l) => /^note:\s*/i.test(l));
+        const note = noteLine
+          ? noteLine.replace(/^note:\s*/i, "").trim() || null
+          : null;
+        const slots = parseSlotsFromGoogleDescription(ev.description ?? null);
+        for (const date of expandAllDayEventToYmds(ev)) {
+          if (date < fromYmd || date > toYmd) continue;
+          byDate.set(date, { date, note, slots });
+        }
+      }
+      pageToken = res.data.nextPageToken ?? undefined;
+    } while (pageToken);
+  } catch (e) {
+    console.warn("Google Calendar listGoogleAvailabilityMarkers:", e);
+    return null;
+  }
+
+  return Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date));
 }
 
 export async function removeAvailabilityEvent(dateYmd: string): Promise<void> {

@@ -34,7 +34,7 @@ export function groupItemsForPrintMenu(items: MenuItemDTO[]): PrintMenuSection[]
       byCat.delete(c);
     }
   }
-  const rest = [...byCat.keys()].sort((a, b) => a.localeCompare(b));
+  const rest = Array.from(byCat.keys()).sort((a, b) => a.localeCompare(b));
   for (const c of rest) {
     const list = byCat.get(c);
     if (list?.length) out.push({ category: c, items: list });

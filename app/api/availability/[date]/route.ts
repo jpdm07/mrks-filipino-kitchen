@@ -3,6 +3,7 @@ import {
   getPickupSlotsForDateYmd,
   isPickupDateOpenInDb,
 } from "@/lib/availability-server";
+import { maybeSyncGoogleAvailabilityFromPublicRequest } from "@/lib/google-availability-stale-sync";
 import { prisma } from "@/lib/prisma";
 import { isDatabaseUnavailableError } from "@/lib/safe-db";
 
@@ -16,6 +17,11 @@ export async function GET(
     return NextResponse.json({ error: "Invalid date" }, { status: 400 });
   }
   try {
+    try {
+      await maybeSyncGoogleAvailabilityFromPublicRequest();
+    } catch (e) {
+      console.warn("[mrk] Google availability auto-sync:", e);
+    }
     if (!(await isPickupDateOpenInDb(date))) {
       return NextResponse.json({ date, slots: [], note: null as string | null });
     }
@@ -28,16 +34,10 @@ export async function GET(
     });
   } catch (e) {
     if (isDatabaseUnavailableError(e)) {
-      if (process.env.NODE_ENV === "development") {
-        console.warn(
-          "[mrk] DATABASE_URL unreachable — no slots for this date. Fix .env.local."
-        );
-        return NextResponse.json({ date, slots: [], note: null as string | null });
-      }
-      return NextResponse.json(
-        { error: "Pickup availability is temporarily unavailable." },
-        { status: 503 }
+      console.warn(
+        "[mrk] DATABASE_URL unreachable — empty slots for date (storefront stays up)."
       );
+      return NextResponse.json({ date, slots: [], note: null as string | null });
     }
     throw e;
   }
