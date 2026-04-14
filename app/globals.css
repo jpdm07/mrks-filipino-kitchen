@@ -143,9 +143,22 @@ body[data-page="business-card"] main {
     margin: 10mm 12mm;
   }
 
+  /* Screen min-heights become a full blank first page in PDF — collapse for print */
+  html {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
   body {
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
     background: #fff !important;
     background-image: none !important;
+  }
+
+  body > main {
+    min-height: 0 !important;
   }
 
   .print-menu-paper {
@@ -155,14 +168,21 @@ body[data-page="business-card"] main {
     padding: 0 !important;
     color: #171717 !important;
     background: #fff !important;
+    overflow: visible !important;
   }
 
+  /*
+   * Avoid break-inside on whole sections/items: long categories/descriptions
+   * exceed one page and Chrome inserts empty pages trying to keep blocks intact.
+   */
   .print-menu-section {
-    break-inside: avoid;
+    break-inside: auto;
+    page-break-inside: auto;
   }
 
   .print-menu-item {
-    break-inside: avoid;
+    break-inside: auto;
+    page-break-inside: auto;
   }
 }
 

@@ -57,7 +57,7 @@ export function PrintableMenu({ items }: { items: MenuItemDTO[] }) {
 
   return (
     <div
-      className="print-menu-paper relative overflow-hidden rounded-2xl border border-neutral-200 bg-[#f4f5f7] px-5 py-7 text-neutral-900 shadow-md sm:px-8 sm:py-9 print:rounded-none print:border-0 print:bg-white print:p-0 print:text-black print:shadow-none"
+      className="print-menu-paper relative overflow-hidden rounded-2xl border border-neutral-200 bg-[#f4f5f7] px-5 py-7 text-neutral-900 shadow-md sm:px-8 sm:py-9 print:overflow-visible print:rounded-none print:border-0 print:bg-white print:p-0 print:text-black print:shadow-none"
     >
       <PhilippineSunMotif className="pointer-events-none absolute -right-2 -top-2 h-32 w-32 opacity-90 print:right-0 print:top-0 print:h-24 print:w-24" />
 

@@ -40,7 +40,7 @@ export default async function TakeoutMenuPage() {
   const shareUrl = getPublicAbsoluteUrl("/takeout-menu");
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 print:max-w-none print:py-6">
+    <div className="mx-auto max-w-3xl px-4 py-10 print:max-w-none print:px-0 print:py-0">
       <nav className="mb-8 flex justify-center print:hidden">
         <Link
           href="/menu"
