@@ -30,7 +30,13 @@ export async function GET(req: NextRequest) {
   try {
     kickGoogleAvailabilityBackgroundSync();
     const payload = await getPublicAvailabilityWhitelistPayload(from, to);
-    return NextResponse.json(payload, { headers: NO_STORE });
+    return NextResponse.json(payload, {
+      headers: {
+        ...NO_STORE,
+        "x-mrk-db": "ok",
+        "x-mrk-open-count": String(payload.openDates.length),
+      },
+    });
   } catch (e) {
     if (isDatabaseUnavailableError(e)) {
       console.warn(
@@ -38,7 +44,13 @@ export async function GET(req: NextRequest) {
       );
       return NextResponse.json(
         { openDates: [], notes: {} },
-        { headers: NO_STORE }
+        {
+          headers: {
+            ...NO_STORE,
+            "x-mrk-db": "unreachable",
+            "x-mrk-open-count": "0",
+          },
+        }
       );
     }
     throw e;
