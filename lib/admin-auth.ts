@@ -6,7 +6,17 @@ export const ADMIN_COOKIE_NAME = "mrk_admin_session";
 const MAX_AGE_SEC = 60 * 60 * 24;
 
 function secret(): string {
-  return (process.env.ADMIN_PASSWORD || "dev-insecure").trim();
+  const raw =
+    process.env.ADMIN_SESSION_SECRET?.trim() ||
+    process.env.ADMIN_PASSWORD ||
+    "dev-insecure";
+  return raw.trim();
+}
+
+/** HTTPS on Vercel (including previews); local dev is usually HTTP. */
+function cookieSecure(): boolean {
+  if (process.env.VERCEL === "1") return true;
+  return process.env.NODE_ENV === "production";
 }
 
 /** New signed token for Set-Cookie (use with `NextResponse.cookies.set` in Route Handlers). */
@@ -24,7 +34,7 @@ export function adminSessionCookieSettings(): {
 } {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
     sameSite: "lax",
     path: "/",
     maxAge: MAX_AGE_SEC,
@@ -73,7 +83,7 @@ export async function setAdminCookie(): Promise<void> {
 export async function clearAdminCookie(): Promise<void> {
   cookies().set(ADMIN_COOKIE_NAME, "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
     sameSite: "lax",
     path: "/",
     maxAge: 0,
@@ -90,7 +100,7 @@ export function adminSessionClearCookieSettings(): {
 } {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
     sameSite: "lax",
     path: "/",
     maxAge: 0,

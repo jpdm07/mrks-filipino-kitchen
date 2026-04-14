@@ -1,74 +1,54 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
+import { adminLoginAction } from "./actions";
 
-export default function AdminLoginPage() {
-  const router = useRouter();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [err, setErr] = useState<string | null>(null);
+export const dynamic = "force-dynamic";
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErr(null);
-    const res = await fetch("/api/admin/auth", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
-    if (res.ok) {
-      router.refresh();
-      router.push("/admin/dashboard");
-      return;
-    }
-    let message = "Invalid username or password";
-    try {
-      const data = (await res.json()) as { error?: string };
-      if (res.status === 500 && data.error === "Admin not configured") {
-        message =
-          "Admin login is not configured on the server (set ADMIN_USERNAME and ADMIN_PASSWORD).";
-      }
-    } catch {
-      /* keep default */
-    }
-    setErr(message);
-  };
+export default function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams: { err?: string | string[] };
+}) {
+  const raw = searchParams.err;
+  const code = Array.isArray(raw) ? raw[0] : raw;
+  const message =
+    code === "auth"
+      ? "Invalid username or password"
+      : code === "cfg"
+        ? "Admin login is not configured on the server (set ADMIN_USERNAME and ADMIN_PASSWORD in the host environment)."
+        : null;
 
   return (
     <div className="flex w-full flex-1 flex-col items-center justify-center px-4 py-10 sm:py-14">
       <Logo size="md" />
       <form
-        onSubmit={submit}
+        action={adminLoginAction}
         className="mt-8 w-full max-w-sm space-y-4 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow)]"
       >
         <h1 className="text-center font-[family-name:var(--font-playfair)] text-2xl font-bold">
           Admin login
         </h1>
-        {err ? (
+        {message ? (
           <p className="text-center text-sm font-medium text-[var(--accent)]">
-            {err}
+            {message}
           </p>
         ) : null}
         <label className="block text-sm font-semibold">
           Username
           <input
-            className="mt-1 w-full min-h-[48px] rounded-lg border border-[var(--border)] px-3"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            name="username"
+            required
             autoComplete="username"
+            className="mt-1 w-full min-h-[48px] rounded-lg border border-[var(--border)] px-3"
           />
         </label>
         <label className="block text-sm font-semibold">
           Password
           <input
+            name="password"
             type="password"
-            className="mt-1 w-full min-h-[48px] rounded-lg border border-[var(--border)] px-3"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            required
             autoComplete="current-password"
+            className="mt-1 w-full min-h-[48px] rounded-lg border border-[var(--border)] px-3"
           />
         </label>
         <button
