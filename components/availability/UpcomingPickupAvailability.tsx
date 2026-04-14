@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getTodayInPickupTimezoneYMD,
@@ -147,12 +146,9 @@ export function UpcomingPickupAvailability() {
                 </>
               ) : null}
               . Matches the{" "}
-              <Link
-                href="/availability"
-                className="font-bold text-[#0038A8] underline decoration-[#0038A8]/30 underline-offset-4 hover:decoration-[#0038A8]"
-              >
+              <span className="font-bold text-[#0038A8]">
                 full pickup calendar
-              </Link>
+              </span>
               .
             </p>
           ) : !loadError && !loading && !hasAnyOpenInRange ? (
@@ -161,12 +157,7 @@ export function UpcomingPickupAvailability() {
               role="status"
             >
               This block updates live from the same calendar as{" "}
-              <Link
-                href="/availability"
-                className="font-semibold text-[#0038A8] underline decoration-[#0038A8]/30 underline-offset-4 hover:decoration-[#0038A8]"
-              >
-                Pick Up Dates
-              </Link>
+              <span className="font-semibold text-[#0038A8]">Pick Up Dates</span>
               . If nothing appears yet, new days will show here as soon as
               they&apos;re opened.
             </p>
@@ -189,13 +180,12 @@ export function UpcomingPickupAvailability() {
             <p className="whitespace-pre-line rounded-xl border border-[#0038A8]/30 bg-white px-6 py-6 text-center text-sm leading-relaxed text-[var(--text)] shadow-sm md:text-left">
               {NO_PICKUP_DATES_PUBLIC_MESSAGE}
             </p>
-            <p className="mt-4 text-center text-sm md:text-left">
-              <Link
-                href="/availability"
-                className="font-bold text-[#0038A8] underline decoration-[#0038A8]/30 underline-offset-4 hover:decoration-[#0038A8]"
-              >
-                View the full pickup calendar →
-              </Link>
+            <p className="mt-4 text-center text-sm text-[var(--text-muted)] md:text-left">
+              The full calendar is on the{" "}
+              <span className="font-semibold text-[var(--text)]">
+                Pick Up Dates
+              </span>{" "}
+              page in the menu.
             </p>
           </div>
         ) : (
@@ -328,14 +318,13 @@ export function UpcomingPickupAvailability() {
               </p>
             </div>
 
-            <div className="mt-6 text-center md:text-left">
-              <Link
-                href="/availability"
-                className="inline-flex items-center gap-1 text-sm font-bold text-[#0038A8] underline decoration-[#0038A8]/30 underline-offset-4 hover:decoration-[#0038A8]"
-              >
-                See full calendar &amp; details →
-              </Link>
-            </div>
+            <p className="mt-6 text-center text-sm text-[var(--text-muted)] md:text-left">
+              More detail lives on{" "}
+              <span className="font-semibold text-[var(--text)]">
+                Pick Up Dates
+              </span>{" "}
+              in the menu.
+            </p>
           </div>
         )}
       </div>
