@@ -6,7 +6,29 @@ export const ADMIN_COOKIE_NAME = "mrk_admin_session";
 const MAX_AGE_SEC = 60 * 60 * 24;
 
 function secret(): string {
-  return process.env.ADMIN_PASSWORD || "dev-insecure";
+  return (process.env.ADMIN_PASSWORD || "dev-insecure").trim();
+}
+
+/** New signed token for Set-Cookie (use with `NextResponse.cookies.set` in Route Handlers). */
+export function newAdminSessionToken(): string {
+  const exp = Date.now() + MAX_AGE_SEC * 1000;
+  return signAdminSession(exp);
+}
+
+export function adminSessionCookieSettings(): {
+  httpOnly: boolean;
+  secure: boolean;
+  sameSite: "lax";
+  path: string;
+  maxAge: number;
+} {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: MAX_AGE_SEC,
+  };
 }
 
 export function signAdminSession(expMs: number): string {
@@ -41,23 +63,38 @@ export function verifyAdminToken(token: string | undefined): boolean {
 }
 
 export async function setAdminCookie(): Promise<void> {
-  const exp = Date.now() + MAX_AGE_SEC * 1000;
-  const token = signAdminSession(exp);
-  cookies().set(ADMIN_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: MAX_AGE_SEC,
-  });
+  cookies().set(
+    ADMIN_COOKIE_NAME,
+    newAdminSessionToken(),
+    adminSessionCookieSettings()
+  );
 }
 
 export async function clearAdminCookie(): Promise<void> {
   cookies().set(ADMIN_COOKIE_NAME, "", {
     httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
     path: "/",
     maxAge: 0,
   });
+}
+
+/** Match `adminSessionCookieSettings` when clearing so the browser drops the session cookie in production. */
+export function adminSessionClearCookieSettings(): {
+  httpOnly: boolean;
+  secure: boolean;
+  sameSite: "lax";
+  path: string;
+  maxAge: number;
+} {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  };
 }
 
 export function getAdminTokenFromRequest(

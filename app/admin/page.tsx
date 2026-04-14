@@ -15,11 +15,26 @@ export default function AdminLoginPage() {
     setErr(null);
     const res = await fetch("/api/admin/auth", {
       method: "POST",
+      credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
     });
-    if (res.ok) router.push("/admin/dashboard");
-    else setErr("Invalid username or password");
+    if (res.ok) {
+      router.refresh();
+      router.push("/admin/dashboard");
+      return;
+    }
+    let message = "Invalid username or password";
+    try {
+      const data = (await res.json()) as { error?: string };
+      if (res.status === 500 && data.error === "Admin not configured") {
+        message =
+          "Admin login is not configured on the server (set ADMIN_USERNAME and ADMIN_PASSWORD).";
+      }
+    } catch {
+      /* keep default */
+    }
+    setErr(message);
   };
 
   return (
