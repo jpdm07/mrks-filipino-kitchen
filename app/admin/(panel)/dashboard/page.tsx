@@ -79,8 +79,11 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
       <p className="mt-2 text-xs text-[var(--text-muted)]">
-        Orders today, week revenue, and all-time revenue exclude demo/test orders.
-        Mark demos on an order&apos;s page or delete them there.
+        Revenue cards exclude orders marked <strong>Demo / test</strong>. To drop
+        dummy checkouts from totals, use <strong>Delete</strong> on a row (or open{" "}
+        <strong>Details</strong> → <strong>Delete permanently</strong>) — or mark
+        the order as demo. Full order page also has delete under &quot;Remove test
+        orders.&quot;
       </p>
       {/*
         Order rows load via GET /api/admin/orders on the client so Prisma objects

@@ -133,23 +133,29 @@ export function DashboardOrders() {
     );
   };
 
-  const deleteOrder = async () => {
-    if (!modal) return;
+  const deleteOrderByRow = async (o: Row) => {
     if (
       !window.confirm(
-        `Delete order #${modal.orderNumber} permanently? This cannot be undone.`
+        `Delete order #${o.orderNumber} permanently? It will disappear from the dashboard, finances, and lists. This cannot be undone.`
       )
     ) {
       return;
     }
     const res = await fetch(
-      `/api/orders/${encodeURIComponent(modal.orderNumber)}`,
+      `/api/orders/${encodeURIComponent(o.orderNumber)}`,
       { method: "DELETE", credentials: "same-origin" }
     );
     if (res.ok) {
-      setOrders((prev) => prev.filter((x) => x.id !== modal.id));
-      setModal(null);
+      setOrders((prev) => prev.filter((x) => x.id !== o.id));
+      if (modal?.id === o.id) setModal(null);
+    } else {
+      window.alert("Could not delete order. Try again or open the full order page.");
     }
+  };
+
+  const deleteOrder = async () => {
+    if (!modal) return;
+    await deleteOrderByRow(modal);
   };
 
   if (loading) {
@@ -261,13 +267,22 @@ export function DashboardOrders() {
                   </div>
                 </td>
                 <td className="px-3 py-2">
-                  <button
-                    type="button"
-                    className="text-[var(--primary)] underline"
-                    onClick={() => openModal(o)}
-                  >
-                    Details
-                  </button>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <button
+                      type="button"
+                      className="text-[var(--primary)] underline"
+                      onClick={() => openModal(o)}
+                    >
+                      Details
+                    </button>
+                    <button
+                      type="button"
+                      className="text-sm font-semibold text-[var(--accent)] underline decoration-[var(--accent)]/40"
+                      onClick={() => void deleteOrderByRow(o)}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -392,7 +407,7 @@ export function DashboardOrders() {
                 className="rounded border-2 border-[var(--accent)] px-4 py-2 text-sm font-bold text-[var(--accent)]"
                 onClick={() => void deleteOrder()}
               >
-                Delete order
+                Delete permanently
               </button>
               <Link
                 href={`/admin/orders/${encodeURIComponent(modal.orderNumber)}`}

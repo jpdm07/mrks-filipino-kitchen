@@ -68,11 +68,13 @@ export function AdminOrderDemoDeletePanel({
 
   return (
     <div className="mt-8 rounded-lg border border-[var(--border)] bg-[var(--gold-light)]/40 p-4 text-left">
-      <h2 className="font-bold text-[var(--text)]">Demo &amp; cleanup</h2>
+      <h2 className="font-bold text-[var(--text)]">Remove test orders</h2>
       <p className="mt-1 text-sm text-[var(--text-muted)]">
-        Demo orders are{" "}
-        <strong className="text-[var(--text)]">excluded from Finances</strong>{" "}
-        and from dashboard revenue. You can delete any order here.
+        <strong className="text-[var(--text)]">Delete</strong> removes this order
+        from the database, dashboard, and finances — use for checkout tests and
+        mistakes.{" "}
+        <strong className="text-[var(--text)]">Demo / test</strong> below keeps
+        the row but hides it from revenue and the Finances page.
       </p>
       {err ? (
         <p className="mt-2 text-sm font-medium text-[var(--accent)]">{err}</p>
@@ -101,7 +103,7 @@ export function AdminOrderDemoDeletePanel({
         onClick={() => void remove()}
         className="mt-4 rounded-lg border-2 border-[var(--accent)] bg-white px-4 py-2 text-sm font-bold text-[var(--accent)] hover:bg-[var(--accent)]/10"
       >
-        Delete order permanently
+        Delete this order permanently
       </button>
     </div>
   );
