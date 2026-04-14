@@ -9,7 +9,7 @@ import { samplesSelectionComplete } from "@/lib/cart-types";
 import { CartItemRow } from "./CartItem";
 import { PRICING, salesTaxPercentLabel } from "@/lib/config";
 import { SalesTaxDisclosure } from "@/components/checkout/SalesTaxDisclosure";
-import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
+import { CartPaymentMethodsStrip } from "@/components/payment/PaymentBrandIcons";
 
 export function CartDrawer() {
   const router = useRouter();
@@ -338,7 +338,7 @@ export function CartDrawer() {
                 I&apos;m interested in bi-weekly recurring bulk orders
               </label>
 
-              <AcceptedPaymentMethods variant="cart" />
+              <CartPaymentMethodsStrip />
             </div>
 
             <div className="border-t border-[var(--border)] bg-[var(--bg)] p-4">

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { PRICING } from "@/lib/config";
 import { generateOrderNumber } from "@/lib/orderNumber";
 import { sendOwnerSms } from "@/lib/twilio";
+import { sendNewOrderEmailToOwner } from "@/lib/order-owner-email";
 import { syncOrderToSheets } from "@/lib/sheets";
 import type { OrderItemLine } from "@/lib/order-types";
 import { isDatabaseUnavailableError, isPrismaEngineError } from "@/lib/safe-db";
@@ -146,6 +147,26 @@ export async function POST(req: NextRequest) {
     ].join("\n");
     const ownerSmsSent = await sendOwnerSms(ownerSms);
 
+    const ownerEmailSent = await sendNewOrderEmailToOwner({
+      orderNumber,
+      customerName,
+      phone,
+      email,
+      items,
+      subtotal: sub,
+      tax,
+      total,
+      pickupDate,
+      pickupTime,
+      notes: (body.notes ?? "").trim() || null,
+      wantsUtensils,
+      utensilSets: sets,
+      utensilCharge: ut,
+      wantsRecurring: Boolean(body.wantsRecurring),
+      customInquiry: (body.customInquiry ?? "").trim() || null,
+      subscribeUpdates: Boolean(body.subscribeUpdates),
+    });
+
     await syncOrderToSheets({
       orderNumber,
       createdAt: order.createdAt.toISOString(),
@@ -186,6 +207,7 @@ export async function POST(req: NextRequest) {
       orderNumber: order.orderNumber,
       orderId: order.id,
       ownerSmsSent,
+      ownerEmailSent,
     });
   } catch (e) {
     console.error(e);

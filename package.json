@@ -36,6 +36,7 @@
     "qrcode": "^1.5.4",
     "react": "^18",
     "react-dom": "^18",
+    "simple-icons": "^16.16.0",
     "twilio": "^5.13.1"
   },
   "devDependencies": {

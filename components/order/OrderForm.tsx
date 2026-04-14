@@ -276,6 +276,22 @@ export function OrderForm() {
           />
         </label>
 
+        <div className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+          <AcceptedPaymentMethods variant="checkout" />
+          <label className="flex cursor-pointer items-start gap-3 text-sm font-medium">
+            <input
+              type="checkbox"
+              className="mt-1 h-5 w-5 shrink-0"
+              checked={paymentMemoAck}
+              onChange={(e) => setPaymentMemoAck(e.target.checked)}
+            />
+            <span>
+              I understand I will put my order number in the Venmo or Zelle memo
+              when I pay, and text that same number after payment is sent.
+            </span>
+          </label>
+        </div>
+
         <div>
           <p className="text-sm font-semibold">Pickup date *</p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
@@ -381,28 +397,13 @@ export function OrderForm() {
         ) : null}
 
         {canSubmitOrder ? (
-          <div className="space-y-4 rounded-xl border-2 border-[var(--primary)]/25 bg-[var(--bg-section)] p-4 text-left">
+          <div className="rounded-xl border-2 border-[var(--primary)]/25 bg-[var(--bg-section)] p-4 text-left">
             <p className="text-sm font-semibold leading-relaxed text-[var(--text)]">
-              Next step: submit this page. You&apos;ll land on a confirmation
-              screen with your <strong>order number</strong> and the exact
-              amount to send: <strong>${cart.total.toFixed(2)}</strong>.
+              Ready to submit? You&apos;ll see your <strong>order number</strong>{" "}
+              and total <strong>${cart.total.toFixed(2)}</strong> on the next
+              screen — use that number in your payment memo, then text us after
+              you pay. Prep starts after payment is verified.
             </p>
-            <AcceptedPaymentMethods variant="checkout" />
-            <p className="text-sm leading-relaxed text-[var(--text-muted)]">
-              Prep starts after payment is verified.
-            </p>
-            <label className="flex cursor-pointer items-start gap-3 text-sm font-medium">
-              <input
-                type="checkbox"
-                className="mt-1 h-5 w-5 shrink-0"
-                checked={paymentMemoAck}
-                onChange={(e) => setPaymentMemoAck(e.target.checked)}
-              />
-              <span>
-                I understand I will put my order number in the Venmo or Zelle
-                memo when I pay, and text that same number after payment is sent.
-              </span>
-            </label>
           </div>
         ) : (
           <p className="text-sm text-[var(--text-muted)]">
