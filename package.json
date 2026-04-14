@@ -9,7 +9,7 @@
     "build": "node scripts/build-production.mjs",
     "start": "next start -H 0.0.0.0 -p 3000",
     "lint": "next lint",
-    "postinstall": "node scripts/prisma-generate.mjs",
+    "postinstall": "node scripts/postinstall-prisma.mjs",
     "db:generate": "node scripts/prisma-generate.mjs",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
