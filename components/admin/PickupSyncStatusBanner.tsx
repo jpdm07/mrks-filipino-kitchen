@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ORDER_FULFILLMENT } from "@/lib/config";
 
 type Status =
   | {
@@ -65,9 +66,10 @@ export function PickupSyncStatusBanner() {
           on the host.
         </li>
         <li>
-          Customers only see dates at least <strong>4 days</strong> ahead; newer
-          open days may show with a lock until then. Use month arrows to find your
-          dates.
+          Customers can book from <strong>{ORDER_FULFILLMENT.MIN_LEAD_DAYS}</strong>{" "}
+          full calendar days out (about <strong>3–4 days</strong> to prepare).
+          Closer open days may show with a lock until then. Use month arrows to
+          find your dates.
         </li>
       </ul>
     </div>

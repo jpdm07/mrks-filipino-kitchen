@@ -30,7 +30,7 @@ export default function AvailabilityPage() {
           <li>✅ Mr. K confirms your order and you&apos;re all set!</li>
         </ol>
         <p className="mt-4 text-sm font-medium text-[var(--text)]">
-          Orders require a minimum of 4 days to prepare.
+          Orders need about 3–4 days to prepare.
         </p>
         <p className="mt-1 text-sm text-[var(--text-muted)]">
           All orders are pickup only from Cypress, TX 77433.

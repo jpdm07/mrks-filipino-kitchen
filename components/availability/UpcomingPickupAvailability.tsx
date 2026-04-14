@@ -143,7 +143,7 @@ export function UpcomingPickupAvailability() {
                 <>
                   , plus{" "}
                   <span className="font-semibold">{lockedSoonCount}</span> still
-                  inside the 4-day prep window (🔒)
+                  inside the 3–4 day prep window (🔒)
                 </>
               ) : null}
               . Matches the{" "}
@@ -319,7 +319,7 @@ export function UpcomingPickupAvailability() {
                 <span className="font-semibold text-[#0038A8]">Gold</span> =
                 open for pickup (times TBD).{" "}
                 <span className="font-semibold text-[var(--text)]">🔒</span> =
-                inside 4-day prep window.
+                inside the 3–4 day prep window.
               </p>
             </div>
 

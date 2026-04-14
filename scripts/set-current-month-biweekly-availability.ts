@@ -1,7 +1,7 @@
 /**
  * One-time / ops: for the current calendar month (America/Chicago), reset pickup
  * availability to a biweekly pattern:
- *   - First open day = today + MIN_LEAD_DAYS (4-day prep).
+ *   - First open day = today + MIN_LEAD_DAYS (~3–4 day prep).
  *   - Further open days = that date + 14 days, + 28, … while still in the month.
  * All other days in that month are closed (rows removed). Other months untouched.
  *

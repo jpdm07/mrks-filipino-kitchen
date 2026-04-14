@@ -310,8 +310,8 @@ export function OrderForm() {
         <div>
           <p className="text-sm font-semibold">Pickup date *</p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
-            Earliest selectable day: {minPickupDate} (Central Time, 4-day minimum
-            lead). {PICKUP_LEAD_TIME_CUSTOMER_LINE}
+            Earliest selectable day: {minPickupDate} (Central Time — about 3–4
+            days to prepare). {PICKUP_LEAD_TIME_CUSTOMER_LINE}
           </p>
           <div
             ref={calendarRef}

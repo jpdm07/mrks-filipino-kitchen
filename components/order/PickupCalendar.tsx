@@ -235,7 +235,7 @@ export const PickupCalendar = forwardRef<
         <p className="text-xs text-[var(--text-muted)]">
           Only <strong>clickable</strong> dates can be chosen. Gray cells are not
           open for pickup. 🔒 means the kitchen marked that day, but it is still
-          inside the prep window. Hover for details.
+          inside the 3–4 day prep window. Hover for details.
         </p>
       )}
     </div>

@@ -163,7 +163,7 @@ export function PublicAvailabilityCalendar() {
           {PICKUP_LEAD_TIME_CUSTOMER_LINE} Only <strong>gold</strong> days are on
           Mr. K&apos;s pickup calendar; gray days are <strong>not</strong> open
           for pickup here. Pickup times are chosen at checkout. 🔒 means still
-          inside the minimum prep window.
+          inside the 3–4 day prep window.
         </p>
 
         <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs font-semibold text-[var(--text-muted)]">
@@ -256,7 +256,7 @@ export function PublicAvailabilityCalendar() {
               <div className="mt-4 space-y-3 text-sm text-[var(--text)]">
                 <p className="rounded-lg bg-[var(--gold-light)] px-3 py-2 font-medium">
                   🔒 Booking window — this day is on our calendar, but online
-                  orders need at least 4 days to prepare.{" "}
+                  orders need about 3–4 days to prepare.{" "}
                   {PICKUP_LEAD_TIME_CUSTOMER_LINE}
                 </p>
                 {kitchenNote ? (

@@ -19,8 +19,9 @@ export default async function AdminAvailabilityPage() {
         Pickup availability
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
-        Mark which calendar dates customers may choose for pickup. Customers also
-        have a minimum 4-day lead time regardless of these settings. Saves go to
+        Mark which calendar dates customers may choose for pickup. The storefront
+        still enforces about 3–4 days lead time (earliest selectable date)
+        regardless of these settings. Saves go to
         the same database the live site uses — the public pickup calendar and
         checkout calendar refresh automatically every few seconds (and when
         someone returns to your site tab).

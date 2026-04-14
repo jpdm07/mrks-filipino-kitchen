@@ -34,8 +34,8 @@ export const SITE = {
  */
 export const ORDER_FULFILLMENT = {
   PICKUP_TIMEZONE: "America/Chicago",
-  /** Earliest pickup = today + this many calendar days (e.g. 4 → Friday if today is Monday). */
-  MIN_LEAD_DAYS: 4,
+  /** Earliest pickup = today + this many calendar days (e.g. 3 → Thursday if today is Monday). */
+  MIN_LEAD_DAYS: 3,
 } as const;
 
 /** Zelle / Venmo checkout copy (no card processing). */
