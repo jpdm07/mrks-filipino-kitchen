@@ -15,7 +15,9 @@
     "bootstrap:availability": "tsx scripts/bootstrap-availability.ts",
     "setup:local": "node scripts/prisma-generate.mjs && npx prisma migrate deploy && npx prisma db seed && npx tsx scripts/bootstrap-availability.ts",
     "db:studio": "prisma studio",
-    "deploy:vercel": "npx vercel --prod"
+    "deploy:vercel": "npx vercel --prod",
+    "env:vercel": "node scripts/sync-env-to-vercel.mjs",
+    "env:vercel:all": "node scripts/sync-env-to-vercel.mjs --preview"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -35,6 +37,7 @@
     "twilio": "^5.13.1"
   },
   "devDependencies": {
+    "dotenv": "^16.4.7",
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.0",
     "@types/qrcode": "^1.5.6",
