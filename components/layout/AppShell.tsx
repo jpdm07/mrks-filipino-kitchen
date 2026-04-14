@@ -18,7 +18,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   if (isAdminPath(pathname)) {
     return (
-      <main className="min-h-[50vh] w-full min-w-0">{children}</main>
+      <main className="flex min-h-dvh w-full min-w-0 flex-col bg-[var(--bg)]">
+        {children}
+      </main>
     );
   }
 

@@ -23,7 +23,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex min-h-[80vh] flex-col items-center justify-center px-4">
+    <div className="flex w-full flex-1 flex-col items-center justify-center px-4 py-10 sm:py-14">
       <Logo size="md" />
       <form
         onSubmit={submit}
