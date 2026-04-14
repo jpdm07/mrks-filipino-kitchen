@@ -20,10 +20,9 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const orders = await prisma.order.findMany({ orderBy: { createdAt: "desc" } });
-  return NextResponse.json({
-    orders: orders.map((o) => ({
-      ...o,
-      itemsSummary: summarize(o.items),
-    })),
-  });
+  const rows = orders.map((o) => ({
+    ...JSON.parse(JSON.stringify(o)),
+    itemsSummary: summarize(o.items),
+  }));
+  return NextResponse.json({ orders: rows });
 }

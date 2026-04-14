@@ -1,28 +1,21 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { DashboardOrders } from "@/components/admin/DashboardOrders";
-import { toAdminOrderClientRow } from "@/lib/admin-order-client";
-import type { OrderItemLine } from "@/lib/order-types";
 
 export const dynamic = "force-dynamic";
 
-function summarize(raw: string): string {
-  try {
-    const items = JSON.parse(raw) as OrderItemLine[];
-    if (!Array.isArray(items)) return "";
-    return items
-      .map((i) => `${i.name}${i.size ? ` (${i.size})` : ""} ×${i.quantity}`)
-      .join(", ");
-  } catch {
-    return "";
-  }
-}
-
 export default async function AdminDashboardPage() {
   await requireAdmin();
-  const orders = await prisma.order.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  let orders: Awaited<ReturnType<typeof prisma.order.findMany>> = [];
+  let dbError: string | null = null;
+  try {
+    orders = await prisma.order.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+  } catch {
+    dbError =
+      "Could not load dashboard metrics from the database. Confirm DATABASE_URL on Vercel matches your Neon (or other Postgres) instance.";
+  }
 
   const now = new Date();
   const startDay = new Date(now);
@@ -48,15 +41,16 @@ export default async function AdminDashboardPage() {
     .filter((o) => forMetrics(o) && o.status !== "Cancelled")
     .reduce((s, o) => s + o.total, 0);
 
-  const rows = orders.map((o) =>
-    toAdminOrderClientRow(o, summarize(o.items))
-  );
-
   return (
     <div>
       <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold">
         Dashboard
       </h1>
+      {dbError ? (
+        <p className="mt-4 rounded-lg border border-[var(--accent)]/50 bg-[var(--gold-light)] px-4 py-3 text-sm font-medium text-[var(--text)]">
+          {dbError}
+        </p>
+      ) : null}
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
           <p className="text-sm text-[var(--text-muted)]">Orders today</p>
@@ -87,7 +81,11 @@ export default async function AdminDashboardPage() {
         Orders today, week revenue, and all-time revenue exclude demo/test orders.
         Mark demos on an order&apos;s page or delete them there.
       </p>
-      <DashboardOrders initialOrders={rows} />
+      {/*
+        Order rows load via GET /api/admin/orders on the client so Prisma objects
+        never cross the RSC → client boundary (avoids production Flight errors).
+      */}
+      <DashboardOrders />
     </div>
   );
 }

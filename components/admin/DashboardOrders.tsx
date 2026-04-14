@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getSauceCupsFromOrderLine,
   totalSauceCupsForItems,
@@ -43,13 +43,43 @@ function sortOrders(list: Row[]): Row[] {
   });
 }
 
-export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
-  const [orders, setOrders] = useState(initialOrders);
+export function DashboardOrders() {
+  const [orders, setOrders] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [demoFilter, setDemoFilter] = useState<"all" | "hide" | "only">("all");
   const [q, setQ] = useState("");
   const [modal, setModal] = useState<Row | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
+    fetch("/api/admin/orders", { credentials: "same-origin" })
+      .then(async (r) => {
+        if (r.status === 401) {
+          throw new Error("Session expired — refresh and sign in again.");
+        }
+        if (!r.ok) throw new Error("Could not load orders.");
+        return r.json() as Promise<{ orders: Row[] }>;
+      })
+      .then((data) => {
+        if (!cancelled) setOrders(Array.isArray(data.orders) ? data.orders : []);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) {
+          setLoadError(e instanceof Error ? e.message : "Could not load orders.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const sorted = useMemo(() => sortOrders(orders), [orders]);
 
@@ -76,6 +106,7 @@ export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
     const num = orders.find((x) => x.id === id)?.orderNumber ?? id;
     const res = await fetch(`/api/orders/${encodeURIComponent(num)}`, {
       method: "PATCH",
+      credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     });
@@ -98,7 +129,7 @@ export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
     if (!modal) return;
     await fetch(
       `/api/orders/${encodeURIComponent(modal.orderNumber)}?action=resend-sms`,
-      { method: "POST" }
+      { method: "POST", credentials: "same-origin" }
     );
   };
 
@@ -113,13 +144,29 @@ export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
     }
     const res = await fetch(
       `/api/orders/${encodeURIComponent(modal.orderNumber)}`,
-      { method: "DELETE" }
+      { method: "DELETE", credentials: "same-origin" }
     );
     if (res.ok) {
       setOrders((prev) => prev.filter((x) => x.id !== modal.id));
       setModal(null);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="mt-10 rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-8 text-center text-sm text-[var(--text-muted)]">
+        Loading orders…
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="mt-10 rounded-lg border border-[var(--accent)]/40 bg-[var(--gold-light)] px-4 py-4 text-sm font-medium text-[var(--text)]">
+        {loadError}
+      </div>
+    );
+  }
 
   return (
     <div className="mt-10">
