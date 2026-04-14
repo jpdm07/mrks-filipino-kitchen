@@ -39,3 +39,44 @@ export async function PATCH(req: NextRequest) {
   }
   return NextResponse.json({ ok: true });
 }
+
+const DELETE_MAX_IDS = 200;
+
+export async function DELETE(req: NextRequest) {
+  if (!(await isAdminSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  let body: { ids?: unknown };
+  try {
+    body = (await req.json()) as { ids?: unknown };
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  if (!Array.isArray(body.ids) || body.ids.length === 0) {
+    return NextResponse.json(
+      { error: "Provide a non-empty ids array" },
+      { status: 400 }
+    );
+  }
+  const ids = body.ids
+    .map((x) => (typeof x === "string" ? x.trim() : ""))
+    .filter(Boolean);
+  if (ids.length === 0) {
+    return NextResponse.json({ error: "No valid ids" }, { status: 400 });
+  }
+  if (ids.length > DELETE_MAX_IDS) {
+    return NextResponse.json(
+      { error: `Too many ids (max ${DELETE_MAX_IDS})` },
+      { status: 400 }
+    );
+  }
+  try {
+    const result = await prisma.inquiry.deleteMany({
+      where: { id: { in: ids } },
+    });
+    return NextResponse.json({ deleted: result.count });
+  } catch (e) {
+    console.error("[admin/inquiries] DELETE failed:", e);
+    return NextResponse.json({ error: "Database error" }, { status: 500 });
+  }
+}
