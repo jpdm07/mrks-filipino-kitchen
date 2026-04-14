@@ -291,7 +291,7 @@ export function PublicAvailabilityCalendar() {
                   slot from the times Mr. K has opened for this date.
                 </p>
                 <Link
-                  href={`/order?pickupDate=${encodeURIComponent(selectedYmd)}`}
+                  href={`/menu?pickupDate=${encodeURIComponent(selectedYmd)}`}
                   className="mt-6 inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-[#0038A8] px-4 text-center text-base font-bold text-white hover:bg-[#002580] sm:w-auto"
                 >
                   Start My Order

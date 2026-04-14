@@ -1,16 +1,95 @@
 import nodemailer from "nodemailer";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 
+function getSmtpFromAddress(): string {
+  const explicit = process.env.EMAIL_FROM?.trim();
+  const user = process.env.EMAIL_USER?.trim();
+  return explicit || user || "";
+}
+
+function getFromDisplayName(): string {
+  return process.env.EMAIL_FROM_NAME?.trim() || "Mr. K's Filipino Kitchen";
+}
+
 function getTransport() {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASSWORD;
+  const user = process.env.EMAIL_USER?.trim();
+  const pass = process.env.EMAIL_PASSWORD?.trim();
   if (!user || !pass) return null;
+
+  const host = (process.env.EMAIL_SMTP_HOST || "smtp.mail.yahoo.com").trim();
+  const portRaw = process.env.EMAIL_SMTP_PORT?.trim();
+  const port = portRaw ? Number(portRaw) : 465;
+  if (!Number.isFinite(port) || port <= 0) {
+    console.warn("[mailer] Invalid EMAIL_SMTP_PORT; falling back to 465.");
+    return nodemailer.createTransport({
+      host,
+      port: 465,
+      secure: true,
+      auth: { user, pass },
+      connectionTimeout: 25_000,
+    });
+  }
+
+  const explicitSecure = process.env.EMAIL_SMTP_SECURE?.trim().toLowerCase();
+  let secure: boolean;
+  if (explicitSecure === "true") secure = true;
+  else if (explicitSecure === "false") secure = false;
+  else secure = port === 465;
+
   return nodemailer.createTransport({
-    host: "smtp.mail.yahoo.com",
-    port: 465,
-    secure: true,
+    host,
+    port,
+    secure,
+    requireTLS: port === 587 && !secure,
     auth: { user, pass },
+    connectionTimeout: 25_000,
   });
+}
+
+async function sendMailViaResend(
+  apiKey: string,
+  opts: {
+    to: string;
+    subject: string;
+    html: string;
+    text?: string;
+  }
+): Promise<boolean> {
+  const from = process.env.RESEND_FROM_EMAIL?.trim();
+  if (!from) {
+    console.warn(
+      "[mailer] RESEND_API_KEY is set but RESEND_FROM_EMAIL is missing. Add a verified sender in Resend (e.g. orders@yourdomain.com)."
+    );
+    return false;
+  }
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [opts.to],
+      subject: opts.subject,
+      html: opts.html,
+      text: opts.text,
+    }),
+  });
+
+  if (!res.ok) {
+    let detail: unknown;
+    try {
+      detail = await res.json();
+    } catch {
+      detail = await res.text();
+    }
+    console.error("[mailer] Resend API error:", res.status, detail);
+    return false;
+  }
+
+  return true;
 }
 
 export async function sendMail(opts: {
@@ -19,17 +98,24 @@ export async function sendMail(opts: {
   html: string;
   text?: string;
 }): Promise<boolean> {
+  const resendKey = process.env.RESEND_API_KEY?.trim();
+  if (resendKey) {
+    return sendMailViaResend(resendKey, opts);
+  }
+
   const transport = getTransport();
-  const from = process.env.EMAIL_USER;
-  if (!transport || !from) {
+  const fromAddr = getSmtpFromAddress();
+  if (!transport || !fromAddr) {
     console.warn(
-      "[mailer] Skipping send: set EMAIL_USER and EMAIL_PASSWORD on the server (Vercel → Production). Yahoo requires an app password, not your normal login password."
+      "[mailer] Skipping send: set RESEND_API_KEY + RESEND_FROM_EMAIL, or EMAIL_USER + EMAIL_PASSWORD on the server (Vercel → Production). Yahoo/Gmail usually need an app password, not your normal login. If SMTP times out from the cloud, try EMAIL_SMTP_PORT=587 or switch to Resend."
     );
     return false;
   }
+
+  const fromName = getFromDisplayName();
   try {
     await transport.sendMail({
-      from: `"Mr. K's Filipino Kitchen" <${from}>`,
+      from: `"${fromName}" <${fromAddr}>`,
       to: opts.to,
       subject: opts.subject,
       html: opts.html,
@@ -38,7 +124,15 @@ export async function sendMail(opts: {
     return true;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    console.error("[mailer] SMTP send failed:", msg);
+    let extra = "";
+    if (e && typeof e === "object") {
+      const o = e as { responseCode?: number; response?: string; code?: string };
+      if (o.responseCode != null || o.response) {
+        extra = ` code=${o.responseCode ?? "?"} response=${o.response ?? ""}`;
+      }
+      if (o.code) extra += ` nodemailerCode=${o.code}`;
+    }
+    console.error("[mailer] SMTP send failed:", msg + extra);
     return false;
   }
 }

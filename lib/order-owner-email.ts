@@ -21,7 +21,7 @@ function formatLine(i: OrderItemLine): string {
 }
 
 /**
- * Email the shop owner a full copy of the new order (SMTP via Yahoo in mailer.ts).
+ * Email the shop owner a full copy of the new order (Resend or SMTP; see lib/mailer.ts).
  * Uses OWNER_ORDER_EMAIL if set, otherwise EMAIL_USER (same inbox you send from).
  * Independent of Twilio; failures are logged and do not block the order.
  */

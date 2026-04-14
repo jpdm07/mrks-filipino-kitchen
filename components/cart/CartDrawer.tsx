@@ -473,7 +473,16 @@ export function CartDrawer() {
                   }
                   setCheckoutHint(null);
                   closeDrawer();
-                  router.push("/order");
+                  const qs = new URLSearchParams(
+                    typeof window !== "undefined" ? window.location.search : ""
+                  );
+                  const pd =
+                    qs.get("pickupDate")?.trim() || qs.get("date")?.trim() || "";
+                  router.push(
+                    pd
+                      ? `/order?pickupDate=${encodeURIComponent(pd)}`
+                      : "/order"
+                  );
                 }}
               >
                 Proceed to Order

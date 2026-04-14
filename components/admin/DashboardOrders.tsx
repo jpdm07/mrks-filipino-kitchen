@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   getSauceCupsFromOrderLine,
   totalSauceCupsForItems,
@@ -54,6 +55,44 @@ export function DashboardOrders() {
   const [q, setQ] = useState("");
   const [modal, setModal] = useState<Row | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
+  const [modalMounted, setModalMounted] = useState(false);
+  const [modalNotice, setModalNotice] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  const closeModal = useCallback(() => {
+    setModal(null);
+    setModalNotice(null);
+  }, []);
+
+  const openModal = (o: Row) => {
+    setModalNotice(null);
+    setModal(o);
+    setAdminNotes(o.adminNotes ?? "");
+  };
+
+  useEffect(() => setModalMounted(true), []);
+
+  useEffect(() => {
+    if (!modalNotice) return;
+    const t = window.setTimeout(() => setModalNotice(null), 4000);
+    return () => window.clearTimeout(t);
+  }, [modalNotice]);
+
+  useEffect(() => {
+    if (!modal) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [modal, closeModal]);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,12 +138,11 @@ export function DashboardOrders() {
     });
   }, [sorted, statusFilter, demoFilter, q]);
 
-  const openModal = (o: Row) => {
-    setModal(o);
-    setAdminNotes(o.adminNotes ?? "");
-  };
-
-  const patchOrder = async (id: string, patch: object) => {
+  const patchOrder = async (
+    id: string,
+    patch: object,
+    options?: { successMessage?: string }
+  ): Promise<boolean> => {
     const num = orders.find((x) => x.id === id)?.orderNumber ?? id;
     const res = await fetch(`/api/orders/${encodeURIComponent(num)}`, {
       method: "PATCH",
@@ -125,7 +163,18 @@ export function DashboardOrders() {
         setModal({ ...modal, ...updated, items: modal.items });
       }
       router.refresh();
+      if (options?.successMessage) {
+        setModalNotice({ type: "success", text: options.successMessage });
+      }
+      return true;
     }
+    if (modal?.id === id || options?.successMessage) {
+      setModalNotice({
+        type: "error",
+        text: "Could not save. Try again.",
+      });
+    }
+    return false;
   };
 
   const resend = async () => {
@@ -150,7 +199,7 @@ export function DashboardOrders() {
     );
     if (res.ok) {
       setOrders((prev) => prev.filter((x) => x.id !== o.id));
-      if (modal?.id === o.id) setModal(null);
+      if (modal?.id === o.id) closeModal();
       router.refresh();
     } else {
       window.alert("Could not delete order. Try again or open the full order page.");
@@ -294,15 +343,54 @@ export function DashboardOrders() {
         </table>
       </div>
 
-      {modal ? (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[var(--radius)] bg-[var(--card)] p-6 shadow-xl">
-            <div className="flex items-start justify-between gap-4">
-              <h2 className="font-bold text-lg">Order #{modal.orderNumber}</h2>
-              <button type="button" onClick={() => setModal(null)}>
-                ✕
-              </button>
-            </div>
+      {modal && modalMounted
+        ? createPortal(
+            <div
+              className="fixed inset-0 flex items-center justify-center overflow-y-auto bg-black/55 p-3 sm:p-4"
+              style={{ zIndex: 2147483646 }}
+              role="presentation"
+              onClick={closeModal}
+            >
+              <div
+                className="my-auto flex w-full max-w-lg flex-col shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div
+                  className="flex items-center justify-between gap-3 rounded-t-xl border-b border-white/25 bg-[#0038A8] px-4 py-3 text-white"
+                >
+                  <h2
+                    id="order-detail-title"
+                    className="min-w-0 text-base font-bold leading-tight"
+                  >
+                    Order #{modal.orderNumber}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg border-2 border-white/80 bg-white/10 text-xl font-bold text-white hover:bg-white/20"
+                    aria-label="Close order details"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="order-detail-title"
+                  className="max-h-[min(78vh,680px)] overflow-y-auto rounded-b-xl border border-t-0 border-[var(--border)] bg-[var(--card)] p-5"
+                >
+            {modalNotice ? (
+              <p
+                className={`mb-3 rounded-lg px-3 py-2 text-sm font-semibold ${
+                  modalNotice.type === "success"
+                    ? "border border-emerald-200 bg-emerald-50 text-emerald-900"
+                    : "border border-red-200 bg-red-50 text-red-800"
+                }`}
+                role="status"
+              >
+                {modalNotice.text}
+              </p>
+            ) : null}
             <p className="mt-2 text-sm text-[var(--text-muted)]">
               {new Date(modal.createdAt).toLocaleString()}
             </p>
@@ -366,6 +454,10 @@ export function DashboardOrders() {
                 );
                 setModal({ ...modal, ...updated });
                 router.refresh();
+                setModalNotice({
+                  type: "success",
+                  text: "Payment status saved.",
+                });
               }}
             />
             <label className="mt-4 flex cursor-pointer items-start gap-2 text-sm">
@@ -375,7 +467,9 @@ export function DashboardOrders() {
                 checked={modal.isDemo}
                 onChange={(e) => {
                   const v = e.target.checked;
-                  void patchOrder(modal.id, { isDemo: v });
+                  void patchOrder(modal.id, { isDemo: v }, {
+                    successMessage: "Demo / test flag saved.",
+                  });
                 }}
               />
               <span>
@@ -396,7 +490,13 @@ export function DashboardOrders() {
               <button
                 type="button"
                 className="rounded bg-[var(--primary)] px-4 py-2 text-sm font-bold text-white"
-                onClick={() => patchOrder(modal.id, { adminNotes })}
+                onClick={() =>
+                  void patchOrder(
+                    modal.id,
+                    { adminNotes },
+                    { successMessage: "Admin notes saved." }
+                  )
+                }
               >
                 Save notes
               </button>
@@ -421,9 +521,19 @@ export function DashboardOrders() {
                 Full page
               </Link>
             </div>
-          </div>
-        </div>
-      ) : null}
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="mt-5 w-full min-h-12 rounded-xl border-2 border-[var(--border)] bg-[var(--bg-section)] text-sm font-bold text-[var(--text)] hover:bg-[var(--gold-light)]"
+                  >
+                    Close window
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }

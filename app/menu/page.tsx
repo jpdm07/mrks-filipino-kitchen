@@ -14,11 +14,23 @@ type MenuPageProps = {
   searchParams: Record<string, string | string[] | undefined>;
 };
 
+function firstSearchParam(
+  v: string | string[] | undefined
+): string | undefined {
+  if (v == null) return undefined;
+  const s = Array.isArray(v) ? v[0] : v;
+  const t = typeof s === "string" ? s.trim() : "";
+  return t || undefined;
+}
+
 export default async function MenuPage({ searchParams }: MenuPageProps) {
   const items = await getPublicMenuItems();
 
   const activeTab = parseMenuCategoryFromSearchParam(searchParams.cat);
   const visible = items.filter((i) => itemVisibleForMenuTab(i, activeTab));
+  const pickupDate =
+    firstSearchParam(searchParams.pickupDate) ??
+    firstSearchParam(searchParams.date);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -40,7 +52,7 @@ export default async function MenuPage({ searchParams }: MenuPageProps) {
       </div>
       <div className="print:hidden">
         <div className="mt-8">
-          <MenuCategoryNav active={activeTab} />
+          <MenuCategoryNav active={activeTab} pickupDate={pickupDate} />
         </div>
         <div className="mt-10">
           <MenuGrid items={visible} />

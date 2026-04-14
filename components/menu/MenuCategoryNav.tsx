@@ -4,11 +4,27 @@ import {
   type MenuCategoryTab,
 } from "@/lib/menu-categories";
 
+function menuTabHref(tab: MenuCategoryTab, pickupDate?: string | null): string {
+  const params = new URLSearchParams();
+  if (tab !== "All") params.set("cat", tab);
+  const pd = pickupDate?.trim();
+  if (pd) params.set("pickupDate", pd);
+  const q = params.toString();
+  return q ? `/menu?${q}` : "/menu";
+}
+
 /**
  * Category tabs use real navigation (?cat=) so filtering runs on the server.
  * Works even if client-side React state fails to update.
  */
-export function MenuCategoryNav({ active }: { active: MenuCategoryTab }) {
+export function MenuCategoryNav({
+  active,
+  pickupDate,
+}: {
+  active: MenuCategoryTab;
+  /** Preserved when linking from pickup calendar (?pickupDate=). */
+  pickupDate?: string | null;
+}) {
   return (
     <nav
       role="tablist"
@@ -16,7 +32,7 @@ export function MenuCategoryNav({ active }: { active: MenuCategoryTab }) {
       className="sticky top-[calc(var(--nav-h,72px)+0px)] z-30 -mx-4 flex flex-wrap items-center justify-center gap-2 border-b border-[var(--border)] bg-[var(--bg)]/95 px-4 py-3 backdrop-blur-md md:mx-0"
     >
       {MENU_CATEGORY_TABS.map((c) => {
-        const href = c === "All" ? "/menu" : `/menu?cat=${encodeURIComponent(c)}`;
+        const href = menuTabHref(c, pickupDate);
         const isActive = c === active;
         return (
           <Link

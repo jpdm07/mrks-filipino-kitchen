@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { userFacingAdminDatabaseError } from "@/lib/safe-db";
@@ -8,10 +9,14 @@ export const dynamic = "force-dynamic";
 export default async function AdminDashboardPage() {
   await requireAdmin();
   let orders: Awaited<ReturnType<typeof prisma.order.findMany>> = [];
+  let unreadInquiries = 0;
   let dbError: string | null = null;
   try {
     orders = await prisma.order.findMany({
       orderBy: { createdAt: "desc" },
+    });
+    unreadInquiries = await prisma.inquiry.count({
+      where: { isRead: false },
     });
   } catch (e) {
     console.error("[admin/dashboard] prisma.order.findMany failed:", e);
@@ -52,7 +57,23 @@ export default async function AdminDashboardPage() {
           {dbError}
         </p>
       ) : null}
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm">
+        <Link
+          href="/admin/inquiries"
+          className="font-semibold text-[var(--primary)] underline-offset-2 hover:underline"
+        >
+          Contact messages
+        </Link>
+        <span className="text-[var(--text-muted)]">
+          — website contact form
+        </span>
+        {unreadInquiries > 0 ? (
+          <span className="rounded-full bg-[var(--primary)] px-2.5 py-0.5 text-xs font-bold text-white">
+            {unreadInquiries} unread
+          </span>
+        ) : null}
+      </div>
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
           <p className="text-sm text-[var(--text-muted)]">Orders today</p>
           <p className="text-2xl font-bold text-[var(--primary)]">
@@ -65,6 +86,20 @@ export default async function AdminDashboardPage() {
           </p>
           <p className="text-2xl font-bold text-[var(--accent)]">{pending}</p>
         </div>
+        <Link
+          href="/admin/inquiries"
+          className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm transition hover:border-[var(--primary)]/40 hover:ring-1 hover:ring-[var(--primary)]/15"
+        >
+          <p className="text-sm text-[var(--text-muted)]">
+            Unread contact messages
+          </p>
+          <p className="text-2xl font-bold text-[var(--primary)]">
+            {unreadInquiries}
+          </p>
+          <p className="mt-1 text-xs font-medium text-[var(--primary)]">
+            Open inquiries →
+          </p>
+        </Link>
         <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
           <p className="text-sm text-[var(--text-muted)]">Revenue this week</p>
           <p className="text-2xl font-bold text-[var(--primary)]">
