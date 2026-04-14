@@ -13,6 +13,20 @@ export function pickupTimeSlotLabels(): string[] {
 
 const ALLOWED = new Set(pickupTimeSlotLabels());
 
+/** Sort labels by chronological order (10:00 AM → 7:00 PM). Unknown labels sort last. */
+export function sortPickupSlotLabels(slots: string[]): string[] {
+  const order = pickupTimeSlotLabels();
+  const idx = new Map(order.map((label, i) => [label, i]));
+  return [...slots].sort((a, b) => {
+    const ia = idx.get(a.trim());
+    const ib = idx.get(b.trim());
+    if (ia !== undefined && ib !== undefined) return ia - ib;
+    if (ia !== undefined) return -1;
+    if (ib !== undefined) return 1;
+    return a.localeCompare(b);
+  });
+}
+
 export function isValidPickupTimeLabel(t: string): boolean {
   return ALLOWED.has(t.trim());
 }

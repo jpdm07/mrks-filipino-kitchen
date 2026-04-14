@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { eachYmdInRangeInclusive } from "@/lib/availability-range";
-import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
+import {
+  pickupTimeSlotLabels,
+  sortPickupSlotLabels,
+} from "@/lib/pickup-time-slots";
 
 const ALL_SLOTS = pickupTimeSlotLabels();
 const SLOT_SET = new Set(ALL_SLOTS);
@@ -46,12 +49,10 @@ export async function getAvailabilityMapForRange(
   for (const ymd of eachYmdInRangeInclusive(fromYmd, toYmd)) {
     const r = byDate.get(ymd);
     const isOpen = r ? r.isOpen === true : false;
-    const slots =
-      r && isOpen ? parseStoredSlots(slotsJsonFromDb(r.slots)) : [];
     map[ymd] = {
       isOpen,
       note: r?.note?.trim() ?? "",
-      slots: slots.length > 0 ? slots : isOpen ? [...ALL_SLOTS] : [],
+      slots: isOpen ? effectiveSlotsForOpenDay(slotsJsonFromDb(r?.slots)) : [],
     };
   }
   return map;
