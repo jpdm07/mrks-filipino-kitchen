@@ -21,7 +21,7 @@ import {
 } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import { SITE } from "@/lib/config";
-import { hrefWithHttps } from "@/lib/url-display";
+import { businessCardUrlDisplay, hrefWithHttps } from "@/lib/url-display";
 
 const LOGO_WORDMARK_TITLE = "Mr. K\u2019s";
 
@@ -244,13 +244,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     flexWrap: "wrap",
     marginTop: 2,
-    gap: 2,
-  },
-  fbColon: {
-    fontSize: 5.5,
-    color: "#14121a",
-    fontWeight: "bold",
-    marginTop: 0.5,
+    gap: 3,
   },
   fbUrlText: {
     fontSize: 4.25,
@@ -330,9 +324,12 @@ function SingleCard({
   siteBaseUrl?: string;
   index: number;
 }) {
-  const websiteDisplay = hrefWithHttps(
+  const websiteHref = hrefWithHttps(
     siteBaseUrl?.trim() || siteBaseFromOrderUrl(orderUrl)
   );
+  const websiteDisplay = businessCardUrlDisplay(websiteHref);
+  const facebookHref = hrefWithHttps(SITE.facebookUrl);
+  const facebookDisplay = businessCardUrlDisplay(SITE.facebookUrl);
   return (
     <View style={styles.cardOuter}>
       <View style={styles.cardInner}>
@@ -343,13 +340,10 @@ function SingleCard({
             <Text style={styles.contact}>{SITE.phoneDisplay}</Text>
             <Text style={styles.contactMuted}>{SITE.email}</Text>
             <Text style={styles.contactMuted}>{SITE.location}</Text>
-            <Link src={hrefWithHttps(SITE.facebookUrl)}>
+            <Link src={facebookHref}>
               <View style={styles.fbRow}>
                 <FacebookMarkPdf size={6} />
-                <Text style={styles.fbColon}>:</Text>
-                <Text style={styles.fbUrlText}>
-                  {hrefWithHttps(SITE.facebookUrl)}
-                </Text>
+                <Text style={styles.fbUrlText}>{facebookDisplay}</Text>
               </View>
             </Link>
             <Text style={styles.websiteLine}>

@@ -7,7 +7,7 @@ import { Logo } from "@/components/ui/Logo";
 import { QRCodeDisplay } from "@/components/ui/QRCodeDisplay";
 import { SITE } from "@/lib/config";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
-import { hrefWithHttps } from "@/lib/url-display";
+import { businessCardUrlDisplay, hrefWithHttps } from "@/lib/url-display";
 
 /** 8 cards per US Letter sheet: 2 × 4 @ 3.5" × 2" with trim gaps */
 const CARDS_PER_SHEET = 8;
@@ -69,24 +69,21 @@ function BusinessCardFace({
           </a>
           <p className="text-[7.5px] text-[var(--text-muted)]">{SITE.location}</p>
           <a
-            href={SITE.facebookUrl}
+            href={hrefWithHttps(SITE.facebookUrl)}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Facebook profile"
-            className="mt-1 inline-flex max-w-full flex-wrap items-center gap-x-0.5 gap-y-0.5"
+            className="mt-1 inline-flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5"
           >
             <FacebookIcon size={12} className="shrink-0 text-[#1877F2]" />
-            <span className="shrink-0 text-[7px] font-semibold text-[var(--text)]">
-              :
-            </span>
             <span className="min-w-0 break-all text-[5px] font-semibold leading-tight text-[#1877F2]">
-              {hrefWithHttps(SITE.facebookUrl)}
+              {businessCardUrlDisplay(SITE.facebookUrl)}
             </span>
           </a>
           {siteBaseUrl ? (
             <p className="mt-1 text-[5px] leading-tight text-[var(--text-muted)] whitespace-nowrap">
               <span className="font-semibold text-[var(--text)]">Website: </span>
-              {hrefWithHttps(siteBaseUrl)}
+              {businessCardUrlDisplay(siteBaseUrl)}
             </p>
           ) : null}
         </div>
