@@ -43,6 +43,7 @@ export async function sendNewOrderEmailToOwner(params: {
   wantsRecurring: boolean;
   customInquiry: string | null;
   subscribeUpdates: boolean;
+  isDemo?: boolean;
 }): Promise<boolean> {
   const to =
     process.env.OWNER_ORDER_EMAIL?.trim() ||
@@ -120,10 +121,11 @@ export async function sendNewOrderEmailToOwner(params: {
   </div>
 </body></html>`;
 
+  const demoTag = params.isDemo ? "[DEMO] " : "";
   try {
     return await sendMail({
       to,
-      subject: `New order #${params.orderNumber} — ${params.customerName} ($${params.total.toFixed(2)})`,
+      subject: `${demoTag}New order #${params.orderNumber} — ${params.customerName} ($${params.total.toFixed(2)})`,
       html,
       text,
     });

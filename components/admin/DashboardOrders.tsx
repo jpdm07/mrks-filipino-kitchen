@@ -46,6 +46,7 @@ function sortOrders(list: Row[]): Row[] {
 export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
   const [orders, setOrders] = useState(initialOrders);
   const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [demoFilter, setDemoFilter] = useState<"all" | "hide" | "only">("all");
   const [q, setQ] = useState("");
   const [modal, setModal] = useState<Order | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
@@ -54,6 +55,8 @@ export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
 
   const filtered = useMemo(() => {
     return sorted.filter((o) => {
+      if (demoFilter === "hide" && o.isDemo) return false;
+      if (demoFilter === "only" && !o.isDemo) return false;
       if (statusFilter !== "All" && o.status !== statusFilter) return false;
       if (!q.trim()) return true;
       const n = q.toLowerCase();
@@ -62,7 +65,7 @@ export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
         o.customerName.toLowerCase().includes(n)
       );
     });
-  }, [sorted, statusFilter, q]);
+  }, [sorted, statusFilter, demoFilter, q]);
 
   const openModal = (o: Order) => {
     setModal(o);
@@ -99,6 +102,25 @@ export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
     );
   };
 
+  const deleteOrder = async () => {
+    if (!modal) return;
+    if (
+      !window.confirm(
+        `Delete order #${modal.orderNumber} permanently? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    const res = await fetch(
+      `/api/orders/${encodeURIComponent(modal.orderNumber)}`,
+      { method: "DELETE" }
+    );
+    if (res.ok) {
+      setOrders((prev) => prev.filter((x) => x.id !== modal.id));
+      setModal(null);
+    }
+  };
+
   return (
     <div className="mt-10">
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -120,6 +142,17 @@ export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
             </option>
           ))}
         </select>
+        <select
+          className="min-h-[44px] rounded-lg border border-[var(--border)] px-3"
+          value={demoFilter}
+          onChange={(e) =>
+            setDemoFilter(e.target.value as "all" | "hide" | "only")
+          }
+        >
+          <option value="all">All orders</option>
+          <option value="hide">Hide demos</option>
+          <option value="only">Demos only</option>
+        </select>
       </div>
       <div className="overflow-x-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)]">
         <table className="min-w-[900px] w-full text-left text-sm">
@@ -138,7 +171,14 @@ export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
           <tbody>
             {filtered.map((o) => (
               <tr key={o.id} className="border-t border-[var(--border)]">
-                <td className="px-3 py-2 font-mono text-xs">{o.orderNumber}</td>
+                <td className="px-3 py-2 font-mono text-xs">
+                  {o.orderNumber}
+                  {o.isDemo ? (
+                    <span className="ml-1 rounded bg-amber-200 px-1 py-0.5 text-[10px] font-bold text-amber-950">
+                      DEMO
+                    </span>
+                  ) : null}
+                </td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {new Date(o.createdAt).toLocaleString()}
                 </td>
@@ -261,6 +301,21 @@ export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
                 setModal({ ...modal, ...updated });
               }}
             />
+            <label className="mt-4 flex cursor-pointer items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4"
+                checked={modal.isDemo}
+                onChange={(e) => {
+                  const v = e.target.checked;
+                  void patchOrder(modal.id, { isDemo: v });
+                }}
+              />
+              <span>
+                <span className="font-semibold">Demo / test</span> — excluded
+                from finances &amp; dashboard revenue
+              </span>
+            </label>
             <label className="mt-4 block text-sm font-semibold">
               Admin notes (internal)
               <textarea
@@ -284,6 +339,13 @@ export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
                 onClick={resend}
               >
                 Resend SMS
+              </button>
+              <button
+                type="button"
+                className="rounded border-2 border-[var(--accent)] px-4 py-2 text-sm font-bold text-[var(--accent)]"
+                onClick={() => void deleteOrder()}
+              >
+                Delete order
               </button>
               <Link
                 href={`/admin/orders/${encodeURIComponent(modal.orderNumber)}`}

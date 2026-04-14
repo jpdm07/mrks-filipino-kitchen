@@ -64,6 +64,7 @@ export async function PATCH(
     status?: string;
     adminNotes?: string;
     paymentAction?: "verify" | "not_received";
+    isDemo?: boolean;
   };
   if (
     body.paymentAction != null &&
@@ -83,6 +84,10 @@ export async function PATCH(
 
   if (body.adminNotes !== undefined) {
     data.adminNotes = body.adminNotes;
+  }
+
+  if (body.isDemo !== undefined) {
+    data.isDemo = Boolean(body.isDemo);
   }
 
   if (body.paymentAction === "verify") {
@@ -217,4 +222,24 @@ export async function POST(
   );
   const sent = await sendOwnerSms(lines.filter(Boolean).join("\n"));
   return NextResponse.json({ ok: true, ownerSmsSent: sent });
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const token = getAdminTokenFromRequest(req.headers.get("cookie"));
+  if (!verifyAdminToken(token)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { id } = params;
+  const order = await prisma.order.findFirst({
+    where: { OR: [{ orderNumber: id }, { id }] },
+  });
+  if (!order) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  await prisma.order.delete({ where: { id: order.id } });
+  void updatePickupEvent(order.orderNumber, "Cancelled");
+  return NextResponse.json({ ok: true });
 }

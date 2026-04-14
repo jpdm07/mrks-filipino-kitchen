@@ -41,6 +41,8 @@ export function OrderForm() {
   const [recurring, setRecurring] = useState(false);
   /** Customer acknowledges they will put the order # in Venmo/Zelle memo after submit. */
   const [paymentMemoAck, setPaymentMemoAck] = useState(false);
+  /** Shown only when NEXT_PUBLIC_ALLOW_DEMO_CHECKOUT=true at build time; server must set ALLOW_DEMO_ORDERS_AT_CHECKOUT. */
+  const [checkoutDemo, setCheckoutDemo] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [slotOptions, setSlotOptions] = useState<string[]>([]);
@@ -141,6 +143,9 @@ export function OrderForm() {
   const samplesOk = samplesSelectionComplete(cart.samples);
   const canSubmitOrder = basicsOk && samplesOk;
 
+  const showDemoCheckout =
+    process.env.NEXT_PUBLIC_ALLOW_DEMO_CHECKOUT === "true";
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
@@ -196,6 +201,7 @@ export function OrderForm() {
         wantsRecurring: recurring || cart.recurringInterest,
         customInquiry: customCheck ? customText.trim() : null,
         subscribeUpdates: cart.newsletterOptIn,
+        ...(showDemoCheckout && checkoutDemo ? { isDemo: true } : {}),
       }),
     });
     const data = (await res.json()) as {
@@ -293,6 +299,20 @@ export function OrderForm() {
 
         <div className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
           <AcceptedPaymentMethods variant="checkout" />
+          {showDemoCheckout ? (
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-dashed border-amber-500/60 bg-amber-50/80 px-3 py-2 text-sm font-medium text-[var(--text)]">
+              <input
+                type="checkbox"
+                className="mt-1 h-5 w-5 shrink-0"
+                checked={checkoutDemo}
+                onChange={(e) => setCheckoutDemo(e.target.checked)}
+              />
+              <span>
+                <strong>Test / demo order</strong> — won&apos;t count in finances
+                or Google Sheet; you can delete it from admin anytime.
+              </span>
+            </label>
+          ) : null}
           <label className="flex cursor-pointer items-start gap-3 text-sm font-medium">
             <input
               type="checkbox"

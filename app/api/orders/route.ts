@@ -51,7 +51,13 @@ export async function POST(req: NextRequest) {
       wantsRecurring?: boolean;
       customInquiry?: string | null;
       subscribeUpdates?: boolean;
+      /** Honored only when ALLOW_DEMO_ORDERS_AT_CHECKOUT=true on the server. */
+      isDemo?: boolean;
     };
+
+    const allowDemoCheckout =
+      process.env.ALLOW_DEMO_ORDERS_AT_CHECKOUT === "true";
+    const isDemo = allowDemoCheckout && body.isDemo === true;
 
     const customerName = (body.customerName ?? "").trim();
     const phone = (body.phone ?? "").trim();
@@ -133,11 +139,12 @@ export async function POST(req: NextRequest) {
         status,
         paymentMethod,
         paymentStatus,
+        isDemo,
       },
     });
 
     const ownerSms = [
-      `🍽️ NEW ORDER #${orderNumber}`,
+      `${isDemo ? "🧪 DEMO " : ""}🍽️ NEW ORDER #${orderNumber}`,
       `Customer: ${customerName} | ${phone}`,
       `Total: $${total.toFixed(2)}`,
       `Pickup: ${pickupDate} @ ${pickupTime}`,
@@ -165,6 +172,7 @@ export async function POST(req: NextRequest) {
       wantsRecurring: Boolean(body.wantsRecurring),
       customInquiry: (body.customInquiry ?? "").trim() || null,
       subscribeUpdates: Boolean(body.subscribeUpdates),
+      isDemo,
     });
 
     if (!ownerEmailSent) {
@@ -173,30 +181,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await syncOrderToSheets({
-      orderNumber,
-      createdAt: order.createdAt.toISOString(),
-      customerName,
-      phone,
-      email,
-      items,
-      utensilSets: sets,
-      utensilCharge: ut,
-      subtotal: sub,
-      tax,
-      total,
-      pickupDate,
-      pickupTime,
-      wantsRecurring: Boolean(body.wantsRecurring),
-      notes: body.notes,
-      customInquiry: body.customInquiry ?? undefined,
-      status,
-      paymentMethod,
-      paymentStatus,
-      orderStatus: status,
-    });
+    if (!isDemo) {
+      await syncOrderToSheets({
+        orderNumber,
+        createdAt: order.createdAt.toISOString(),
+        customerName,
+        phone,
+        email,
+        items,
+        utensilSets: sets,
+        utensilCharge: ut,
+        subtotal: sub,
+        tax,
+        total,
+        pickupDate,
+        pickupTime,
+        wantsRecurring: Boolean(body.wantsRecurring),
+        notes: body.notes,
+        customInquiry: body.customInquiry ?? undefined,
+        status,
+        paymentMethod,
+        paymentStatus,
+        orderStatus: status,
+      });
+    } else {
+      console.log(
+        `[orders] Demo order #${orderNumber} — skipped Google Sheets sync`
+      );
+    }
 
-    if (body.subscribeUpdates) {
+    if (body.subscribeUpdates && !isDemo) {
       const em = email.toLowerCase();
       const existing = await prisma.subscriber.findUnique({
         where: { email: em },

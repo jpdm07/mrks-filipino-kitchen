@@ -234,7 +234,12 @@ export function FinancesAdminClient() {
   return (
     <div className="mx-auto max-w-4xl space-y-8 py-4">
       <p className="text-sm text-[var(--text-muted)]">
-        Mobile-friendly profit/loss view. Confirmed orders = income; expenses are logged here.
+        Mobile-friendly profit/loss view. Confirmed orders = income; expenses are
+        logged here.{" "}
+        <strong className="text-[var(--text)]">
+          Demo / test orders are excluded
+        </strong>{" "}
+        (mark them on the order page or at checkout when enabled).
       </p>
 
       <div className="flex flex-wrap gap-2">

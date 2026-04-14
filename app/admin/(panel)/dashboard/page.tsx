@@ -28,15 +28,21 @@ export default async function AdminDashboardPage() {
   startWeek.setDate(now.getDate() - now.getDay());
   startWeek.setHours(0, 0, 0, 0);
 
-  const todayOrders = orders.filter((o) => o.createdAt >= startDay);
+  const forMetrics = (o: (typeof orders)[0]) => !o.isDemo;
+  const todayOrders = orders.filter(
+    (o) => forMetrics(o) && o.createdAt >= startDay
+  );
   const pending = orders.filter(
     (o) => o.status === "Pending Payment Verification"
   ).length;
   const weekRev = orders
-    .filter((o) => o.createdAt >= startWeek && o.status !== "Cancelled")
+    .filter(
+      (o) =>
+        forMetrics(o) && o.createdAt >= startWeek && o.status !== "Cancelled"
+    )
     .reduce((s, o) => s + o.total, 0);
   const allRev = orders
-    .filter((o) => o.status !== "Cancelled")
+    .filter((o) => forMetrics(o) && o.status !== "Cancelled")
     .reduce((s, o) => s + o.total, 0);
 
   const rows = orders.map((o) => ({
@@ -75,6 +81,10 @@ export default async function AdminDashboardPage() {
           </p>
         </div>
       </div>
+      <p className="mt-2 text-xs text-[var(--text-muted)]">
+        Orders today, week revenue, and all-time revenue exclude demo/test orders.
+        Mark demos on an order&apos;s page or delete them there.
+      </p>
       <DashboardOrders initialOrders={rows} />
     </div>
   );

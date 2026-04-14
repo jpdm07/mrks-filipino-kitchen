@@ -159,6 +159,7 @@ async function main() {
       paymentMethod: PAYMENT_METHOD_VERIFIED_LABEL,
       paymentStatus: PAYMENT_STATUS_VERIFIED,
       subscribeUpdates: false,
+      isDemo: true,
     },
     update: {
       items: JSON.stringify(demoItems),
@@ -169,6 +170,7 @@ async function main() {
       status: ORDER_STATUS_CONFIRMED,
       paymentMethod: PAYMENT_METHOD_VERIFIED_LABEL,
       paymentStatus: PAYMENT_STATUS_VERIFIED,
+      isDemo: true,
     },
   });
 

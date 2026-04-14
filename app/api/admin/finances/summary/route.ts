@@ -46,6 +46,7 @@ export async function GET(req: NextRequest) {
   const orders = await prisma.order.findMany({
     where: {
       status: "Confirmed",
+      isDemo: false,
       createdAt: { gte: start, lte: end },
     },
     select: { total: true },

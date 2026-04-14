@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import type { OrderItemLine } from "@/lib/order-types";
 import { AdminOrderPaymentPanel } from "@/components/admin/AdminOrderPaymentPanel";
+import { AdminOrderDemoDeletePanel } from "@/components/admin/AdminOrderDemoDeletePanel";
+import { AdminOrderDemoDeletePanel } from "@/components/admin/AdminOrderDemoDeletePanel";
 import {
   getSauceCupsFromOrderLine,
   totalSauceCupsForItems,
@@ -42,6 +44,11 @@ export default async function AdminOrderDetailPage({
       </h1>
       <p className="text-sm text-[var(--text-muted)]">
         {new Date(order.createdAt).toLocaleString()}
+        {order.isDemo ? (
+          <span className="ml-2 rounded bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-950">
+            Demo
+          </span>
+        ) : null}
       </p>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <div className="rounded border border-[var(--border)] bg-[var(--card)] p-4">
@@ -116,6 +123,10 @@ export default async function AdminOrderDetailPage({
           <strong>Admin:</strong> {order.adminNotes}
         </p>
       ) : null}
+      <AdminOrderDemoDeletePanel
+        orderNumber={order.orderNumber}
+        initialIsDemo={order.isDemo}
+      />
     </div>
   );
 }
