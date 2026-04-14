@@ -8,6 +8,10 @@ const HISTORY_LEN = 48;
 const STAR_LAG = [9, 18, 30];
 const STAR_SIZES = [10, 8, 6];
 const STAR_OPACITY = [0.7, 0.45, 0.2];
+/** Gold (sun), blue stripe, red stripe — Philippine flag echo */
+const STAR_FILLS = ["#FFC200", "#0038A8", "#CE1126"] as const;
+const MIST_LAG = [5, 9] as const; // blue under, red on top (slightly further back)
+const MIST_LERP = 0.22;
 const LERP = 0.32;
 
 /** Heavy client-side link usage + `cursor:none` leaves no visible pointer if the sun glitches. */
@@ -48,7 +52,7 @@ function FlagSun() {
   );
 }
 
-function TrailStar({ size }: { size: number }) {
+function TrailStar({ size, fill }: { size: number; fill: string }) {
   return (
     <svg
       width={size}
@@ -59,7 +63,10 @@ function TrailStar({ size }: { size: number }) {
     >
       <path
         d="M 0 -4 L 0.95 -1.2 L 3.8 -0.9 L 1.5 0.95 L 2.35 4 L 0 2.45 L -2.35 4 L -1.5 0.95 L -3.8 -0.9 L -0.95 -1.2 Z"
-        fill="#FFC200"
+        fill={fill}
+        stroke={fill === "#FFC200" ? "none" : "rgba(255, 251, 245, 0.5)"}
+        strokeWidth={fill === "#FFC200" ? 0 : 0.4}
+        vectorEffect="non-scaling-stroke"
       />
     </svg>
   );
@@ -75,10 +82,15 @@ export function CustomCursor() {
     { x: -100, y: -100 },
     { x: -100, y: -100 },
   ]);
+  const smoothMist = useRef([
+    { x: -100, y: -100 },
+    { x: -100, y: -100 },
+  ]);
   const overInteractive = useRef(false);
 
   const sunWrapRef = useRef<HTMLDivElement>(null);
   const starRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const mistRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const skipDecorative = PATHS_SKIP_DECORATIVE_CURSOR.has(pathname);
   const showDecorative = mqFine && !skipDecorative;
@@ -142,6 +154,19 @@ export function CustomCursor() {
         }
       }
 
+      for (let i = 0; i < 2; i++) {
+        const lag = MIST_LAG[i];
+        const idx = Math.max(0, len - 1 - lag);
+        const target = len > 0 ? h[idx] : { x: mx, y: my };
+        const m = smoothMist.current[i];
+        m.x = lerp(m.x, target.x, MIST_LERP);
+        m.y = lerp(m.y, target.y, MIST_LERP);
+        const mel = mistRefs.current[i];
+        if (mel) {
+          mel.style.transform = `translate(${m.x}px, ${m.y}px) translate(-50%, -50%)`;
+        }
+      }
+
       const scale = overInteractive.current ? 1.14 : 1;
       const sunEl = sunWrapRef.current;
       if (sunEl) {
@@ -170,6 +195,30 @@ export function CustomCursor() {
       className="pointer-events-none fixed inset-0 z-[10000] overflow-hidden print:hidden"
       aria-hidden
     >
+      <div
+        ref={(el) => {
+          mistRefs.current[0] = el;
+        }}
+        className="pointer-events-none absolute left-0 top-0 h-[52px] w-[52px] rounded-full will-change-transform"
+        style={{
+          zIndex: 8,
+          background:
+            "radial-gradient(circle, rgba(0,56,168,0.42) 0%, rgba(0,56,168,0.12) 45%, transparent 72%)",
+          filter: "blur(6px)",
+        }}
+      />
+      <div
+        ref={(el) => {
+          mistRefs.current[1] = el;
+        }}
+        className="pointer-events-none absolute left-0 top-0 h-[40px] w-[40px] rounded-full will-change-transform"
+        style={{
+          zIndex: 9,
+          background:
+            "radial-gradient(circle, rgba(206,17,38,0.38) 0%, rgba(206,17,38,0.1) 48%, transparent 74%)",
+          filter: "blur(5px)",
+        }}
+      />
       {[0, 1, 2].map((i) => (
         <div
           key={i}
@@ -179,7 +228,7 @@ export function CustomCursor() {
           className="pointer-events-none absolute left-0 top-0"
           style={{ zIndex: 29 }}
         >
-          <TrailStar size={STAR_SIZES[i]} />
+          <TrailStar size={STAR_SIZES[i]} fill={STAR_FILLS[i]} />
         </div>
       ))}
       <div
