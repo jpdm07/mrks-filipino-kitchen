@@ -8,7 +8,6 @@ import { SuggestionPoll } from "@/components/sections/SuggestionPoll";
 import { CustomOrderCTA } from "@/components/sections/CustomOrderCTA";
 import { NewsletterStrip } from "@/components/sections/NewsletterStrip";
 import { FacebookCTA } from "@/components/sections/FacebookCTA";
-import { UpcomingPickupAvailability } from "@/components/availability/UpcomingPickupAvailability";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +26,6 @@ export default function HomePage() {
       <Suspense fallback={<FeaturedFallback />}>
         <FeaturedItems />
       </Suspense>
-      <UpcomingPickupAvailability />
       <PickupNotice />
       <HowItWorks />
       <AboutTeaser />
