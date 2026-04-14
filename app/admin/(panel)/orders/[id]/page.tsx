@@ -5,7 +5,6 @@ import { requireAdmin } from "@/lib/admin-auth";
 import type { OrderItemLine } from "@/lib/order-types";
 import { AdminOrderPaymentPanel } from "@/components/admin/AdminOrderPaymentPanel";
 import { AdminOrderDemoDeletePanel } from "@/components/admin/AdminOrderDemoDeletePanel";
-import { AdminOrderDemoDeletePanel } from "@/components/admin/AdminOrderDemoDeletePanel";
 import {
   getSauceCupsFromOrderLine,
   totalSauceCupsForItems,
