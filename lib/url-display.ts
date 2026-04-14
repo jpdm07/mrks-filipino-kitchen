@@ -6,10 +6,11 @@ export function urlForPrintLabel(href: string): string {
     .replace(/\/+$/, "");
 }
 
-/** Canonical https URL for print — never strips the scheme (business card website + order link). */
+/** Canonical https URL for print — keeps scheme; upgrades http → https; adds https if missing. */
 export function hrefWithHttps(href: string): string {
   const t = href.trim().replace(/\/+$/, "");
   if (!t) return t;
-  if (/^https?:\/\//i.test(t)) return t;
+  if (/^https:\/\//i.test(t)) return t;
+  if (/^http:\/\//i.test(t)) return `https://${t.slice(7)}`;
   return `https://${t.replace(/^\/+/, "")}`;
 }

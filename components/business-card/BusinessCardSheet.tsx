@@ -7,7 +7,7 @@ import { Logo } from "@/components/ui/Logo";
 import { QRCodeDisplay } from "@/components/ui/QRCodeDisplay";
 import { SITE } from "@/lib/config";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
-import { hrefWithHttps, urlForPrintLabel } from "@/lib/url-display";
+import { hrefWithHttps } from "@/lib/url-display";
 
 /** 8 cards per US Letter sheet: 2 × 4 @ 3.5" × 2" with trim gaps */
 const CARDS_PER_SHEET = 8;
@@ -69,7 +69,7 @@ function BusinessCardFace({
           </a>
           <p className="text-[7.5px] text-[var(--text-muted)]">{SITE.location}</p>
           {siteBaseUrl ? (
-            <p className="text-[5.5px] leading-snug break-all text-[var(--text-muted)]">
+            <p className="text-[5px] leading-tight text-[var(--text-muted)] whitespace-nowrap">
               <span className="font-semibold text-[var(--text)]">Website: </span>
               {hrefWithHttps(siteBaseUrl)}
             </p>
@@ -83,8 +83,8 @@ function BusinessCardFace({
             <FacebookIcon size={12} />
             Facebook
           </a>
-          <p className="text-[5.5px] leading-tight break-all text-[var(--text-muted)]">
-            {urlForPrintLabel(SITE.facebookUrl)}
+          <p className="text-[5px] leading-tight text-[var(--text-muted)] break-all">
+            {hrefWithHttps(SITE.facebookUrl)}
           </p>
         </div>
 
@@ -94,7 +94,7 @@ function BusinessCardFace({
               Order online
             </p>
             {orderQrHref ? (
-              <p className="mt-1 break-all text-[5.5px] leading-snug text-[var(--text-muted)]">
+              <p className="mt-1 text-[5px] leading-tight text-[var(--text-muted)] whitespace-nowrap">
                 Can&apos;t scan?{" "}
                 <span className="font-semibold text-[var(--text)]">
                   {hrefWithHttps(orderQrHref)}

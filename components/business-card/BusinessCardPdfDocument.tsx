@@ -21,7 +21,7 @@ import {
 } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import { SITE } from "@/lib/config";
-import { hrefWithHttps, urlForPrintLabel } from "@/lib/url-display";
+import { hrefWithHttps } from "@/lib/url-display";
 
 const LOGO_WORDMARK_TITLE = "Mr. K\u2019s";
 
@@ -221,6 +221,12 @@ const styles = StyleSheet.create({
     color: "#5c5866",
     marginTop: 1,
   },
+  /** Store URL on one line (no mid-string breaks). */
+  websiteLine: {
+    fontSize: 4.25,
+    color: "#5c5866",
+    marginTop: 1,
+  },
   fb: {
     fontSize: 5.5,
     color: "#1877F2",
@@ -228,7 +234,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   fbUrl: {
-    fontSize: 4.5,
+    fontSize: 4.25,
     color: "#5c5866",
     marginTop: 1,
     lineHeight: 1.15,
@@ -257,9 +263,9 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   orderUrlWrap: {
-    fontSize: 4.5,
+    fontSize: 4.25,
     color: "#5c5866",
-    lineHeight: 1.25,
+    lineHeight: 1.2,
   },
   scan: {
     fontSize: 5,
@@ -333,13 +339,13 @@ function SingleCard({
             <Text style={styles.contact}>{SITE.phoneDisplay}</Text>
             <Text style={styles.contactMuted}>{SITE.email}</Text>
             <Text style={styles.contactMuted}>{SITE.location}</Text>
-            <Text style={styles.contactMuted}>Website: {websiteDisplay}</Text>
-            <Link src={SITE.facebookUrl} style={styles.fb}>
+            <Text style={styles.websiteLine}>
+              Website: {websiteDisplay}
+            </Text>
+            <Link src={hrefWithHttps(SITE.facebookUrl)} style={styles.fb}>
               Facebook
             </Link>
-            <Text style={styles.fbUrl}>
-              {urlForPrintLabel(SITE.facebookUrl)}
-            </Text>
+            <Text style={styles.fbUrl}>{hrefWithHttps(SITE.facebookUrl)}</Text>
           </View>
           <View style={styles.bottomRow}>
             <View style={styles.orderBlock}>
