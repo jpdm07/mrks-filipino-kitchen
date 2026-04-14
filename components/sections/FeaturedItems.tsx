@@ -59,9 +59,9 @@ export async function FeaturedItems() {
           return (
             <article
               key={item.id}
-              className="card-elevated group overflow-hidden"
+              className="card-elevated group flex h-full flex-col overflow-hidden"
             >
-              <div className="relative aspect-[4/3] overflow-hidden">
+              <div className="relative aspect-[4/3] shrink-0 overflow-hidden">
                 <Image
                   src={item.photoUrl}
                   alt={item.name}
@@ -70,18 +70,21 @@ export async function FeaturedItems() {
                   sizes="(max-width:768px) 100vw, 33vw"
                 />
               </div>
-              <div className="p-5">
+              <div className="flex flex-1 flex-col p-5">
                 <h3 className="font-[family-name:var(--font-playfair)] text-xl font-bold">
                   {item.groupCardTitle ?? item.name}
                 </h3>
                 <p className="text-sm text-[var(--text-muted)]">{item.calories}</p>
-                <p className="mt-2 text-sm text-[var(--text)]">
+                <p className="mt-2 min-h-0 flex-1 text-sm text-[var(--text)]">
                   {item.description}
                 </p>
-                <p className="mt-3 text-lg font-bold text-[var(--primary)]">
+                <p className="mt-4 text-lg font-bold text-[var(--primary)]">
                   From ${price.toFixed(2)}
                 </p>
-                <Link href="/menu" className="btn btn-primary btn-sm btn-block mt-4">
+                <Link
+                  href="/menu"
+                  className="btn btn-primary btn-sm btn-block mt-3"
+                >
                   Order Now
                 </Link>
               </div>
