@@ -53,15 +53,15 @@ export async function FeaturedItems() {
       <h2 className="text-center font-[family-name:var(--font-playfair)] text-3xl font-bold text-[var(--text)] md:text-4xl">
         Our Most Loved Dishes
       </h2>
-      <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-3">
+      <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-3 [&>*]:min-h-0 [&>*]:h-full">
         {ordered.map((item) => {
           const price = item.sizes[0]?.price ?? item.basePrice;
           return (
             <article
               key={item.id}
-              className="card-elevated group flex h-full flex-col overflow-hidden"
+              className="card-elevated group flex h-full min-h-0 flex-col overflow-hidden"
             >
-              <div className="relative aspect-[4/3] shrink-0 overflow-hidden">
+              <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden">
                 <Image
                   src={item.photoUrl}
                   alt={item.name}
@@ -70,7 +70,7 @@ export async function FeaturedItems() {
                   sizes="(max-width:768px) 100vw, 33vw"
                 />
               </div>
-              <div className="flex flex-1 flex-col p-5">
+              <div className="flex min-h-0 flex-1 flex-col p-5">
                 <h3 className="font-[family-name:var(--font-playfair)] text-xl font-bold">
                   {item.groupCardTitle ?? item.name}
                 </h3>

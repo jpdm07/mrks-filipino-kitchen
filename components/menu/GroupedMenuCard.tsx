@@ -206,9 +206,9 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
   };
 
   return (
-    <article className="card-elevated group flex flex-col overflow-hidden">
+    <article className="card-elevated group flex h-full min-h-0 flex-col overflow-hidden">
       <div
-        className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--bg-section)]"
+        className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[var(--bg-section)]"
         aria-hidden
       >
         <Image
@@ -224,244 +224,248 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
           </span>
         ) : null}
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[var(--text)]">
-          {title}
-        </h3>
-        <p className="text-sm text-[var(--text-muted)]">{variant.calories}</p>
-        <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
-          {variant.description}
-        </p>
+      <div className="flex min-h-0 flex-1 flex-col p-4">
+        <div className="flex min-h-0 flex-1 flex-col">
+          <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[var(--text)]">
+            {title}
+          </h3>
+          <p className="text-sm text-[var(--text-muted)]">{variant.calories}</p>
+          <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
+            {variant.description}
+          </p>
 
-        <div className="mt-3 rounded-lg border border-[var(--gold)]/45 bg-[var(--gold)]/12 px-3 py-2.5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--primary)]">
-            Your selection
-          </p>
-          <p className="mt-1 font-semibold leading-snug text-[var(--text)]">
-            {selectionSummary}
-          </p>
-          {servingDetail ? (
-            <p className="mt-1 text-xs font-medium text-[var(--text-muted)]">
-              {servingDetail}
+          <div className="mt-3 rounded-lg border border-[var(--gold)]/45 bg-[var(--gold)]/12 px-3 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--primary)]">
+              Your selection
+            </p>
+            <p className="mt-1 font-semibold leading-snug text-[var(--text)]">
+              {selectionSummary}
+            </p>
+            {servingDetail ? (
+              <p className="mt-1 text-xs font-medium text-[var(--text-muted)]">
+                {servingDetail}
+              </p>
+            ) : null}
+            <p className="mt-2 text-xl font-bold text-[var(--primary)]">
+              ${safeUnitPrice.toFixed(2)}
+              {qty > 1 ? (
+                <span className="ml-2 text-sm font-semibold text-[var(--text-muted)]">
+                  × {qty} = ${(safeUnitPrice * qty).toFixed(2)}
+                </span>
+              ) : null}
+            </p>
+          </div>
+
+          {groupBlurb ? (
+            <p className="mt-2 text-xs leading-snug text-[var(--text-muted)]">
+              {groupBlurb}
             </p>
           ) : null}
-          <p className="mt-2 text-xl font-bold text-[var(--primary)]">
-            ${safeUnitPrice.toFixed(2)}
-            {qty > 1 ? (
-              <span className="ml-2 text-sm font-semibold text-[var(--text-muted)]">
-                × {qty} = ${(safeUnitPrice * qty).toFixed(2)}
-              </span>
-            ) : null}
-          </p>
-        </div>
 
-        {groupBlurb ? (
-          <p className="mt-2 text-xs leading-snug text-[var(--text-muted)]">
-            {groupBlurb}
-          </p>
-        ) : null}
-
-        {isTocinoUnified ? (
-          <>
-            <div className="mt-3 space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
-                Meat
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {(["pork", "chicken"] as const).map((m) => (
+          {isTocinoUnified ? (
+            <>
+              <div className="mt-3 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
+                  Meat
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {(["pork", "chicken"] as const).map((m) => (
+                    <label
+                      key={m}
+                      className={`flex cursor-pointer items-center gap-2 text-sm capitalize ${
+                        tocinoMeatDisabled(m)
+                          ? "cursor-not-allowed opacity-50"
+                          : ""
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name={`tocino-meat-${groupKey}`}
+                        checked={tocinoMeat === m}
+                        disabled={tocinoMeatDisabled(m)}
+                        onChange={() => setTocinoMeat(m)}
+                      />
+                      {m}
+                      {tocinoMeatDisabled(m) ? (
+                        <span className="text-[10px] font-bold text-[var(--accent)]">
+                          (out)
+                        </span>
+                      ) : null}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-3 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
+                  Plate or frozen pack
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-4">
                   <label
-                    key={m}
-                    className={`flex cursor-pointer items-center gap-2 text-sm capitalize ${
-                      tocinoMeatDisabled(m)
+                    className={`flex cursor-pointer items-center gap-2 text-sm ${
+                      tocinoStyleDisabled("plate")
                         ? "cursor-not-allowed opacity-50"
                         : ""
                     }`}
                   >
                     <input
                       type="radio"
-                      name={`tocino-meat-${groupKey}`}
-                      checked={tocinoMeat === m}
-                      disabled={tocinoMeatDisabled(m)}
-                      onChange={() => setTocinoMeat(m)}
+                      name={`tocino-style-${groupKey}`}
+                      checked={tocinoStyle === "plate"}
+                      disabled={tocinoStyleDisabled("plate")}
+                      onChange={() => setTocinoStyle("plate")}
                     />
-                    {m}
-                    {tocinoMeatDisabled(m) ? (
+                    Ready-made plate (with egg &amp; rice)
+                    {tocinoStyleDisabled("plate") ? (
                       <span className="text-[10px] font-bold text-[var(--accent)]">
                         (out)
                       </span>
                     ) : null}
                   </label>
-                ))}
-              </div>
-            </div>
-            <div className="mt-3 space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
-                Plate or frozen pack
-              </p>
-              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-4">
-                <label
-                  className={`flex cursor-pointer items-center gap-2 text-sm ${
-                    tocinoStyleDisabled("plate")
-                      ? "cursor-not-allowed opacity-50"
-                      : ""
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name={`tocino-style-${groupKey}`}
-                    checked={tocinoStyle === "plate"}
-                    disabled={tocinoStyleDisabled("plate")}
-                    onChange={() => setTocinoStyle("plate")}
-                  />
-                  Ready-made plate (with egg &amp; rice)
-                  {tocinoStyleDisabled("plate") ? (
-                    <span className="text-[10px] font-bold text-[var(--accent)]">
-                      (out)
-                    </span>
-                  ) : null}
-                </label>
-                <label
-                  className={`flex cursor-pointer items-center gap-2 text-sm ${
-                    tocinoStyleDisabled("frozen")
-                      ? "cursor-not-allowed opacity-50"
-                      : ""
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name={`tocino-style-${groupKey}`}
-                    checked={tocinoStyle === "frozen"}
-                    disabled={tocinoStyleDisabled("frozen")}
-                    onChange={() => setTocinoStyle("frozen")}
-                  />
-                  Frozen 12 oz (cook at home)
-                  {tocinoStyleDisabled("frozen") ? (
-                    <span className="text-[10px] font-bold text-[var(--accent)]">
-                      (out)
-                    </span>
-                  ) : null}
-                </label>
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="mt-3 space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
-                {variant.variantGroup === "lumpia" ? "Protein" : "Option"}
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {sorted.map((v) => (
                   <label
-                    key={v.id}
                     className={`flex cursor-pointer items-center gap-2 text-sm ${
-                      v.soldOut ? "cursor-not-allowed opacity-50" : ""
+                      tocinoStyleDisabled("frozen")
+                        ? "cursor-not-allowed opacity-50"
+                        : ""
                     }`}
                   >
                     <input
                       type="radio"
-                      name={`protein-${groupKey}`}
-                      checked={variantId === v.id}
-                      disabled={v.soldOut}
-                      onChange={() => setVariantId(v.id)}
+                      name={`tocino-style-${groupKey}`}
+                      checked={tocinoStyle === "frozen"}
+                      disabled={tocinoStyleDisabled("frozen")}
+                      onChange={() => setTocinoStyle("frozen")}
                     />
-                    {shortLabel(v)}
-                    {v.soldOut ? (
+                    Frozen 12 oz (cook at home)
+                    {tocinoStyleDisabled("frozen") ? (
                       <span className="text-[10px] font-bold text-[var(--accent)]">
                         (out)
                       </span>
                     ) : null}
                   </label>
-                ))}
-              </div>
-            </div>
-
-            {cookedFrozenPick ? (
-              <div className="mt-3 space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
-                  Cooked or frozen
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <label className="flex cursor-pointer items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name={`cf-${groupKey}`}
-                      checked={cookedOrFrozen === "cooked"}
-                      onChange={() => setCookedOrFrozen("cooked")}
-                    />
-                    Cooked
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name={`cf-${groupKey}`}
-                      checked={cookedOrFrozen === "frozen"}
-                      onChange={() => setCookedOrFrozen("frozen")}
-                    />
-                    Frozen
-                  </label>
                 </div>
               </div>
-            ) : !cookedFrozenPick && variant.sizes.length > 1 ? (
+            </>
+          ) : (
+            <>
               <div className="mt-3 space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
-                  Size
+                  {variant.variantGroup === "lumpia" ? "Protein" : "Option"}
                 </p>
-                <div className="flex flex-col gap-2">
-                  {variant.sizes.map((s) => (
+                <div className="flex flex-wrap gap-3">
+                  {sorted.map((v) => (
                     <label
-                      key={s.key}
-                      className="flex cursor-pointer items-center gap-2 text-sm"
+                      key={v.id}
+                      className={`flex cursor-pointer items-center gap-2 text-sm ${
+                        v.soldOut ? "cursor-not-allowed opacity-50" : ""
+                      }`}
                     >
                       <input
                         type="radio"
-                        name={`sz-${groupKey}`}
-                        checked={sizeKey === s.key}
-                        onChange={() => setSizeKey(s.key)}
+                        name={`protein-${groupKey}`}
+                        checked={variantId === v.id}
+                        disabled={v.soldOut}
+                        onChange={() => setVariantId(v.id)}
                       />
-                      {s.label}
+                      {shortLabel(v)}
+                      {v.soldOut ? (
+                        <span className="text-[10px] font-bold text-[var(--accent)]">
+                          (out)
+                        </span>
+                      ) : null}
                     </label>
                   ))}
                 </div>
               </div>
-            ) : null}
-          </>
-        )}
 
-        <div className="mt-4 flex items-center gap-2">
-          <button
-            type="button"
-            className="btn-qty"
-            onClick={() => setQty((q) => Math.max(1, q - 1))}
-            aria-label="Decrease quantity"
-          >
-            −
-          </button>
-          <span className="w-8 text-center font-bold">{qty}</span>
-          <button
-            type="button"
-            className="btn-qty"
-            onClick={() => setQty((q) => Math.min(99, q + 1))}
-            aria-label="Increase quantity"
-          >
-            +
-          </button>
+              {cookedFrozenPick ? (
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
+                    Cooked or frozen
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <label className="flex cursor-pointer items-center gap-2 text-sm">
+                      <input
+                        type="radio"
+                        name={`cf-${groupKey}`}
+                        checked={cookedOrFrozen === "cooked"}
+                        onChange={() => setCookedOrFrozen("cooked")}
+                      />
+                      Cooked
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-2 text-sm">
+                      <input
+                        type="radio"
+                        name={`cf-${groupKey}`}
+                        checked={cookedOrFrozen === "frozen"}
+                        onChange={() => setCookedOrFrozen("frozen")}
+                      />
+                      Frozen
+                    </label>
+                  </div>
+                </div>
+              ) : !cookedFrozenPick && variant.sizes.length > 1 ? (
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
+                    Size
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {variant.sizes.map((s) => (
+                      <label
+                        key={s.key}
+                        className="flex cursor-pointer items-center gap-2 text-sm"
+                      >
+                        <input
+                          type="radio"
+                          name={`sz-${groupKey}`}
+                          checked={sizeKey === s.key}
+                          onChange={() => setSizeKey(s.key)}
+                        />
+                        {s.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </>
+          )}
         </div>
 
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={handleAdd}
-          className="btn btn-primary btn-sm btn-block mt-4"
-        >
-          Add to Cart
-        </button>
-        <Link
-          href={`/contact?subject=inquiry&item=${encodeURIComponent(variant.name)}`}
-          className="mt-2 block text-center text-sm font-medium text-[var(--primary)] underline decoration-[var(--primary)]/30 underline-offset-4 transition hover:decoration-[var(--primary)]"
-        >
-          💬 Ask About This Dish
-        </Link>
+        <div className="mt-auto flex flex-col border-t border-[var(--border)]/60 pt-4">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="btn-qty"
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              aria-label="Decrease quantity"
+            >
+              −
+            </button>
+            <span className="w-8 text-center font-bold">{qty}</span>
+            <button
+              type="button"
+              className="btn-qty"
+              onClick={() => setQty((q) => Math.min(99, q + 1))}
+              aria-label="Increase quantity"
+            >
+              +
+            </button>
+          </div>
+
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={handleAdd}
+            className="btn btn-primary btn-sm btn-block mt-4"
+          >
+            Add to Cart
+          </button>
+          <Link
+            href={`/contact?subject=inquiry&item=${encodeURIComponent(variant.name)}`}
+            className="mt-2 block text-center text-sm font-medium text-[var(--primary)] underline decoration-[var(--primary)]/30 underline-offset-4 transition hover:decoration-[var(--primary)]"
+          >
+            💬 Ask About This Dish
+          </Link>
+        </div>
       </div>
     </article>
   );

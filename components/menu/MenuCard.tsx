@@ -48,9 +48,9 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
   };
 
   return (
-    <article className="card-elevated group flex flex-col overflow-hidden">
+    <article className="card-elevated group flex h-full min-h-0 flex-col overflow-hidden">
       <div
-        className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--bg-section)]"
+        className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[var(--bg-section)]"
         aria-hidden
       >
         <Image
@@ -66,108 +66,112 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
           </span>
         ) : null}
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[var(--text)]">
-          {item.name}
-        </h3>
-        <p className="text-sm text-[var(--text-muted)]">{item.calories}</p>
-        <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
-          {item.description}
-        </p>
-        {item.id === "seed-6" ? (
-          <p className="mt-2 text-xs font-medium text-[var(--text-muted)]">
-            Baked and served in its own aluminum ramekin
+      <div className="flex min-h-0 flex-1 flex-col p-4">
+        <div className="flex min-h-0 flex-1 flex-col">
+          <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[var(--text)]">
+            {item.name}
+          </h3>
+          <p className="text-sm text-[var(--text-muted)]">{item.calories}</p>
+          <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
+            {item.description}
           </p>
-        ) : null}
+          {item.id === "seed-6" ? (
+            <p className="mt-2 text-xs font-medium text-[var(--text-muted)]">
+              Baked and served in its own aluminum ramekin
+            </p>
+          ) : null}
 
-        {lumpia ? (
-          <div className="mt-3 space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
-              Cooked or Frozen
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name={`cf-${item.id}`}
-                  checked={cookedOrFrozen === "cooked"}
-                  onChange={() => setCookedOrFrozen("cooked")}
-                />
-                Cooked
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name={`cf-${item.id}`}
-                  checked={cookedOrFrozen === "frozen"}
-                  onChange={() => setCookedOrFrozen("frozen")}
-                />
-                Frozen
-              </label>
-            </div>
-          </div>
-        ) : item.sizes.length > 1 ? (
-          <div className="mt-3 space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
-              Size
-            </p>
-            <div className="flex flex-col gap-2">
-              {item.sizes.map((s) => (
-                <label
-                  key={s.key}
-                  className="flex cursor-pointer items-center gap-2 text-sm"
-                >
+          {lumpia ? (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
+                Cooked or Frozen
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
                   <input
                     type="radio"
-                    name={`sz-${item.id}`}
-                    checked={sizeKey === s.key}
-                    onChange={() => setSizeKey(s.key)}
+                    name={`cf-${item.id}`}
+                    checked={cookedOrFrozen === "cooked"}
+                    onChange={() => setCookedOrFrozen("cooked")}
                   />
-                  {s.label}
+                  Cooked
                 </label>
-              ))}
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name={`cf-${item.id}`}
+                    checked={cookedOrFrozen === "frozen"}
+                    onChange={() => setCookedOrFrozen("frozen")}
+                  />
+                  Frozen
+                </label>
+              </div>
             </div>
-          </div>
-        ) : null}
-
-        <div className="mt-4 flex items-center gap-2">
-          <button
-            type="button"
-            className="btn-qty"
-            onClick={() => setQty((q) => Math.max(1, q - 1))}
-            aria-label="Decrease quantity"
-          >
-            −
-          </button>
-          <span className="w-8 text-center font-bold">{qty}</span>
-          <button
-            type="button"
-            className="btn-qty"
-            onClick={() => setQty((q) => Math.min(99, q + 1))}
-            aria-label="Increase quantity"
-          >
-            +
-          </button>
+          ) : item.sizes.length > 1 ? (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
+                Size
+              </p>
+              <div className="flex flex-col gap-2">
+                {item.sizes.map((s) => (
+                  <label
+                    key={s.key}
+                    className="flex cursor-pointer items-center gap-2 text-sm"
+                  >
+                    <input
+                      type="radio"
+                      name={`sz-${item.id}`}
+                      checked={sizeKey === s.key}
+                      onChange={() => setSizeKey(s.key)}
+                    />
+                    {s.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
 
-        <p className="mt-3 text-xl font-bold text-[var(--primary)]">
-          ${safeUnitPrice.toFixed(2)}
-        </p>
+        <div className="mt-auto flex flex-col border-t border-[var(--border)]/60 pt-4">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="btn-qty"
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              aria-label="Decrease quantity"
+            >
+              −
+            </button>
+            <span className="w-8 text-center font-bold">{qty}</span>
+            <button
+              type="button"
+              className="btn-qty"
+              onClick={() => setQty((q) => Math.min(99, q + 1))}
+              aria-label="Increase quantity"
+            >
+              +
+            </button>
+          </div>
 
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={handleAdd}
-          className="btn btn-primary btn-sm btn-block mt-4"
-        >
-          Add to Cart
-        </button>
-        <Link
-          href={`/contact?subject=inquiry&item=${encodeURIComponent(item.name)}`}
-          className="mt-2 block text-center text-sm font-medium text-[var(--primary)] underline decoration-[var(--primary)]/30 underline-offset-4 transition hover:decoration-[var(--primary)]"
-        >
-          💬 Ask About This Dish
-        </Link>
+          <p className="mt-3 text-xl font-bold text-[var(--primary)]">
+            ${safeUnitPrice.toFixed(2)}
+          </p>
+
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={handleAdd}
+            className="btn btn-primary btn-sm btn-block mt-4"
+          >
+            Add to Cart
+          </button>
+          <Link
+            href={`/contact?subject=inquiry&item=${encodeURIComponent(item.name)}`}
+            className="mt-2 block text-center text-sm font-medium text-[var(--primary)] underline decoration-[var(--primary)]/30 underline-offset-4 transition hover:decoration-[var(--primary)]"
+          >
+            💬 Ask About This Dish
+          </Link>
+        </div>
       </div>
     </article>
   );
