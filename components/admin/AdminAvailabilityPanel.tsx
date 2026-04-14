@@ -453,7 +453,13 @@ export function AdminAvailabilityPanel() {
               </div>
             </div>
           ) : null}
-          <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
+          <p className="mt-4 border-t border-[var(--border)] pt-4 text-xs text-[var(--text-muted)]">
+            <strong className="text-[var(--text)]">Save</strong> writes this day to
+            the database every time you click it — note, open/closed state, and
+            slots (when the day is open). The storefront picks it up within a few
+            seconds.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
               className="rounded bg-[var(--primary)] px-3 py-2 text-sm font-bold text-white"
