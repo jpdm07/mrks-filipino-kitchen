@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { AdminAvailabilityPanel } from "@/components/admin/AdminAvailabilityPanel";
-import { PickupSyncStatusBanner } from "@/components/admin/PickupSyncStatusBanner";
 
 export default async function AdminAvailabilityPage() {
   await requireAdmin();
@@ -26,9 +25,6 @@ export default async function AdminAvailabilityPage() {
         checkout calendar refresh automatically every few seconds (and when
         someone returns to your site tab).
       </p>
-      <div className="mt-6">
-        <PickupSyncStatusBanner />
-      </div>
       <div className="mt-8">
         <AdminAvailabilityPanel />
       </div>

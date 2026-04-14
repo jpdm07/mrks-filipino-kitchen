@@ -34,16 +34,6 @@ export function isGoogleCalendarConfigured(): boolean {
   );
 }
 
-export function getGoogleAvailabilitySyncEnvSummary(): {
-  autoSyncEnabled: boolean;
-  calendarConfigured: boolean;
-} {
-  return {
-    autoSyncEnabled: process.env.GOOGLE_AVAILABILITY_AUTO_SYNC !== "false",
-    calendarConfigured: isGoogleCalendarConfigured(),
-  };
-}
-
 /**
  * Throttled Google Calendar → DB sync that does **not** block the caller.
  * Public routes should call this and then read the database immediately so
