@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
-const KEY = "mrk_banner_dismissed";
+/** Bump suffix when you want the banner to reappear for users who dismissed an older version. */
+const KEY = "mrk_banner_biweekly_v2_dismissed";
 
 export function AnnouncementBanner() {
   const [visible, setVisible] = useState(false);
