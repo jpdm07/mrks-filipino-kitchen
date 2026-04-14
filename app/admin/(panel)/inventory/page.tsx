@@ -4,7 +4,10 @@ import { prisma } from "@/lib/prisma";
 
 export default async function InventoryPage() {
   await requireAdmin();
-  const items = await prisma.menuItem.findMany({ orderBy: { sortOrder: "asc" } });
+  const itemsRaw = await prisma.menuItem.findMany({
+    orderBy: { sortOrder: "asc" },
+  });
+  const items = JSON.parse(JSON.stringify(itemsRaw));
   return (
     <div>
       <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold">

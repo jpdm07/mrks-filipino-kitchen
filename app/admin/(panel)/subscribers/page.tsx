@@ -8,10 +8,7 @@ export default async function SubscribersPage() {
     prisma.subscriber.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.menuItem.findMany({ orderBy: { name: "asc" } }),
   ]);
-  const subscribers = subscribersRaw.map((s) => ({
-    ...s,
-    createdAt: s.createdAt.toISOString(),
-  }));
+  const subscribers = JSON.parse(JSON.stringify(subscribersRaw));
   return (
     <div>
       <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold">

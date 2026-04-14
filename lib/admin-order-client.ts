@@ -13,10 +13,11 @@ export function toAdminOrderClientRow(
   order: Order,
   itemsSummary: string
 ): AdminOrderClientRow {
-  return {
-    ...order,
-    createdAt: order.createdAt.toISOString(),
-    updatedAt: order.updatedAt.toISOString(),
-    itemsSummary,
-  };
+  // JSON round-trip strips Prisma client prototypes / non-JSON fields so React Flight
+  // can serialize props to DashboardOrders (spread alone can still fail in production).
+  const base = JSON.parse(JSON.stringify(order)) as Omit<
+    AdminOrderClientRow,
+    "itemsSummary"
+  >;
+  return { ...base, itemsSummary };
 }

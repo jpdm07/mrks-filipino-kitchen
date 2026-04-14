@@ -4,6 +4,8 @@ import { DashboardOrders } from "@/components/admin/DashboardOrders";
 import { toAdminOrderClientRow } from "@/lib/admin-order-client";
 import type { OrderItemLine } from "@/lib/order-types";
 
+export const dynamic = "force-dynamic";
+
 function summarize(raw: string): string {
   try {
     const items = JSON.parse(raw) as OrderItemLine[];
