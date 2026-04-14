@@ -80,6 +80,18 @@ function smLogoRayPaths(): string[] {
 
 const RAY_PATHS = smLogoRayPaths();
 
+/** Facebook “f” mark (matches site `FacebookIcon` path, print scale). */
+function FacebookMarkPdf({ size = 6 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path
+        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+        fill="#1877F2"
+      />
+    </Svg>
+  );
+}
+
 /** Renders the sun + wordmark like the site Logo (sm, light). */
 function BrandLogoMarkPdf() {
   const L = LOGO_SM;
@@ -221,56 +233,48 @@ const styles = StyleSheet.create({
     color: "#5c5866",
     marginTop: 1,
   },
-  /** Store URL on one line (no mid-string breaks). */
+  /** Store URL under Facebook row. */
   websiteLine: {
     fontSize: 4.25,
     color: "#5c5866",
-    marginTop: 1,
-  },
-  fb: {
-    fontSize: 5.5,
-    color: "#1877F2",
     marginTop: 2,
+  },
+  fbRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    flexWrap: "wrap",
+    marginTop: 2,
+    gap: 2,
+  },
+  fbColon: {
+    fontSize: 5.5,
+    color: "#14121a",
     fontWeight: "bold",
+    marginTop: 0.5,
   },
-  fbUrl: {
+  fbUrlText: {
     fontSize: 4.25,
-    color: "#5c5866",
-    marginTop: 1,
+    color: "#1877F2",
     lineHeight: 1.15,
-  },
-  orderBlock: {
     flex: 1,
     minWidth: 0,
-    paddingRight: 4,
   },
   bottomRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    justifyContent: "flex-end",
+    alignItems: "flex-end",
     marginTop: 4,
     paddingTop: 4,
     borderTopWidth: 1,
     borderTopColor: "#e5dfd3",
     borderTopStyle: "solid",
-    gap: 4,
   },
   orderLabel: {
     fontSize: 5,
     fontWeight: "bold",
     color: "#ce1126",
     textTransform: "uppercase",
-    marginBottom: 2,
-  },
-  orderUrlWrap: {
-    fontSize: 4.25,
-    color: "#5c5866",
-    lineHeight: 1.2,
-  },
-  scan: {
-    fontSize: 5,
-    color: "#5c5866",
-    marginTop: 1,
+    marginTop: 2,
     textAlign: "center",
   },
   qrCol: {
@@ -339,25 +343,24 @@ function SingleCard({
             <Text style={styles.contact}>{SITE.phoneDisplay}</Text>
             <Text style={styles.contactMuted}>{SITE.email}</Text>
             <Text style={styles.contactMuted}>{SITE.location}</Text>
+            <Link src={hrefWithHttps(SITE.facebookUrl)}>
+              <View style={styles.fbRow}>
+                <FacebookMarkPdf size={6} />
+                <Text style={styles.fbColon}>:</Text>
+                <Text style={styles.fbUrlText}>
+                  {hrefWithHttps(SITE.facebookUrl)}
+                </Text>
+              </View>
+            </Link>
             <Text style={styles.websiteLine}>
               Website: {websiteDisplay}
             </Text>
-            <Link src={hrefWithHttps(SITE.facebookUrl)} style={styles.fb}>
-              Facebook
-            </Link>
-            <Text style={styles.fbUrl}>{hrefWithHttps(SITE.facebookUrl)}</Text>
           </View>
           <View style={styles.bottomRow}>
-            <View style={styles.orderBlock}>
-              <Text style={styles.orderLabel}>Order online</Text>
-              <Text style={styles.orderUrlWrap}>
-                Can&apos;t scan? {hrefWithHttps(orderUrl)}
-              </Text>
-            </View>
             <View style={styles.qrCol}>
               {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf Image has no alt */}
               <Image src={qrSrc} style={{ width: 33, height: 33 }} />
-              <Text style={styles.scan}>Scan</Text>
+              <Text style={styles.orderLabel}>Order online</Text>
             </View>
           </View>
         </View>

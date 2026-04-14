@@ -68,41 +68,31 @@ function BusinessCardFace({
             {SITE.email}
           </a>
           <p className="text-[7.5px] text-[var(--text-muted)]">{SITE.location}</p>
-          {siteBaseUrl ? (
-            <p className="text-[5px] leading-tight text-[var(--text-muted)] whitespace-nowrap">
-              <span className="font-semibold text-[var(--text)]">Website: </span>
-              {hrefWithHttps(siteBaseUrl)}
-            </p>
-          ) : null}
           <a
             href={SITE.facebookUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[7.5px] font-semibold text-[#1877F2]"
+            aria-label="Facebook profile"
+            className="mt-1 inline-flex max-w-full flex-wrap items-center gap-x-0.5 gap-y-0.5"
           >
-            <FacebookIcon size={12} />
-            Facebook
+            <FacebookIcon size={12} className="shrink-0 text-[#1877F2]" />
+            <span className="shrink-0 text-[7px] font-semibold text-[var(--text)]">
+              :
+            </span>
+            <span className="min-w-0 break-all text-[5px] font-semibold leading-tight text-[#1877F2]">
+              {hrefWithHttps(SITE.facebookUrl)}
+            </span>
           </a>
-          <p className="text-[5px] leading-tight text-[var(--text-muted)] break-all">
-            {hrefWithHttps(SITE.facebookUrl)}
-          </p>
+          {siteBaseUrl ? (
+            <p className="mt-1 text-[5px] leading-tight text-[var(--text-muted)] whitespace-nowrap">
+              <span className="font-semibold text-[var(--text)]">Website: </span>
+              {hrefWithHttps(siteBaseUrl)}
+            </p>
+          ) : null}
         </div>
 
-        <div className="mt-1 flex shrink-0 items-start gap-3 border-t border-[var(--border)] pt-1.5">
-          <div className="min-w-0 flex-1">
-            <p className="text-[6.5px] font-bold uppercase leading-tight tracking-wide text-[var(--accent)]">
-              Order online
-            </p>
-            {orderQrHref ? (
-              <p className="mt-1 text-[5px] leading-tight text-[var(--text-muted)] whitespace-nowrap">
-                Can&apos;t scan?{" "}
-                <span className="font-semibold text-[var(--text)]">
-                  {hrefWithHttps(orderQrHref)}
-                </span>
-              </p>
-            ) : null}
-          </div>
-          <div className="flex w-[52px] shrink-0 flex-col items-center">
+        <div className="mt-1 flex shrink-0 justify-end border-t border-[var(--border)] pt-1.5">
+          <div className="flex w-[52px] flex-col items-center">
             {orderQrHref ? (
               <QRCodeDisplay
                 size={46}
@@ -118,9 +108,9 @@ function BusinessCardFace({
                 aria-hidden
               />
             )}
-            <span className="mt-0.5 text-[6px] font-bold text-[var(--text-muted)]">
-              Scan
-            </span>
+            <p className="mt-0.5 text-center text-[6px] font-bold uppercase leading-tight tracking-wide text-[var(--accent)]">
+              Order online
+            </p>
           </div>
         </div>
       </div>
