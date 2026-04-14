@@ -25,6 +25,7 @@ export function AdminOrderDemoDeletePanel({
         `/api/orders/${encodeURIComponent(orderNumber)}`,
         {
           method: "PATCH",
+          credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ isDemo: next }),
         }
@@ -53,7 +54,7 @@ export function AdminOrderDemoDeletePanel({
     try {
       const res = await fetch(
         `/api/orders/${encodeURIComponent(orderNumber)}`,
-        { method: "DELETE" }
+        { method: "DELETE", credentials: "same-origin" }
       );
       if (!res.ok) {
         setErr("Could not delete order.");

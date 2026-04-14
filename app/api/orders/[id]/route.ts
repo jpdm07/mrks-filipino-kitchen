@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -23,6 +24,12 @@ import {
 
 function venmoDisplay(): string {
   return process.env.NEXT_PUBLIC_VENMO_HANDLE ?? "@jpdm07";
+}
+
+/** Dashboard + finances read orders from DB; invalidate after admin mutations. */
+function revalidateAdminOrderViews() {
+  revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/finances");
 }
 
 function parseItems(raw: string): OrderItemLine[] {
@@ -181,6 +188,7 @@ export async function PATCH(
     void updatePickupEvent(updated.orderNumber, "Cancelled");
   }
 
+  revalidateAdminOrderViews();
   return NextResponse.json(updated);
 }
 
@@ -241,5 +249,6 @@ export async function DELETE(
   }
   await prisma.order.delete({ where: { id: order.id } });
   void updatePickupEvent(order.orderNumber, "Cancelled");
+  revalidateAdminOrderViews();
   return NextResponse.json({ ok: true });
 }

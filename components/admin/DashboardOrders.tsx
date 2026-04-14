@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   getSauceCupsFromOrderLine,
@@ -44,6 +45,7 @@ function sortOrders(list: Row[]): Row[] {
 }
 
 export function DashboardOrders() {
+  const router = useRouter();
   const [orders, setOrders] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -122,6 +124,7 @@ export function DashboardOrders() {
       if (modal && modal.id === updated.id) {
         setModal({ ...modal, ...updated, items: modal.items });
       }
+      router.refresh();
     }
   };
 
@@ -148,6 +151,7 @@ export function DashboardOrders() {
     if (res.ok) {
       setOrders((prev) => prev.filter((x) => x.id !== o.id));
       if (modal?.id === o.id) setModal(null);
+      router.refresh();
     } else {
       window.alert("Could not delete order. Try again or open the full order page.");
     }
@@ -361,6 +365,7 @@ export function DashboardOrders() {
                   )
                 );
                 setModal({ ...modal, ...updated });
+                router.refresh();
               }}
             />
             <label className="mt-4 flex cursor-pointer items-start gap-2 text-sm">
