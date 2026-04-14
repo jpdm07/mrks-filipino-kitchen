@@ -81,3 +81,46 @@ export async function safeDb<T>(run: () => Promise<T>, fallback: T): Promise<T> 
     return fallback;
   }
 }
+
+const VERCEL_DB_CHECKLIST =
+  "1) Vercel → your project → Settings → Environment Variables → ensure DATABASE_URL exists for Production (and Preview if you use preview URLs). " +
+  "2) Paste the same pooled Postgres URL you use locally (Neon: Connection string → “Pooled”, often contains pooler…neon.tech). " +
+  "3) Append ?sslmode=require if the string does not already include sslmode=. " +
+  "4) Save variables, then redeploy (Deployments → … → Redeploy).";
+
+/**
+ * Safe copy for admin UI when Prisma fails (no secrets). Logs should capture full `err`.
+ */
+export function userFacingAdminDatabaseError(err: unknown): string {
+  const code = prismaDiagnosticCode(err);
+  const msg = err instanceof Error ? err.message : String(err);
+
+  if (
+    code === "P2021" ||
+    (msg.includes("does not exist") &&
+      (msg.includes("relation") || msg.includes("table")))
+  ) {
+    return (
+      `Database tables are missing (schema not applied${code ? `, ${code}` : ""}). ` +
+      `On your computer, put the production DATABASE_URL in .env.local and run: npx prisma migrate deploy`
+    );
+  }
+
+  if (
+    code === "P1001" ||
+    code === "P1002" ||
+    code === "P1017" ||
+    code === "P2024" ||
+    isDatabaseUnavailableError(err)
+  ) {
+    return (
+      `Cannot reach the database server${code ? ` (${code})` : ""}. ` +
+      VERCEL_DB_CHECKLIST
+    );
+  }
+
+  return (
+    `Database error${code ? ` (${code})` : ""}. ${VERCEL_DB_CHECKLIST} ` +
+    `Also open Vercel → this deployment → Logs and search for “prisma” or “admin/dashboard” for the full error.`
+  );
+}

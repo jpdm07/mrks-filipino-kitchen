@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
+import { userFacingAdminDatabaseError } from "@/lib/safe-db";
 import { DashboardOrders } from "@/components/admin/DashboardOrders";
 
 export const dynamic = "force-dynamic";
@@ -12,9 +13,9 @@ export default async function AdminDashboardPage() {
     orders = await prisma.order.findMany({
       orderBy: { createdAt: "desc" },
     });
-  } catch {
-    dbError =
-      "Could not load dashboard metrics from the database. Confirm DATABASE_URL on Vercel matches your Neon (or other Postgres) instance.";
+  } catch (e) {
+    console.error("[admin/dashboard] prisma.order.findMany failed:", e);
+    dbError = userFacingAdminDatabaseError(e);
   }
 
   const now = new Date();
@@ -47,7 +48,7 @@ export default async function AdminDashboardPage() {
         Dashboard
       </h1>
       {dbError ? (
-        <p className="mt-4 rounded-lg border border-[var(--accent)]/50 bg-[var(--gold-light)] px-4 py-3 text-sm font-medium text-[var(--text)]">
+        <p className="mt-4 whitespace-pre-wrap rounded-lg border border-[var(--accent)]/50 bg-[var(--gold-light)] px-4 py-3 text-sm font-medium leading-relaxed text-[var(--text)]">
           {dbError}
         </p>
       ) : null}
