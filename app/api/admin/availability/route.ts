@@ -1,0 +1,117 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { isAdminSession } from "@/lib/admin-auth";
+import { getAvailabilityMapForRange } from "@/lib/availability-server";
+import { eachYmdInRangeInclusive } from "@/lib/availability-range";
+import { addCalendarDaysYMD, getTodayInPickupTimezoneYMD } from "@/lib/pickup-lead-time";
+import {
+  slotsToDb,
+  upsertAvailabilityEntries,
+} from "@/lib/availability-admin-write";
+import {
+  createAvailabilityEvent,
+  removeAvailabilityEvent,
+} from "@/lib/googleCalendar";
+
+function ymdUtcWeekday(ymd: string): number {
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+}
+
+function lastDayOfMonth(year: number, monthIndex0: number): number {
+  return new Date(Date.UTC(year, monthIndex0 + 1, 0)).getUTCDate();
+}
+
+/** Admin: read month or write availability rules. */
+export async function GET(req: NextRequest) {
+  if (!(await isAdminSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { searchParams } = new URL(req.url);
+  const year = Number(searchParams.get("year"));
+  const month = Number(searchParams.get("month"));
+  if (!year || !month || month < 1 || month > 12) {
+    return NextResponse.json({ error: "year & month (1-12) required" }, { status: 400 });
+  }
+  const from = `${year}-${String(month).padStart(2, "0")}-01`;
+  const last = lastDayOfMonth(year, month - 1);
+  const to = `${year}-${String(month).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
+  const days = await getAvailabilityMapForRange(from, to);
+  return NextResponse.json({ from, to, days });
+}
+
+export async function POST(req: NextRequest) {
+  if (!(await isAdminSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const body = (await req.json()) as {
+    action?: string;
+    entries?: Array<{
+      date: string;
+      isOpen: boolean;
+      note?: string | null;
+      slots?: string[] | null;
+    }>;
+    year?: number;
+    month?: number;
+    isOpen?: boolean;
+    until?: string;
+    daysOfWeek?: number[];
+  };
+
+  if (body.action === "upsert" && Array.isArray(body.entries)) {
+    await upsertAvailabilityEntries(body.entries);
+    return NextResponse.json({ ok: true });
+  }
+
+  if (body.action === "setMonth" && body.year && body.month) {
+    const y = body.year;
+    const m = body.month;
+    const isOpen = Boolean(body.isOpen);
+    const from = `${y}-${String(m).padStart(2, "0")}-01`;
+    const last = lastDayOfMonth(y, m - 1);
+    const to = `${y}-${String(m).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
+    const slotsJson = slotsToDb(undefined, isOpen);
+    for (const ymd of eachYmdInRangeInclusive(from, to)) {
+      await prisma.availability.upsert({
+        where: { date: ymd },
+        create: { date: ymd, isOpen, note: null, slots: slotsJson },
+        update: {
+          isOpen,
+          slots: slotsJson,
+          ...(isOpen ? {} : { note: null }),
+        },
+      });
+      if (isOpen) {
+        void createAvailabilityEvent(ymd, JSON.parse(slotsJson) as string[], null);
+      } else {
+        void removeAvailabilityEvent(ymd);
+      }
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  if (body.action === "applyWeekly" && Array.isArray(body.daysOfWeek)) {
+    const today = getTodayInPickupTimezoneYMD();
+    const end =
+      body.until && /^\d{4}-\d{2}-\d{2}$/.test(body.until) && body.until >= today
+        ? body.until
+        : addCalendarDaysYMD(today, 60);
+    const want = new Set(body.daysOfWeek.map((n) => ((n % 7) + 7) % 7));
+    const slotsJson = slotsToDb(undefined, true);
+    const slotsArr = JSON.parse(slotsJson) as string[];
+    for (const ymd of eachYmdInRangeInclusive(today, end)) {
+      if (want.has(ymdUtcWeekday(ymd))) {
+        await prisma.availability.upsert({
+          where: { date: ymd },
+          create: { date: ymd, isOpen: true, note: null, slots: slotsJson },
+          update: { isOpen: true, slots: slotsJson },
+        });
+        void createAvailabilityEvent(ymd, slotsArr, null);
+      }
+    }
+    return NextResponse.json({ ok: true });
+  }
+
+  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+}

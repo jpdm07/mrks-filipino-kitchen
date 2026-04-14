@@ -1,0 +1,300 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import {
+  getSauceCupsFromOrderLine,
+  totalSauceCupsForItems,
+} from "@/lib/menu-item-unit-costs";
+import Link from "next/link";
+import type { Order } from "@prisma/client";
+import type { OrderItemLine } from "@/lib/order-types";
+import { OrderPaymentAdminActions } from "./OrderPaymentAdminActions";
+import { ORDER_STATUS_PENDING_PAYMENT_VERIFICATION } from "@/lib/order-payment";
+
+type Row = Order & { itemsSummary: string };
+
+const STATUSES = [
+  "Pending Payment Verification",
+  "Awaiting Payment",
+  "Pending",
+  "Confirmed",
+  "Ready",
+  "Completed",
+  "Cancelled",
+] as const;
+
+function parseItems(raw: string): OrderItemLine[] {
+  try {
+    const v = JSON.parse(raw) as unknown;
+    return Array.isArray(v) ? (v as OrderItemLine[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function sortOrders(list: Row[]): Row[] {
+  return [...list].sort((a, b) => {
+    const ta =
+      a.status === ORDER_STATUS_PENDING_PAYMENT_VERIFICATION ? 0 : 1;
+    const tb =
+      b.status === ORDER_STATUS_PENDING_PAYMENT_VERIFICATION ? 0 : 1;
+    if (ta !== tb) return ta - tb;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+}
+
+export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
+  const [orders, setOrders] = useState(initialOrders);
+  const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [q, setQ] = useState("");
+  const [modal, setModal] = useState<Order | null>(null);
+  const [adminNotes, setAdminNotes] = useState("");
+
+  const sorted = useMemo(() => sortOrders(orders), [orders]);
+
+  const filtered = useMemo(() => {
+    return sorted.filter((o) => {
+      if (statusFilter !== "All" && o.status !== statusFilter) return false;
+      if (!q.trim()) return true;
+      const n = q.toLowerCase();
+      return (
+        o.orderNumber.toLowerCase().includes(n) ||
+        o.customerName.toLowerCase().includes(n)
+      );
+    });
+  }, [sorted, statusFilter, q]);
+
+  const openModal = (o: Order) => {
+    setModal(o);
+    setAdminNotes(o.adminNotes ?? "");
+  };
+
+  const patchOrder = async (id: string, patch: object) => {
+    const num = orders.find((x) => x.id === id)?.orderNumber ?? id;
+    const res = await fetch(`/api/orders/${encodeURIComponent(num)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    if (res.ok) {
+      const updated = (await res.json()) as Order;
+      setOrders((prev) =>
+        prev.map((x) =>
+          x.id === updated.id
+            ? { ...x, ...updated, itemsSummary: x.itemsSummary }
+            : x
+        )
+      );
+      if (modal && modal.id === updated.id) {
+        setModal({ ...modal, ...updated, items: modal.items });
+      }
+    }
+  };
+
+  const resend = async () => {
+    if (!modal) return;
+    await fetch(
+      `/api/orders/${encodeURIComponent(modal.orderNumber)}?action=resend-sms`,
+      { method: "POST" }
+    );
+  };
+
+  return (
+    <div className="mt-10">
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <input
+          placeholder="Search order # or customer"
+          className="min-h-[44px] w-full max-w-md rounded-lg border border-[var(--border)] px-3 md:w-auto"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+        <select
+          className="min-h-[44px] rounded-lg border border-[var(--border)] px-3"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="All">All statuses</option>
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="overflow-x-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)]">
+        <table className="min-w-[900px] w-full text-left text-sm">
+          <thead className="bg-[var(--primary)] text-white">
+            <tr>
+              <th className="px-3 py-2">#</th>
+              <th className="px-3 py-2">Date</th>
+              <th className="px-3 py-2">Customer</th>
+              <th className="px-3 py-2">Items</th>
+              <th className="px-3 py-2">Utensils</th>
+              <th className="px-3 py-2">Total</th>
+              <th className="px-3 py-2">Status</th>
+              <th className="px-3 py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((o) => (
+              <tr key={o.id} className="border-t border-[var(--border)]">
+                <td className="px-3 py-2 font-mono text-xs">{o.orderNumber}</td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  {new Date(o.createdAt).toLocaleString()}
+                </td>
+                <td className="px-3 py-2">{o.customerName}</td>
+                <td className="max-w-[200px] truncate px-3 py-2" title={o.itemsSummary}>
+                  {o.itemsSummary}
+                </td>
+                <td className="px-3 py-2">
+                  {o.utensilSets != null ? o.utensilSets : "None"}
+                </td>
+                <td className="px-3 py-2 font-semibold">${o.total.toFixed(2)}</td>
+                <td className="px-3 py-2">
+                  <div className="flex flex-wrap items-center gap-1">
+                    {o.status === ORDER_STATUS_PENDING_PAYMENT_VERIFICATION ? (
+                      <span
+                        className="shrink-0 rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-black uppercase text-black"
+                        title="Verify Zelle/Venmo before confirming pickup"
+                      >
+                        Pay
+                      </span>
+                    ) : null}
+                    <select
+                      className="min-h-[40px] min-w-[8rem] flex-1 rounded border px-1"
+                      value={o.status}
+                      onChange={(e) => patchOrder(o.id, { status: e.target.value })}
+                    >
+                      {STATUSES.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </td>
+                <td className="px-3 py-2">
+                  <button
+                    type="button"
+                    className="text-[var(--primary)] underline"
+                    onClick={() => openModal(o)}
+                  >
+                    Details
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {modal ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[var(--radius)] bg-[var(--card)] p-6 shadow-xl">
+            <div className="flex items-start justify-between gap-4">
+              <h2 className="font-bold text-lg">Order #{modal.orderNumber}</h2>
+              <button type="button" onClick={() => setModal(null)}>
+                ✕
+              </button>
+            </div>
+            <p className="mt-2 text-sm text-[var(--text-muted)]">
+              {new Date(modal.createdAt).toLocaleString()}
+            </p>
+            <p className="mt-4">
+              <strong>{modal.customerName}</strong>
+              <br />
+              <a href={`tel:${modal.phone.replace(/\D/g, "")}`}>{modal.phone}</a>
+              <br />
+              {modal.email}
+            </p>
+            <ul className="mt-4 list-disc pl-5 text-sm">
+              {parseItems(modal.items).map((i, idx) => {
+                const cups = getSauceCupsFromOrderLine(i) * i.quantity;
+                const sauceLabel =
+                  cups > 0
+                    ? `${cups} sauce cup${cups === 1 ? "" : "s"}`
+                    : "no sauce cups";
+                return (
+                  <li key={idx}>
+                    {i.name} ×{i.quantity}
+                    {i.size ? ` · ${i.size}` : ""} → {sauceLabel}
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-2 text-sm font-semibold text-[var(--text-muted)]">
+              Total sauce cups to pack:{" "}
+              {totalSauceCupsForItems(parseItems(modal.items))}
+            </p>
+            <p className="mt-2 text-sm">
+              Utensils: {modal.utensilSets} sets (${modal.utensilCharge.toFixed(2)})
+            </p>
+            <p className="mt-2 text-sm">
+              Pickup: {modal.pickupDate} @ {modal.pickupTime}
+            </p>
+            {modal.paymentStatus ? (
+              <p className="mt-2 text-sm text-[var(--text-muted)]">
+                Payment: {modal.paymentMethod ?? "—"} · {modal.paymentStatus}
+              </p>
+            ) : null}
+            {modal.notes ? (
+              <p className="mt-2 text-sm">
+                <strong>Notes:</strong> {modal.notes}
+              </p>
+            ) : null}
+            {modal.customInquiry ? (
+              <p className="mt-2 text-sm">
+                <strong>Custom:</strong> {modal.customInquiry}
+              </p>
+            ) : null}
+            <OrderPaymentAdminActions
+              orderNumber={modal.orderNumber}
+              status={modal.status}
+              onDone={(updated) => {
+                setOrders((prev) =>
+                  prev.map((x) =>
+                    x.id === updated.id
+                      ? { ...x, ...updated, itemsSummary: x.itemsSummary }
+                      : x
+                  )
+                );
+                setModal({ ...modal, ...updated });
+              }}
+            />
+            <label className="mt-4 block text-sm font-semibold">
+              Admin notes (internal)
+              <textarea
+                className="mt-1 w-full rounded border px-2 py-2 text-sm"
+                rows={3}
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+              />
+            </label>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="rounded bg-[var(--primary)] px-4 py-2 text-sm font-bold text-white"
+                onClick={() => patchOrder(modal.id, { adminNotes })}
+              >
+                Save notes
+              </button>
+              <button
+                type="button"
+                className="rounded border px-4 py-2 text-sm font-semibold"
+                onClick={resend}
+              >
+                Resend SMS
+              </button>
+              <Link
+                href={`/admin/orders/${encodeURIComponent(modal.orderNumber)}`}
+                className="rounded border px-4 py-2 text-sm font-semibold"
+              >
+                Full page
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}

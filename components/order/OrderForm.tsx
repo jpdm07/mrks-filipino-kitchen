@@ -1,0 +1,453 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCart } from "@/components/cart/CartContext";
+import { OrderSummary } from "./OrderSummary";
+import { PickupCalendar } from "./PickupCalendar";
+import {
+  cartLinesToOrderItems,
+  samplesSelectionComplete,
+  samplesToLines,
+} from "@/lib/cart-types";
+import {
+  formatPickupYmdLong,
+  getEarliestPickupDateMinYMD,
+  isPickupYmdAllowed,
+  isWellFormedPickupYMD,
+  pickupDateRejectedMessage,
+} from "@/lib/pickup-lead-time";
+import {
+  ORDER_FORM_PREP_BANNER,
+  orderFormPickupConfirmationLine,
+  PICKUP_LEAD_TIME_CUSTOMER_LINE,
+} from "@/lib/pickup-availability-copy";
+import { PAYMENT_INSTRUCTIONS } from "@/lib/config";
+
+export function OrderForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const cart = useCart();
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const appliedUrlPickup = useRef(false);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [pickupDate, setPickupDate] = useState("");
+  const [pickupTime, setPickupTime] = useState("");
+  const [notes, setNotes] = useState("");
+  const [customCheck, setCustomCheck] = useState(false);
+  const [customText, setCustomText] = useState("");
+  const [recurring, setRecurring] = useState(false);
+  /** Customer acknowledges they will put the order # in Venmo/Zelle memo after submit. */
+  const [paymentMemoAck, setPaymentMemoAck] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [slotOptions, setSlotOptions] = useState<string[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [urlLeadReject, setUrlLeadReject] = useState(false);
+  /** Month jump for deep-linked orders only; not tied to every pickupDate change. */
+  const [calendarAnchorYmd, setCalendarAnchorYmd] = useState<string | null>(
+    null
+  );
+
+  const items = useMemo(
+    () => [
+      ...cartLinesToOrderItems(cart.lines),
+      ...samplesToLines(cart.samples, cart.samplePrices),
+    ],
+    [cart.lines, cart.samples, cart.samplePrices]
+  );
+
+  const minPickupDate = getEarliestPickupDateMinYMD();
+
+  useEffect(() => {
+    if (appliedUrlPickup.current) return;
+    const raw = searchParams.get("pickupDate") ?? searchParams.get("date");
+    if (!raw || !isWellFormedPickupYMD(raw)) return;
+    appliedUrlPickup.current = true;
+    const d = raw.trim();
+    if (!isPickupYmdAllowed(d)) {
+      setUrlLeadReject(true);
+      return;
+    }
+    setCalendarAnchorYmd(d);
+    setPickupDate(d);
+    window.setTimeout(() => {
+      calendarRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }, 500);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!pickupDate) {
+      setSlotOptions([]);
+      setPickupTime("");
+      return;
+    }
+    let cancelled = false;
+    setSlotsLoading(true);
+    fetch(`/api/availability/${encodeURIComponent(pickupDate)}`)
+      .then((r) => r.json())
+      .then((j: { slots?: unknown }) => {
+        if (cancelled) return;
+        const slots = Array.isArray(j.slots)
+          ? j.slots.filter((x): x is string => typeof x === "string")
+          : [];
+        setSlotOptions(slots);
+        setPickupTime((prev) => (prev && slots.includes(prev) ? prev : ""));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSlotOptions([]);
+          setPickupTime("");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSlotsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pickupDate]);
+
+  const basicsOk =
+    name.trim() &&
+    phone.trim() &&
+    email.trim() &&
+    pickupDate &&
+    pickupTime &&
+    slotOptions.includes(pickupTime) &&
+    isPickupYmdAllowed(pickupDate) &&
+    !slotsLoading;
+
+  const samplesOk = samplesSelectionComplete(cart.samples);
+  const canSubmitOrder = basicsOk && samplesOk;
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr(null);
+    if (!name.trim() || !phone.trim() || !email.trim()) {
+      setErr("Please fill in name, phone, and email.");
+      return;
+    }
+    if (!pickupDate || !pickupTime) {
+      setErr("Please select a pickup date and time to continue.");
+      return;
+    }
+    if (!isPickupYmdAllowed(pickupDate)) {
+      setErr(pickupDateRejectedMessage());
+      return;
+    }
+    if (items.length === 0) {
+      setErr("Your cart is empty.");
+      return;
+    }
+    if (!samplesOk) {
+      if (cart.samples.lumpiaQty > 0 && !cart.samples.lumpiaProtein) {
+        setErr(
+          "Choose beef, pork, or turkey for lumpia samples (open your cart if needed)."
+        );
+        return;
+      }
+      if (cart.samples.pancitQty > 0 && !cart.samples.pancitType) {
+        setErr("Choose chicken or shrimp for pancit samples.");
+        return;
+      }
+    }
+    if (!paymentMemoAck) {
+      setErr(
+        "Please confirm you will put your order number in your Venmo or Zelle memo when you pay."
+      );
+      return;
+    }
+    setLoading(true);
+    const sets = cart.wantsUtensils ? Math.max(1, cart.utensilSets) : 0;
+    const res = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerName: name.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        items,
+        wantsUtensils: cart.wantsUtensils,
+        utensilSets: sets,
+        pickupDate,
+        pickupTime,
+        notes: notes.trim(),
+        wantsRecurring: recurring || cart.recurringInterest,
+        customInquiry: customCheck ? customText.trim() : null,
+        subscribeUpdates: cart.newsletterOptIn,
+      }),
+    });
+    const data = (await res.json()) as {
+      error?: string;
+      devHint?: string;
+      orderNumber?: string;
+    };
+    setLoading(false);
+    if (!res.ok) {
+      const msg = data.error ?? "Order failed";
+      const hint =
+        typeof data.devHint === "string" && data.devHint.trim()
+          ? data.devHint.trim()
+          : "";
+      setErr(hint ? `${msg}\n\n${hint}` : msg);
+      return;
+    }
+    if (!data.orderNumber) {
+      setErr("Order placed but confirmation number missing. Please contact us.");
+      return;
+    }
+    cart.clearCart();
+    router.push(`/order-confirmation/${encodeURIComponent(data.orderNumber)}`);
+  };
+
+  if (items.length === 0) {
+    return (
+      <p className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-8 text-center text-[var(--text-muted)]">
+        Your cart is empty.{" "}
+        <a href="/menu" className="font-semibold text-[var(--primary)] underline">
+          Browse the menu
+        </a>{" "}
+        to add items.
+      </p>
+    );
+  }
+
+  return (
+    <form onSubmit={submit} className="grid gap-10 lg:grid-cols-2">
+      <div className="space-y-4">
+        <h1 className="font-[family-name:var(--font-playfair)] text-2xl font-bold sm:text-3xl">
+          Checkout
+        </h1>
+        <p className="rounded-xl border border-[#0038A8]/20 bg-[#eef4ff] px-4 py-3 text-sm leading-relaxed text-[var(--text)]">
+          {ORDER_FORM_PREP_BANNER}
+        </p>
+        {urlLeadReject ? (
+          <p className="rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-3 py-2 text-sm text-[var(--text)]">
+            The date in your link is too soon for online ordering.{" "}
+            {PICKUP_LEAD_TIME_CUSTOMER_LINE}
+          </p>
+        ) : null}
+        {pickupDate && isPickupYmdAllowed(pickupDate) ? (
+          <p
+            className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--text)]"
+            role="status"
+          >
+            {orderFormPickupConfirmationLine(formatPickupYmdLong(pickupDate))}
+          </p>
+        ) : null}
+        {err ? (
+          <p className="whitespace-pre-line rounded-lg bg-[var(--gold-light)] px-4 py-2 text-sm font-medium text-[var(--accent)]">
+            {err}
+          </p>
+        ) : null}
+        <label className="block text-sm font-semibold">
+          Customer name *
+          <input
+            required
+            className="mt-1 w-full min-h-[48px] rounded-lg border border-[var(--border)] px-3"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
+        <label className="block text-sm font-semibold">
+          Phone *
+          <input
+            required
+            type="tel"
+            className="mt-1 w-full min-h-[48px] rounded-lg border border-[var(--border)] px-3"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </label>
+        <label className="block text-sm font-semibold">
+          Email *
+          <input
+            required
+            type="email"
+            className="mt-1 w-full min-h-[48px] rounded-lg border border-[var(--border)] px-3"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </label>
+
+        <div>
+          <p className="text-sm font-semibold">Pickup date *</p>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            Earliest selectable day: {minPickupDate} (Central Time, 4-day minimum
+            lead). {PICKUP_LEAD_TIME_CUSTOMER_LINE}
+          </p>
+          <div
+            ref={calendarRef}
+            id="pickup-calendar"
+            className="mt-2 max-w-md scroll-mt-28 rounded-lg border border-[var(--border)] bg-[var(--card)] p-3"
+          >
+            <PickupCalendar
+              value={pickupDate}
+              onChange={setPickupDate}
+              anchorYmd={calendarAnchorYmd}
+            />
+          </div>
+        </div>
+
+        {pickupDate ? (
+          <div>
+            <p className="text-sm font-semibold">Pickup time *</p>
+            {slotsLoading ? (
+              <p className="mt-2 text-xs text-[var(--text-muted)]">Loading times…</p>
+            ) : slotOptions.length === 0 ? (
+              <p className="mt-2 text-sm text-[var(--accent)]">
+                No time slots are set for this date. Please pick another day.
+              </p>
+            ) : (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {slotOptions.map((t) => {
+                  const sel = pickupTime === t;
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setPickupTime(t)}
+                      className={[
+                        "min-h-[44px] rounded-full border px-4 text-sm font-semibold transition-colors",
+                        sel
+                          ? "border-[#0038A8] bg-[#0038A8] text-white"
+                          : "border-[var(--border)] bg-[var(--card)] text-[var(--text)] hover:bg-[#FFC200]",
+                      ].join(" ")}
+                    >
+                      {t}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        <label className="block text-sm font-semibold">
+          Special instructions
+          <textarea
+            rows={3}
+            className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+        </label>
+        <label className="flex cursor-pointer items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={customCheck}
+            onChange={(e) => setCustomCheck(e.target.checked)}
+            className="mt-1"
+          />
+          I&apos;d like to inquire about a custom dish not on the menu
+        </label>
+        {customCheck ? (
+          <textarea
+            required={customCheck}
+            rows={3}
+            className="w-full rounded-lg border border-[var(--border)] px-3 py-2"
+            placeholder="Describe what you'd like us to make"
+            value={customText}
+            onChange={(e) => setCustomText(e.target.value)}
+          />
+        ) : null}
+        <label className="flex cursor-pointer items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={recurring}
+            onChange={(e) => setRecurring(e.target.checked)}
+            className="mt-1"
+          />
+          I&apos;m interested in bi-weekly recurring orders
+        </label>
+
+        {!samplesOk && basicsOk ? (
+          <p className="rounded-lg border border-[var(--accent)]/40 bg-[var(--gold-light)] px-4 py-3 text-sm font-medium text-[var(--text)]">
+            Your cart includes samples that need a choice:{" "}
+            {cart.samples.lumpiaQty > 0 && !cart.samples.lumpiaProtein
+              ? "pick beef, pork, or turkey for lumpia samples. "
+              : null}
+            {cart.samples.pancitQty > 0 && !cart.samples.pancitType
+              ? "pick chicken or shrimp for pancit samples."
+              : null}
+            Open the cart from the bag icon to finish.
+          </p>
+        ) : null}
+
+        {canSubmitOrder ? (
+          <div className="space-y-4 rounded-xl border-2 border-[var(--primary)]/25 bg-[var(--bg-section)] p-4 text-left">
+            <p className="text-sm font-semibold leading-relaxed text-[var(--text)]">
+              Next step: submit this page. You&apos;ll land on a confirmation
+              screen with your <strong>order number</strong> and exact payment
+              amount.
+            </p>
+            <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+              Send <strong>${cart.total.toFixed(2)}</strong> via Zelle or Venmo
+              after you have that number, and{" "}
+              <strong>
+                type the order number in the payment memo / note
+              </strong>{" "}
+              (for example <code className="rounded bg-white/80 px-1">MRK-1001</code>
+              ). That&apos;s how we match your payment to this order.
+            </p>
+            <p className="text-sm leading-relaxed">
+              💚 Zelle: {PAYMENT_INSTRUCTIONS.zellePhone}
+              <br />
+              💜 Venmo: {PAYMENT_INSTRUCTIONS.venmoHandle}
+            </p>
+            <p className="text-sm leading-relaxed text-[var(--text-muted)]">
+              Prep starts after payment is verified. Questions? Call or text{" "}
+              <a
+                href="tel:+19797033827"
+                className="font-semibold text-[var(--primary)] underline"
+              >
+                979-703-3827
+              </a>
+              .
+            </p>
+            <label className="flex cursor-pointer items-start gap-3 text-sm font-medium">
+              <input
+                type="checkbox"
+                className="mt-1 h-5 w-5 shrink-0"
+                checked={paymentMemoAck}
+                onChange={(e) => setPaymentMemoAck(e.target.checked)}
+              />
+              <span>
+                I understand I will put my order number in the Venmo or Zelle
+                memo when I send payment.
+              </span>
+            </label>
+          </div>
+        ) : (
+          <p className="text-sm text-[var(--text-muted)]">
+            Enter your details, choose pickup date and time, and resolve any sample
+            choices (lumpia protein / pancit type) in your cart to continue.
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading || !canSubmitOrder || !paymentMemoAck}
+          className="btn btn-accent btn-block disabled:pointer-events-none disabled:opacity-40"
+        >
+          {loading ? "Submitting order…" : "Submit order & get order number"}
+        </button>
+      </div>
+      <OrderSummary
+        items={items}
+        wantsUtensils={cart.wantsUtensils}
+        utensilSets={cart.wantsUtensils ? cart.utensilSets : 0}
+        utensilCharge={cart.utensilCharge}
+        subtotal={cart.subtotalBeforeTax}
+        tax={cart.tax}
+        total={cart.total}
+      />
+    </form>
+  );
+}

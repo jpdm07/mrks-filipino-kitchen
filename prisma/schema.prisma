@@ -1,0 +1,128 @@
+generator client {
+  provider   = "prisma-client-js"
+  // Avoid Node-API .dll on Windows (ARM / arch mismatches). Uses a child-process engine instead.
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id               String   @id @default(cuid())
+  orderNumber      String   @unique
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  customerName     String
+  phone            String
+  email            String
+  items            String
+  subtotal         Float
+  tax              Float
+  total            Float
+  pickupDate       String?
+  pickupTime       String?
+  notes            String?
+  wantsUtensils    Boolean  @default(false)
+  utensilSets      Int      @default(0)
+  utensilCharge    Float    @default(0.0)
+  wantsRecurring   Boolean  @default(false)
+  customInquiry    String?
+  status           String   @default("Pending Payment Verification")
+  paymentMethod    String?
+  paymentStatus    String?
+  adminNotes       String?
+  subscribeUpdates Boolean  @default(false)
+}
+
+model Availability {
+  id        String   @id @default(cuid())
+  date      String   @unique
+  isOpen    Boolean  @default(false)
+  slots     String   @default("[]")
+  note      String?
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+model MenuItem {
+  id                 String  @id @default(cuid())
+  name               String
+  description        String
+  category           String
+  calories           String
+  basePrice          Float
+  sizes              String
+  photoUrl           String
+  isActive           Boolean @default(true)
+  soldOut            Boolean @default(false)
+  stockNotes         String?
+  hasCooked          Boolean @default(false)
+  hasFrozen          Boolean @default(false)
+  sortOrder          Int     @default(0)
+  // Same variantGroup = one menu card; each DB row stays a separate cart line.
+  variantGroup       String?
+  variantShortLabel  String?
+  groupCardTitle     String?
+  groupServingBlurb  String?
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+}
+
+model Suggestion {
+  id       String  @id @default(cuid())
+  option   String
+  count    Int     @default(0)
+  isCustom Boolean @default(false)
+}
+
+model DishSuggestionSubmission {
+  id          String   @id @default(cuid())
+  text        String
+  submittedAt DateTime @default(now())
+  ipAddress   String?
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  date        String
+  store       String
+  category    String
+  description String
+  amount      Float
+  receiptUrl  String?
+  receiptData String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isEdited    Boolean  @default(false)
+}
+
+model Inquiry {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+  isRead    Boolean  @default(false)
+}
+
+model OrderCounter {
+  id    String @id @default("counter")
+  count Int    @default(1000)
+}
+
+model PricingSettings {
+  id            String @id @default("default")
+  sampleLumpia  Float  @default(4.33)
+  sampleQuail   Float  @default(2.49)
+  sampleFlan    Float  @default(3.5)
+  samplePancit  Float  @default(6.3)
+}
