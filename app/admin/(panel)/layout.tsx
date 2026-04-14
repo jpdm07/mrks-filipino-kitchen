@@ -24,11 +24,20 @@ export default async function AdminPanelLayout({
   return (
     <div className="min-h-screen bg-[var(--bg-section)]">
       <div className="sticky top-0 z-[200] border-b border-[var(--border)] bg-[var(--card)] shadow-sm">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3">
-          <Link href="/admin/dashboard" className="font-bold text-[var(--primary)]">
-            Mr. K Admin
-          </Link>
-          <nav className="flex flex-wrap gap-2 text-sm font-medium">
+        <div className="mx-auto max-w-7xl px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <Link
+              href="/admin/dashboard"
+              className="shrink-0 font-bold text-[var(--primary)]"
+            >
+              Mr. K Admin
+            </Link>
+            <AdminLogoutButton />
+          </div>
+          <nav
+            className="mt-3 flex flex-wrap gap-2 border-t border-[var(--border)] pt-3 text-sm font-medium"
+            aria-label="Admin sections"
+          >
             {links.map((l) => (
               <Link
                 key={l.href}
@@ -39,7 +48,6 @@ export default async function AdminPanelLayout({
               </Link>
             ))}
           </nav>
-          <AdminLogoutButton />
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-4 py-8">{children}</div>

@@ -17,7 +17,9 @@ function isAdminPath(pathname: string | null): boolean {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   if (isAdminPath(pathname)) {
-    return <>{children}</>;
+    return (
+      <main className="min-h-[50vh] w-full min-w-0">{children}</main>
+    );
   }
 
   return (
