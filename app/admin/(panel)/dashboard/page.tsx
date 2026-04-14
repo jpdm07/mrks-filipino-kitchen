@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { DashboardOrders } from "@/components/admin/DashboardOrders";
+import { toAdminOrderClientRow } from "@/lib/admin-order-client";
 import type { OrderItemLine } from "@/lib/order-types";
 
 function summarize(raw: string): string {
@@ -45,10 +46,9 @@ export default async function AdminDashboardPage() {
     .filter((o) => forMetrics(o) && o.status !== "Cancelled")
     .reduce((s, o) => s + o.total, 0);
 
-  const rows = orders.map((o) => ({
-    ...o,
-    itemsSummary: summarize(o.items),
-  }));
+  const rows = orders.map((o) =>
+    toAdminOrderClientRow(o, summarize(o.items))
+  );
 
   return (
     <div>

@@ -6,12 +6,12 @@ import {
   totalSauceCupsForItems,
 } from "@/lib/menu-item-unit-costs";
 import Link from "next/link";
-import type { Order } from "@prisma/client";
 import type { OrderItemLine } from "@/lib/order-types";
+import type { AdminOrderClientRow } from "@/lib/admin-order-client";
 import { OrderPaymentAdminActions } from "./OrderPaymentAdminActions";
 import { ORDER_STATUS_PENDING_PAYMENT_VERIFICATION } from "@/lib/order-payment";
 
-type Row = Order & { itemsSummary: string };
+type Row = AdminOrderClientRow;
 
 const STATUSES = [
   "Pending Payment Verification",
@@ -48,7 +48,7 @@ export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [demoFilter, setDemoFilter] = useState<"all" | "hide" | "only">("all");
   const [q, setQ] = useState("");
-  const [modal, setModal] = useState<Order | null>(null);
+  const [modal, setModal] = useState<Row | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
 
   const sorted = useMemo(() => sortOrders(orders), [orders]);
@@ -67,7 +67,7 @@ export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
     });
   }, [sorted, statusFilter, demoFilter, q]);
 
-  const openModal = (o: Order) => {
+  const openModal = (o: Row) => {
     setModal(o);
     setAdminNotes(o.adminNotes ?? "");
   };
@@ -80,7 +80,7 @@ export function DashboardOrders({ initialOrders }: { initialOrders: Row[] }) {
       body: JSON.stringify(patch),
     });
     if (res.ok) {
-      const updated = (await res.json()) as Order;
+      const updated = (await res.json()) as Partial<Row> & { id: string };
       setOrders((prev) =>
         prev.map((x) =>
           x.id === updated.id

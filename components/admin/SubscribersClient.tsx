@@ -4,11 +4,15 @@ import { useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import type { Subscriber } from "@prisma/client";
 
+type SubscriberClientRow = Omit<Subscriber, "createdAt"> & {
+  createdAt: string;
+};
+
 function Inner({
   initialSubscribers,
   menuItems,
 }: {
-  initialSubscribers: Subscriber[];
+  initialSubscribers: SubscriberClientRow[];
   menuItems: { id: string; name: string }[];
 }) {
   const sp = useSearchParams();
@@ -26,7 +30,7 @@ function Inner({
     const rows = subs
       .map(
         (s) =>
-          `"${(s.name ?? "").replace(/"/g, '""')}","${s.email}",${s.createdAt.toISOString()}`
+          `"${(s.name ?? "").replace(/"/g, '""')}","${s.email}",${s.createdAt}`
       )
       .join("\n");
     return header + rows;
@@ -149,7 +153,7 @@ function Inner({
 }
 
 export function SubscribersClient(props: {
-  initialSubscribers: Subscriber[];
+  initialSubscribers: SubscriberClientRow[];
   menuItems: { id: string; name: string }[];
 }) {
   return (
