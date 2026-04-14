@@ -17,7 +17,6 @@ import { TOCINO_RETAIL_USD } from "./tocino-cost-model";
 import {
   PANCIT_LIME_COST_USD,
   PANCIT_LIMES_PARTY_TRAY,
-  PANCIT_LIMES_SMALL_TRAY,
 } from "./pancit-limes";
 import { HERO_FULLBLEED_IMAGE_SRC } from "./site-visuals";
 

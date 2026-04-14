@@ -127,7 +127,7 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
     if (!variant) return;
     setCookedOrFrozen("cooked");
     setSizeKey(variant.sizes[0]?.key ?? "default");
-  }, [variant?.id]);
+  }, [variant]);
 
   const selectedSize = useMemo(() => {
     if (!variant) return undefined;
