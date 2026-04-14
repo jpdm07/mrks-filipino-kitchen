@@ -1,66 +1,81 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  addCalendarDaysYMD,
   getTodayInPickupTimezoneYMD,
   getEarliestPickupDateMinYMD,
   isPickupYmdAllowed,
 } from "@/lib/pickup-lead-time";
+import {
+  customerAvailabilityQueryRange,
+  daysInCalendarMonth,
+  ymdFromParts,
+} from "@/lib/pickup-availability-query-range";
 import { useAvailabilityWhitelist } from "@/lib/hooks/useAvailabilityWhitelist";
 import {
   NO_PICKUP_DATES_PUBLIC_MESSAGE,
   PICKUP_LEAD_TIME_CUSTOMER_LINE,
 } from "@/lib/pickup-availability-copy";
 
-const RANGE_DAYS = 150;
-
-function pad2(n: number) {
-  return String(n).padStart(2, "0");
-}
-
-function ymdFromParts(y: number, m: number, d: number) {
-  return `${y}-${pad2(m)}-${pad2(d)}`;
-}
-
-function daysInMonth(year: number, month1: number) {
-  return new Date(Date.UTC(year, month1, 0)).getUTCDate();
-}
-
 function firstWeekdayOfMonth(year: number, month1: number) {
   return new Date(Date.UTC(year, month1 - 1, 1)).getUTCDay();
 }
 
 export function UpcomingPickupAvailability() {
-  const todayYmd = useMemo(() => getTodayInPickupTimezoneYMD(), []);
-  const toYmd = useMemo(
-    () => addCalendarDaysYMD(todayYmd, RANGE_DAYS),
-    [todayYmd]
-  );
-  const minBookable = useMemo(() => getEarliestPickupDateMinYMD(), []);
+  /** Recompute each render so the API range (and hook subscription) stay in sync with “today” and admin updates. */
+  const todayStr = getTodayInPickupTimezoneYMD();
+  const [cy, cm] = todayStr.split("-").map(Number);
+  const { from, to, todayYmd } = customerAvailabilityQueryRange(cy, cm, null);
+  const minBookable = getEarliestPickupDateMinYMD();
 
-  const { openDates, loading, loadError } = useAvailabilityWhitelist(
-    todayYmd,
-    toYmd
-  );
+  const { openDates, loading, loadError } = useAvailabilityWhitelist(from, to);
 
   const openSet = useMemo(() => new Set(openDates), [openDates]);
 
-  const initialYm = useMemo(() => {
-    const [y, m] = todayYmd.split("-").map(Number);
-    return { y, m };
-  }, [todayYmd]);
   const [ty, tm] = useMemo(() => {
     const [y, m] = todayYmd.split("-").map(Number);
     return [y, m] as const;
   }, [todayYmd]);
 
-  const [year, setYear] = useState(initialYm.y);
-  const [month, setMonth] = useState(initialYm.m);
+  const [year, setYear] = useState(() => {
+    const [y] = getTodayInPickupTimezoneYMD().split("-").map(Number);
+    return y;
+  });
+  const [month, setMonth] = useState(() => {
+    const [, m] = getTodayInPickupTimezoneYMD().split("-").map(Number);
+    return m;
+  });
+
+  const hasSeededMonthToFirstOpen = useRef(false);
+
+  useEffect(() => {
+    if (openDates.length === 0) hasSeededMonthToFirstOpen.current = false;
+  }, [openDates.length]);
+
+  useEffect(() => {
+    if (
+      hasSeededMonthToFirstOpen.current ||
+      loading ||
+      loadError ||
+      openDates.length === 0
+    ) {
+      return;
+    }
+    const bookable = [...openDates]
+      .filter((d) => d >= minBookable && isPickupYmdAllowed(d))
+      .sort();
+    const pick = bookable[0] ?? [...openDates].sort()[0];
+    if (pick) {
+      const [y, m] = pick.split("-").map(Number);
+      setYear(y);
+      setMonth(m);
+    }
+    hasSeededMonthToFirstOpen.current = true;
+  }, [loading, loadError, openDates, minBookable]);
 
   const grid = useMemo(() => {
-    const dim = daysInMonth(year, month);
+    const dim = daysInCalendarMonth(year, month);
     const startPad = firstWeekdayOfMonth(year, month);
     const cells: Array<{ ymd: string | null }> = [];
     for (let i = 0; i < startPad; i++) cells.push({ ymd: null });
@@ -84,6 +99,17 @@ export function UpcomingPickupAvailability() {
     [openDates, minBookable]
   );
 
+  const bookableCount = useMemo(
+    () =>
+      openDates.filter((d) => d >= minBookable && isPickupYmdAllowed(d)).length,
+    [openDates, minBookable]
+  );
+
+  const lockedSoonCount = useMemo(
+    () => openDates.filter((d) => d >= todayYmd && !isPickupYmdAllowed(d)).length,
+    [openDates, todayYmd]
+  );
+
   const showGlobalEmpty = !loading && !loadError && !hasAnyOpenInRange;
 
   return (
@@ -104,6 +130,47 @@ export function UpcomingPickupAvailability() {
             <span className="font-semibold text-[var(--text)]">TBD</span> for
             now—you&apos;ll confirm your time window when you check out.
           </p>
+          {!loadError && !loading && hasAnyOpenInRange ? (
+            <p
+              className="mt-3 max-w-2xl text-sm text-[var(--text)]"
+              role="status"
+            >
+              <span className="font-semibold text-[#0038A8]">
+                {bookableCount} pickup day{bookableCount !== 1 ? "s" : ""}
+              </span>{" "}
+              open for online ordering in the window we show below
+              {lockedSoonCount > 0 ? (
+                <>
+                  , plus{" "}
+                  <span className="font-semibold">{lockedSoonCount}</span> still
+                  inside the 4-day prep window (🔒)
+                </>
+              ) : null}
+              . Matches the{" "}
+              <Link
+                href="/availability"
+                className="font-bold text-[#0038A8] underline decoration-[#0038A8]/30 underline-offset-4 hover:decoration-[#0038A8]"
+              >
+                full pickup calendar
+              </Link>
+              .
+            </p>
+          ) : !loadError && !loading && !hasAnyOpenInRange ? (
+            <p
+              className="mt-3 max-w-2xl text-sm text-[var(--text-muted)]"
+              role="status"
+            >
+              This block updates live from the same calendar as{" "}
+              <Link
+                href="/availability"
+                className="font-semibold text-[#0038A8] underline decoration-[#0038A8]/30 underline-offset-4 hover:decoration-[#0038A8]"
+              >
+                Pick Up Dates
+              </Link>
+              . If nothing appears yet, new days will show here as soon as
+              they&apos;re opened.
+            </p>
+          ) : null}
         </div>
 
         {loading ? (

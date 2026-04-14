@@ -43,7 +43,8 @@ export function useAvailabilityWhitelist(
   const fetchOnce = useCallback(async () => {
     try {
       const r = await fetch(
-        `/api/availability?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+        `/api/availability?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+        { cache: "no-store" }
       );
       if (!r.ok) {
         setOpenDates([]);
@@ -72,6 +73,8 @@ export function useAvailabilityWhitelist(
       clearInterval(pollRef.current);
       pollRef.current = null;
     }
+
+    void fetchOnce();
 
     const qs = `?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
     const source = new EventSource(`/api/availability/stream${qs}`);

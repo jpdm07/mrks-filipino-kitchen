@@ -1,24 +1,14 @@
 "use client";
 
 import { forwardRef, useEffect, useMemo, useState } from "react";
+import { getTodayInPickupTimezoneYMD, isPickupYmdAllowed } from "@/lib/pickup-lead-time";
 import {
-  getTodayInPickupTimezoneYMD,
-  isPickupYmdAllowed,
-} from "@/lib/pickup-lead-time";
+  customerAvailabilityQueryRange,
+  daysInCalendarMonth,
+  ymdFromParts,
+} from "@/lib/pickup-availability-query-range";
 import { PICKUP_LEAD_TIME_CUSTOMER_LINE } from "@/lib/pickup-availability-copy";
 import { useAvailabilityWhitelist } from "@/lib/hooks/useAvailabilityWhitelist";
-
-function pad2(n: number) {
-  return String(n).padStart(2, "0");
-}
-
-function ymdFromParts(y: number, m: number, d: number) {
-  return `${y}-${pad2(m)}-${pad2(d)}`;
-}
-
-function daysInMonth(year: number, month1: number) {
-  return new Date(Date.UTC(year, month1, 0)).getUTCDate();
-}
 
 function firstWeekdayOfMonth(year: number, month1: number) {
   return new Date(Date.UTC(year, month1 - 1, 1)).getUTCDay();
@@ -48,18 +38,14 @@ export const PickupCalendar = forwardRef<
   ref
 ) {
 
-  const todayYmd = useMemo(() => getTodayInPickupTimezoneYMD(), []);
-  const [ty, tm] = useMemo(() => {
-    const [y, m] = todayYmd.split("-").map(Number);
-    return [y, m] as const;
-  }, [todayYmd]);
-
-  const initialYm = useMemo(() => {
-    const [y, m] = todayYmd.split("-").map(Number);
-    return { y, m };
-  }, [todayYmd]);
-  const [year, setYear] = useState(initialYm.y);
-  const [month, setMonth] = useState(initialYm.m);
+  const [year, setYear] = useState(() => {
+    const [y] = getTodayInPickupTimezoneYMD().split("-").map(Number);
+    return y;
+  });
+  const [month, setMonth] = useState(() => {
+    const [, m] = getTodayInPickupTimezoneYMD().split("-").map(Number);
+    return m;
+  });
 
   useEffect(() => {
     if (!anchorYmd || !/^\d{4}-\d{2}-\d{2}$/.test(anchorYmd)) return;
@@ -69,24 +55,18 @@ export const PickupCalendar = forwardRef<
     setMonth(m);
   }, [anchorYmd]);
 
-  const displayedFrom = ymdFromParts(year, month, 1);
-  const displayedTo = ymdFromParts(year, month, daysInMonth(year, month));
+  const valueYmd =
+    value && /^\d{4}-\d{2}-\d{2}$/.test(value.trim()) ? value.trim() : null;
+  const { from, to, todayYmd } = customerAvailabilityQueryRange(
+    year,
+    month,
+    valueYmd
+  );
 
-  /** Include the selected date’s month so URL/deep links validate even when that month isn’t visible. */
-  const { from, to } = useMemo(() => {
-    let f = displayedFrom;
-    let t = displayedTo;
-    if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      const [vy, vm] = value.split("-").map(Number);
-      if (Number.isFinite(vy) && Number.isFinite(vm) && vm >= 1 && vm <= 12) {
-        const vf = ymdFromParts(vy, vm, 1);
-        const vt = ymdFromParts(vy, vm, daysInMonth(vy, vm));
-        if (vf < f) f = vf;
-        if (vt > t) t = vt;
-      }
-    }
-    return { from: f, to: t };
-  }, [displayedFrom, displayedTo, value]);
+  const [ty, tm] = useMemo(() => {
+    const [y, m] = todayYmd.split("-").map(Number);
+    return [y, m] as const;
+  }, [todayYmd]);
 
   const { openDates, notes, loading, loadError } = useAvailabilityWhitelist(
     from,
@@ -105,7 +85,7 @@ export const PickupCalendar = forwardRef<
   }, [loading, loadError, value, from, to, openSet, onChange]);
 
   const grid = useMemo(() => {
-    const dim = daysInMonth(year, month);
+    const dim = daysInCalendarMonth(year, month);
     const startPad = firstWeekdayOfMonth(year, month);
     const cells: Array<{ ymd: string | null }> = [];
     for (let i = 0; i < startPad; i++) cells.push({ ymd: null });

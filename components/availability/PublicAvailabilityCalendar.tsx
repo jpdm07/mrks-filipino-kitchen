@@ -1,58 +1,82 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   formatPickupYmdLong,
+  getEarliestPickupDateMinYMD,
   getTodayInPickupTimezoneYMD,
   isPickupYmdAllowed,
 } from "@/lib/pickup-lead-time";
+import {
+  customerAvailabilityQueryRange,
+  daysInCalendarMonth,
+  ymdFromParts,
+} from "@/lib/pickup-availability-query-range";
 import { useAvailabilityWhitelist } from "@/lib/hooks/useAvailabilityWhitelist";
 import { PICKUP_LEAD_TIME_CUSTOMER_LINE } from "@/lib/pickup-availability-copy";
-
-function pad2(n: number) {
-  return String(n).padStart(2, "0");
-}
-
-function ymdFromParts(y: number, m: number, d: number) {
-  return `${y}-${pad2(m)}-${pad2(d)}`;
-}
-
-function daysInMonth(year: number, month1: number) {
-  return new Date(Date.UTC(year, month1, 0)).getUTCDate();
-}
 
 function firstWeekdayOfMonth(year: number, month1: number) {
   return new Date(Date.UTC(year, month1 - 1, 1)).getUTCDay();
 }
 
 export function PublicAvailabilityCalendar() {
-  const todayYmd = useMemo(() => getTodayInPickupTimezoneYMD(), []);
-  const [ty, tm] = useMemo(() => {
-    const [y, m] = todayYmd.split("-").map(Number);
-    return [y, m] as const;
-  }, [todayYmd]);
-
-  const initialYm = useMemo(() => {
-    const [y, m] = todayYmd.split("-").map(Number);
-    return { y, m };
-  }, [todayYmd]);
-
-  const [year, setYear] = useState(initialYm.y);
-  const [month, setMonth] = useState(initialYm.m);
+  const [year, setYear] = useState(() => {
+    const [y] = getTodayInPickupTimezoneYMD().split("-").map(Number);
+    return y;
+  });
+  const [month, setMonth] = useState(() => {
+    const [, m] = getTodayInPickupTimezoneYMD().split("-").map(Number);
+    return m;
+  });
   const [panel, setPanel] = useState<
     null | { ymd: string; kind: "bookable" | "locked" }
   >(null);
   const [kitchenNote, setKitchenNote] = useState<string | null>(null);
 
-  const from = ymdFromParts(year, month, 1);
-  const to = ymdFromParts(year, month, daysInMonth(year, month));
+  const { from, to, todayYmd } = customerAvailabilityQueryRange(
+    year,
+    month,
+    null
+  );
+
+  const [ty, tm] = useMemo(() => {
+    const [y, m] = todayYmd.split("-").map(Number);
+    return [y, m] as const;
+  }, [todayYmd]);
 
   const { openDates, notes, loading, loadError } = useAvailabilityWhitelist(
     from,
     to,
     { pollMsOnError: 60000 }
   );
+
+  const hasSeededMonth = useRef(false);
+  useEffect(() => {
+    if (openDates.length === 0) hasSeededMonth.current = false;
+  }, [openDates.length]);
+
+  useEffect(() => {
+    if (
+      hasSeededMonth.current ||
+      loading ||
+      loadError ||
+      openDates.length === 0
+    ) {
+      return;
+    }
+    const minBookable = getEarliestPickupDateMinYMD();
+    const bookable = [...openDates]
+      .filter((d) => d >= minBookable && isPickupYmdAllowed(d))
+      .sort();
+    const pick = bookable[0] ?? [...openDates].sort()[0];
+    if (pick) {
+      const [y, m] = pick.split("-").map(Number);
+      setYear(y);
+      setMonth(m);
+    }
+    hasSeededMonth.current = true;
+  }, [loading, loadError, openDates]);
 
   const openSet = useMemo(() => new Set(openDates), [openDates]);
 
@@ -72,7 +96,7 @@ export function PublicAvailabilityCalendar() {
   }, [panel, notes]);
 
   const grid = useMemo(() => {
-    const dim = daysInMonth(year, month);
+    const dim = daysInCalendarMonth(year, month);
     const startPad = firstWeekdayOfMonth(year, month);
     const cells: Array<{ ymd: string | null }> = [];
     for (let i = 0; i < startPad; i++) cells.push({ ymd: null });
