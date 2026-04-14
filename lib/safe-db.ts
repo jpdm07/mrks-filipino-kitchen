@@ -106,6 +106,25 @@ export function userFacingAdminDatabaseError(err: unknown): string {
     );
   }
 
+  /** Column exists in Prisma schema but not in the DB — migrations not applied (or wrong database). */
+  if (code === "P2022") {
+    let detail = "";
+    if (err && typeof err === "object" && "meta" in err) {
+      const col = (err as { meta?: { column?: unknown } }).meta?.column;
+      if (typeof col === "string") detail = ` Prisma reported: ${col}`;
+    }
+    return (
+      `Production database is missing a column your code expects (P2022).${detail}\n\n` +
+      `This is almost always “migrations never ran on this Neon database,” not a bad password.\n\n` +
+      `Fix:\n` +
+      `1) In Vercel, copy the Production DATABASE_URL (same as Neon pooled URL).\n` +
+      `2) On your PC, put it in .env.local as DATABASE_URL=...\n` +
+      `3) From this repo run: npx prisma migrate deploy\n` +
+      `4) Redeploy the site (or just refresh the dashboard).\n\n` +
+      `If migrate deploy says everything is applied but P2022 persists, the Vercel DATABASE_URL may point at a different Neon branch/database than the one you migrated.`
+    );
+  }
+
   if (
     code === "P1001" ||
     code === "P1002" ||
