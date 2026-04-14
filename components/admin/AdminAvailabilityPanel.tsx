@@ -37,10 +37,11 @@ export function AdminAvailabilityPanel() {
   const [msg, setMsg] = useState<string | null>(null);
   const [slotSelection, setSlotSelection] = useState<Set<string>>(new Set());
   const [syncingGoogle, setSyncingGoogle] = useState(false);
+  /** Shown next to the per-day Save button after a successful save. */
+  const [saveDayAck, setSaveDayAck] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    setMsg(null);
     try {
       const r = await fetch(
         `/api/admin/availability?year=${year}&month=${month}`,
@@ -81,6 +82,15 @@ export function AdminAvailabilityPanel() {
     load();
   }, [load]);
 
+  /** Don’t carry “Saved” / errors across a different month view. */
+  useEffect(() => {
+    setMsg(null);
+  }, [year, month]);
+
+  useEffect(() => {
+    setSaveDayAck(false);
+  }, [selected]);
+
   useEffect(() => {
     if (!selected || !days[selected]) return;
     const s = days[selected].slots;
@@ -89,17 +99,27 @@ export function AdminAvailabilityPanel() {
     );
   }, [selected, days]);
 
-  const post = async (body: object) => {
+  const post = async (
+    body: object,
+    opts?: { quietSuccess?: boolean }
+  ): Promise<boolean> => {
     setMsg(null);
+    setSaveDayAck(false);
     const r = await fetch("/api/admin/availability", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    if (!r.ok) setMsg("Save failed.");
-    else setMsg("Saved.");
     await load();
+    if (!r.ok) {
+      setMsg("Save failed.");
+      return false;
+    }
+    if (!opts?.quietSuccess) {
+      setMsg("Changes saved.");
+    }
+    return true;
   };
 
   const syncFromGoogle = async (closeMissingInRange: boolean) => {
@@ -172,20 +192,27 @@ export function AdminAvailabilityPanel() {
     }
   }, [selected, days]);
 
-  const saveSelectedDay = () => {
+  const saveSelectedDay = async () => {
     if (!selected) return;
     const isOpen = days[selected]?.isOpen ?? false;
-    void post({
-      action: "upsert",
-      entries: [
-        {
-          date: selected,
-          isOpen,
-          note: noteDraft.trim() || null,
-          ...(isOpen ? { slots: Array.from(slotSelection) } : {}),
-        },
-      ],
-    });
+    const ok = await post(
+      {
+        action: "upsert",
+        entries: [
+          {
+            date: selected,
+            isOpen,
+            note: noteDraft.trim() || null,
+            ...(isOpen ? { slots: Array.from(slotSelection) } : {}),
+          },
+        ],
+      },
+      { quietSuccess: true }
+    );
+    if (ok) {
+      setSaveDayAck(true);
+      window.setTimeout(() => setSaveDayAck(false), 6000);
+    }
   };
 
   return (
@@ -455,18 +482,27 @@ export function AdminAvailabilityPanel() {
           ) : null}
           <p className="mt-4 border-t border-[var(--border)] pt-4 text-xs text-[var(--text-muted)]">
             <strong className="text-[var(--text)]">Save</strong> writes this day to
-            the database every time you click it — note, open/closed state, and
-            slots (when the day is open). The storefront picks it up within a few
-            seconds.
+            the database — note, open/closed state, and slots when the day is
+            open. You&apos;ll see a confirmation next to the button each time it
+            succeeds.
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
               type="button"
               className="rounded bg-[var(--primary)] px-3 py-2 text-sm font-bold text-white"
-              onClick={saveSelectedDay}
+              onClick={() => void saveSelectedDay()}
             >
               Save
             </button>
+            {saveDayAck ? (
+              <span
+                className="text-sm font-semibold text-emerald-800"
+                role="status"
+                aria-live="polite"
+              >
+                Changes saved
+              </span>
+            ) : null}
             <button
               type="button"
               className="rounded border px-3 py-2 text-sm font-semibold"
