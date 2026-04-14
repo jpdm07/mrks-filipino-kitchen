@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ShoppingBag, X, ChevronDown, ChevronUp } from "lucide-react";
@@ -18,12 +18,28 @@ export function CartDrawer() {
   const [mounted, setMounted] = useState(false);
   const [samplesOpen, setSamplesOpen] = useState(true);
   const [checkoutHint, setCheckoutHint] = useState<string | null>(null);
+  const [highlightLumpiaSample, setHighlightLumpiaSample] = useState(false);
+  const [highlightPancitSample, setHighlightPancitSample] = useState(false);
+  const lumpiaSampleRef = useRef<HTMLDivElement>(null);
+  const pancitSampleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    if (!drawerOpen) setCheckoutHint(null);
+    if (!drawerOpen) {
+      setCheckoutHint(null);
+      setHighlightLumpiaSample(false);
+      setHighlightPancitSample(false);
+    }
   }, [drawerOpen]);
+
+  useEffect(() => {
+    if (cart.samples.lumpiaProtein) setHighlightLumpiaSample(false);
+  }, [cart.samples.lumpiaProtein]);
+
+  useEffect(() => {
+    if (cart.samples.pancitType) setHighlightPancitSample(false);
+  }, [cart.samples.pancitType]);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -122,7 +138,9 @@ export function CartDrawer() {
                 </button>
                 {samplesOpen ? (
                   <div className="space-y-4 border-t border-[var(--border)] px-4 py-4 text-sm">
+                    <div ref={lumpiaSampleRef}>
                     <SampleRow
+                      highlight={highlightLumpiaSample}
                       title={lumpiaSampleTitle}
                       subtitle={lumpiaSampleSub}
                       qty={cart.samples.lumpiaQty}
@@ -174,6 +192,7 @@ export function CartDrawer() {
                         ) : null}
                       </div>
                     </SampleRow>
+                    </div>
                     <SampleRow
                       title={`Breaded quail sample (3 pcs) · $${cart.samplePrices.quail.toFixed(2)} ea`}
                       qty={cart.samples.quailQty}
@@ -191,7 +210,9 @@ export function CartDrawer() {
                       }
                       max={10}
                     />
+                    <div ref={pancitSampleRef}>
                     <SampleRow
+                      highlight={highlightPancitSample}
                       title={`Pancit sample (1 container) · $${cart.samplePrices.pancit.toFixed(2)} ea`}
                       subtitle="Small foil container · ~1 serving"
                       qty={cart.samples.pancitQty}
@@ -242,6 +263,7 @@ export function CartDrawer() {
                         ) : null}
                       </div>
                     </SampleRow>
+                    </div>
                   </div>
                 ) : null}
               </div>
@@ -366,6 +388,8 @@ export function CartDrawer() {
                 type="button"
                 className="btn btn-gold btn-block btn-sm mt-4"
                 onClick={() => {
+                  setHighlightLumpiaSample(false);
+                  setHighlightPancitSample(false);
                   if (!samplesSelectionComplete(cart.samples)) {
                     setSamplesOpen(true);
                     if (
@@ -375,6 +399,13 @@ export function CartDrawer() {
                       setCheckoutHint(
                         "Choose beef, pork, or turkey for lumpia samples before going to checkout."
                       );
+                      setHighlightLumpiaSample(true);
+                      window.setTimeout(() => {
+                        lumpiaSampleRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        });
+                      }, 100);
                       return;
                     }
                     if (
@@ -384,6 +415,13 @@ export function CartDrawer() {
                       setCheckoutHint(
                         "Choose chicken or shrimp for pancit samples before checkout."
                       );
+                      setHighlightPancitSample(true);
+                      window.setTimeout(() => {
+                        pancitSampleRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        });
+                      }, 100);
                       return;
                     }
                   }
@@ -409,6 +447,7 @@ function SampleRow({
   max,
   children,
   selectorsFirst,
+  highlight,
 }: {
   title: string;
   subtitle?: string;
@@ -418,9 +457,18 @@ function SampleRow({
   children?: React.ReactNode;
   /** Put radio/check rows under the subtitle (before qty on wide layouts). */
   selectorsFirst?: boolean;
+  /** Red outline when checkout blocked on this row. */
+  highlight?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-white p-3">
+    <div
+      className={[
+        "rounded-lg border bg-white p-3 transition-shadow",
+        highlight
+          ? "border-red-500 ring-2 ring-red-500 ring-offset-2"
+          : "border-[var(--border)]",
+      ].join(" ")}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{title}</p>

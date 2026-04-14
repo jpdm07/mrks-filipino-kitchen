@@ -24,11 +24,35 @@ import {
 } from "@/lib/pickup-availability-copy";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 
+type CheckoutIssueKey =
+  | "name"
+  | "phone"
+  | "email"
+  | "payment"
+  | "pickup"
+  | "time"
+  | "samples"
+  | "custom";
+
+type CheckoutIssues = Partial<Record<CheckoutIssueKey, boolean>>;
+
+function inputIssueClass(active: boolean) {
+  return active
+    ? "border-red-500 ring-2 ring-red-500/35 focus:border-red-500 focus:ring-red-500/40"
+    : "border-[var(--border)]";
+}
+
 export function OrderForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const cart = useCart();
   const calendarRef = useRef<HTMLDivElement>(null);
+  const contactRef = useRef<HTMLDivElement>(null);
+  const paymentRef = useRef<HTMLDivElement>(null);
+  const pickupSectionRef = useRef<HTMLDivElement>(null);
+  const timeSectionRef = useRef<HTMLDivElement>(null);
+  const samplesRef = useRef<HTMLDivElement>(null);
+  const customRef = useRef<HTMLDivElement>(null);
   const appliedUrlPickup = useRef(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -44,6 +68,7 @@ export function OrderForm() {
   /** Shown only when NEXT_PUBLIC_ALLOW_DEMO_CHECKOUT=true at build time; server must set ALLOW_DEMO_ORDERS_AT_CHECKOUT. */
   const [checkoutDemo, setCheckoutDemo] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [issues, setIssues] = useState<CheckoutIssues>({});
   const [loading, setLoading] = useState(false);
   const [slotOptions, setSlotOptions] = useState<string[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -82,6 +107,12 @@ export function OrderForm() {
       });
     }, 500);
   }, [searchParams]);
+
+  useEffect(() => {
+    if (samplesOk) {
+      setIssues((p) => (p.samples ? { ...p, samples: false } : p));
+    }
+  }, [samplesOk]);
 
   useEffect(() => {
     if (!pickupDate) {
@@ -146,43 +177,114 @@ export function OrderForm() {
   const showDemoCheckout =
     process.env.NEXT_PUBLIC_ALLOW_DEMO_CHECKOUT === "true";
 
+  const scrollToFirstIssue = (i: CheckoutIssues) => {
+    const run = () => {
+      const el =
+        i.name || i.phone || i.email
+          ? contactRef.current
+          : i.payment
+            ? paymentRef.current
+            : i.pickup
+              ? pickupSectionRef.current
+              : i.time
+                ? timeSectionRef.current
+                : i.samples
+                  ? samplesRef.current
+                  : i.custom
+                    ? customRef.current
+                    : null;
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+    window.setTimeout(run, 50);
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
-    if (!name.trim() || !phone.trim() || !email.trim()) {
-      setErr("Please fill in name, phone, and email.");
-      return;
-    }
-    if (!pickupDate || !pickupTime) {
-      setErr("Please select a pickup date and time to continue.");
-      return;
-    }
-    if (!isPickupYmdAllowed(pickupDate)) {
-      setErr(pickupDateRejectedMessage());
-      return;
-    }
+    setIssues({});
+
     if (items.length === 0) {
       setErr("Your cart is empty.");
       return;
     }
-    if (!samplesOk) {
-      if (cart.samples.lumpiaQty > 0 && !cart.samples.lumpiaProtein) {
-        setErr(
-          "Choose beef, pork, or turkey for lumpia samples (open your cart if needed)."
-        );
-        return;
-      }
-      if (cart.samples.pancitQty > 0 && !cart.samples.pancitType) {
-        setErr("Choose chicken or shrimp for pancit samples.");
-        return;
-      }
+
+    const next: CheckoutIssues = {};
+    if (!name.trim()) next.name = true;
+    if (!phone.trim()) next.phone = true;
+    if (!email.trim()) next.email = true;
+    if (!paymentMemoAck) next.payment = true;
+
+    if (!pickupDate?.trim() || !isWellFormedPickupYMD(pickupDate)) {
+      next.pickup = true;
+    } else if (!isPickupYmdAllowed(pickupDate)) {
+      next.pickup = true;
+    } else if (slotsLoading) {
+      next.time = true;
+    } else if (slotOptions.length === 0) {
+      next.time = true;
+    } else if (!pickupTime || !slotOptions.includes(pickupTime)) {
+      next.time = true;
     }
-    if (!paymentMemoAck) {
-      setErr(
-        "Please confirm you will use your order number in the payment memo and text it after paying."
-      );
+
+    if (!samplesOk) {
+      next.samples = true;
+    }
+
+    if (customCheck && !customText.trim()) {
+      next.custom = true;
+    }
+
+    if (Object.keys(next).length > 0) {
+      setIssues(next);
+      const parts: string[] = [];
+      if (next.name || next.phone || next.email) {
+        parts.push("Please fill in name, phone, and email.");
+      }
+      if (next.payment) {
+        parts.push(
+          "Please confirm you will use your order number in the payment memo and text it after paying."
+        );
+      }
+      if (next.pickup && pickupDate && !isPickupYmdAllowed(pickupDate)) {
+        parts.push(pickupDateRejectedMessage());
+      } else if (next.pickup) {
+        parts.push("Please select a valid pickup date.");
+      }
+      if (next.time) {
+        if (slotsLoading) {
+          parts.push(
+            "Pickup times are still loading — wait a moment, then try again."
+          );
+        } else if (slotOptions.length === 0) {
+          parts.push(
+            "No time slots for this date — choose another pickup day."
+          );
+        } else {
+          parts.push("Please select a pickup time.");
+        }
+      }
+      if (next.samples) {
+        const bits: string[] = [];
+        if (cart.samples.lumpiaQty > 0 && !cart.samples.lumpiaProtein) {
+          bits.push("choose beef, pork, or turkey for lumpia samples");
+        }
+        if (cart.samples.pancitQty > 0 && !cart.samples.pancitType) {
+          bits.push("choose chicken or shrimp for pancit samples");
+        }
+        parts.push(
+          bits.length > 0
+            ? `Open the cart (bag icon) and ${bits.join("; ")}.`
+            : "Complete sample choices in your cart."
+        );
+      }
+      if (next.custom) {
+        parts.push("Please describe your custom dish, or turn off that option.");
+      }
+      setErr(parts.filter(Boolean).join("\n\n"));
+      scrollToFirstIssue(next);
       return;
     }
+
     setLoading(true);
     const sets = cart.wantsUtensils ? Math.max(1, cart.utensilSets) : 0;
     const res = await fetch("/api/orders", {
@@ -239,8 +341,10 @@ export function OrderForm() {
     );
   }
 
+  const hasFieldIssues = Object.keys(issues).length > 0;
+
   return (
-    <form onSubmit={submit} className="grid gap-10 lg:grid-cols-2">
+    <form noValidate onSubmit={submit} className="grid gap-10 lg:grid-cols-2">
       <div className="space-y-4">
         <h1 className="font-[family-name:var(--font-playfair)] text-2xl font-bold sm:text-3xl">
           Checkout
@@ -263,41 +367,74 @@ export function OrderForm() {
           </p>
         ) : null}
         {err ? (
-          <p className="whitespace-pre-line rounded-lg bg-[var(--gold-light)] px-4 py-2 text-sm font-medium text-[var(--accent)]">
+          <p
+            className={[
+              "whitespace-pre-line rounded-lg px-4 py-2 text-sm font-medium",
+              hasFieldIssues
+                ? "border-2 border-red-500 bg-red-50 text-red-900"
+                : "bg-[var(--gold-light)] text-[var(--accent)]",
+            ].join(" ")}
+            role="alert"
+          >
             {err}
           </p>
         ) : null}
-        <label className="block text-sm font-semibold">
-          Customer name *
-          <input
-            required
-            className="mt-1 w-full min-h-[48px] rounded-lg border border-[var(--border)] px-3"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </label>
-        <label className="block text-sm font-semibold">
-          Phone *
-          <input
-            required
-            type="tel"
-            className="mt-1 w-full min-h-[48px] rounded-lg border border-[var(--border)] px-3"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-        </label>
-        <label className="block text-sm font-semibold">
-          Email *
-          <input
-            required
-            type="email"
-            className="mt-1 w-full min-h-[48px] rounded-lg border border-[var(--border)] px-3"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </label>
+        <div ref={contactRef} className="space-y-4">
+          <label className="block text-sm font-semibold">
+            Customer name *
+            <input
+              className={[
+                "mt-1 w-full min-h-[48px] rounded-lg border px-3 outline-none",
+                inputIssueClass(Boolean(issues.name)),
+              ].join(" ")}
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setIssues((p) => ({ ...p, name: false }));
+              }}
+            />
+          </label>
+          <label className="block text-sm font-semibold">
+            Phone *
+            <input
+              type="tel"
+              className={[
+                "mt-1 w-full min-h-[48px] rounded-lg border px-3 outline-none",
+                inputIssueClass(Boolean(issues.phone)),
+              ].join(" ")}
+              value={phone}
+              onChange={(e) => {
+                setPhone(e.target.value);
+                setIssues((p) => ({ ...p, phone: false }));
+              }}
+            />
+          </label>
+          <label className="block text-sm font-semibold">
+            Email *
+            <input
+              type="email"
+              className={[
+                "mt-1 w-full min-h-[48px] rounded-lg border px-3 outline-none",
+                inputIssueClass(Boolean(issues.email)),
+              ].join(" ")}
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setIssues((p) => ({ ...p, email: false }));
+              }}
+            />
+          </label>
+        </div>
 
-        <div className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+        <div
+          ref={paymentRef}
+          className={[
+            "space-y-4 rounded-xl border bg-[var(--card)] p-4 shadow-sm",
+            issues.payment
+              ? "border-red-500 ring-2 ring-red-500/40"
+              : "border-[var(--border)]",
+          ].join(" ")}
+        >
           <AcceptedPaymentMethods variant="checkout" />
           {showDemoCheckout ? (
             <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-dashed border-amber-500/60 bg-amber-50/80 px-3 py-2 text-sm font-medium text-[var(--text)]">
@@ -318,7 +455,10 @@ export function OrderForm() {
               type="checkbox"
               className="mt-1 h-5 w-5 shrink-0"
               checked={paymentMemoAck}
-              onChange={(e) => setPaymentMemoAck(e.target.checked)}
+              onChange={(e) => {
+                setPaymentMemoAck(e.target.checked);
+                if (e.target.checked) setIssues((p) => ({ ...p, payment: false }));
+              }}
             />
             <span>
               I understand I will put my order number in the Venmo or Zelle memo
@@ -327,7 +467,13 @@ export function OrderForm() {
           </label>
         </div>
 
-        <div>
+        <div
+          ref={pickupSectionRef}
+          className={[
+            "rounded-xl p-1",
+            issues.pickup ? "ring-2 ring-red-500 ring-offset-2" : "",
+          ].join(" ")}
+        >
           <p className="text-sm font-semibold">Pickup date *</p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
             Earliest selectable day: {minPickupDate} (Central Time — about 3–4
@@ -340,14 +486,23 @@ export function OrderForm() {
           >
             <PickupCalendar
               value={pickupDate}
-              onChange={setPickupDate}
+              onChange={(d) => {
+                setPickupDate(d);
+                setIssues((p) => ({ ...p, pickup: false, time: false }));
+              }}
               anchorYmd={calendarAnchorYmd}
             />
           </div>
         </div>
 
         {pickupDate ? (
-          <div>
+          <div
+            ref={timeSectionRef}
+            className={[
+              "rounded-xl p-1",
+              issues.time ? "ring-2 ring-red-500 ring-offset-2" : "",
+            ].join(" ")}
+          >
             <p className="text-sm font-semibold">Pickup time *</p>
             {slotsLoading ? (
               <p className="mt-2 text-xs text-[var(--text-muted)]">Loading times…</p>
@@ -363,7 +518,10 @@ export function OrderForm() {
                     <button
                       key={t}
                       type="button"
-                      onClick={() => setPickupTime(t)}
+                      onClick={() => {
+                        setPickupTime(t);
+                        setIssues((p) => ({ ...p, time: false }));
+                      }}
                       className={[
                         "min-h-[44px] rounded-full border px-4 text-sm font-semibold transition-colors",
                         sel
@@ -393,20 +551,38 @@ export function OrderForm() {
           <input
             type="checkbox"
             checked={customCheck}
-            onChange={(e) => setCustomCheck(e.target.checked)}
+            onChange={(e) => {
+              setCustomCheck(e.target.checked);
+              if (!e.target.checked) {
+                setIssues((p) => ({ ...p, custom: false }));
+              }
+            }}
             className="mt-1"
           />
           I&apos;d like to inquire about a custom dish not on the menu
         </label>
         {customCheck ? (
-          <textarea
-            required={customCheck}
-            rows={3}
-            className="w-full rounded-lg border border-[var(--border)] px-3 py-2"
-            placeholder="Describe what you'd like us to make"
-            value={customText}
-            onChange={(e) => setCustomText(e.target.value)}
-          />
+          <div
+            ref={customRef}
+            className={[
+              "rounded-lg p-1",
+              issues.custom ? "ring-2 ring-red-500 ring-offset-2" : "",
+            ].join(" ")}
+          >
+            <textarea
+              rows={3}
+              className={[
+                "w-full rounded-lg border px-3 py-2 outline-none",
+                inputIssueClass(Boolean(issues.custom)),
+              ].join(" ")}
+              placeholder="Describe what you'd like us to make"
+              value={customText}
+              onChange={(e) => {
+                setCustomText(e.target.value);
+                setIssues((p) => ({ ...p, custom: false }));
+              }}
+            />
+          </div>
         ) : null}
         <label className="flex cursor-pointer items-start gap-2 text-sm">
           <input
@@ -418,18 +594,27 @@ export function OrderForm() {
           I&apos;m interested in bi-weekly recurring orders
         </label>
 
-        {!samplesOk && basicsOk ? (
-          <p className="rounded-lg border border-[var(--accent)]/40 bg-[var(--gold-light)] px-4 py-3 text-sm font-medium text-[var(--text)]">
-            Your cart includes samples that need a choice:{" "}
-            {cart.samples.lumpiaQty > 0 && !cart.samples.lumpiaProtein
-              ? "pick beef, pork, or turkey for lumpia samples. "
-              : null}
-            {cart.samples.pancitQty > 0 && !cart.samples.pancitType
-              ? "pick chicken or shrimp for pancit samples."
-              : null}
-            Open the cart from the bag icon to finish.
-          </p>
-        ) : null}
+        <div
+          ref={samplesRef}
+          className={
+            issues.samples
+              ? "rounded-lg ring-2 ring-red-500 ring-offset-2"
+              : ""
+          }
+        >
+          {!samplesOk ? (
+            <p className="rounded-lg border border-[var(--accent)]/40 bg-[var(--gold-light)] px-4 py-3 text-sm font-medium text-[var(--text)]">
+              Your cart includes samples that need a choice:{" "}
+              {cart.samples.lumpiaQty > 0 && !cart.samples.lumpiaProtein
+                ? "pick beef, pork, or turkey for lumpia samples. "
+                : null}
+              {cart.samples.pancitQty > 0 && !cart.samples.pancitType
+                ? "pick chicken or shrimp for pancit samples."
+                : null}
+              Open the cart from the bag icon to finish.
+            </p>
+          ) : null}
+        </div>
 
         {canSubmitOrder ? (
           <div className="rounded-xl border-2 border-[var(--primary)]/25 bg-[var(--bg-section)] p-4 text-left">
@@ -449,7 +634,7 @@ export function OrderForm() {
 
         <button
           type="submit"
-          disabled={loading || !canSubmitOrder || !paymentMemoAck}
+          disabled={loading}
           className="btn btn-accent btn-block disabled:pointer-events-none disabled:opacity-40"
         >
           {loading ? "Submitting order…" : "Submit order & get order number"}
