@@ -17,9 +17,8 @@ import {
 } from "lucide-react";
 
 /**
- * Bundled MP3s are legal placeholders (not MYMP / Parokya / Gloc-9).
- * Filenames stay kailan / harana / simpleng-tao so you can drop in licensed OPM later.
- * Optional overrides: NEXT_PUBLIC_OPM_*_URL in .env.local
+ * Bundled files in public/audio/ (optional CDN/env: NEXT_PUBLIC_OPM_*_URL in .env.local).
+ * Display names are fixed per slot so labels stay correct when src is overridden.
  */
 const SRC_KAILAN =
   process.env.NEXT_PUBLIC_OPM_KAILAN_URL?.trim() || "/audio/kailan.mp3";
@@ -29,25 +28,10 @@ const SRC_SIMPLENG_TAO =
   process.env.NEXT_PUBLIC_OPM_SIMPLENG_TAO_URL?.trim() ||
   "/audio/simpleng-tao.mp3";
 
-/** Last path segment of the audio URL — matches what is actually loaded (local file or env override). */
-function trackLabelFromSrc(src: string): string {
-  try {
-    if (src.startsWith("http://") || src.startsWith("https://")) {
-      const path = new URL(src).pathname;
-      const seg = path.split("/").filter(Boolean).pop();
-      if (seg) return decodeURIComponent(seg);
-    }
-  } catch {
-    /* fall through */
-  }
-  const seg = src.split("/").filter(Boolean).pop();
-  return seg ? decodeURIComponent(seg) : src;
-}
-
 const TRACKS = [
-  { src: SRC_KAILAN },
-  { src: SRC_HARANA },
-  { src: SRC_SIMPLENG_TAO },
+  { src: SRC_KAILAN, title: "Kailan", artist: "MYMP" },
+  { src: SRC_HARANA, title: "Harana", artist: "Parokya ni Edgar" },
+  { src: SRC_SIMPLENG_TAO, title: "Simpleng Tao", artist: "Gloc 9" },
 ] as const;
 
 const LS_STOPPED = "mrks-opm-stopped";
@@ -649,7 +633,10 @@ export function SiteBackgroundMusic() {
               ) : null}
             </div>
             <p className="font-[family-name:var(--font-playfair)] text-lg font-bold leading-snug text-[var(--text)]">
-              {trackLabelFromSrc(track.src)}
+              {track.title}
+            </p>
+            <p className="mt-0.5 text-sm font-semibold leading-tight text-[var(--text-muted)]">
+              {track.artist}
             </p>
             {muted && playing ? (
               <p className="mt-1 text-[10px] font-semibold text-[var(--accent)]">
