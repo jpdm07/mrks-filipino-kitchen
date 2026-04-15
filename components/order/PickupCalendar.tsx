@@ -7,9 +7,11 @@ import {
   isPickupYmdAllowed,
 } from "@/lib/pickup-lead-time";
 import {
+  isFlanPickupOnlyNote,
   isFlanWeekdayLeadTimeOk,
   kitchenDayKind,
 } from "@/lib/kitchen-schedule";
+import { FlanPickupDayBadge } from "@/components/calendar/FlanPickupDayBadge";
 import {
   customerAvailabilityQueryRange,
   daysInCalendarMonth,
@@ -186,6 +188,7 @@ export const PickupCalendar = forwardRef<
           const bookable = whitelisted && !past && !tooSoon;
           const bookingWindowLocked = whitelisted && !past && tooSoon;
           const note = (notes[ymd] ?? "").trim();
+          const flanOnly = isFlanPickupOnlyNote(note);
           const selected = value === ymd;
           const notOffered = !whitelisted && !past;
           const staticTitle = bookingWindowLocked
@@ -205,20 +208,25 @@ export const PickupCalendar = forwardRef<
                 type="button"
                 title={note || undefined}
                 aria-pressed={selected}
-                aria-label={`${ymd} pickup`}
+                aria-label={`${ymd} pickup${flanOnly ? " (flan pickup only)" : ""}`}
                 onClick={() => onChange(ymd)}
                 className={[
-                  "relative aspect-square rounded-md border border-[var(--border)] text-sm font-semibold text-[var(--text)] transition-colors hover:bg-[#FFC200]",
+                  "relative flex aspect-square flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border px-0.5 py-0.5 text-sm font-semibold transition-colors",
                   selected
                     ? "!border-[#0038A8] !bg-[#0038A8] !text-white hover:!bg-[#0038A8]"
-                    : "",
+                    : flanOnly
+                      ? "border-amber-500 bg-amber-100 text-amber-950 ring-1 ring-amber-400/45 hover:bg-amber-200"
+                      : "border-[var(--border)] text-[var(--text)] hover:bg-[#FFC200]",
                 ]
                   .filter(Boolean)
                   .join(" ")}
               >
-                <span className="flex h-full w-full items-center justify-center rounded-md">
+                <span className="text-sm font-semibold leading-none tabular-nums">
                   {Number(ymd.slice(8))}
                 </span>
+                {flanOnly ? (
+                  <FlanPickupDayBadge inverted={selected} />
+                ) : null}
               </button>
             );
           }
@@ -229,21 +237,26 @@ export const PickupCalendar = forwardRef<
               role="presentation"
               title={staticTitle}
               className={[
-                "relative aspect-square select-none rounded-md text-sm font-semibold",
+                "relative flex aspect-square select-none flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md px-0.5 py-0.5 text-sm font-semibold",
                 past
                   ? "bg-[var(--bg-section)] text-[var(--text-muted)] opacity-50"
                   : bookingWindowLocked
-                    ? "border-2 border-[#FFC200] bg-[#FFC200]/25 text-[var(--text)] shadow-[0_0_12px_rgba(255,194,0,0.35)]"
+                    ? flanOnly
+                      ? "border-2 border-amber-500 bg-amber-100/90 text-amber-950 shadow-[0_0_12px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/40"
+                      : "border-2 border-[#FFC200] bg-[#FFC200]/25 text-[var(--text)] shadow-[0_0_12px_rgba(255,194,0,0.35)]"
                     : "bg-[var(--bg-section)] text-[var(--text-muted)] opacity-70 ring-1 ring-inset ring-[var(--border)]/60",
               ].join(" ")}
             >
-              <span className="flex h-full w-full items-center justify-center gap-0.5 rounded-md">
+              <span className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-0.5">
                 {bookingWindowLocked ? (
-                  <span className="text-[10px]" aria-hidden>
+                  <span className="text-[10px] leading-none" aria-hidden>
                     🔒
                   </span>
                 ) : null}
-                <span aria-hidden>{Number(ymd.slice(8))}</span>
+                <span aria-hidden className="tabular-nums leading-none">
+                  {Number(ymd.slice(8))}
+                </span>
+                {bookingWindowLocked && flanOnly ? <FlanPickupDayBadge /> : null}
               </span>
             </div>
           );
@@ -261,8 +274,9 @@ export const PickupCalendar = forwardRef<
       ) : (
         <p className="text-xs text-[var(--text-muted)]">
           Only <strong>clickable</strong> dates can be chosen. Gray = not open.
-          🔒 = open on our calendar but before the first Friday/Saturday pickup
-          window (Central Time). Hover for details.
+          Amber / <strong>Flan only</strong> = flan pickup that day (full menu Fri
+          &amp; Sat). 🔒 = open on our calendar but before the first
+          Friday/Saturday pickup window (Central Time). Hover for details.
         </p>
       )}
     </div>

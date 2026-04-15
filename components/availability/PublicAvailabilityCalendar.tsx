@@ -14,6 +14,8 @@ import {
   ymdFromParts,
 } from "@/lib/pickup-availability-query-range";
 import { useAvailabilityWhitelist } from "@/lib/hooks/useAvailabilityWhitelist";
+import { isFlanPickupOnlyNote } from "@/lib/kitchen-schedule";
+import { FlanPickupDayBadge } from "@/components/calendar/FlanPickupDayBadge";
 
 function firstWeekdayOfMonth(year: number, month1: number) {
   return new Date(Date.UTC(year, month1 - 1, 1)).getUTCDay();
@@ -160,10 +162,11 @@ export function PublicAvailabilityCalendar() {
 
         <p className="mt-3 text-xs text-[var(--text-muted)]">
           Only <strong>gold</strong> days are on Mr. K&apos;s pickup calendar;
-          gray days are <strong>not</strong> open for pickup here. Pickup times
-          are chosen at checkout. 🔒 means before the first Friday/Saturday
-          pickup window (Central), or that weekend closed after Thursday noon
-          (Central) for new orders.
+          <strong>amber</strong> days are open for <strong>flan pickup only</strong>
+          (full menu Fri &amp; Sat). Gray days are <strong>not</strong> open for
+          pickup here. Pickup times are chosen at checkout. 🔒 means before the
+          first Friday/Saturday pickup window (Central), or that weekend closed
+          after Thursday noon (Central) for new orders.
         </p>
 
         <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs font-semibold text-[var(--text-muted)]">
@@ -183,6 +186,8 @@ export function PublicAvailabilityCalendar() {
             const bookable = whitelisted && !past && !tooSoon;
             const lockedHighlight = whitelisted && !past && tooSoon;
             const selected = selectedYmd === ymd;
+            const note = (notes[ymd] ?? "").trim();
+            const flanOnly = isFlanPickupOnlyNote(note);
 
             if (past || !whitelisted) {
               return (
@@ -210,15 +215,21 @@ export function PublicAvailabilityCalendar() {
               <button
                 key={ymd}
                 type="button"
+                title={note || undefined}
+                aria-label={`${ymd}${flanOnly ? " — flan pickup only" : ""}`}
                 onClick={() => {
                   if (bookable) setPanel({ ymd, kind: "bookable" });
                   else setPanel({ ymd, kind: "locked" });
                 }}
                 className={[
-                  "relative flex aspect-square flex-col items-center justify-center rounded-lg text-sm font-bold transition",
-                  lockedHighlight
-                    ? "cursor-pointer border-2 border-[#FFC200] bg-[#FFC200] text-[var(--text)] shadow-[0_0_16px_rgba(255,194,0,0.55)]"
-                    : "cursor-pointer border-2 border-[#FFC200] bg-[#FFC200] text-[var(--text)] shadow-[0_0_14px_rgba(255,194,0,0.4)] hover:shadow-[0_0_20px_rgba(255,194,0,0.65)]",
+                  "relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-0.5 text-sm font-bold transition",
+                  flanOnly
+                    ? lockedHighlight
+                      ? "cursor-pointer border-2 border-amber-600 bg-amber-300 text-amber-950 shadow-[0_0_16px_rgba(245,158,11,0.55)]"
+                      : "cursor-pointer border-2 border-amber-600 bg-amber-300 text-amber-950 shadow-[0_0_14px_rgba(245,158,11,0.45)] hover:shadow-[0_0_20px_rgba(245,158,11,0.6)]"
+                    : lockedHighlight
+                      ? "cursor-pointer border-2 border-[#FFC200] bg-[#FFC200] text-[var(--text)] shadow-[0_0_16px_rgba(255,194,0,0.55)]"
+                      : "cursor-pointer border-2 border-[#FFC200] bg-[#FFC200] text-[var(--text)] shadow-[0_0_14px_rgba(255,194,0,0.4)] hover:shadow-[0_0_20px_rgba(255,194,0,0.65)]",
                   selected ? "ring-2 ring-[#0038A8] ring-offset-2" : "",
                 ].join(" ")}
               >
@@ -227,9 +238,14 @@ export function PublicAvailabilityCalendar() {
                     🔒
                   </span>
                 ) : null}
-                <span>{Number(ymd.slice(8))}</span>
+                <span className="tabular-nums leading-none">
+                  {Number(ymd.slice(8))}
+                </span>
+                {flanOnly ? (
+                  <FlanPickupDayBadge className="!text-amber-950" />
+                ) : null}
                 {lockedHighlight ? (
-                  <span className="mt-0.5 text-[7px] font-bold uppercase leading-none text-[var(--text)]/80">
+                  <span className="text-[7px] font-bold uppercase leading-none text-[var(--text)]/80">
                     Booking window
                   </span>
                 ) : null}
@@ -251,6 +267,12 @@ export function PublicAvailabilityCalendar() {
             <p className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[var(--text)]">
               {formatPickupYmdLong(selectedYmd)}
             </p>
+
+            {selectedYmd && isFlanPickupOnlyNote(notes[selectedYmd] ?? "") ? (
+              <p className="mt-3 rounded-lg border border-amber-500/45 bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-950">
+                Flan pickup only — full menu Fri &amp; Sat.
+              </p>
+            ) : null}
 
             {!selectedBookable ? (
               <div className="mt-4 space-y-3 text-sm text-[var(--text)]">

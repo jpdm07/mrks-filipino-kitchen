@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
+import { isFlanPickupOnlyNote } from "@/lib/kitchen-schedule";
+import { FlanPickupDayBadge } from "@/components/calendar/FlanPickupDayBadge";
 
 type DayMap = Record<string, { isOpen: boolean; note: string; slots: string[] }>;
 
@@ -548,6 +550,8 @@ export function AdminAvailabilityPanel() {
               const ymd = cell.ymd;
               const open = days[ymd]?.isOpen === true;
               const sel = selected === ymd;
+              const flanOpen =
+                open && isFlanPickupOnlyNote(days[ymd]?.note);
               return (
                 <button
                   key={ymd}
@@ -559,28 +563,41 @@ export function AdminAvailabilityPanel() {
                   }}
                   title="Click to select (edit note). Double-click to toggle open/closed."
                   className={[
-                    "aspect-square rounded-md border text-sm font-semibold",
+                    "flex aspect-square flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border px-0.5 py-0.5 text-sm font-semibold",
                     open
-                      ? "border-emerald-600 bg-emerald-100 text-emerald-900"
+                      ? flanOpen
+                        ? "border-amber-500 bg-amber-100 text-amber-950"
+                        : "border-emerald-600 bg-emerald-100 text-emerald-900"
                       : "border-[var(--border)] bg-[var(--bg-section)] text-[var(--text-muted)]",
                     sel ? "ring-2 ring-[var(--primary)]" : "",
                   ].join(" ")}
                 >
-                  {Number(ymd.slice(8))}
+                  <span className="tabular-nums leading-none">
+                    {Number(ymd.slice(8))}
+                  </span>
+                  {flanOpen ? <FlanPickupDayBadge /> : null}
                 </button>
               );
             })}
           </div>
         </div>
         <p className="mt-2 text-xs text-[var(--text-muted)]">
-          Green = available · Gray = unavailable · Double-click toggles · Click
-          once to add a note below
+          Green = available · Amber + “Flan only” = open with a flan-pickup-only
+          note · Gray = unavailable · Double-click toggles · Click once to add a
+          note below
         </p>
       </div>
 
       {selected ? (
         <div className="max-w-lg rounded-lg border border-[var(--border)] bg-[var(--card)] p-4">
           <p className="font-bold">Note for {selected}</p>
+          {days[selected]?.isOpen &&
+          isFlanPickupOnlyNote(days[selected]?.note) ? (
+            <p className="mt-2 rounded-md border border-amber-500/50 bg-amber-50 px-2 py-1.5 text-xs font-semibold text-amber-950">
+              Flan pickup only — customers see this day highlighted as flan-only on
+              all calendars.
+            </p>
+          ) : null}
           <textarea
             className="mt-2 w-full rounded border px-2 py-2 text-sm"
             rows={3}

@@ -7,11 +7,11 @@
  */
 
 /**
- * Fried spring rolls on a plate — reads as lumpia-style for hero & social previews.
- * (Previous default read as grilled meat to many viewers.)
+ * Plated crispy spring rolls (lumpia-style) — hero & OG default. Override with
+ * `NEXT_PUBLIC_HERO_FULLBLEED_IMAGE` (e.g. `/images/your-lumpia.jpg`).
  */
 const SHARP_HERO_STOCK =
-  "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=2400&q=90&auto=format&fit=crop";
+  "https://images.unsplash.com/photo-1562967914-608f82629710?w=2400&q=90&auto=format&fit=crop";
 
 /**
  * Culture FAQ corner — local file (previous default Unsplash URL 404’d).

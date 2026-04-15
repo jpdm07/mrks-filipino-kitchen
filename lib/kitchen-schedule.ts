@@ -16,6 +16,11 @@ export const FLAN_ONLY_DAY_NOTE =
 
 export const ALL_ITEMS_DAY_NOTE = "All items available for pickup";
 
+/** True when the kitchen/API note marks this day as flan-only pickup (calendar badge). */
+export function isFlanPickupOnlyNote(note: string | null | undefined): boolean {
+  return (note ?? "").trim().includes("Flan pickup only");
+}
+
 const ALL_SLOTS = pickupTimeSlotLabels();
 const SLOT_SET = new Set(ALL_SLOTS);
 
