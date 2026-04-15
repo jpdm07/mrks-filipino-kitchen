@@ -440,8 +440,9 @@ export function AdminAvailabilityPanel() {
                 <strong>Save</strong> stores the note above and these slots together.
               </p>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
-                Saving with no boxes checked stores every standard slot (same as{" "}
-                <strong>Select all</strong>).
+                Standard times are in <strong>15-minute</strong> steps (10:00 AM–7:00
+                PM). Saving with no boxes checked stores every standard slot (same
+                as <strong>Select all</strong>). Scroll the list to see all.
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <button
@@ -459,7 +460,7 @@ export function AdminAvailabilityPanel() {
                   Select all
                 </button>
               </div>
-              <div className="mt-2 grid max-h-48 grid-cols-2 gap-2 overflow-y-auto text-sm sm:grid-cols-3">
+              <div className="mt-2 grid max-h-[min(70vh,28rem)] grid-cols-2 gap-2 overflow-y-auto text-sm sm:grid-cols-3">
                 {ALL_SLOT_LABELS.map((label) => (
                   <label key={label} className="flex items-center gap-2">
                     <input

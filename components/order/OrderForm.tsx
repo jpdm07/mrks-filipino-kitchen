@@ -12,16 +12,11 @@ import {
 } from "@/lib/cart-types";
 import {
   formatPickupYmdLong,
-  getEarliestPickupDateMinYMD,
   isPickupYmdAllowed,
   isWellFormedPickupYMD,
   pickupDateRejectedMessage,
 } from "@/lib/pickup-lead-time";
-import {
-  ORDER_FORM_PREP_BANNER,
-  orderFormPickupConfirmationLine,
-  PICKUP_LEAD_TIME_CUSTOMER_LINE,
-} from "@/lib/pickup-availability-copy";
+import { orderFormPickupConfirmationLine } from "@/lib/pickup-availability-copy";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 
 type CheckoutIssueKey =
@@ -85,8 +80,6 @@ export function OrderForm() {
     ],
     [cart.lines, cart.samples, cart.samplePrices]
   );
-
-  const minPickupDate = getEarliestPickupDateMinYMD();
 
   useEffect(() => {
     if (appliedUrlPickup.current) return;
@@ -353,13 +346,10 @@ export function OrderForm() {
         <h1 className="font-[family-name:var(--font-playfair)] text-2xl font-bold sm:text-3xl">
           Checkout
         </h1>
-        <p className="rounded-xl border border-[#0038A8]/20 bg-[#eef4ff] px-4 py-3 text-sm leading-relaxed text-[var(--text)]">
-          {ORDER_FORM_PREP_BANNER}
-        </p>
         {urlLeadReject ? (
           <p className="rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-3 py-2 text-sm text-[var(--text)]">
-            The date in your link is too soon for online ordering.{" "}
-            {PICKUP_LEAD_TIME_CUSTOMER_LINE}
+            The date in your link isn&apos;t available for online ordering. Please
+            pick another open date on the calendar.
           </p>
         ) : null}
         {pickupDate && isPickupYmdAllowed(pickupDate) ? (
@@ -480,8 +470,7 @@ export function OrderForm() {
         >
           <p className="text-sm font-semibold">Pickup date *</p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
-            Earliest selectable day: {minPickupDate} (Central Time — about 3–4
-            days to prepare). {PICKUP_LEAD_TIME_CUSTOMER_LINE}
+            Choose an open day (Central Time), then a pickup time.
           </p>
           <div
             ref={calendarRef}

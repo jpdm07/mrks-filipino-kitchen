@@ -14,7 +14,6 @@ import {
   ymdFromParts,
 } from "@/lib/pickup-availability-query-range";
 import { useAvailabilityWhitelist } from "@/lib/hooks/useAvailabilityWhitelist";
-import { PICKUP_LEAD_TIME_CUSTOMER_LINE } from "@/lib/pickup-availability-copy";
 
 function firstWeekdayOfMonth(year: number, month1: number) {
   return new Date(Date.UTC(year, month1 - 1, 1)).getUTCDay();
@@ -160,10 +159,10 @@ export function PublicAvailabilityCalendar() {
         ) : null}
 
         <p className="mt-3 text-xs text-[var(--text-muted)]">
-          {PICKUP_LEAD_TIME_CUSTOMER_LINE} Only <strong>gold</strong> days are on
-          Mr. K&apos;s pickup calendar; gray days are <strong>not</strong> open
-          for pickup here. Pickup times are chosen at checkout. 🔒 means still
-          inside the 3–4 day prep window.
+          Only <strong>gold</strong> days are on Mr. K&apos;s pickup calendar;
+          gray days are <strong>not</strong> open for pickup here. Pickup times
+          are chosen at checkout. 🔒 means that day isn&apos;t selectable online
+          yet.
         </p>
 
         <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs font-semibold text-[var(--text-muted)]">
@@ -255,9 +254,8 @@ export function PublicAvailabilityCalendar() {
             {!selectedBookable ? (
               <div className="mt-4 space-y-3 text-sm text-[var(--text)]">
                 <p className="rounded-lg bg-[var(--gold-light)] px-3 py-2 font-medium">
-                  🔒 Booking window — this day is on our calendar, but online
-                  orders need about 3–4 days to prepare.{" "}
-                  {PICKUP_LEAD_TIME_CUSTOMER_LINE}
+                  🔒 This day is on our calendar, but it isn&apos;t available for
+                  online orders yet. Please choose a later highlighted date.
                 </p>
                 {kitchenNote ? (
                   <p className="text-[var(--text-muted)]">

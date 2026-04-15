@@ -24,12 +24,34 @@ export function addCalendarDaysYMD(ymd: string, days: number): string {
   return `${yy}-${mm}-${dd}`;
 }
 
-/** Earliest date allowed for pickup (min on date input + server validation). */
+/** 0 = Sunday … 6 = Saturday (calendar weekday of YYYY-MM-DD in UTC date parts). */
+export function ymdUtcWeekday(ymd: string): number {
+  const t = ymd.trim();
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t);
+  if (!m) return 0;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  return new Date(Date.UTC(y, mo - 1, d)).getUTCDay();
+}
+
+/**
+ * Earliest YYYY-MM-DD customers may pick: first Friday or Saturday on or after
+ * (today + MIN_NOTICE_CALENDAR_DAYS) in PICKUP_TIMEZONE.
+ */
 export function getEarliestPickupDateMinYMD(): string {
-  return addCalendarDaysYMD(
-    getTodayInPickupTimezoneYMD(),
-    ORDER_FULFILLMENT.MIN_LEAD_DAYS
+  const today = getTodayInPickupTimezoneYMD();
+  const threshold = addCalendarDaysYMD(
+    today,
+    ORDER_FULFILLMENT.MIN_NOTICE_CALENDAR_DAYS
   );
+  let ymd = threshold;
+  for (let i = 0; i < 7; i++) {
+    const dow = ymdUtcWeekday(ymd);
+    if (dow === 5 || dow === 6) return ymd;
+    ymd = addCalendarDaysYMD(ymd, 1);
+  }
+  return threshold;
 }
 
 export function isWellFormedPickupYMD(s: string): boolean {
@@ -41,16 +63,9 @@ export function isPickupYmdAllowed(pickupYmd: string): boolean {
   return pickupYmd.trim() >= getEarliestPickupDateMinYMD();
 }
 
-/** User-facing error when date is too soon (form + API). */
+/** User-facing error when date is not allowed (form + API). */
 export function pickupDateRejectedMessage(): string {
-  const n = ORDER_FULFILLMENT.MIN_LEAD_DAYS;
-  if (n <= 0) {
-    return "Choose today or a future pickup date.";
-  }
-  if (n <= 1) {
-    return "Pickup must be at least one full day after you order. Choose tomorrow or a later date.";
-  }
-  return `Pickup must be at least ${n} full days from today. Choose a later date.`;
+  return "That pickup date isn’t available. Please choose an open date on the calendar.";
 }
 
 /** Long label for a pickup calendar day (matches YYYY-MM-DD literally). */

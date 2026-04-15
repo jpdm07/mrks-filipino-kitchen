@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { PublicAvailabilityCalendar } from "@/components/availability/PublicAvailabilityCalendar";
-import { PICKUP_LEAD_TIME_CUSTOMER_LINE } from "@/lib/pickup-availability-copy";
 
 export const metadata: Metadata = {
   title: "Pickup availability",
@@ -29,14 +28,8 @@ export default function AvailabilityPage() {
           <li>💚 Send payment via Zelle or Venmo</li>
           <li>✅ Mr. K confirms your order and you&apos;re all set!</li>
         </ol>
-        <p className="mt-4 text-sm font-medium text-[var(--text)]">
-          Orders need about 3–4 days to prepare.
-        </p>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
+        <p className="mt-4 text-sm text-[var(--text-muted)]">
           All orders are pickup only from Cypress, TX 77433.
-        </p>
-        <p className="mt-3 text-sm text-[var(--text-muted)]">
-          {PICKUP_LEAD_TIME_CUSTOMER_LINE}
         </p>
       </div>
 

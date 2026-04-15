@@ -7,7 +7,6 @@ import {
   daysInCalendarMonth,
   ymdFromParts,
 } from "@/lib/pickup-availability-query-range";
-import { PICKUP_LEAD_TIME_CUSTOMER_LINE } from "@/lib/pickup-availability-copy";
 import { useAvailabilityWhitelist } from "@/lib/hooks/useAvailabilityWhitelist";
 
 function firstWeekdayOfMonth(year: number, month1: number) {
@@ -163,7 +162,7 @@ export const PickupCalendar = forwardRef<
           const selected = value === ymd;
           const notOffered = !whitelisted && !past;
           const staticTitle = bookingWindowLocked
-            ? `Booking window: ${PICKUP_LEAD_TIME_CUSTOMER_LINE}${note ? ` · ${note}` : ""}`
+            ? `Not selectable online yet${note ? ` · ${note}` : ""}`
             : past
               ? "Past date"
               : notOffered
@@ -221,7 +220,6 @@ export const PickupCalendar = forwardRef<
           );
         })}
       </div>
-      <p className="text-xs text-[var(--text-muted)]">{PICKUP_LEAD_TIME_CUSTOMER_LINE}</p>
       {noDatesInRange ? (
         <p className="rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-3 py-2 text-sm text-[var(--text)]">
           No pickup dates are currently available. Please check back soon or
@@ -234,8 +232,8 @@ export const PickupCalendar = forwardRef<
       ) : (
         <p className="text-xs text-[var(--text-muted)]">
           Only <strong>clickable</strong> dates can be chosen. Gray cells are not
-          open for pickup. 🔒 means the kitchen marked that day, but it is still
-          inside the 3–4 day prep window. Hover for details.
+          open for pickup. 🔒 means the kitchen marked that day, but it
+          isn&apos;t selectable online yet. Hover for details.
         </p>
       )}
     </div>

@@ -74,7 +74,7 @@ export async function createAvailabilityEvent(
 const ALL_SLOT_LABELS = pickupTimeSlotLabels();
 const SLOT_ALLOW = new Set(ALL_SLOT_LABELS);
 
-/** Parse "Slots: 10:00 AM, 10:30 AM" lines from event descriptions (app-created). */
+/** Parse "Slots: 10:00 AM, 10:15 AM, …" lines from event descriptions (app-created). */
 export function parseSlotsFromGoogleDescription(
   description: string | null | undefined
 ): string[] {
@@ -219,7 +219,7 @@ export async function createPickupEvent(order: OrderLike): Promise<void> {
     const time = convertTo24Hour(order.pickupTime);
     const start = `${order.pickupDate}T${time}`;
     const startDate = new Date(`${start}-06:00`);
-    const endDate = new Date(startDate.getTime() + 30 * 60 * 1000);
+    const endDate = new Date(startDate.getTime() + 15 * 60 * 1000);
     await cal.events.insert({
       calendarId: calId,
       requestBody: {

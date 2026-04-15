@@ -1,7 +1,7 @@
 /**
  * One-time / ops: for the current calendar month (America/Chicago), reset pickup
  * availability to a biweekly pattern:
- *   - First open day = today + MIN_LEAD_DAYS (~3–4 day prep).
+ *   - First open day = same rule as checkout (first Fri/Sat on or after today + 7d).
  *   - Further open days = that date + 14 days, + 28, … while still in the month.
  * All other days in that month are closed (rows removed). Other months untouched.
  *
@@ -12,9 +12,9 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import {
   addCalendarDaysYMD,
+  getEarliestPickupDateMinYMD,
   getTodayInPickupTimezoneYMD,
 } from "../lib/pickup-lead-time";
-import { ORDER_FULFILLMENT } from "../lib/config";
 import { pickupTimeSlotLabels } from "../lib/pickup-time-slots";
 import { createAvailabilityEvent } from "../lib/googleCalendar";
 
@@ -36,36 +36,33 @@ function lastDayOfMonthYmd(ymd: string): string {
 }
 
 function collectOpenDatesThisMonth(
-  todayYmd: string,
-  minLeadDays: number
-): { monthStart: string; monthEnd: string; openDates: string[] } {
-  const monthStart = firstDayOfMonthYmd(todayYmd);
-  const monthEnd = lastDayOfMonthYmd(todayYmd);
-  const firstPickup = addCalendarDaysYMD(todayYmd, minLeadDays);
+  monthStart: string,
+  monthEnd: string,
+  firstOpenYmd: string
+): string[] {
   const openDates: string[] = [];
-  let d = firstPickup;
+  let d = firstOpenYmd;
   while (d <= monthEnd) {
     if (d >= monthStart) openDates.push(d);
     d = addCalendarDaysYMD(d, 14);
   }
-  return { monthStart, monthEnd, openDates };
+  return openDates;
 }
 
 async function main() {
   const today = getTodayInPickupTimezoneYMD();
-  const lead = ORDER_FULFILLMENT.MIN_LEAD_DAYS;
-  const { monthStart, monthEnd, openDates } = collectOpenDatesThisMonth(
-    today,
-    lead
-  );
+  const earliest = getEarliestPickupDateMinYMD();
+  const monthStart = firstDayOfMonthYmd(today);
+  const monthEnd = lastDayOfMonthYmd(today);
+  const openDates = collectOpenDatesThisMonth(monthStart, monthEnd, earliest);
 
   const del = await prisma.availability.deleteMany({
     where: { date: { gte: monthStart, lte: monthEnd } },
   });
 
   const slotsArr = pickupTimeSlotLabels();
+  const note = `Biweekly slot (${monthStart.slice(0, 7)}; first open ${earliest}, then every 14d).`;
   for (const date of openDates) {
-    const note = `Biweekly slot (${monthStart.slice(0, 7)} schedule; +${lead}d lead, then every 14d).`;
     await prisma.availability.create({
       data: {
         date,
@@ -78,7 +75,7 @@ async function main() {
   }
 
   console.log(
-    `Today (pickup TZ): ${today} · Month ${monthStart} … ${monthEnd} · ` +
+    `Today (pickup TZ): ${today} · Earliest bookable: ${earliest} · Month ${monthStart} … ${monthEnd} · ` +
       `Removed ${del.count} row(s) in range · Open pickup day(s): ` +
       (openDates.length ? openDates.join(", ") : "(none — first bookable is after this month)")
   );

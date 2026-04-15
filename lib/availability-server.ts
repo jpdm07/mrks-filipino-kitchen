@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { eachYmdInRangeInclusive } from "@/lib/availability-range";
 import {
+  isLegacyFullThirtyMinuteSlotGrid,
   pickupTimeSlotLabels,
-  sortPickupSlotLabels,
 } from "@/lib/pickup-time-slots";
 
 const ALL_SLOTS = pickupTimeSlotLabels();
@@ -26,10 +26,12 @@ function slotsJsonFromDb(value: string | null | undefined): unknown {
 
 /**
  * Effective pickup slots for an open day. Empty stored array = all standard slots (convenience).
+ * Rows saved as the old full half-hour grid expand to the current standard (15-minute) list.
  */
 export function effectiveSlotsForOpenDay(stored: unknown): string[] {
   const parsed = parseStoredSlots(stored);
   if (parsed.length === 0) return [...ALL_SLOTS];
+  if (isLegacyFullThirtyMinuteSlotGrid(parsed)) return [...ALL_SLOTS];
   return parsed;
 }
 
@@ -102,7 +104,7 @@ export async function isPickupDateOpenInDb(dateYmd: string): Promise<boolean> {
   return row != null && row.isOpen === true;
 }
 
-/** Slots customers may choose for an open date (subset of 30-min labels). */
+/** Slots customers may choose for an open date (subset of standard 15-min labels). */
 export async function getPickupSlotsForDateYmd(dateYmd: string): Promise<string[]> {
   const row = await prisma.availability.findUnique({
     where: { date: dateYmd.trim() },
