@@ -71,9 +71,15 @@ export async function buildKitchenOpenDatesPayload(
   const allDates = [...eachYmdInRangeInclusive(fromYmd, toYmd)];
   const dbRows = await prisma.availability.findMany({
     where: { date: { in: allDates } },
-    select: { date: true, isOpen: true },
+    select: { date: true, isOpen: true, note: true },
   });
   const dbOpen = new Map(dbRows.map((r) => [r.date, r.isOpen === true]));
+  const dbExplicitClosed = new Set(
+    dbRows.filter((r) => r.isOpen === false).map((r) => r.date)
+  );
+  const dbNoteByDate = new Map(
+    dbRows.map((r) => [r.date, r.note?.trim() || ""])
+  );
 
   const mainNeed = opts.mainMinutesNeeded ?? 0;
   const flanNeed = opts.flanRamekinsNeeded ?? 0;
@@ -129,5 +135,51 @@ export async function buildKitchenOpenDatesPayload(
     }
   }
 
-  return { openDates, notes };
+  const filtered = openDates.filter((ymd) => !dbExplicitClosed.has(ymd));
+  const prunedNotes: Record<string, string> = {};
+  for (const ymd of filtered) {
+    prunedNotes[ymd] = notes[ymd] ?? "";
+  }
+  for (const ymd of filtered) {
+    const custom = dbNoteByDate.get(ymd);
+    if (custom) prunedNotes[ymd] = custom;
+  }
+
+  return { openDates: filtered, notes: prunedNotes };
+}
+
+/**
+ * View-only: union of mixed + flan-only payloads so the public calendar shows both
+ * full-menu Fri/Sat and Mon–Thu flan days (matches what the admin panel saves for flan template).
+ * Checkout still uses `cartMode=mixed` or `flan` only.
+ */
+export async function buildUnifiedDisplayOpenDatesPayload(
+  fromYmd: string,
+  toYmd: string,
+  opts: { mainMinutesNeeded: number; flanRamekinsNeeded: number }
+): Promise<{ openDates: string[]; notes: Record<string, string> }> {
+  const mixed = await buildKitchenOpenDatesPayload(fromYmd, toYmd, {
+    cartFlanOnly: false,
+    mainMinutesNeeded: opts.mainMinutesNeeded,
+    flanRamekinsNeeded: opts.flanRamekinsNeeded,
+  });
+  const flan = await buildKitchenOpenDatesPayload(fromYmd, toYmd, {
+    cartFlanOnly: true,
+    mainMinutesNeeded: opts.mainMinutesNeeded,
+    flanRamekinsNeeded: opts.flanRamekinsNeeded,
+  });
+  const openSet = new Set([...mixed.openDates, ...flan.openDates]);
+  const notes: Record<string, string> = { ...mixed.notes };
+  for (const ymd of flan.openDates) {
+    const kd = kitchenDayKind(ymd);
+    if (kd === "mon_thu") {
+      notes[ymd] = flan.notes[ymd] ?? notes[ymd] ?? "";
+    } else if (!notes[ymd]) {
+      notes[ymd] = flan.notes[ymd] ?? "";
+    }
+  }
+  return {
+    openDates: [...openSet].sort(),
+    notes,
+  };
 }

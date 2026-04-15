@@ -1,6 +1,9 @@
 import { NextRequest } from "next/server";
 import { AVAILABILITY_LIVE_POLL_MS } from "@/lib/availability-live-sync";
-import { buildKitchenOpenDatesPayload } from "@/lib/kitchen-availability-merge";
+import {
+  buildKitchenOpenDatesPayload,
+  buildUnifiedDisplayOpenDatesPayload,
+} from "@/lib/kitchen-availability-merge";
 import { kickGoogleAvailabilityBackgroundSync } from "@/lib/google-availability-stale-sync";
 import {
   addCalendarDaysYMD,
@@ -10,7 +13,7 @@ import {
 export const dynamic = "force-dynamic";
 
 /**
- * SSE: pushes the same whitelist as GET /api/availability (only DB isOpen === true).
+ * SSE: same payloads as GET /api/availability (poll every few seconds).
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -31,7 +34,9 @@ export async function GET(req: NextRequest) {
   const encoder = new TextEncoder();
   const fromYmd = from;
   const toYmd = to;
-  const cartMode = searchParams.get("cartMode") === "flan" ? "flan" : "mixed";
+  const cartParam = searchParams.get("cartMode") ?? "mixed";
+  const cartMode =
+    cartParam === "flan" ? "flan" : cartParam === "all" ? "all" : "mixed";
   const mainNeed = Number(searchParams.get("mainNeed") || "0");
   const flanNeed = Number(searchParams.get("flanNeed") || "0");
 
@@ -42,11 +47,19 @@ export async function GET(req: NextRequest) {
         if (closed) return;
         try {
           kickGoogleAvailabilityBackgroundSync();
-          const payload = await buildKitchenOpenDatesPayload(fromYmd, toYmd, {
-            cartFlanOnly: cartMode === "flan",
-            mainMinutesNeeded: Number.isFinite(mainNeed) ? mainNeed : 0,
-            flanRamekinsNeeded: Number.isFinite(flanNeed) ? flanNeed : 0,
-          });
+          const mainN = Number.isFinite(mainNeed) ? mainNeed : 0;
+          const flanN = Number.isFinite(flanNeed) ? flanNeed : 0;
+          const payload =
+            cartMode === "all"
+              ? await buildUnifiedDisplayOpenDatesPayload(fromYmd, toYmd, {
+                  mainMinutesNeeded: mainN,
+                  flanRamekinsNeeded: flanN,
+                })
+              : await buildKitchenOpenDatesPayload(fromYmd, toYmd, {
+                  cartFlanOnly: cartMode === "flan",
+                  mainMinutesNeeded: mainN,
+                  flanRamekinsNeeded: flanN,
+                });
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify(payload)}\n\n`)
           );

@@ -16,7 +16,8 @@ export function useAvailabilityWhitelist(
   to: string,
   options?: {
     pollMsOnError?: number;
-    cartMode?: "flan" | "mixed";
+    /** `all` = union of mixed + flan weekdays (public /availability page). */
+    cartMode?: "flan" | "mixed" | "all";
     mainNeed?: number;
     flanNeed?: number;
   }

@@ -47,7 +47,10 @@ export function PublicAvailabilityCalendar() {
   const { openDates, notes, loading, loadError } = useAvailabilityWhitelist(
     from,
     to,
-    { pollMsOnError: 60000 }
+    {
+      cartMode: "all",
+      pollMsOnError: 60000,
+    }
   );
 
   const hasSeededMonth = useRef(false);

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildKitchenOpenDatesPayload } from "@/lib/kitchen-availability-merge";
+import {
+  buildKitchenOpenDatesPayload,
+  buildUnifiedDisplayOpenDatesPayload,
+} from "@/lib/kitchen-availability-merge";
 import { kickGoogleAvailabilityBackgroundSync } from "@/lib/google-availability-stale-sync";
 import {
   isDatabaseUnavailableError,
@@ -14,8 +17,8 @@ const NO_STORE = {
 } as const;
 
 /**
- * Public whitelist: only dates with an Availability row where isOpen === true.
- * Empty openDates means no pickup days are open for this range.
+ * Public pickup dates: kitchen merge + DB (see `buildKitchenOpenDatesPayload`).
+ * Use `cartMode=all` for a view-only union (mixed + flan weekdays) on `/availability`.
  */
 export async function GET(req: NextRequest) {
   if (!process.env.DATABASE_URL?.trim()) {
@@ -45,17 +48,27 @@ export async function GET(req: NextRequest) {
   if (from > to) {
     return NextResponse.json({ error: "from must be <= to" }, { status: 400 });
   }
-  const cartMode = searchParams.get("cartMode") === "flan" ? "flan" : "mixed";
+  const cartParam = searchParams.get("cartMode") ?? "mixed";
+  const cartMode =
+    cartParam === "flan" ? "flan" : cartParam === "all" ? "all" : "mixed";
   const mainNeed = Number(searchParams.get("mainNeed") || "0");
   const flanNeed = Number(searchParams.get("flanNeed") || "0");
 
   try {
     kickGoogleAvailabilityBackgroundSync();
-    const payload = await buildKitchenOpenDatesPayload(from, to, {
-      cartFlanOnly: cartMode === "flan",
-      mainMinutesNeeded: Number.isFinite(mainNeed) ? mainNeed : 0,
-      flanRamekinsNeeded: Number.isFinite(flanNeed) ? flanNeed : 0,
-    });
+    const mainN = Number.isFinite(mainNeed) ? mainNeed : 0;
+    const flanN = Number.isFinite(flanNeed) ? flanNeed : 0;
+    const payload =
+      cartMode === "all"
+        ? await buildUnifiedDisplayOpenDatesPayload(from, to, {
+            mainMinutesNeeded: mainN,
+            flanRamekinsNeeded: flanN,
+          })
+        : await buildKitchenOpenDatesPayload(from, to, {
+            cartFlanOnly: cartMode === "flan",
+            mainMinutesNeeded: mainN,
+            flanRamekinsNeeded: flanN,
+          });
     return NextResponse.json(payload, {
       headers: {
         ...NO_STORE,
