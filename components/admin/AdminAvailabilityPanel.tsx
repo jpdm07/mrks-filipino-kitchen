@@ -7,6 +7,36 @@ type DayMap = Record<string, { isOpen: boolean; note: string; slots: string[] }>
 
 const ALL_SLOT_LABELS = pickupTimeSlotLabels();
 
+/** Minutes from midnight for a label like "6:00 PM" (10:00 AM–8:00 PM grid). */
+function slotLabelToMinutes(label: string): number | null {
+  const m = /^(\d{1,2}):(\d{2})\s+(AM|PM)$/.exec(label.trim());
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const ap = m[3];
+  if (ap === "PM" && h !== 12) h += 12;
+  if (ap === "AM" && h === 12) h = 0;
+  return h * 60 + parseInt(m[2], 10);
+}
+
+function slotsWithMinutesInRangeInclusive(
+  startMin: number,
+  endMin: number
+): Set<string> {
+  const out = new Set<string>();
+  for (const label of ALL_SLOT_LABELS) {
+    const t = slotLabelToMinutes(label);
+    if (t !== null && t >= startMin && t <= endMin) out.add(label);
+  }
+  return out;
+}
+
+/** Effective slots for an open day (empty stored = all standard slots). */
+function effectiveSlotsSet(day: { isOpen: boolean; slots: string[] } | undefined): Set<string> {
+  if (!day?.isOpen) return new Set();
+  if (!day.slots || day.slots.length === 0) return new Set(ALL_SLOT_LABELS);
+  return new Set(day.slots);
+}
+
 function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
@@ -39,6 +69,13 @@ export function AdminAvailabilityPanel() {
   const [syncingGoogle, setSyncingGoogle] = useState(false);
   /** Shown next to the per-day Save button after a successful save. */
   const [saveDayAck, setSaveDayAck] = useState(false);
+  /** Copied slot list (copy/paste between days without saving yet). */
+  const [slotsClipboard, setSlotsClipboard] = useState<string[] | null>(null);
+  const [rangeFromLabel, setRangeFromLabel] = useState(() => ALL_SLOT_LABELS[0] ?? "");
+  const [rangeToLabel, setRangeToLabel] = useState(
+    () => ALL_SLOT_LABELS[ALL_SLOT_LABELS.length - 1] ?? ""
+  );
+  const [loadFromYmd, setLoadFromYmd] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -89,6 +126,10 @@ export function AdminAvailabilityPanel() {
 
   useEffect(() => {
     setSaveDayAck(false);
+  }, [selected]);
+
+  useEffect(() => {
+    setLoadFromYmd("");
   }, [selected]);
 
   useEffect(() => {
@@ -177,6 +218,82 @@ export function AdminAvailabilityPanel() {
     "en-US",
     { month: "long", year: "numeric", timeZone: "UTC" }
   );
+
+  const openDaysThisMonth = useMemo(() => {
+    return grid
+      .map((c) => c.ymd)
+      .filter((ymd): ymd is string => Boolean(ymd && days[ymd]?.isOpen))
+      .sort();
+  }, [grid, days]);
+
+  const copySourceChoices = useMemo(
+    () => openDaysThisMonth.filter((d) => d !== selected),
+    [openDaysThisMonth, selected]
+  );
+
+  const applyPresetReplace = (preset: "evening68" | "full" | "morning" | "lunch" | "afternoon") => {
+    let s: Set<string>;
+    switch (preset) {
+      case "evening68":
+        s = slotsWithMinutesInRangeInclusive(18 * 60, 20 * 60);
+        break;
+      case "full":
+        s = slotsWithMinutesInRangeInclusive(10 * 60, 20 * 60);
+        break;
+      case "morning":
+        s = slotsWithMinutesInRangeInclusive(10 * 60, 12 * 60);
+        break;
+      case "lunch":
+        s = slotsWithMinutesInRangeInclusive(11 * 60, 14 * 60);
+        break;
+      case "afternoon":
+        s = slotsWithMinutesInRangeInclusive(14 * 60, 17 * 60);
+        break;
+      default:
+        s = new Set();
+    }
+    setSlotSelection(s);
+  };
+
+  const applyRangeFromDropdowns = (mode: "replace" | "add") => {
+    const i0 = ALL_SLOT_LABELS.indexOf(rangeFromLabel);
+    const i1 = ALL_SLOT_LABELS.indexOf(rangeToLabel);
+    if (i0 < 0 || i1 < 0) return;
+    const a = Math.min(i0, i1);
+    const b = Math.max(i0, i1);
+    const next = new Set<string>();
+    for (let i = a; i <= b; i++) next.add(ALL_SLOT_LABELS[i]);
+    if (mode === "replace") setSlotSelection(next);
+    else
+      setSlotSelection((prev) => {
+        const u = new Set(prev);
+        next.forEach((x) => u.add(x));
+        return u;
+      });
+  };
+
+  const copySlotsToClipboard = () => {
+    const sorted = Array.from(slotSelection).sort(
+      (x, y) => ALL_SLOT_LABELS.indexOf(x) - ALL_SLOT_LABELS.indexOf(y)
+    );
+    setSlotsClipboard(sorted);
+    setMsg("Slot list copied — open another day and click Paste, or Save here.");
+  };
+
+  const pasteSlotsFromClipboard = () => {
+    if (!slotsClipboard?.length) {
+      setMsg("Nothing in clipboard — use Copy slots on a day first.");
+      return;
+    }
+    setSlotSelection(new Set(slotsClipboard));
+  };
+
+  const loadSlotsFromOtherDay = (sourceYmd: string) => {
+    const day = days[sourceYmd];
+    if (!day?.isOpen) return;
+    setSlotSelection(effectiveSlotsSet(day));
+    setMsg(`Loaded slots from ${sourceYmd}. Click Save to apply to ${selected}.`);
+  };
 
   const toggleDay = (ymd: string) => {
     const cur = days[ymd]?.isOpen ?? false;
@@ -436,7 +553,8 @@ export function AdminAvailabilityPanel() {
               <p className="text-sm font-bold">Pickup time slots (customer checkout)</p>
               <p className="text-xs text-[var(--text-muted)]">
                 Pick which pickup windows customers see. Use{" "}
-                <strong>Uncheck all</strong>, then turn on only what you need.{" "}
+                <strong>presets</strong>, a <strong>time range</strong>, or{" "}
+                <strong>copy from another day</strong> to fill many slots at once.{" "}
                 <strong>Save</strong> stores the note above and these slots together.
               </p>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
@@ -459,6 +577,125 @@ export function AdminAvailabilityPanel() {
                 >
                   Select all
                 </button>
+              </div>
+              <div className="mt-3 space-y-3 rounded-md border border-[var(--border)] bg-[var(--bg-section)] p-3">
+                <p className="text-xs font-semibold text-[var(--text)]">Quick fill</p>
+                <div className="flex flex-wrap gap-2">
+                  {(
+                    [
+                      ["evening68", "6:00 PM – 8:00 PM"] as const,
+                      ["full", "10:00 AM – 8:00 PM"] as const,
+                      ["morning", "10:00 AM – 12:00 PM"] as const,
+                      ["lunch", "11:00 AM – 2:00 PM"] as const,
+                      ["afternoon", "2:00 PM – 5:00 PM"] as const,
+                    ] as const
+                  ).map(([key, text]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      className="rounded border border-[var(--border)] bg-[var(--card)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text)] hover:bg-[var(--gold-light)]"
+                      onClick={() => applyPresetReplace(key)}
+                    >
+                      {text}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex flex-wrap items-end gap-2">
+                  <label className="flex flex-col gap-0.5 text-xs font-medium text-[var(--text-muted)]">
+                    From
+                    <select
+                      className="mt-0.5 min-w-[7.5rem] rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm text-[var(--text)]"
+                      value={rangeFromLabel}
+                      onChange={(e) => setRangeFromLabel(e.target.value)}
+                    >
+                      {ALL_SLOT_LABELS.map((l) => (
+                        <option key={l} value={l}>
+                          {l}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-0.5 text-xs font-medium text-[var(--text-muted)]">
+                    To
+                    <select
+                      className="mt-0.5 min-w-[7.5rem] rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm text-[var(--text)]"
+                      value={rangeToLabel}
+                      onChange={(e) => setRangeToLabel(e.target.value)}
+                    >
+                      {ALL_SLOT_LABELS.map((l) => (
+                        <option key={l} value={l}>
+                          {l}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    className="rounded border border-[var(--border)] bg-[var(--card)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text)] hover:bg-[var(--gold-light)]"
+                    onClick={() => applyRangeFromDropdowns("replace")}
+                  >
+                    Set range (replace)
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded border border-[var(--border)] bg-[var(--card)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text)] hover:bg-[var(--gold-light)]"
+                    onClick={() => applyRangeFromDropdowns("add")}
+                  >
+                    Add range
+                  </button>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 border-t border-[var(--border)] pt-3">
+                  <button
+                    type="button"
+                    className="rounded border border-[var(--border)] bg-[var(--card)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text)] hover:bg-[var(--gold-light)]"
+                    onClick={copySlotsToClipboard}
+                  >
+                    Copy slots
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded border border-[var(--border)] bg-[var(--card)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text)] hover:bg-[var(--gold-light)]"
+                    onClick={pasteSlotsFromClipboard}
+                  >
+                    Paste slots
+                  </button>
+                  {slotsClipboard?.length ? (
+                    <span className="text-xs text-[var(--text-muted)]">
+                      Clipboard: {slotsClipboard.length} slot
+                      {slotsClipboard.length === 1 ? "" : "s"}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="flex flex-wrap items-end gap-2 border-t border-[var(--border)] pt-3">
+                  <label className="flex flex-col gap-0.5 text-xs font-medium text-[var(--text-muted)]">
+                    Load schedule from day
+                    <select
+                      className="mt-0.5 min-w-[10rem] rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm text-[var(--text)]"
+                      value={loadFromYmd}
+                      onChange={(e) => setLoadFromYmd(e.target.value)}
+                    >
+                      <option value="">Choose a day…</option>
+                      {copySourceChoices.map((ymd) => (
+                        <option key={ymd} value={ymd}>
+                          {ymd}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    className="rounded border border-[var(--border)] bg-[var(--card)] px-2.5 py-1.5 text-xs font-semibold text-[var(--text)] hover:bg-[var(--gold-light)] disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={!loadFromYmd}
+                    onClick={() => loadFromYmd && loadSlotsFromOtherDay(loadFromYmd)}
+                  >
+                    Load into this day
+                  </button>
+                  {copySourceChoices.length === 0 ? (
+                    <span className="text-xs text-[var(--text-muted)]">
+                      No other open days this month — use Copy/Paste or presets.
+                    </span>
+                  ) : null}
+                </div>
               </div>
               <div className="mt-2 grid max-h-[min(70vh,28rem)] grid-cols-2 gap-2 overflow-y-auto text-sm sm:grid-cols-3">
                 {ALL_SLOT_LABELS.map((label) => (
