@@ -3,6 +3,8 @@ export type OrderItemLine = {
   quantity: number;
   unitPrice: number;
   size?: string;
+  /** Matches MenuItem sizes[].key — required for kitchen capacity on new orders. */
+  sizeKey?: string;
   cookedOrFrozen?: string;
   isSample?: boolean;
   category?: string;

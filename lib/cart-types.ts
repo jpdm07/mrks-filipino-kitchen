@@ -82,6 +82,8 @@ export function samplesToLines(
       quantity: selection.flanQty,
       unitPrice: prices.flan,
       size: "Individual (1 ramekin)",
+      sizeKey: "individual",
+      menuItemId: "seed-6",
       isSample: true,
       category: "sample",
     });
@@ -106,6 +108,7 @@ export function cartLinesToOrderItems(lines: CartLine[]): OrderItemLine[] {
     quantity: l.quantity,
     unitPrice: l.unitPrice,
     size: l.sizeLabel,
+    sizeKey: l.sizeKey,
     cookedOrFrozen: l.cookedOrFrozen,
     menuItemId: l.menuItemId,
     isSample: false,

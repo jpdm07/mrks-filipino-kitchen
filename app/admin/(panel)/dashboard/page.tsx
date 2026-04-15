@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import { userFacingAdminDatabaseError } from "@/lib/safe-db";
 import { DashboardOrders } from "@/components/admin/DashboardOrders";
+import { CapacityOverview } from "@/components/admin/CapacityOverview";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,7 @@ export default async function AdminDashboardPage() {
       <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold">
         Dashboard
       </h1>
+      <CapacityOverview />
       {dbError ? (
         <p className="mt-4 whitespace-pre-wrap rounded-lg border border-[var(--accent)]/50 bg-[var(--gold-light)] px-4 py-3 text-sm font-medium leading-relaxed text-[var(--text)]">
           {dbError}

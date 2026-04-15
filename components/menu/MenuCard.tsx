@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { MenuItemDTO } from "@/lib/menu-types";
 import { useCart } from "@/components/cart/CartContext";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
+import { FlanWeekStockNote } from "@/components/menu/FlanWeekStockNote";
 
 export function MenuCard({ item }: { item: MenuItemDTO }) {
   const { addLine } = useCart();
@@ -75,9 +76,12 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
             {item.description}
           </p>
           {item.id === "seed-6" ? (
-            <p className="mt-2 text-xs font-medium text-[var(--text-muted)]">
-              Baked and served in its own aluminum ramekin
-            </p>
+            <>
+              <p className="mt-2 text-xs font-medium text-[var(--text-muted)]">
+                Baked and served in its own aluminum ramekin
+              </p>
+              <FlanWeekStockNote />
+            </>
           ) : null}
 
           {lumpia ? (

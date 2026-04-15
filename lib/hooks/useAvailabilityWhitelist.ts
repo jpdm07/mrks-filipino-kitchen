@@ -14,9 +14,17 @@ export type AvailabilityWhitelistPayload = {
 export function useAvailabilityWhitelist(
   from: string,
   to: string,
-  options?: { pollMsOnError?: number }
+  options?: {
+    pollMsOnError?: number;
+    cartMode?: "flan" | "mixed";
+    mainNeed?: number;
+    flanNeed?: number;
+  }
 ) {
   const pollMsOnError = options?.pollMsOnError ?? 30000;
+  const cartMode = options?.cartMode ?? "mixed";
+  const mainNeed = options?.mainNeed ?? 0;
+  const flanNeed = options?.flanNeed ?? 0;
   const [openDates, setOpenDates] = useState<string[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -43,7 +51,7 @@ export function useAvailabilityWhitelist(
   const fetchOnce = useCallback(async () => {
     try {
       const r = await fetch(
-        `/api/availability?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+        `/api/availability?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&cartMode=${encodeURIComponent(cartMode)}&mainNeed=${encodeURIComponent(String(mainNeed))}&flanNeed=${encodeURIComponent(String(flanNeed))}`,
         { cache: "no-store" }
       );
       if (!r.ok) {
@@ -64,7 +72,7 @@ export function useAvailabilityWhitelist(
       setLoadError(true);
       setLoading(false);
     }
-  }, [from, to, applyPayload]);
+  }, [from, to, applyPayload, cartMode, mainNeed, flanNeed]);
 
   useEffect(() => {
     setLoading(true);
@@ -76,7 +84,7 @@ export function useAvailabilityWhitelist(
 
     void fetchOnce();
 
-    const qs = `?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+    const qs = `?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&cartMode=${encodeURIComponent(cartMode)}&mainNeed=${encodeURIComponent(String(mainNeed))}&flanNeed=${encodeURIComponent(String(flanNeed))}`;
     const source = new EventSource(`/api/availability/stream${qs}`);
 
     source.onmessage = (event) => {
@@ -107,7 +115,7 @@ export function useAvailabilityWhitelist(
         pollRef.current = null;
       }
     };
-  }, [from, to, applyPayload, fetchOnce, pollMsOnError]);
+  }, [from, to, applyPayload, fetchOnce, pollMsOnError, cartMode, mainNeed, flanNeed]);
 
   useEffect(() => {
     const onVisible = () => {

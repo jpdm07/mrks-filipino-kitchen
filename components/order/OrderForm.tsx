@@ -12,10 +12,14 @@ import {
 } from "@/lib/cart-types";
 import {
   formatPickupYmdLong,
-  isPickupYmdAllowed,
   isWellFormedPickupYMD,
   pickupDateRejectedMessage,
 } from "@/lib/pickup-lead-time";
+import { isPickupYmdAllowedForOrderCart } from "@/lib/kitchen-schedule";
+import {
+  cartHasOnlyFlanItems,
+  totalCookContribution,
+} from "@/lib/menu-cook-capacity";
 import { orderFormPickupConfirmationLine } from "@/lib/pickup-availability-copy";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 import {
@@ -85,13 +89,52 @@ export function OrderForm() {
     [cart.lines, cart.samples, cart.samplePrices]
   );
 
+  const cartFlanOnly = useMemo(() => cartHasOnlyFlanItems(items), [items]);
+  const cookNeed = useMemo(() => totalCookContribution(items), [items]);
+
+  const [capacityWeeks, setCapacityWeeks] = useState<
+    Array<{
+      weekStart: string;
+      mainSoldOut: boolean;
+      mainCookRemaining: number;
+      flanRemaining: number;
+    }>
+  >([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/capacity/weeks", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data: unknown) => {
+        if (cancelled || !Array.isArray(data)) return;
+        setCapacityWeeks(
+          data.map((w: Record<string, unknown>) => ({
+            weekStart: String(w.weekStart ?? ""),
+            mainSoldOut: Boolean(w.mainSoldOut),
+            mainCookRemaining: Number(w.mainCookRemaining ?? 0),
+            flanRemaining: Number(w.flanRemaining ?? 0),
+          }))
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setCapacityWeeks([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     if (appliedUrlPickup.current) return;
     const raw = searchParams.get("pickupDate") ?? searchParams.get("date");
     if (!raw || !isWellFormedPickupYMD(raw)) return;
     appliedUrlPickup.current = true;
     const d = raw.trim();
-    if (!isPickupYmdAllowed(d)) {
+    const flanOnly = cartHasOnlyFlanItems([
+      ...cartLinesToOrderItems(cart.lines),
+      ...samplesToLines(cart.samples, cart.samplePrices),
+    ]);
+    if (!isPickupYmdAllowedForOrderCart(d, flanOnly)) {
       setUrlLeadReject(true);
       return;
     }
@@ -103,7 +146,7 @@ export function OrderForm() {
         block: "nearest",
       });
     }, 500);
-  }, [searchParams]);
+  }, [searchParams, cart.lines, cart.samples, cart.samplePrices]);
 
   useEffect(() => {
     if (!pickupDate) {
@@ -113,7 +156,15 @@ export function OrderForm() {
     }
     let cancelled = false;
     setSlotsLoading(true);
-    fetch(`/api/availability/${encodeURIComponent(pickupDate)}`)
+    const mode = cartFlanOnly ? "flan" : "mixed";
+    const qs = new URLSearchParams({
+      cartMode: mode,
+      mainNeed: String(cookNeed.mainMinutes),
+      flanNeed: String(cookNeed.flanRamekins),
+    });
+    fetch(
+      `/api/availability/${encodeURIComponent(pickupDate)}?${qs.toString()}`
+    )
       .then(async (r) => {
         const j = (await r.json().catch(() => ({}))) as {
           slots?: unknown;
@@ -150,7 +201,7 @@ export function OrderForm() {
     return () => {
       cancelled = true;
     };
-  }, [pickupDate]);
+  }, [pickupDate, cartFlanOnly, cookNeed.mainMinutes, cookNeed.flanRamekins]);
 
   const emailOk = isValidEmail(email);
   const phoneOk = hasValidPhoneDigits(phone);
@@ -162,7 +213,7 @@ export function OrderForm() {
     pickupDate &&
     pickupTime &&
     slotOptions.includes(pickupTime) &&
-    isPickupYmdAllowed(pickupDate) &&
+    isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly) &&
     !slotsLoading;
 
   const samplesOk = samplesSelectionComplete(cart.samples);
@@ -216,7 +267,7 @@ export function OrderForm() {
 
     if (!pickupDate?.trim() || !isWellFormedPickupYMD(pickupDate)) {
       next.pickup = true;
-    } else if (!isPickupYmdAllowed(pickupDate)) {
+    } else if (!isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly)) {
       next.pickup = true;
     } else if (slotsLoading) {
       next.time = true;
@@ -261,7 +312,11 @@ export function OrderForm() {
           "Please confirm you will use your order number in the payment memo and text it after paying."
         );
       }
-      if (next.pickup && pickupDate && !isPickupYmdAllowed(pickupDate)) {
+      if (
+        next.pickup &&
+        pickupDate &&
+        !isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly)
+      ) {
         parts.push(pickupDateRejectedMessage());
       } else if (next.pickup) {
         parts.push("Please select a valid pickup date.");
@@ -381,12 +436,28 @@ export function OrderForm() {
         </div>
         {urlLeadReject ? (
           <p className="rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-3 py-2 text-sm text-[var(--text)]">
-            The date in your link isn&apos;t available for online pickup yet
-            (first pickup is the upcoming Friday or Saturday, Central Time). Pick
-            another open date on the calendar.
+            The date in your link isn&apos;t available for your cart (pickup rules
+            depend on what you&apos;re ordering). Pick another open date on the
+            calendar.
           </p>
         ) : null}
-        {pickupDate && isPickupYmdAllowed(pickupDate) ? (
+        {capacityWeeks[0] && !cartFlanOnly && capacityWeeks[0].mainSoldOut ? (
+          <p className="rounded-lg border border-[var(--primary)]/30 bg-[var(--primary)]/10 px-3 py-2 text-sm font-medium text-[var(--text)]">
+            📅 This week&apos;s pickups are full — but you can still place your
+            order for next Friday or Saturday! Select your pickup date below.
+          </p>
+        ) : null}
+        {capacityWeeks[0] &&
+        !cartFlanOnly &&
+        !capacityWeeks[0].mainSoldOut &&
+        capacityWeeks[0].mainCookRemaining > 0 &&
+        capacityWeeks[0].mainCookRemaining < 60 ? (
+          <p className="rounded-lg border border-amber-400/50 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950">
+            ⏳ Limited availability left this week — order soon before we&apos;re
+            fully booked!
+          </p>
+        ) : null}
+        {pickupDate && isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly) ? (
           <p
             className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--text)]"
             role="status"
@@ -532,6 +603,9 @@ export function OrderForm() {
                 setIssues((p) => ({ ...p, pickup: false, time: false }));
               }}
               anchorYmd={calendarAnchorYmd}
+              cartMode={cartFlanOnly ? "flan" : "mixed"}
+              mainCookNeed={cookNeed.mainMinutes}
+              flanRamekinsNeed={cookNeed.flanRamekins}
             />
           </div>
         </div>

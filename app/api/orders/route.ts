@@ -8,14 +8,17 @@ import { syncOrderToSheets } from "@/lib/sheets";
 import type { OrderItemLine } from "@/lib/order-types";
 import { isDatabaseUnavailableError, isPrismaEngineError } from "@/lib/safe-db";
 import {
-  isPickupYmdAllowed,
   isWellFormedPickupYMD,
   pickupDateRejectedMessage,
 } from "@/lib/pickup-lead-time";
 import {
-  isPickupDateOpenInDb,
-  isPickupSlotValidForDate,
-} from "@/lib/availability-server";
+  getKitchenSlotsForDate,
+  isPickupYmdAllowedForOrderCart,
+} from "@/lib/kitchen-schedule";
+import { cartHasOnlyFlanItems } from "@/lib/menu-cook-capacity";
+import {
+  wouldExceedCapacityForPickupWeekWithTx,
+} from "@/lib/capacity-service";
 import {
   ORDER_STATUS_PENDING_PAYMENT_VERIFICATION,
   PAYMENT_METHOD_UNVERIFIED,
@@ -29,6 +32,13 @@ import {
   hasValidPhoneDigits,
   isValidEmail,
 } from "@/lib/checkout-contact-validation";
+
+class CapacityExceededError extends Error {
+  constructor() {
+    super("Capacity exceeded");
+    this.name = "CapacityExceededError";
+  }
+}
 
 function computeTotals(
   items: OrderItemLine[],
@@ -103,22 +113,16 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    if (!isPickupYmdAllowed(pickupDate, new Date())) {
+    const cartFlanOnly = cartHasOnlyFlanItems(items);
+    if (!isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly, new Date())) {
       return NextResponse.json(
         { error: pickupDateRejectedMessage() },
         { status: 400 }
       );
     }
-    if (!(await isPickupDateOpenInDb(pickupDate))) {
-      return NextResponse.json(
-        {
-          error:
-            "Sorry, that pickup date is no longer available. Please go back and select a different date.",
-        },
-        { status: 400 }
-      );
-    }
-    if (!(await isPickupSlotValidForDate(pickupDate, pickupTime))) {
+
+    const slotList = await getKitchenSlotsForDate(pickupDate, cartFlanOnly);
+    if (!slotList.includes(pickupTime.trim())) {
       return NextResponse.json(
         {
           error:
@@ -146,6 +150,18 @@ export async function POST(req: NextRequest) {
     try {
       order = await prisma.$transaction(async (tx) => {
         if (!isDemo) {
+          const settings = await tx.kitchenCapacitySettings.findUnique({
+            where: { id: "default" },
+          });
+          const cap = await wouldExceedCapacityForPickupWeekWithTx(
+            tx,
+            pickupDate,
+            items,
+            { manualSoldOutWeekStart: settings?.manualSoldOutWeekStart ?? null }
+          );
+          if (!cap.ok) {
+            throw new CapacityExceededError();
+          }
           await assertPickupSlotFreeInTx(tx, pickupDate, pickupTime);
         }
         return tx.order.create({
@@ -180,6 +196,15 @@ export async function POST(req: NextRequest) {
           {
             error:
               "That pickup time was just taken. Please choose another time on the checkout page.",
+          },
+          { status: 409 }
+        );
+      }
+      if (e instanceof CapacityExceededError) {
+        return NextResponse.json(
+          {
+            error:
+              "That pickup week just filled up while you were checking out. Please go back and select a different date.",
           },
           { status: 409 }
         );

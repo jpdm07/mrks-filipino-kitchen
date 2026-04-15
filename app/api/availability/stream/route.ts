@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { AVAILABILITY_LIVE_POLL_MS } from "@/lib/availability-live-sync";
-import { getPublicAvailabilityWhitelistPayload } from "@/lib/availability-server";
+import { buildKitchenOpenDatesPayload } from "@/lib/kitchen-availability-merge";
 import { kickGoogleAvailabilityBackgroundSync } from "@/lib/google-availability-stale-sync";
 import {
   addCalendarDaysYMD,
@@ -31,6 +31,9 @@ export async function GET(req: NextRequest) {
   const encoder = new TextEncoder();
   const fromYmd = from;
   const toYmd = to;
+  const cartMode = searchParams.get("cartMode") === "flan" ? "flan" : "mixed";
+  const mainNeed = Number(searchParams.get("mainNeed") || "0");
+  const flanNeed = Number(searchParams.get("flanNeed") || "0");
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -39,10 +42,11 @@ export async function GET(req: NextRequest) {
         if (closed) return;
         try {
           kickGoogleAvailabilityBackgroundSync();
-          const payload = await getPublicAvailabilityWhitelistPayload(
-            fromYmd,
-            toYmd
-          );
+          const payload = await buildKitchenOpenDatesPayload(fromYmd, toYmd, {
+            cartFlanOnly: cartMode === "flan",
+            mainMinutesNeeded: Number.isFinite(mainNeed) ? mainNeed : 0,
+            flanRamekinsNeeded: Number.isFinite(flanNeed) ? flanNeed : 0,
+          });
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify(payload)}\n\n`)
           );

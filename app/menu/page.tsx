@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MenuCategoryNav } from "@/components/menu/MenuCategoryNav";
 import { MenuGrid } from "@/components/menu/MenuGrid";
+import { MenuKitchenCapacityBanner } from "@/components/menu/MenuKitchenCapacityBanner";
 import { SuggestionPoll } from "@/components/sections/SuggestionPoll";
 import {
   itemVisibleForMenuTab,
@@ -51,6 +52,7 @@ export default async function MenuPage({ searchParams }: MenuPageProps) {
         </p>
       </div>
       <div className="print:hidden">
+        <MenuKitchenCapacityBanner />
         <div className="mt-8">
           <MenuCategoryNav active={activeTab} pickupDate={pickupDate} />
         </div>

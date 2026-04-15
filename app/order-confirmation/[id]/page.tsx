@@ -10,6 +10,11 @@ import { orderHasFrozenLumpia } from "@/lib/order-types";
 import { salesTaxPercentLabel } from "@/lib/config";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 import { ORDER_STATUS_CONFIRMED } from "@/lib/order-payment";
+import {
+  formatPickupYmdLong,
+  getTodayInPickupTimezoneYMD,
+} from "@/lib/pickup-lead-time";
+import { mondayOfCalendarWeekContaining } from "@/lib/pickup-week";
 import { SalesTaxDisclosure } from "@/components/checkout/SalesTaxDisclosure";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +49,12 @@ export default async function OrderConfirmationPage({
   const items = parseItems(order.items);
   const frozenLumpia = orderHasFrozenLumpia(items);
 
+  const pickupYmd = order.pickupDate?.trim();
+  const futurePickupWeek =
+    pickupYmd &&
+    mondayOfCalendarWeekContaining(pickupYmd) >
+      mondayOfCalendarWeekContaining(getTodayInPickupTimezoneYMD());
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 text-center">
       <OrderConfirmationConfetti />
@@ -67,6 +78,15 @@ export default async function OrderConfirmationPage({
         Use this number in your Zelle/Venmo memo and when you text us after you
         pay.
       </p>
+
+      {futurePickupWeek && pickupYmd ? (
+        <p className="mx-auto mt-6 max-w-lg rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-4 py-3 text-sm leading-relaxed text-[var(--text)]">
+          You&apos;re all set! Your order is confirmed for pickup on{" "}
+          <strong>{formatPickupYmdLong(pickupYmd)}</strong>. This is a future
+          pickup — we&apos;ll be
+          in touch to confirm once the week gets closer.
+        </p>
+      ) : null}
 
       <div className="mt-8 rounded-[var(--radius)] border-2 border-[var(--primary)] bg-[var(--primary)]/5 p-6 text-left shadow-[var(--shadow)]">
         <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[var(--primary)]">

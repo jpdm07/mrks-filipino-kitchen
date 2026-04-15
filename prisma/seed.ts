@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { PRICING, SUGGESTION_OPTIONS } from "../lib/config";
 import { MENU_CATALOG } from "../lib/menu-catalog";
+import { COOK_MINUTES_BY_MENU_ITEM } from "../lib/menu-capacity-catalog";
 import { FLAN_RETAIL_PER_RAMEKIN_USD } from "../lib/flan-cost-model";
 import { LUMPIA_SAMPLE_4PC_RETAIL_USD } from "../lib/lumpia-cost-model";
 import { PANCIT_SAMPLE_PRICE_DEFAULT_USD } from "../lib/pancit-limes";
@@ -40,11 +41,23 @@ async function main() {
     update: { count: 1000 },
   });
 
+  await prisma.kitchenCapacitySettings.upsert({
+    where: { id: "default" },
+    create: { id: "default", manualSoldOutWeekStart: null },
+    update: {},
+  });
+
   for (const m of MENU_CATALOG) {
     const variantGroup = "variantGroup" in m ? m.variantGroup : null;
     const variantShortLabel = "variantShortLabel" in m ? m.variantShortLabel : null;
     const groupCardTitle = "groupCardTitle" in m ? m.groupCardTitle : null;
     const groupServingBlurb = "groupServingBlurb" in m ? m.groupServingBlurb : null;
+    const cap = COOK_MINUTES_BY_MENU_ITEM[m.id];
+    const isFlanItem = cap?.isFlan === true;
+    const cookMinutes =
+      cap && !isFlanItem
+        ? Math.max(0, ...Object.values(cap.bySize))
+        : 0;
     await prisma.menuItem.upsert({
       where: { id: m.id },
       create: {
@@ -58,6 +71,8 @@ async function main() {
         photoUrl: m.photoUrl,
         isActive: true,
         soldOut: false,
+        cookMinutes,
+        isFlanItem,
         hasCooked: m.hasCooked,
         hasFrozen: m.hasFrozen,
         sortOrder: m.sortOrder,
@@ -74,6 +89,8 @@ async function main() {
         basePrice: m.basePrice,
         sizes: JSON.stringify(m.sizes),
         photoUrl: m.photoUrl,
+        cookMinutes,
+        isFlanItem,
         hasCooked: m.hasCooked,
         hasFrozen: m.hasFrozen,
         sortOrder: m.sortOrder,

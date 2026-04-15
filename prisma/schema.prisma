@@ -63,11 +63,22 @@ model MenuItem {
   hasCooked          Boolean @default(false)
   hasFrozen          Boolean @default(false)
   sortOrder          Int     @default(0)
+  /// Minutes of Friday cook time for one unit of this line (sizeKey in capacity map); 0 for flan.
+  cookMinutes        Int     @default(0)
+  /// True only for Caramel Flan — used for pickup calendar + weekly flan cap (16/week).
+  isFlanItem         Boolean @default(false)
   // Same variantGroup = one menu card; each DB row stays a separate cart line.
   variantGroup       String?
   variantShortLabel  String?
   groupCardTitle     String?
   groupServingBlurb  String?
+}
+
+/// Singleton row: manual “week sold out” override (current week only; ignored when week changes).
+model KitchenCapacitySettings {
+  id String @id @default("default")
+  /// Monday YYYY-MM-DD of the week admin force-closed; must match current week to apply
+  manualSoldOutWeekStart String?
 }
 
 model Subscriber {

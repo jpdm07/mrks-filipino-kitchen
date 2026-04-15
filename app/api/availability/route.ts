@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPublicAvailabilityWhitelistPayload } from "@/lib/availability-server";
+import { buildKitchenOpenDatesPayload } from "@/lib/kitchen-availability-merge";
 import { kickGoogleAvailabilityBackgroundSync } from "@/lib/google-availability-stale-sync";
 import {
   isDatabaseUnavailableError,
@@ -45,9 +45,17 @@ export async function GET(req: NextRequest) {
   if (from > to) {
     return NextResponse.json({ error: "from must be <= to" }, { status: 400 });
   }
+  const cartMode = searchParams.get("cartMode") === "flan" ? "flan" : "mixed";
+  const mainNeed = Number(searchParams.get("mainNeed") || "0");
+  const flanNeed = Number(searchParams.get("flanNeed") || "0");
+
   try {
     kickGoogleAvailabilityBackgroundSync();
-    const payload = await getPublicAvailabilityWhitelistPayload(from, to);
+    const payload = await buildKitchenOpenDatesPayload(from, to, {
+      cartFlanOnly: cartMode === "flan",
+      mainMinutesNeeded: Number.isFinite(mainNeed) ? mainNeed : 0,
+      flanRamekinsNeeded: Number.isFinite(flanNeed) ? flanNeed : 0,
+    });
     return NextResponse.json(payload, {
       headers: {
         ...NO_STORE,

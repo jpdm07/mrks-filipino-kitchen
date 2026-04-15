@@ -7,6 +7,10 @@ import {
   isPickupYmdAllowed,
 } from "@/lib/pickup-lead-time";
 import {
+  isFlanWeekdayLeadTimeOk,
+  kitchenDayKind,
+} from "@/lib/kitchen-schedule";
+import {
   customerAvailabilityQueryRange,
   daysInCalendarMonth,
   ymdFromParts,
@@ -30,6 +34,10 @@ export const PickupCalendar = forwardRef<
     anchorYmd?: string | null;
     /** If false, the customer cannot navigate to months before the current month. */
     allowNavigateToPastMonths?: boolean;
+    /** Kitchen schedule + capacity (checkout). */
+    cartMode?: "flan" | "mixed";
+    mainCookNeed?: number;
+    flanRamekinsNeed?: number;
   }
 >(function PickupCalendar(
   {
@@ -37,6 +45,9 @@ export const PickupCalendar = forwardRef<
     onChange,
     anchorYmd = null,
     allowNavigateToPastMonths = true,
+    cartMode = "mixed",
+    mainCookNeed = 0,
+    flanRamekinsNeed = 0,
   },
   ref
 ) {
@@ -73,7 +84,12 @@ export const PickupCalendar = forwardRef<
 
   const { openDates, notes, loading, loadError } = useAvailabilityWhitelist(
     from,
-    to
+    to,
+    {
+      cartMode,
+      mainNeed: mainCookNeed,
+      flanNeed: flanRamekinsNeed,
+    }
   );
 
   const openSet = useMemo(() => new Set(openDates), [openDates]);
@@ -158,7 +174,14 @@ export const PickupCalendar = forwardRef<
           }
           const ymd = cell.ymd;
           const past = ymd < todayYmd;
-          const tooSoon = !isPickupYmdAllowed(ymd);
+          const leadOkForCart = (() => {
+            if (cartMode === "flan") {
+              const kd = kitchenDayKind(ymd);
+              if (kd === "mon_thu") return isFlanWeekdayLeadTimeOk(ymd);
+            }
+            return isPickupYmdAllowed(ymd);
+          })();
+          const tooSoon = !leadOkForCart;
           const whitelisted = openSet.has(ymd);
           const bookable = whitelisted && !past && !tooSoon;
           const bookingWindowLocked = whitelisted && !past && tooSoon;
