@@ -6,6 +6,7 @@ import {
 } from "@/lib/admin-nav-badges";
 import { AdminDocumentAttentionTitle } from "@/components/admin/AdminDocumentAttentionTitle";
 import { AdminNavLinks } from "@/components/admin/AdminNavLinks";
+import { AdminAutoRefresh } from "@/components/admin/AdminAutoRefresh";
 import { AdminLogoutButton } from "./AdminLogoutButton";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,7 @@ export default async function AdminPanelLayout({
 
   return (
     <div className="min-h-screen bg-[var(--bg-section)]">
+      <AdminAutoRefresh />
       <AdminDocumentAttentionTitle total={attentionTotal} />
       <div className="sticky top-0 z-[200] border-b border-[var(--border)] bg-[var(--card)] shadow-sm">
         <div className="mx-auto max-w-7xl px-4 py-3">

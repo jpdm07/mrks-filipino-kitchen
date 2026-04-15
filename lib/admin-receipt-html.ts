@@ -175,14 +175,61 @@ export function buildAdminReceiptHtml(order: AdminOrderClientRow): string {
 </html>`;
 }
 
+/**
+ * Prints the receipt without opening a new tab — avoids popup blockers and the
+ * “blank tab” that `window.open` triggers in some browsers.
+ */
 export function openAdminReceiptPrintWindow(order: AdminOrderClientRow): void {
+  if (typeof document === "undefined") return;
+
   const html = buildAdminReceiptHtml(order);
-  const w = window.open("", "_blank", "noopener,noreferrer");
-  if (!w) {
-    window.alert("Pop-up blocked. Allow pop-ups for this site to print the receipt.");
+  const iframe = document.createElement("iframe");
+  iframe.setAttribute("title", "Receipt print");
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.style.cssText =
+    "position:fixed;width:0;height:0;border:0;left:0;top:0;opacity:0;pointer-events:none";
+
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    try {
+      iframe.remove();
+    } catch {
+      /* ignore */
+    }
+  };
+
+  document.body.appendChild(iframe);
+
+  const win = iframe.contentWindow;
+  if (!win) {
+    cleanup();
+    window.alert("Could not prepare the receipt for printing. Try again.");
     return;
   }
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
+
+  const runPrint = () => {
+    try {
+      win.focus();
+      win.print();
+    } catch {
+      cleanup();
+      window.alert("Could not open the print dialog. Try again.");
+      return;
+    }
+    win.addEventListener("afterprint", cleanup, { once: true });
+    window.setTimeout(cleanup, 120_000);
+  };
+
+  iframe.onload = () => {
+    requestAnimationFrame(runPrint);
+  };
+
+  try {
+    iframe.srcdoc = html;
+  } catch {
+    cleanup();
+    window.alert("Could not prepare the receipt for printing. Try again.");
+  }
 }

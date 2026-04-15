@@ -13,6 +13,7 @@ import type { AdminOrderClientRow } from "@/lib/admin-order-client";
 import { OrderPaymentAdminActions } from "./OrderPaymentAdminActions";
 import { ORDER_STATUS_PENDING_PAYMENT_VERIFICATION } from "@/lib/order-payment";
 import { openAdminReceiptPrintWindow } from "@/lib/admin-receipt-html";
+import { ADMIN_POLL_INTERVAL_MS } from "@/lib/admin-poll-interval";
 
 type Row = AdminOrderClientRow;
 
@@ -99,33 +100,42 @@ export function DashboardOrders() {
     };
   }, [modal, closeModal]);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setLoadError(null);
-    fetch("/api/admin/orders", { credentials: "same-origin" })
-      .then(async (r) => {
-        if (r.status === 401) {
-          throw new Error("Session expired — refresh and sign in again.");
-        }
-        if (!r.ok) throw new Error("Could not load orders.");
-        return r.json() as Promise<{ orders: Row[] }>;
-      })
-      .then((data) => {
-        if (!cancelled) setOrders(Array.isArray(data.orders) ? data.orders : []);
-      })
-      .catch((e: unknown) => {
-        if (!cancelled) {
-          setLoadError(e instanceof Error ? e.message : "Could not load orders.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+  const loadOrders = useCallback(async (silent: boolean) => {
+    if (!silent) {
+      setLoading(true);
+      setLoadError(null);
+    }
+    try {
+      const r = await fetch("/api/admin/orders", { credentials: "same-origin" });
+      if (r.status === 401) {
+        setLoadError("Session expired — refresh and sign in again.");
+        return;
+      }
+      if (!r.ok) throw new Error("Could not load orders.");
+      const data = (await r.json()) as { orders: Row[] };
+      setOrders(Array.isArray(data.orders) ? data.orders : []);
+      setLoadError(null);
+    } catch (e: unknown) {
+      if (!silent) {
+        setLoadError(e instanceof Error ? e.message : "Could not load orders.");
+      }
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadOrders(false);
+  }, [loadOrders]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      if (modal) return;
+      void loadOrders(true);
+    }, ADMIN_POLL_INTERVAL_MS);
+    return () => window.clearInterval(id);
+  }, [loadOrders, modal]);
 
   const sorted = useMemo(() => sortOrders(orders), [orders]);
 

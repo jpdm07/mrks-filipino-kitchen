@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ADMIN_POLL_INTERVAL_MS } from "@/lib/admin-poll-interval";
 import type { Inquiry } from "@prisma/client";
 import { Trash2 } from "lucide-react";
 
@@ -20,6 +21,8 @@ export function InquiriesAdminClient({
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [err, setErr] = useState<string | null>(null);
   const selectAllRef = useRef<HTMLInputElement>(null);
+  const deleteBusyRef = useRef(deleteBusy);
+  deleteBusyRef.current = deleteBusy;
 
   const unread = useMemo(() => items.filter((i) => !i.isRead).length, [items]);
 
@@ -32,6 +35,37 @@ export function InquiriesAdminClient({
     const el = selectAllRef.current;
     if (el) el.indeterminate = someSelected;
   }, [someSelected]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const pull = async () => {
+      if (document.visibilityState !== "visible") return;
+      if (deleteBusyRef.current) return;
+      try {
+        const res = await fetch("/api/admin/inquiries", {
+          credentials: "same-origin",
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as { inquiries?: InquiryRow[] };
+        if (cancelled || !Array.isArray(data.inquiries)) return;
+        setItems(data.inquiries);
+      } catch {
+        /* ignore transient network errors while polling */
+      }
+    };
+
+    const id = window.setInterval(pull, ADMIN_POLL_INTERVAL_MS);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") void pull();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
