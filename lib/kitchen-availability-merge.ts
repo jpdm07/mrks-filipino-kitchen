@@ -61,6 +61,7 @@ export async function buildKitchenOpenDatesPayload(
   opts: KitchenCalendarOptions
 ): Promise<{ openDates: string[]; notes: Record<string, string> }> {
   const today = getTodayInPickupTimezoneYMD();
+  const nowClock = new Date();
   const snapMap = await snapshotsByWeek(fromYmd, toYmd);
   const flanUnlockWeekMondays = await fetchFlanWeekdayUnlockWeekMondays(
     fromYmd,
@@ -96,7 +97,7 @@ export async function buildKitchenOpenDatesPayload(
       if (
         isMonThuFlanSuppressedAfterSaturdayCutoff(
           weekMon,
-          today,
+          nowClock,
           flanUnlockWeekMondays
         )
       ) {

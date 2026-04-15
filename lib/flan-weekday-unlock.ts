@@ -4,10 +4,8 @@ import { totalCookContribution } from "@/lib/menu-cook-capacity";
 import type { OrderItemLine } from "@/lib/order-types";
 import { kitchenDayKind } from "@/lib/kitchen-schedule";
 import { mondayOfCalendarWeekContaining } from "@/lib/pickup-week";
-import {
-  addCalendarDaysYMD,
-  getYmdInPickupTimezoneForInstant,
-} from "@/lib/pickup-lead-time";
+import { addCalendarDaysYMD } from "@/lib/pickup-lead-time";
+import { instantSundayAfterPickupSaturday } from "@/lib/pickup-tz-instants";
 
 function parseItemsJson(raw: string): OrderItemLine[] {
   try {
@@ -20,9 +18,8 @@ function parseItemsJson(raw: string): OrderItemLine[] {
 
 /**
  * Weeks (Monday YYYY-MM-DD) where at least one qualifying flan order exists:
- * pickup Mon–Thu, flan ramekins &gt; 0, and order placed on or before the Saturday
- * before that week (Central calendar date). Used to keep Mon–Thu flan-only slots
- * off the calendar after that Saturday unless someone committed earlier.
+ * pickup Mon–Thu, flan ramekins &gt; 0, and order placed at or before Saturday 11:59:59 PM Central
+ * (i.e. strictly before Sunday 12:00 AM Central after the Saturday before that week).
  */
 export async function fetchFlanWeekdayUnlockWeekMondays(
   pickupRangeFromYmd: string,
@@ -50,21 +47,25 @@ export async function fetchFlanWeekdayUnlockWeekMondays(
     if (t.flanRamekins <= 0) continue;
     const weekMon = mondayOfCalendarWeekContaining(pd);
     const satBefore = addCalendarDaysYMD(weekMon, -2);
-    const createdYmd = getYmdInPickupTimezoneForInstant(new Date(o.createdAt));
-    if (createdYmd > satBefore) continue;
+    const sundayStart = instantSundayAfterPickupSaturday(satBefore);
+    const placed = new Date(o.createdAt).getTime();
+    if (placed >= sundayStart.getTime()) continue;
     unlock.add(weekMon);
   }
   return unlock;
 }
 
-/** True = do not offer Mon–Thu flan-only pickup for this week (deadline passed, no unlock). */
+/**
+ * True = do not offer Mon–Thu flan-only pickup for this week (deadline passed, no unlock).
+ * Weekly rule: lock after Saturday 11:59:59 PM Central — enforced as `now` ≥ Sunday 12:00 AM Central.
+ */
 export function isMonThuFlanSuppressedAfterSaturdayCutoff(
   weekMondayYmd: string,
-  todayYmd: string,
+  now: Date,
   unlockWeekMondays: Set<string>
 ): boolean {
   const satBefore = addCalendarDaysYMD(weekMondayYmd, -2);
-  const sundayAfterSaturday = addCalendarDaysYMD(satBefore, 1);
-  if (todayYmd < sundayAfterSaturday) return false;
+  const sundayStart = instantSundayAfterPickupSaturday(satBefore);
+  if (now.getTime() < sundayStart.getTime()) return false;
   return !unlockWeekMondays.has(weekMondayYmd);
 }
