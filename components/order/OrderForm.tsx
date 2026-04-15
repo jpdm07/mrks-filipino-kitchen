@@ -18,6 +18,10 @@ import {
 } from "@/lib/pickup-lead-time";
 import { orderFormPickupConfirmationLine } from "@/lib/pickup-availability-copy";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
+import {
+  hasValidPhoneDigits,
+  isValidEmail,
+} from "@/lib/checkout-contact-validation";
 
 type CheckoutIssueKey =
   | "name"
@@ -147,10 +151,13 @@ export function OrderForm() {
     };
   }, [pickupDate]);
 
+  const emailOk = isValidEmail(email);
+  const phoneOk = hasValidPhoneDigits(phone);
+
   const basicsOk =
     name.trim() &&
-    phone.trim() &&
-    email.trim() &&
+    phoneOk &&
+    emailOk &&
     pickupDate &&
     pickupTime &&
     slotOptions.includes(pickupTime) &&
@@ -202,8 +209,8 @@ export function OrderForm() {
 
     const next: CheckoutIssues = {};
     if (!name.trim()) next.name = true;
-    if (!phone.trim()) next.phone = true;
-    if (!email.trim()) next.email = true;
+    if (!phone.trim() || !hasValidPhoneDigits(phone)) next.phone = true;
+    if (!email.trim() || !isValidEmail(email)) next.email = true;
     if (!paymentMemoAck) next.payment = true;
 
     if (!pickupDate?.trim() || !isWellFormedPickupYMD(pickupDate)) {
@@ -230,7 +237,23 @@ export function OrderForm() {
       setIssues(next);
       const parts: string[] = [];
       if (next.name || next.phone || next.email) {
-        parts.push("Please fill in name, phone, and email.");
+        const bits: string[] = [];
+        if (next.name) bits.push("your name");
+        if (next.phone) {
+          bits.push(
+            !phone.trim()
+              ? "a phone number"
+              : "a phone number with at least 10 digits"
+          );
+        }
+        if (next.email) {
+          bits.push(
+            !email.trim()
+              ? "an email address"
+              : "a valid email address (include @ and domain)"
+          );
+        }
+        parts.push(`Please provide ${bits.join(", ")}.`);
       }
       if (next.payment) {
         parts.push(
@@ -401,6 +424,8 @@ export function OrderForm() {
             Phone *
             <input
               type="tel"
+              autoComplete="tel"
+              inputMode="tel"
               className={[
                 "mt-1 w-full min-h-[48px] rounded-lg border px-3 outline-none",
                 inputIssueClass(Boolean(issues.phone)),
@@ -411,11 +436,18 @@ export function OrderForm() {
                 setIssues((p) => ({ ...p, phone: false }));
               }}
             />
+            {phone.trim() && !hasValidPhoneDigits(phone) ? (
+              <span className="mt-1 block text-xs font-medium text-red-700">
+                Enter at least 10 digits (area code + number).
+              </span>
+            ) : null}
           </label>
           <label className="block text-sm font-semibold">
             Email *
             <input
               type="email"
+              autoComplete="email"
+              inputMode="email"
               className={[
                 "mt-1 w-full min-h-[48px] rounded-lg border px-3 outline-none",
                 inputIssueClass(Boolean(issues.email)),
@@ -426,6 +458,11 @@ export function OrderForm() {
                 setIssues((p) => ({ ...p, email: false }));
               }}
             />
+            {email.trim() && !isValidEmail(email) ? (
+              <span className="mt-1 block text-xs font-medium text-red-700">
+                Enter a valid email (example: name@domain.com).
+              </span>
+            ) : null}
           </label>
         </div>
 
@@ -620,14 +657,15 @@ export function OrderForm() {
           </div>
         ) : (
           <p className="text-sm text-[var(--text-muted)]">
-            Enter your details, choose pickup date and time, and resolve any sample
-            choices (lumpia protein / pancit type) in your cart to continue.
+            Enter your details (including a valid email and phone with at least 10
+            digits), choose pickup date and time, confirm payment memo, and resolve
+            any sample choices in your cart to continue.
           </p>
         )}
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !canSubmitOrder}
           className="btn btn-accent btn-block disabled:pointer-events-none disabled:opacity-40"
         >
           {loading ? "Submitting order…" : "Submit order & get order number"}

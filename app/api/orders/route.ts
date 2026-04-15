@@ -25,6 +25,10 @@ import {
   assertPickupSlotFreeInTx,
   PickupSlotTakenError,
 } from "@/lib/pickup-slot-holds";
+import {
+  hasValidPhoneDigits,
+  isValidEmail,
+} from "@/lib/checkout-contact-validation";
 
 function computeTotals(
   items: OrderItemLine[],
@@ -69,6 +73,18 @@ export async function POST(req: NextRequest) {
     if (!customerName || !phone || !email || items.length === 0) {
       return NextResponse.json(
         { error: "Missing required fields or empty cart" },
+        { status: 400 }
+      );
+    }
+    if (!isValidEmail(email)) {
+      return NextResponse.json(
+        { error: "Enter a valid email address." },
+        { status: 400 }
+      );
+    }
+    if (!hasValidPhoneDigits(phone)) {
+      return NextResponse.json(
+        { error: "Enter a phone number with at least 10 digits." },
         { status: 400 }
       );
     }

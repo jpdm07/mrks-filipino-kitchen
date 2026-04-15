@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getSauceCupsFromOrderLine,
   totalSauceCupsForItems,
@@ -12,6 +12,7 @@ import type { OrderItemLine } from "@/lib/order-types";
 import type { AdminOrderClientRow } from "@/lib/admin-order-client";
 import { OrderPaymentAdminActions } from "./OrderPaymentAdminActions";
 import { ORDER_STATUS_PENDING_PAYMENT_VERIFICATION } from "@/lib/order-payment";
+import { openAdminReceiptPrintWindow } from "@/lib/admin-receipt-html";
 
 type Row = AdminOrderClientRow;
 
@@ -60,6 +61,10 @@ export function DashboardOrders() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [deleteAllBusy, setDeleteAllBusy] = useState(false);
+  const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
 
   const closeModal = useCallback(() => {
     setModal(null);
@@ -137,6 +142,133 @@ export function DashboardOrders() {
       );
     });
   }, [sorted, statusFilter, demoFilter, q]);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [statusFilter, demoFilter, q]);
+
+  const allFilteredSelected =
+    filtered.length > 0 && filtered.every((o) => selectedIds.has(o.id));
+  const someFilteredSelected = filtered.some((o) => selectedIds.has(o.id));
+
+  useEffect(() => {
+    const el = selectAllCheckboxRef.current;
+    if (el) {
+      el.indeterminate = someFilteredSelected && !allFilteredSelected;
+    }
+  }, [someFilteredSelected, allFilteredSelected]);
+
+  const selectedCount = useMemo(
+    () => orders.filter((o) => selectedIds.has(o.id)).length,
+    [orders, selectedIds]
+  );
+
+  const toggleRowSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  };
+
+  const toggleSelectAllFiltered = () => {
+    setSelectedIds((prev) => {
+      const n = new Set(prev);
+      if (filtered.length > 0 && filtered.every((o) => n.has(o.id))) {
+        filtered.forEach((o) => n.delete(o.id));
+      } else {
+        filtered.forEach((o) => n.add(o.id));
+      }
+      return n;
+    });
+  };
+
+  const bulkDeleteSelected = async () => {
+    const ids = orders.filter((o) => selectedIds.has(o.id)).map((o) => o.id);
+    if (ids.length === 0) return;
+
+    const rows = orders.filter((o) => selectedIds.has(o.id));
+    const nums = rows.map((o) => o.orderNumber);
+    const head = nums.slice(0, 15);
+    const tail = nums.length > 15 ? `\n… and ${nums.length - 15} more` : "";
+    const list = head.map((n) => `#${n}`).join("\n");
+
+    if (
+      !window.confirm(
+        `Permanently delete ${ids.length} order(s)? They will disappear from the dashboard, finances, and lists. This cannot be undone.\n\n${list}${tail}`
+      )
+    ) {
+      return;
+    }
+
+    setBulkDeleting(true);
+    try {
+      const res = await fetch("/api/admin/orders/bulk-delete", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        deleted?: number;
+      };
+      if (!res.ok) {
+        window.alert(data.error ?? "Bulk delete failed. Try again.");
+        return;
+      }
+      const deleted = typeof data.deleted === "number" ? data.deleted : ids.length;
+      const idSet = new Set(ids);
+      setOrders((prev) => prev.filter((o) => !idSet.has(o.id)));
+      setSelectedIds(new Set());
+      if (modal && idSet.has(modal.id)) closeModal();
+      router.refresh();
+      if (deleted < ids.length) {
+        window.alert(
+          `Removed ${deleted} order(s). Some rows may have already been deleted.`
+        );
+      }
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  const deleteAllOrders = async () => {
+    if (orders.length === 0) return;
+    const typed = window.prompt(
+      `Delete ALL ${orders.length} order(s) permanently? This cannot be undone.\n\nType exactly: DELETE ALL ORDERS`
+    );
+    if (typed?.trim() !== "DELETE ALL ORDERS") {
+      if (typed != null) {
+        window.alert('Cancelled — you must type the phrase exactly: DELETE ALL ORDERS');
+      }
+      return;
+    }
+    setDeleteAllBusy(true);
+    try {
+      const res = await fetch("/api/admin/orders/delete-all", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: "DELETE ALL ORDERS" }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        deleted?: number;
+      };
+      if (!res.ok) {
+        window.alert(data.error ?? "Could not delete all orders.");
+        return;
+      }
+      setOrders([]);
+      setSelectedIds(new Set());
+      closeModal();
+      router.refresh();
+    } finally {
+      setDeleteAllBusy(false);
+    }
+  };
 
   const patchOrder = async (
     id: string,
@@ -260,10 +392,65 @@ export function DashboardOrders() {
           <option value="only">Demos only</option>
         </select>
       </div>
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <p className="text-sm text-[var(--text-muted)]">
+          {selectedCount > 0 ? (
+            <span className="font-semibold text-[var(--text)]">
+              {selectedCount} selected
+            </span>
+          ) : (
+            <>
+              Tick rows to select, or use the header box to select everyone in
+              your current filter.
+            </>
+          )}
+        </p>
+        {selectedCount > 0 ? (
+          <button
+            type="button"
+            disabled={bulkDeleting}
+            className="min-h-[44px] shrink-0 rounded-lg border-2 border-[var(--accent)] bg-[var(--gold-light)] px-4 text-sm font-bold text-[var(--accent)] hover:bg-[var(--accent)]/10 disabled:pointer-events-none disabled:opacity-50"
+            onClick={() => void bulkDeleteSelected()}
+          >
+            {bulkDeleting ? "Deleting…" : `Delete selected (${selectedCount})`}
+          </button>
+        ) : null}
+      </div>
+      {orders.length > 0 ? (
+        <div className="mb-4 rounded-lg border border-red-300 bg-red-50/90 px-4 py-3 text-sm text-red-950">
+          <p className="font-bold">Delete every order in the database</p>
+          <p className="mt-1 text-red-900/90">
+            For test resets or a full clear. You will be asked to type{" "}
+            <kbd className="rounded bg-white px-1 font-mono text-xs">
+              DELETE ALL ORDERS
+            </kbd>{" "}
+            exactly.
+          </p>
+          <button
+            type="button"
+            disabled={deleteAllBusy || bulkDeleting}
+            className="mt-3 min-h-[44px] rounded-lg border-2 border-red-700 bg-white px-4 text-sm font-bold text-red-800 hover:bg-red-100 disabled:pointer-events-none disabled:opacity-50"
+            onClick={() => void deleteAllOrders()}
+          >
+            {deleteAllBusy ? "Deleting all…" : "Delete ALL orders…"}
+          </button>
+        </div>
+      ) : null}
       <div className="overflow-x-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)]">
-        <table className="min-w-[900px] w-full text-left text-sm">
+        <table className="min-w-[960px] w-full text-left text-sm">
           <thead className="bg-[var(--primary)] text-white">
             <tr>
+              <th className="w-10 px-2 py-2">
+                <input
+                  ref={selectAllCheckboxRef}
+                  type="checkbox"
+                  checked={allFilteredSelected}
+                  onChange={toggleSelectAllFiltered}
+                  disabled={filtered.length === 0 || bulkDeleting}
+                  aria-label="Select all orders in the current filtered list"
+                  className="h-4 w-4 align-middle"
+                />
+              </th>
               <th className="px-3 py-2">#</th>
               <th className="px-3 py-2">Date</th>
               <th className="px-3 py-2">Customer</th>
@@ -277,6 +464,16 @@ export function DashboardOrders() {
           <tbody>
             {filtered.map((o) => (
               <tr key={o.id} className="border-t border-[var(--border)]">
+                <td className="px-2 py-2 align-middle">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(o.id)}
+                    onChange={() => toggleRowSelected(o.id)}
+                    disabled={bulkDeleting}
+                    aria-label={`Select order ${o.orderNumber}`}
+                    className="h-4 w-4"
+                  />
+                </td>
                 <td className="px-3 py-2 font-mono text-xs">
                   {o.orderNumber}
                   {o.isDemo ? (
@@ -499,6 +696,13 @@ export function DashboardOrders() {
                 }
               >
                 Save notes
+              </button>
+              <button
+                type="button"
+                className="rounded border border-[var(--primary)] bg-[var(--gold-light)] px-4 py-2 text-sm font-bold text-[var(--primary)]"
+                onClick={() => openAdminReceiptPrintWindow(modal)}
+              >
+                Print receipt
               </button>
               <button
                 type="button"

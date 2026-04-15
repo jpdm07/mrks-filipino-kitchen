@@ -134,6 +134,14 @@ body[data-page="business-card"] main {
   padding-bottom: 2rem;
 }
 
+/* Mobile: match desktop paper tone; full-width gradients can read “different” on narrow viewports */
+@media (max-width: 639px) {
+  body[data-page="business-card"] {
+    background-color: var(--bg) !important;
+    background-image: none !important;
+  }
+}
+
 @media print {
   body[data-page="business-card"] [data-site-chrome] {
     display: none !important;

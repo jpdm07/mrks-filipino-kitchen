@@ -29,7 +29,7 @@ function BusinessCardFace({
   siteBaseUrl: string | null;
 }) {
   return (
-    <div className="bc-card box-border h-[192px] w-[336px] rounded-xl border-2 border-[var(--primary)] bg-white shadow-[var(--shadow-lg)] print:rounded-xl print:shadow-none">
+    <div className="bc-card box-border aspect-[336/192] w-full max-w-[336px] rounded-xl border-2 border-[var(--primary)] bg-white shadow-[var(--shadow-lg)] print:h-[192px] print:w-[336px] print:max-w-none print:rounded-xl print:shadow-none">
       {/*
         Border on outer only; inner clips content. Same-element overflow-hidden + rounded border
         often clips the blue stroke at the corners (especially in print/PDF).
@@ -252,7 +252,7 @@ export function BusinessCardSheet({
         id="print-area"
         className="flex flex-col items-center print:block print:text-left"
       >
-        <div className="bc-preview flex flex-col items-center">
+        <div className="bc-preview flex w-full max-w-[336px] flex-col items-stretch px-1 sm:px-0">
           <BusinessCardFace orderQrHref={orderQrHref} siteBaseUrl={siteBaseUrl} />
         </div>
 
