@@ -253,9 +253,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   fbUrlText: {
-    fontSize: 5.75,
+    fontSize: 5,
     color: "#1877F2",
-    lineHeight: 1.1,
+    lineHeight: 1.05,
     flex: 1,
     minWidth: 0,
     fontWeight: "bold",
@@ -349,7 +349,7 @@ function SingleCard({
             <Text style={styles.contactMuted}>{SITE.location}</Text>
             <Link src={facebookHref}>
               <View style={styles.fbRow}>
-                <FacebookMarkPdf size={7} />
+                <FacebookMarkPdf size={6} />
                 <Text style={styles.fbUrlText} wrap={false}>
                   {facebookDisplay}
                 </Text>

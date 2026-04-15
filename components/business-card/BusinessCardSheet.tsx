@@ -71,8 +71,8 @@ function BusinessCardFace({
             aria-label="Facebook profile"
             className="mt-1 flex min-w-0 max-w-full flex-nowrap items-center gap-1"
           >
-            <FacebookIcon size={13} className="shrink-0 text-[#1877F2]" />
-            <span className="min-w-0 flex-1 truncate text-[7px] font-semibold leading-none text-[#1877F2]">
+            <FacebookIcon size={11} className="shrink-0 text-[#1877F2]" />
+            <span className="min-w-0 flex-1 truncate text-[6px] font-semibold leading-none tracking-tight text-[#1877F2]">
               {businessCardUrlDisplay(SITE.facebookUrl)}
             </span>
           </a>
