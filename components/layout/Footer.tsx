@@ -98,9 +98,6 @@ export function Footer() {
               <li className="font-semibold text-[var(--accent)]">
                 Pickup only — no delivery
               </li>
-              <li className="text-[var(--text-muted)]">
-                Preferred contact: phone. Leave voicemail if no answer.
-              </li>
             </ul>
           </div>
         </div>

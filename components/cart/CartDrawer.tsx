@@ -385,7 +385,7 @@ export function CartDrawer() {
                 </p>
               </div>
 
-              <label className="mb-3 flex cursor-pointer items-start gap-2 text-sm">
+              <label className="mb-4 flex cursor-pointer items-start gap-2 text-sm">
                 <input
                   type="checkbox"
                   checked={cart.newsletterOptIn}
@@ -393,17 +393,6 @@ export function CartDrawer() {
                   className="mt-1"
                 />
                 Keep me updated on new menu items and specials
-              </label>
-              <label className="mb-4 flex cursor-pointer items-start gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={cart.recurringInterest}
-                  onChange={(e) =>
-                    cart.setRecurringInterest(e.target.checked)
-                  }
-                  className="mt-1"
-                />
-                I&apos;m interested in bi-weekly recurring bulk orders
               </label>
 
               <CartPaymentMethodsStrip />

@@ -57,7 +57,6 @@ export function OrderForm() {
   const [notes, setNotes] = useState("");
   const [customCheck, setCustomCheck] = useState(false);
   const [customText, setCustomText] = useState("");
-  const [recurring, setRecurring] = useState(false);
   /** Customer acknowledges they will put the order # in Venmo/Zelle memo after submit. */
   const [paymentMemoAck, setPaymentMemoAck] = useState(false);
   /** Shown only when NEXT_PUBLIC_ALLOW_DEMO_CHECKOUT=true at build time; server must set ALLOW_DEMO_ORDERS_AT_CHECKOUT. */
@@ -293,7 +292,6 @@ export function OrderForm() {
         pickupDate,
         pickupTime,
         notes: notes.trim(),
-        wantsRecurring: recurring || cart.recurringInterest,
         customInquiry: customCheck ? customText.trim() : null,
         subscribeUpdates: cart.newsletterOptIn,
         ...(showDemoCheckout && checkoutDemo ? { isDemo: true } : {}),
@@ -343,9 +341,19 @@ export function OrderForm() {
       className="grid min-w-0 gap-10 lg:grid-cols-2 lg:items-start"
     >
       <div className="min-w-0 space-y-4">
-        <h1 className="font-[family-name:var(--font-playfair)] text-2xl font-bold sm:text-3xl">
-          Checkout
-        </h1>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <h1 className="font-[family-name:var(--font-playfair)] text-2xl font-bold sm:text-3xl">
+            Checkout
+          </h1>
+          <button
+            type="button"
+            onClick={() => cart.openDrawer()}
+            aria-label="Open shopping cart to review or change items"
+            className="shrink-0 self-start rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-semibold text-[var(--primary)] shadow-sm transition-colors hover:border-[var(--primary)]/40 hover:bg-[var(--primary)]/5"
+          >
+            Back to cart
+          </button>
+        </div>
         {urlLeadReject ? (
           <p className="rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-3 py-2 text-sm text-[var(--text)]">
             The date in your link isn&apos;t available for online pickup yet
@@ -578,15 +586,6 @@ export function OrderForm() {
             />
           </div>
         ) : null}
-        <label className="flex cursor-pointer items-start gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={recurring}
-            onChange={(e) => setRecurring(e.target.checked)}
-            className="mt-1"
-          />
-          I&apos;m interested in bi-weekly recurring orders
-        </label>
 
         <div
           ref={samplesRef}

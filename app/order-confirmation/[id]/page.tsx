@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { safeDb } from "@/lib/safe-db";
 import { Logo } from "@/components/ui/Logo";
-import { ConfirmationShare } from "@/components/order/ConfirmationShare";
 import { AnimatedCheck } from "@/components/order/AnimatedCheck";
 import type { OrderItemLine } from "@/lib/order-types";
 import { orderHasFrozenLumpia } from "@/lib/order-types";
@@ -11,7 +10,6 @@ import { salesTaxPercentLabel } from "@/lib/config";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 import { ORDER_STATUS_CONFIRMED } from "@/lib/order-payment";
 import { SalesTaxDisclosure } from "@/components/checkout/SalesTaxDisclosure";
-import { getPublicSiteOrigin } from "@/lib/public-site-url";
 
 export const dynamic = "force-dynamic";
 
@@ -41,8 +39,6 @@ export default async function OrderConfirmationPage({
 
   const items = parseItems(order.items);
   const frozenLumpia = orderHasFrozenLumpia(items);
-  const base = getPublicSiteOrigin();
-  const pageUrl = `${base}/order-confirmation/${encodeURIComponent(order.orderNumber)}`;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 text-center">
@@ -180,15 +176,6 @@ export default async function OrderConfirmationPage({
           </p>
         </div>
       )}
-      {order.wantsRecurring ? (
-        <div className="mt-4 rounded-[var(--radius)] border border-[var(--gold)] bg-[var(--gold)]/25 p-4 text-left text-sm">
-          <p>
-            📦 You indicated interest in bi-weekly recurring orders. We will
-            discuss the details with you when we call to confirm your first
-            order!
-          </p>
-        </div>
-      ) : null}
       {frozenLumpia ? (
         <div className="mt-4 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-section)] p-4 text-left text-sm">
           <p>
@@ -198,10 +185,7 @@ export default async function OrderConfirmationPage({
         </div>
       ) : null}
 
-      <div className="mt-10">
-        <ConfirmationShare url={pageUrl} />
-      </div>
-      <div className="mt-8 flex justify-center">
+      <div className="mt-10 flex justify-center">
         <Link href="/menu" className="btn btn-primary px-8">
           Back to Menu
         </Link>

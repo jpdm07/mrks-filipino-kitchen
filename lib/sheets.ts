@@ -142,7 +142,6 @@ export async function syncOrderToSheets(order: {
   total: number;
   pickupDate?: string;
   pickupTime?: string;
-  wantsRecurring: boolean;
   notes?: string;
   customInquiry?: string;
   status: string;
@@ -184,7 +183,7 @@ export async function syncOrderToSheets(order: {
         total: order.total.toFixed(2),
         pickupDate: order.pickupDate || "",
         pickupTime: order.pickupTime || "",
-        wantsRecurring: order.wantsRecurring ? "Yes" : "No",
+        wantsRecurring: "No",
         notes: order.notes || "",
         customInquiry: order.customInquiry || "",
         status: order.status,

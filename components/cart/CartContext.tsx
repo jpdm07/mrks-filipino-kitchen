@@ -82,8 +82,6 @@ type CartContextValue = {
   setUtensilSets: Dispatch<SetStateAction<number>>;
   newsletterOptIn: boolean;
   setNewsletterOptIn: (v: boolean) => void;
-  recurringInterest: boolean;
-  setRecurringInterest: (v: boolean) => void;
   itemsSubtotal: number;
   utensilCharge: number;
   subtotalBeforeTax: number;
@@ -131,7 +129,6 @@ function readStoredCart(): {
   wantsUtensils: boolean;
   utensilSets: number;
   newsletterOptIn: boolean;
-  recurringInterest: boolean;
 } | null {
   if (typeof window === "undefined") return null;
   try {
@@ -144,7 +141,6 @@ function readStoredCart(): {
       wantsUtensils?: unknown;
       utensilSets?: unknown;
       newsletterOptIn?: unknown;
-      recurringInterest?: unknown;
     };
     if (
       typeof data.savedAt === "number" &&
@@ -164,7 +160,6 @@ function readStoredCart(): {
           ? Math.max(1, Math.min(50, Math.floor(data.utensilSets)))
           : 1,
       newsletterOptIn: Boolean(data.newsletterOptIn),
-      recurringInterest: Boolean(data.recurringInterest),
     };
   } catch {
     return null;
@@ -187,7 +182,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [wantsUtensils, setWantsUtensils] = useState(false);
   const [utensilSets, setUtensilSets] = useState(1);
   const [newsletterOptIn, setNewsletterOptIn] = useState(false);
-  const [recurringInterest, setRecurringInterest] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -202,7 +196,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setWantsUtensils(s.wantsUtensils);
       setUtensilSets(s.utensilSets);
       setNewsletterOptIn(s.newsletterOptIn);
-      setRecurringInterest(s.recurringInterest);
     }
     setHydrated(true);
   }, []);
@@ -219,7 +212,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
           wantsUtensils,
           utensilSets,
           newsletterOptIn,
-          recurringInterest,
         })
       );
     } catch {
@@ -232,7 +224,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     wantsUtensils,
     utensilSets,
     newsletterOptIn,
-    recurringInterest,
   ]);
 
   useEffect(() => {
@@ -304,7 +295,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setWantsUtensils(false);
     setUtensilSets(1);
     setNewsletterOptIn(false);
-    setRecurringInterest(false);
     setDrawerOpen(false);
   }, []);
 
@@ -370,8 +360,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setUtensilSets,
       newsletterOptIn,
       setNewsletterOptIn,
-      recurringInterest,
-      setRecurringInterest,
       itemsSubtotal,
       utensilCharge,
       subtotalBeforeTax,
@@ -394,7 +382,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       wantsUtensils,
       utensilSets,
       newsletterOptIn,
-      recurringInterest,
       itemsSubtotal,
       utensilCharge,
       subtotalBeforeTax,

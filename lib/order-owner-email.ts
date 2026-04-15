@@ -40,7 +40,6 @@ export async function sendNewOrderEmailToOwner(params: {
   wantsUtensils: boolean;
   utensilSets: number;
   utensilCharge: number;
-  wantsRecurring: boolean;
   customInquiry: string | null;
   subscribeUpdates: boolean;
   isDemo?: boolean;
@@ -86,7 +85,6 @@ export async function sendNewOrderEmailToOwner(params: {
       ? `Utensils: ${params.utensilSets} set(s) (+$${params.utensilCharge.toFixed(2)})`
       : null,
     params.notes ? `Notes: ${params.notes}` : null,
-    params.wantsRecurring ? `Recurring interest: yes` : null,
     params.customInquiry ? `Custom dish inquiry: ${params.customInquiry}` : null,
     params.subscribeUpdates ? `Newsletter opt-in: yes` : null,
     ``,
@@ -113,7 +111,6 @@ export async function sendNewOrderEmailToOwner(params: {
     ${params.notes ? `<p style="margin:16px 0 0;padding:12px;background:#fffbeb;border-radius:8px;border:1px solid #fcd34d;"><strong>Instructions</strong><br/>${escapeHtml(params.notes)}</p>` : ""}
     ${params.customInquiry ? `<p style="margin:12px 0 0;padding:12px;background:#f5f3ff;border-radius:8px;"><strong>Custom dish</strong><br/>${escapeHtml(params.customInquiry)}</p>` : ""}
     <p style="margin:20px 0 0;font-size:13px;color:#666;">
-      ${params.wantsRecurring ? "• Customer interested in bi-weekly recurring orders<br/>" : ""}
       ${params.subscribeUpdates ? "• Opted in to menu updates<br/>" : ""}
       • Ask them to use order #${escapeHtml(params.orderNumber)} in Venmo/Zelle memo and text after payment.
     </p>

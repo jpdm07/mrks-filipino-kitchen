@@ -52,7 +52,6 @@ export async function POST(req: NextRequest) {
       pickupDate?: string;
       pickupTime?: string;
       notes?: string;
-      wantsRecurring?: boolean;
       customInquiry?: string | null;
       subscribeUpdates?: boolean;
       /** Honored only when ALLOW_DEMO_ORDERS_AT_CHECKOUT=true on the server. */
@@ -149,7 +148,7 @@ export async function POST(req: NextRequest) {
             wantsUtensils,
             utensilSets: sets,
             utensilCharge: ut,
-            wantsRecurring: Boolean(body.wantsRecurring),
+            wantsRecurring: false,
             customInquiry: (body.customInquiry ?? "").trim() || null,
             subscribeUpdates: Boolean(body.subscribeUpdates),
             status,
@@ -198,7 +197,6 @@ export async function POST(req: NextRequest) {
       wantsUtensils,
       utensilSets: sets,
       utensilCharge: ut,
-      wantsRecurring: Boolean(body.wantsRecurring),
       customInquiry: (body.customInquiry ?? "").trim() || null,
       subscribeUpdates: Boolean(body.subscribeUpdates),
       isDemo,
@@ -225,7 +223,6 @@ export async function POST(req: NextRequest) {
         total,
         pickupDate,
         pickupTime,
-        wantsRecurring: Boolean(body.wantsRecurring),
         notes: body.notes,
         customInquiry: body.customInquiry ?? undefined,
         status,
