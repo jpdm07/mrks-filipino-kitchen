@@ -76,6 +76,7 @@ export function AdminAvailabilityPanel() {
     () => ALL_SLOT_LABELS[ALL_SLOT_LABELS.length - 1] ?? ""
   );
   const [loadFromYmd, setLoadFromYmd] = useState("");
+  const [flanTplSaturdays, setFlanTplSaturdays] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -458,6 +459,44 @@ export function AdminAvailabilityPanel() {
           }
         >
           Apply weekly pattern (60 days)
+        </button>
+      </div>
+
+      <div className="rounded-lg border border-amber-200 bg-amber-50/90 p-4 text-sm text-[var(--text)]">
+        <p className="font-bold text-amber-950">Flan pickup habit (this month)</p>
+        <p className="mt-1 text-xs text-[var(--text-muted)]">
+          One click opens <strong>Mon–Thu</strong> with the standard flan-only note and{" "}
+          <strong>6:00–8:00 PM</strong> slots (same as checkout). Use this instead of
+          typing the note on each day. The storefront also hides Mon–Thu flan-only
+          dates <strong>after the Saturday before that week</strong> unless someone
+          already ordered flan for a Mon–Thu pickup (order placed on or before that
+          Saturday, Central date).
+        </p>
+        <label className="mt-3 flex cursor-pointer items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={flanTplSaturdays}
+            onChange={(e) => setFlanTplSaturdays(e.target.checked)}
+          />
+          <span>
+            Also open <strong>Saturdays</strong> this month (full menu note, all time
+            slots) — same as marking Saturday available for mixed pickup.
+          </span>
+        </label>
+        <button
+          type="button"
+          className="mt-3 rounded bg-amber-800 px-4 py-2 text-sm font-bold text-white hover:bg-amber-900"
+          onClick={() =>
+            void post({
+              action: "applyFlanPickupTemplate",
+              year,
+              month,
+              openSaturdays: flanTplSaturdays,
+            })
+          }
+        >
+          Apply flan template to {label}
         </button>
       </div>
 

@@ -3,7 +3,16 @@ import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
 import { getAvailabilityMapForRange } from "@/lib/availability-server";
 import { eachYmdInRangeInclusive } from "@/lib/availability-range";
-import { addCalendarDaysYMD, getTodayInPickupTimezoneYMD } from "@/lib/pickup-lead-time";
+import {
+  ALL_ITEMS_DAY_NOTE,
+  eveningPickupSlots1800to2000,
+  FLAN_ONLY_DAY_NOTE,
+} from "@/lib/kitchen-schedule";
+import {
+  addCalendarDaysYMD,
+  getTodayInPickupTimezoneYMD,
+  ymdUtcWeekday,
+} from "@/lib/pickup-lead-time";
 import {
   slotsToDb,
   upsertAvailabilityEntries,
@@ -13,11 +22,6 @@ import {
   removeAvailabilityEvent,
 } from "@/lib/googleCalendar";
 import { syncGoogleCalendarAvailabilityToDatabase } from "@/lib/availability-google-sync";
-
-function ymdUtcWeekday(ymd: string): number {
-  const [y, m, d] = ymd.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
-}
 
 function lastDayOfMonth(year: number, monthIndex0: number): number {
   return new Date(Date.UTC(year, monthIndex0 + 1, 0)).getUTCDate();
@@ -61,6 +65,7 @@ export async function POST(req: NextRequest) {
     from?: string;
     to?: string;
     closeMissingInRange?: boolean;
+    openSaturdays?: boolean;
   };
 
   if (body.action === "syncFromGoogle") {
@@ -126,6 +131,44 @@ export async function POST(req: NextRequest) {
       }
     }
     return NextResponse.json({ ok: true });
+  }
+
+  if (body.action === "applyFlanPickupTemplate" && body.year && body.month) {
+    const y = body.year;
+    const m = body.month;
+    const openSaturdays = Boolean(body.openSaturdays);
+    const today = getTodayInPickupTimezoneYMD();
+    const from = `${y}-${String(m).padStart(2, "0")}-01`;
+    const last = lastDayOfMonth(y, m - 1);
+    const to = `${y}-${String(m).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
+    const evening = eveningPickupSlots1800to2000();
+    const entries: Array<{
+      date: string;
+      isOpen: boolean;
+      note: string | null;
+      slots: string[] | null;
+    }> = [];
+    for (const ymd of eachYmdInRangeInclusive(from, to)) {
+      if (ymd < today) continue;
+      const dow = ymdUtcWeekday(ymd);
+      if (dow >= 1 && dow <= 4) {
+        entries.push({
+          date: ymd,
+          isOpen: true,
+          note: FLAN_ONLY_DAY_NOTE,
+          slots: evening,
+        });
+      } else if (openSaturdays && dow === 6) {
+        entries.push({
+          date: ymd,
+          isOpen: true,
+          note: ALL_ITEMS_DAY_NOTE,
+          slots: null,
+        });
+      }
+    }
+    await upsertAvailabilityEntries(entries);
+    return NextResponse.json({ ok: true, applied: entries.length });
   }
 
   if (body.action === "applyWeekly" && Array.isArray(body.daysOfWeek)) {

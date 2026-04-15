@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { eachYmdInRangeInclusive } from "@/lib/availability-range";
 import {
+  fetchFlanWeekdayUnlockWeekMondays,
+  isMonThuFlanSuppressedAfterSaturdayCutoff,
+} from "@/lib/flan-weekday-unlock";
+import {
   getWeekCapacitySnapshot,
   type WeekCapacitySnapshot,
 } from "@/lib/capacity-service";
@@ -58,6 +62,10 @@ export async function buildKitchenOpenDatesPayload(
 ): Promise<{ openDates: string[]; notes: Record<string, string> }> {
   const today = getTodayInPickupTimezoneYMD();
   const snapMap = await snapshotsByWeek(fromYmd, toYmd);
+  const flanUnlockWeekMondays = await fetchFlanWeekdayUnlockWeekMondays(
+    fromYmd,
+    toYmd
+  );
 
   const allDates = [...eachYmdInRangeInclusive(fromYmd, toYmd)];
   const dbRows = await prisma.availability.findMany({
@@ -85,6 +93,15 @@ export async function buildKitchenOpenDatesPayload(
     if (kind === "mon_thu") {
       if (!opts.cartFlanOnly) continue;
       if (!isFlanWeekdayLeadTimeOk(ymd)) continue;
+      if (
+        isMonThuFlanSuppressedAfterSaturdayCutoff(
+          weekMon,
+          today,
+          flanUnlockWeekMondays
+        )
+      ) {
+        continue;
+      }
       if (snap.flanSoldOut) continue;
       if (flanNeed > snap.flanRemaining) continue;
       openDates.push(ymd);

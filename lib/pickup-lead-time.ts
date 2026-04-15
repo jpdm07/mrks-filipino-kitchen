@@ -10,6 +10,16 @@ export function getTodayInPickupTimezoneYMD(now: Date = new Date()): string {
   }).format(now);
 }
 
+/** Calendar date of `instant` in the pickup timezone (e.g. order placed-at), YYYY-MM-DD. */
+export function getYmdInPickupTimezoneForInstant(instant: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: ORDER_FULFILLMENT.PICKUP_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(instant);
+}
+
 /** Hour (0–23) and minute in PICKUP_TIMEZONE for an instant. */
 function getPickupTzHm(now: Date): { h: number; m: number } {
   const parts = new Intl.DateTimeFormat("en-US", {
