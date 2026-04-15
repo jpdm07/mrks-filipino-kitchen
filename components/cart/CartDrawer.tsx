@@ -474,7 +474,7 @@ export function CartDrawer() {
                   );
                 }}
               >
-                Proceed to Order
+                Proceed to Checkout
               </button>
             </div>
           </aside>

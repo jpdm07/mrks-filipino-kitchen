@@ -3,7 +3,6 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { FacebookIcon } from "@/components/ui/FacebookIcon";
-import Link from "next/link";
 import { SITE } from "@/lib/config";
 
 function FormInner() {
@@ -145,14 +144,14 @@ export function ContactHero() {
         <div className="mt-8">
           <FacebookIcon size={48} className="mx-auto text-[#1877F2]" />
           <p className="mt-2 font-semibold">Find us on Facebook</p>
-          <Link
+          <a
             href={SITE.facebookUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-facebook mt-4 px-6"
+            className="btn btn-facebook mt-4 inline-flex px-6"
           >
             Visit Our Facebook Page
-          </Link>
+          </a>
         </div>
       </div>
     </section>

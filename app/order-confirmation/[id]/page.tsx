@@ -75,8 +75,8 @@ export default async function OrderConfirmationPage({
         #{order.orderNumber}
       </p>
       <p className="mt-2 text-balance text-center text-xs text-[var(--text-muted)]">
-        Use this number in your Zelle/Venmo memo and when you text us after you
-        pay.
+        Keep this number handy for pickup. The payment section below fills Venmo
+        memo for you and has copy buttons for Zelle.
       </p>
 
       {futurePickupWeek && pickupYmd ? (
@@ -102,14 +102,20 @@ export default async function OrderConfirmationPage({
           <AcceptedPaymentMethods
             variant="confirmation"
             orderNumber={order.orderNumber}
+            amountDue={order.total}
           />
         </div>
         <p className="mt-4 rounded-lg border border-[var(--gold)] bg-[var(--gold-light)] px-4 py-3 text-sm font-semibold text-[var(--text)]">
-          Memo / note (required): type{" "}
+          <strong>Venmo:</strong> the blue button opens Venmo with{" "}
           <span className="font-mono text-[var(--primary)]">
             {order.orderNumber}
           </span>{" "}
-          exactly — same as your order number above.
+          in the memo. <strong>Zelle:</strong> use{" "}
+          <span className="font-mono text-[var(--primary)]">
+            {order.orderNumber}
+          </span>{" "}
+          in the memo — tap <strong>Copy order # (memo)</strong> above if
+          needed.
         </p>
       </div>
 

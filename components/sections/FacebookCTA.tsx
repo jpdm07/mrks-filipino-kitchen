@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { FacebookIcon } from "@/components/ui/FacebookIcon";
 import { SITE } from "@/lib/config";
 
@@ -9,14 +8,14 @@ export function FacebookCTA() {
       <h2 className="mt-4 font-[family-name:var(--font-playfair)] text-2xl font-bold">
         Follow Us on Facebook
       </h2>
-      <Link
+      <a
         href={SITE.facebookUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="btn btn-facebook mt-6 px-8"
+        className="btn btn-facebook mt-6 inline-flex px-8"
       >
         Visit Our Facebook Page
-      </Link>
+      </a>
     </section>
   );
 }

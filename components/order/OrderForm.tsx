@@ -577,8 +577,9 @@ export function OrderForm() {
               }}
             />
             <span>
-              I understand I will put my order number in the Venmo or Zelle memo
-              when I pay, and text that same number after payment is sent.
+              I understand I&apos;ll complete payment on the next screen using
+              Venmo (memo can be filled automatically) or Zelle (copy buttons
+              provided), and I&apos;ll keep my order number to show at pickup.
             </span>
           </label>
         </div>

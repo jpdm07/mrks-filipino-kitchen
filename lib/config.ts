@@ -1,3 +1,4 @@
+import { getFacebookPageUrl } from "@/lib/facebook-url";
 import { CANONICAL_SITE_ORIGIN } from "@/lib/public-site-url";
 
 export const PRICING = {
@@ -24,8 +25,8 @@ export const SITE = {
   phoneTel: "tel:+19797033827",
   email: "jpdm07@yahoo.com",
   location: "Cypress, TX 77433",
-  facebookUrl:
-    "https://www.facebook.com/people/Mr-Ks/61587453610719/",
+  /** Canonical Page URL — see `lib/facebook-url.ts` (mobile-safe default). */
+  facebookUrl: getFacebookPageUrl(),
 } as const;
 
 /**
