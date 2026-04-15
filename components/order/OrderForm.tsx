@@ -348,8 +348,9 @@ export function OrderForm() {
         </h1>
         {urlLeadReject ? (
           <p className="rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-3 py-2 text-sm text-[var(--text)]">
-            The date in your link isn&apos;t available for online ordering. Please
-            pick another open date on the calendar.
+            The date in your link isn&apos;t available for online pickup yet
+            (first pickup is the upcoming Friday or Saturday, Central Time). Pick
+            another open date on the calendar.
           </p>
         ) : null}
         {pickupDate && isPickupYmdAllowed(pickupDate) ? (

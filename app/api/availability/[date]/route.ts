@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getPickupSlotsForDateYmd,
+  getPublicPickupSlotsForDateYmd,
   isPickupDateOpenInDb,
 } from "@/lib/availability-server";
 import { kickGoogleAvailabilityBackgroundSync } from "@/lib/google-availability-stale-sync";
@@ -40,7 +40,7 @@ export async function GET(
       );
     }
     const row = await prisma.availability.findUnique({ where: { date } });
-    const slots = await getPickupSlotsForDateYmd(date);
+    const slots = await getPublicPickupSlotsForDateYmd(date);
     return NextResponse.json(
       {
         date,

@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   formatPickupYmdLong,
-  getEarliestPickupDateMinYMD,
   getTodayInPickupTimezoneYMD,
+  isPickupLockedByThursdayNoonCutoff,
   isPickupYmdAllowed,
 } from "@/lib/pickup-lead-time";
 import {
@@ -64,10 +64,7 @@ export function PublicAvailabilityCalendar() {
     ) {
       return;
     }
-    const minBookable = getEarliestPickupDateMinYMD();
-    const bookable = [...openDates]
-      .filter((d) => d >= minBookable && isPickupYmdAllowed(d))
-      .sort();
+    const bookable = [...openDates].filter((d) => isPickupYmdAllowed(d)).sort();
     const pick = bookable[0] ?? [...openDates].sort()[0];
     if (pick) {
       const [y, m] = pick.split("-").map(Number);
@@ -161,8 +158,9 @@ export function PublicAvailabilityCalendar() {
         <p className="mt-3 text-xs text-[var(--text-muted)]">
           Only <strong>gold</strong> days are on Mr. K&apos;s pickup calendar;
           gray days are <strong>not</strong> open for pickup here. Pickup times
-          are chosen at checkout. 🔒 means that day isn&apos;t selectable online
-          yet.
+          are chosen at checkout. 🔒 means before the first Friday/Saturday
+          pickup window (Central), or that weekend closed after Thursday noon
+          (Central) for new orders.
         </p>
 
         <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs font-semibold text-[var(--text-muted)]">
@@ -254,8 +252,34 @@ export function PublicAvailabilityCalendar() {
             {!selectedBookable ? (
               <div className="mt-4 space-y-3 text-sm text-[var(--text)]">
                 <p className="rounded-lg bg-[var(--gold-light)] px-3 py-2 font-medium">
-                  🔒 This day is on our calendar, but it isn&apos;t available for
-                  online orders yet. Please choose a later highlighted date.
+                  {selectedYmd &&
+                  isPickupLockedByThursdayNoonCutoff(selectedYmd) ? (
+                    <>
+                      🔒 After Thursday at noon (Central), new orders can&apos;t
+                      use that same weekend. Choose a later gold date to order,
+                      or call{" "}
+                      <a
+                        href="tel:+19797033827"
+                        className="font-bold text-[var(--primary)]"
+                      >
+                        979-703-3827
+                      </a>
+                      .
+                    </>
+                  ) : (
+                    <>
+                      🔒 Online pickup starts the first Friday or Saturday on or
+                      after today (Central). This day opens before that window —
+                      choose a later gold date to order, or call{" "}
+                      <a
+                        href="tel:+19797033827"
+                        className="font-bold text-[var(--primary)]"
+                      >
+                        979-703-3827
+                      </a>
+                      .
+                    </>
+                  )}
                 </p>
                 {kitchenNote ? (
                   <p className="text-[var(--text-muted)]">
@@ -265,16 +289,6 @@ export function PublicAvailabilityCalendar() {
                     {kitchenNote}
                   </p>
                 ) : null}
-                <p className="text-[var(--text-muted)]">
-                  Choose a later highlighted date, or call{" "}
-                  <a
-                    href="tel:+19797033827"
-                    className="font-bold text-[var(--primary)]"
-                  >
-                    979-703-3827
-                  </a>
-                  .
-                </p>
               </div>
             ) : (
               <>
@@ -285,8 +299,8 @@ export function PublicAvailabilityCalendar() {
                 ) : null}
                 <p className="mt-4 rounded-lg border border-[#0038A8]/20 bg-[#eef4ff] px-3 py-2 text-sm text-[var(--text)]">
                   <span className="font-semibold">Pickup times:</span> TBD for
-                  now. After you start your order, you&apos;ll pick your time
-                  slot from the times Mr. K has opened for this date.
+                  now. After you start your order, you&apos;ll pick your time slot
+                  from the times Mr. K has opened for this date.
                 </p>
                 <Link
                   href={`/menu?pickupDate=${encodeURIComponent(selectedYmd)}`}

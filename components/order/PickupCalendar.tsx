@@ -1,7 +1,11 @@
 "use client";
 
 import { forwardRef, useEffect, useMemo, useState } from "react";
-import { getTodayInPickupTimezoneYMD, isPickupYmdAllowed } from "@/lib/pickup-lead-time";
+import {
+  getTodayInPickupTimezoneYMD,
+  isPickupLockedByThursdayNoonCutoff,
+  isPickupYmdAllowed,
+} from "@/lib/pickup-lead-time";
 import {
   customerAvailabilityQueryRange,
   daysInCalendarMonth,
@@ -162,7 +166,9 @@ export const PickupCalendar = forwardRef<
           const selected = value === ymd;
           const notOffered = !whitelisted && !past;
           const staticTitle = bookingWindowLocked
-            ? `Not selectable online yet${note ? ` · ${note}` : ""}`
+            ? isPickupLockedByThursdayNoonCutoff(ymd)
+              ? `New orders after Thursday noon (Central) can’t use this weekend—pick a later open date.${note ? ` · ${note}` : ""}`
+              : `First pickups are the upcoming Friday or Saturday (Central)${note ? ` · ${note}` : ""}`
             : past
               ? "Past date"
               : notOffered
@@ -231,9 +237,9 @@ export const PickupCalendar = forwardRef<
         </p>
       ) : (
         <p className="text-xs text-[var(--text-muted)]">
-          Only <strong>clickable</strong> dates can be chosen. Gray cells are not
-          open for pickup. 🔒 means the kitchen marked that day, but it
-          isn&apos;t selectable online yet. Hover for details.
+          Only <strong>clickable</strong> dates can be chosen. Gray = not open.
+          🔒 = open on our calendar but before the first Friday/Saturday pickup
+          window (Central Time). Hover for details.
         </p>
       )}
     </div>

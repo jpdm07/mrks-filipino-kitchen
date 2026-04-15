@@ -21,6 +21,10 @@ import {
   PAYMENT_METHOD_UNVERIFIED,
   PAYMENT_STATUS_PENDING,
 } from "@/lib/order-payment";
+import {
+  assertPickupSlotFreeInTx,
+  PickupSlotTakenError,
+} from "@/lib/pickup-slot-holds";
 
 function computeTotals(
   items: OrderItemLine[],
@@ -78,7 +82,13 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    if (!isWellFormedPickupYMD(pickupDate) || !isPickupYmdAllowed(pickupDate)) {
+    if (!isWellFormedPickupYMD(pickupDate)) {
+      return NextResponse.json(
+        { error: pickupDateRejectedMessage() },
+        { status: 400 }
+      );
+    }
+    if (!isPickupYmdAllowed(pickupDate, new Date())) {
       return NextResponse.json(
         { error: pickupDateRejectedMessage() },
         { status: 400 }
@@ -117,31 +127,50 @@ export async function POST(req: NextRequest) {
     const paymentMethod = PAYMENT_METHOD_UNVERIFIED;
     const paymentStatus = PAYMENT_STATUS_PENDING;
 
-    const order = await prisma.order.create({
-      data: {
-        orderNumber,
-        customerName,
-        phone,
-        email,
-        items: JSON.stringify(items),
-        subtotal: sub,
-        tax,
-        total,
-        pickupDate,
-        pickupTime,
-        notes: (body.notes ?? "").trim() || null,
-        wantsUtensils,
-        utensilSets: sets,
-        utensilCharge: ut,
-        wantsRecurring: Boolean(body.wantsRecurring),
-        customInquiry: (body.customInquiry ?? "").trim() || null,
-        subscribeUpdates: Boolean(body.subscribeUpdates),
-        status,
-        paymentMethod,
-        paymentStatus,
-        isDemo,
-      },
-    });
+    let order;
+    try {
+      order = await prisma.$transaction(async (tx) => {
+        if (!isDemo) {
+          await assertPickupSlotFreeInTx(tx, pickupDate, pickupTime);
+        }
+        return tx.order.create({
+          data: {
+            orderNumber,
+            customerName,
+            phone,
+            email,
+            items: JSON.stringify(items),
+            subtotal: sub,
+            tax,
+            total,
+            pickupDate,
+            pickupTime,
+            notes: (body.notes ?? "").trim() || null,
+            wantsUtensils,
+            utensilSets: sets,
+            utensilCharge: ut,
+            wantsRecurring: Boolean(body.wantsRecurring),
+            customInquiry: (body.customInquiry ?? "").trim() || null,
+            subscribeUpdates: Boolean(body.subscribeUpdates),
+            status,
+            paymentMethod,
+            paymentStatus,
+            isDemo,
+          },
+        });
+      });
+    } catch (e) {
+      if (e instanceof PickupSlotTakenError) {
+        return NextResponse.json(
+          {
+            error:
+              "That pickup time was just taken. Please choose another time on the checkout page.",
+          },
+          { status: 409 }
+        );
+      }
+      throw e;
+    }
 
     const ownerSms = [
       `${isDemo ? "🧪 DEMO " : ""}🍽️ NEW ORDER #${orderNumber}`,

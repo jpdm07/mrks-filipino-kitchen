@@ -31,12 +31,10 @@ export const SITE = {
 /**
  * Pickup date rules for web orders (min date on the picker + API validation).
  * Earliest selectable pickup is the first Friday or Saturday on or after
- * (today + MIN_NOTICE_CALENDAR_DAYS) in PICKUP_TIMEZONE.
+ * “today” in PICKUP_TIMEZONE (same week when you order Wed–Thu).
  */
 export const ORDER_FULFILLMENT = {
   PICKUP_TIMEZONE: "America/Chicago",
-  /** Calendar days after “today” before the first allowed pickup window begins. */
-  MIN_NOTICE_CALENDAR_DAYS: 7,
 } as const;
 
 /** Zelle / Venmo checkout copy (no card processing). */

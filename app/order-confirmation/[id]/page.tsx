@@ -6,7 +6,7 @@ import { Logo } from "@/components/ui/Logo";
 import { ConfirmationShare } from "@/components/order/ConfirmationShare";
 import { AnimatedCheck } from "@/components/order/AnimatedCheck";
 import type { OrderItemLine } from "@/lib/order-types";
-import { orderHasFlan, orderHasFrozenLumpia } from "@/lib/order-types";
+import { orderHasFrozenLumpia } from "@/lib/order-types";
 import { salesTaxPercentLabel } from "@/lib/config";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 import { ORDER_STATUS_CONFIRMED } from "@/lib/order-payment";
@@ -41,7 +41,6 @@ export default async function OrderConfirmationPage({
 
   const items = parseItems(order.items);
   const frozenLumpia = orderHasFrozenLumpia(items);
-  const hasFlan = orderHasFlan(items);
   const base = getPublicSiteOrigin();
   const pageUrl = `${base}/order-confirmation/${encodeURIComponent(order.orderNumber)}`;
 
@@ -63,7 +62,7 @@ export default async function OrderConfirmationPage({
       >
         #{order.orderNumber}
       </p>
-      <p className="mt-2 max-w-md text-xs text-[var(--text-muted)]">
+      <p className="mt-2 text-balance text-center text-xs text-[var(--text-muted)]">
         Use this number in your Zelle/Venmo memo and when you text us after you
         pay.
       </p>
@@ -171,9 +170,8 @@ export default async function OrderConfirmationPage({
               className="font-bold text-[var(--primary)] underline"
             >
               979-703-3827
-            </a>{" "}
-            — or leave a voicemail and we&apos;ll get back to you as soon as
-            possible.
+            </a>
+            .
           </p>
           <p className="mt-4 font-medium">
             Please note: your order will not begin preparation until payment has
@@ -182,30 +180,12 @@ export default async function OrderConfirmationPage({
           </p>
         </div>
       )}
-      <div className="mt-4 rounded-[var(--radius)] border border-[var(--primary)]/30 bg-[var(--primary)]/5 p-4 text-left text-sm">
-        <p>
-          📞 We prefer to communicate by phone. If we don&apos;t answer,{" "}
-          <strong>please leave a voicemail</strong> and we will return your
-          call.
-        </p>
-      </div>
       {order.wantsRecurring ? (
         <div className="mt-4 rounded-[var(--radius)] border border-[var(--gold)] bg-[var(--gold)]/25 p-4 text-left text-sm">
           <p>
             📦 You indicated interest in bi-weekly recurring orders. We will
             discuss the details with you when we call to confirm your first
             order!
-          </p>
-        </div>
-      ) : null}
-      {hasFlan ? (
-        <div className="mt-4 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-section)] p-4 text-left text-sm">
-          <p>
-            Caramel flan is baked and served in its own 5oz silver aluminum
-            ramekin with clear Findful lid—never transferred. Cool completely
-            before snapping the lid on; the clear lid is not heat-resistant.
-            Pickup includes a regular take-out bag and napkin(s)—no dip cup,
-            foil cover, or freezer bag.
           </p>
         </div>
       ) : null}

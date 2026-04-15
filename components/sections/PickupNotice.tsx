@@ -13,14 +13,6 @@ export function PickupNotice() {
           we will contact you to confirm your pickup time. You&apos;ll pick up
           your food from us, fresh and ready.
         </p>
-        <div className="mt-8 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-6 text-left shadow-[var(--shadow)]">
-          <p className="text-[var(--text)]">
-            📦 We accept{" "}
-            <strong>bulk recurring orders every 2 weeks</strong>, starting from
-            your first order fulfillment date. Great for families, offices, and
-            regular customers!
-          </p>
-        </div>
       </div>
     </section>
   );

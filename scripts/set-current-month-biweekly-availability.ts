@@ -1,7 +1,7 @@
 /**
  * One-time / ops: for the current calendar month (America/Chicago), reset pickup
  * availability to a biweekly pattern:
- *   - First open day = same rule as checkout (first Fri/Sat on or after today + 7d).
+ *   - First open day = same rule as checkout (first Fri/Sat on or after today).
  *   - Further open days = that date + 14 days, + 28, … while still in the month.
  * All other days in that month are closed (rows removed). Other months untouched.
  *

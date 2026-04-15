@@ -1,8 +1,8 @@
-/** Pickup windows: 10:00 AM through 7:00 PM, 15-minute steps (checkout + admin availability). */
+/** Pickup windows: 10:00 AM through 8:00 PM, 15-minute steps (checkout + admin availability). */
 export function pickupTimeSlotLabels(): string[] {
   const out: string[] = [];
   const step = 15;
-  for (let mins = 10 * 60; mins <= 19 * 60; mins += step) {
+  for (let mins = 10 * 60; mins <= 20 * 60; mins += step) {
     const h24 = Math.floor(mins / 60);
     const m = mins % 60;
     const hour12 = h24 > 12 ? h24 - 12 : h24 === 0 ? 12 : h24;
@@ -14,7 +14,7 @@ export function pickupTimeSlotLabels(): string[] {
 
 const ALLOWED = new Set(pickupTimeSlotLabels());
 
-/** Full 10:00 AM–7:00 PM grid before 15-minute slots (30-minute steps only). */
+/** Legacy full half-hour grid (10:00 AM–7:00 PM) used to detect old “default” DB rows. */
 function buildLegacyThirtyMinuteFullGrid(): string[] {
   const out: string[] = [];
   for (let mins = 10 * 60; mins <= 19 * 60; mins += 30) {
@@ -43,7 +43,7 @@ export function isLegacyFullThirtyMinuteSlotGrid(slots: string[]): boolean {
   return true;
 }
 
-/** Sort labels by chronological order (10:00 AM → 7:00 PM). Unknown labels sort last. */
+/** Sort labels by chronological order (10:00 AM → 8:00 PM). Unknown labels sort last. */
 export function sortPickupSlotLabels(slots: string[]): string[] {
   const order = pickupTimeSlotLabels();
   const idx = new Map(order.map((label, i) => [label, i]));

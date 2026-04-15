@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { eachYmdInRangeInclusive } from "@/lib/availability-range";
+import { getTakenPickupTimeLabelsForDate } from "@/lib/pickup-slot-holds";
 import {
   isLegacyFullThirtyMinuteSlotGrid,
   pickupTimeSlotLabels,
@@ -111,6 +112,16 @@ export async function getPickupSlotsForDateYmd(dateYmd: string): Promise<string[
   });
   if (!row || !row.isOpen) return [];
   return effectiveSlotsForOpenDay(slotsJsonFromDb(row.slots));
+}
+
+/** Same as {@link getPickupSlotsForDateYmd} but omits times already taken by active (non-cancelled) orders. */
+export async function getPublicPickupSlotsForDateYmd(
+  dateYmd: string
+): Promise<string[]> {
+  const slots = await getPickupSlotsForDateYmd(dateYmd);
+  if (slots.length === 0) return [];
+  const taken = await getTakenPickupTimeLabelsForDate(dateYmd);
+  return slots.filter((s) => !taken.has(s.trim()));
 }
 
 export async function isPickupSlotValidForDate(

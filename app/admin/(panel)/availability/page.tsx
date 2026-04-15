@@ -19,9 +19,9 @@ export default async function AdminAvailabilityPage() {
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
         Mark which calendar dates customers may choose for pickup. Checkout only
-        allows dates on or after the first Friday or Saturday that falls at least
-        one full week out (Central Time), even if you open earlier days here.
-        Saves go to
+        allows dates on or after the <strong>first Friday or Saturday on or after
+        today</strong> (Central) — so mid-week orders can still target this
+        weekend. Saves go to
         the same database the live site uses — the public pickup calendar and
         checkout calendar refresh automatically every few seconds (and when
         someone returns to your site tab).

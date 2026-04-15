@@ -1,13 +1,56 @@
 import { ORDER_FULFILLMENT } from "@/lib/config";
 
 /** Today's calendar date in the pickup timezone, as YYYY-MM-DD. */
-export function getTodayInPickupTimezoneYMD(): string {
+export function getTodayInPickupTimezoneYMD(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: ORDER_FULFILLMENT.PICKUP_TIMEZONE,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(new Date());
+  }).format(now);
+}
+
+/** Hour (0–23) and minute in PICKUP_TIMEZONE for an instant. */
+function getPickupTzHm(now: Date): { h: number; m: number } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: ORDER_FULFILLMENT.PICKUP_TIMEZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const n = (t: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === t)?.value ?? "0");
+  return { h: n("hour"), m: n("minute") };
+}
+
+/**
+ * The Thursday of the same Sun–Sat week as `anchorYmd` (calendar YMD in UTC parts,
+ * consistent with `ymdUtcWeekday`).
+ */
+export function getThursdayYmdOfSameWeek(anchorYmd: string): string {
+  const dow = ymdUtcWeekday(anchorYmd);
+  if (dow <= 4) return addCalendarDaysYMD(anchorYmd, 4 - dow);
+  return addCalendarDaysYMD(anchorYmd, -(dow - 4));
+}
+
+/** Friday and Saturday immediately following that week's Thursday. */
+export function getThisWeeksFridaySaturdayAfterThursday(
+  thursdayYmd: string
+): { fri: string; sat: string } {
+  return {
+    fri: addCalendarDaysYMD(thursdayYmd, 1),
+    sat: addCalendarDaysYMD(thursdayYmd, 2),
+  };
+}
+
+/** True after 12:00 PM Central on the Thursday of the current pickup-tz week. */
+export function isPastThisWeekThursdayNoonCentral(now: Date = new Date()): boolean {
+  const todayYmd = getTodayInPickupTimezoneYMD(now);
+  const thuYmd = getThursdayYmdOfSameWeek(todayYmd);
+  if (todayYmd > thuYmd) return true;
+  if (todayYmd < thuYmd) return false;
+  const { h, m } = getPickupTzHm(now);
+  return h * 60 + m >= 12 * 60;
 }
 
 export function addCalendarDaysYMD(ymd: string, days: number): string {
@@ -37,35 +80,61 @@ export function ymdUtcWeekday(ymd: string): number {
 
 /**
  * Earliest YYYY-MM-DD customers may pick: first Friday or Saturday on or after
- * (today + MIN_NOTICE_CALENDAR_DAYS) in PICKUP_TIMEZONE.
+ * today in PICKUP_TIMEZONE (includes “this Friday/Saturday” when you order mid-week).
  */
-export function getEarliestPickupDateMinYMD(): string {
-  const today = getTodayInPickupTimezoneYMD();
-  const threshold = addCalendarDaysYMD(
-    today,
-    ORDER_FULFILLMENT.MIN_NOTICE_CALENDAR_DAYS
-  );
-  let ymd = threshold;
+export function getEarliestPickupDateMinYMD(now: Date = new Date()): string {
+  const today = getTodayInPickupTimezoneYMD(now);
   for (let i = 0; i < 7; i++) {
+    const ymd = addCalendarDaysYMD(today, i);
     const dow = ymdUtcWeekday(ymd);
     if (dow === 5 || dow === 6) return ymd;
-    ymd = addCalendarDaysYMD(ymd, 1);
   }
-  return threshold;
+  return today;
 }
 
 export function isWellFormedPickupYMD(s: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(s.trim());
 }
 
-export function isPickupYmdAllowed(pickupYmd: string): boolean {
+/**
+ * True when this pickup date is the current week's Fri/Sat and the Thursday-noon
+ * cutoff has passed (would be allowed by lead date alone).
+ */
+export function isPickupLockedByThursdayNoonCutoff(
+  pickupYmd: string,
+  now: Date = new Date()
+): boolean {
   if (!isWellFormedPickupYMD(pickupYmd)) return false;
-  return pickupYmd.trim() >= getEarliestPickupDateMinYMD();
+  if (!isPastThisWeekThursdayNoonCentral(now)) return false;
+  const t = pickupYmd.trim();
+  if (t < getEarliestPickupDateMinYMD(now)) return false;
+  const thuYmd = getThursdayYmdOfSameWeek(getTodayInPickupTimezoneYMD(now));
+  const { fri, sat } = getThisWeeksFridaySaturdayAfterThursday(thuYmd);
+  return t === fri || t === sat;
+}
+
+/**
+ * True when pickup YYYY-MM-DD is allowed: first Fri/Sat on or after "today" (Central),
+ * and not this week's Fri/Sat once it is past Thursday noon Central.
+ */
+export function isPickupYmdAllowed(
+  pickupYmd: string,
+  now: Date = new Date()
+): boolean {
+  if (!isWellFormedPickupYMD(pickupYmd)) return false;
+  const t = pickupYmd.trim();
+  if (t < getEarliestPickupDateMinYMD(now)) return false;
+  if (isPastThisWeekThursdayNoonCentral(now)) {
+    const thuYmd = getThursdayYmdOfSameWeek(getTodayInPickupTimezoneYMD(now));
+    const { fri, sat } = getThisWeeksFridaySaturdayAfterThursday(thuYmd);
+    if (t === fri || t === sat) return false;
+  }
+  return true;
 }
 
 /** User-facing error when date is not allowed (form + API). */
 export function pickupDateRejectedMessage(): string {
-  return "That pickup date isn’t available. Please choose an open date on the calendar.";
+  return "That pickup date isn’t available. Pickups start on the first open Friday or Saturday on or after today (Central Time). After Thursday at noon Central, that same weekend closes to new orders—choose a later open date or call the kitchen.";
 }
 
 /** Long label for a pickup calendar day (matches YYYY-MM-DD literally). */
