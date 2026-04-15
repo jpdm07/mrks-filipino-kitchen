@@ -22,8 +22,12 @@ function run(label, command, args) {
 
 const onVercel = Boolean(process.env.VERCEL);
 const forceMigrate = process.env.RUN_MIGRATE_ON_BUILD === "1";
+/** Set in Vercel → Environment Variables if migrate fails the deploy (drift, timeout). Run `npx prisma migrate deploy` locally or in CI instead. */
+const skipMigrateDeploy =
+  process.env.VERCEL_SKIP_MIGRATE_DEPLOY === "1" ||
+  process.env.SKIP_PRISMA_MIGRATE_DEPLOY === "1";
 
-if (onVercel || forceMigrate) {
+if ((onVercel || forceMigrate) && !skipMigrateDeploy) {
   console.log("\n========== [build-production] prisma migrate deploy ==========\n");
   const dbUrl = process.env.DATABASE_URL?.trim();
   if (!dbUrl) {
@@ -36,6 +40,10 @@ if (onVercel || forceMigrate) {
   } else {
     run("prisma migrate deploy", "npx", ["prisma", "migrate", "deploy"]);
   }
+} else if (skipMigrateDeploy && (onVercel || forceMigrate)) {
+  console.log(
+    "\n[build-production] Skipping prisma migrate deploy (VERCEL_SKIP_MIGRATE_DEPLOY=1). Apply migrations manually when needed.\n"
+  );
 }
 
 console.log("\n========== [build-production] prisma generate ==========\n");
