@@ -12,6 +12,9 @@ import { ORDER_STATUS_CONFIRMED } from "@/lib/order-payment";
 import { SalesTaxDisclosure } from "@/components/checkout/SalesTaxDisclosure";
 
 export const dynamic = "force-dynamic";
+/** Avoid stale HTML if a CDN or browser cached an older confirmation layout. */
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 function parseItems(raw: string): OrderItemLine[] {
   try {
