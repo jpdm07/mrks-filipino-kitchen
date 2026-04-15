@@ -8,6 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AnnouncementBanner } from "@/components/ui/AnnouncementBanner";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 import { SiteBackgroundMusic } from "@/components/music/SiteBackgroundMusic";
+import { ConsoleNoiseFilter } from "@/components/system/ConsoleNoiseFilter";
 
 function isAdminPath(pathname: string | null): boolean {
   if (!pathname) return false;
@@ -19,6 +20,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (isAdminPath(pathname)) {
     return (
       <main className="flex min-h-dvh w-full min-w-0 flex-col bg-[var(--bg)]">
+        <ConsoleNoiseFilter />
         {children}
       </main>
     );
@@ -26,6 +28,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <ConsoleNoiseFilter />
       <CustomCursor />
       <CartProvider>
         <Navbar />

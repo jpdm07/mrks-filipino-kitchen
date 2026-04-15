@@ -115,11 +115,20 @@ export function Logo({
       xmlns="http://www.w3.org/2000/svg"
       aria-label="Mr. K's Filipino Kitchen"
     >
-      <g opacity={0.2}>
+      <g opacity={light ? 0.14 : 0.2}>
         {rayPath.map((p, i) => (
-          <path key={i} d={p} fill="var(--gold)" />
+          <path
+            key={i}
+            d={p}
+            fill={light ? "#fff1c8" : "var(--gold)"}
+          />
         ))}
-        <circle cx={cx} cy={cy} r={inner - 0.5} fill="var(--gold-light)" />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={inner - 0.5}
+          fill={light ? "#ffffff" : "var(--gold-light)"}
+        />
       </g>
       <text
         x={L.sunCx}

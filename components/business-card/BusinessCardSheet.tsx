@@ -12,12 +12,12 @@ import { businessCardUrlDisplay, hrefWithHttps } from "@/lib/url-display";
 /** 8 cards per US Letter sheet: 2 × 4 @ 3.5" × 2" with trim gaps */
 const CARDS_PER_SHEET = 8;
 
-/** Modern mesh ombre: deep blue base, crimson glow, warm gold corner (flag-inspired, print-safe) */
+/** Deep blue + crimson; lighter gold “sun” corner for inkjet print */
 const brandPanelStyle: CSSProperties = {
   background: `
-    radial-gradient(ellipse 120% 72% at 100% 4%, rgba(206, 17, 38, 0.7), transparent 54%),
-    radial-gradient(ellipse 88% 65% at 2% 96%, rgba(255, 214, 102, 0.45), transparent 52%),
-    linear-gradient(152deg, #06153d 0%, #0c3488 26%, #0038a8 50%, #5a1836 74%, #7a1428 88%, #c9a227 100%)
+    radial-gradient(ellipse 120% 72% at 100% 4%, rgba(206, 17, 38, 0.55), transparent 54%),
+    radial-gradient(ellipse 88% 65% at 2% 96%, rgba(255, 236, 180, 0.55), transparent 52%),
+    linear-gradient(152deg, #06153d 0%, #0c3488 26%, #0038a8 50%, #5a1836 74%, #7a1428 88%, #f2e6a8 100%)
   `,
 };
 
@@ -29,12 +29,8 @@ function BusinessCardFace({
   siteBaseUrl: string | null;
 }) {
   return (
-    <div className="bc-card box-border aspect-[336/192] w-full max-w-[336px] rounded-xl border-2 border-[var(--primary)] bg-white shadow-[var(--shadow-lg)] print:h-[192px] print:w-[336px] print:max-w-none print:rounded-xl print:shadow-none">
-      {/*
-        Border on outer only; inner clips content. Same-element overflow-hidden + rounded border
-        often clips the blue stroke at the corners (especially in print/PDF).
-      */}
-      <div className="bc-card-inner flex h-full min-h-0 w-full flex-row overflow-hidden rounded-[10px] print:rounded-[10px]">
+    <div className="bc-card box-border aspect-[336/192] w-full max-w-[336px] border-2 border-[var(--primary)] bg-white shadow-[var(--shadow-lg)] print:h-[192px] print:w-[336px] print:max-w-none print:shadow-none">
+      <div className="bc-card-inner flex h-full min-h-0 w-full flex-row overflow-hidden">
         <div
           className="flex w-[min(50%,168px)] shrink-0 flex-col items-center justify-center px-3 py-3 print:border-0"
           style={brandPanelStyle}
@@ -73,17 +69,21 @@ function BusinessCardFace({
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Facebook profile"
-            className="mt-1 inline-flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5"
+            className="mt-1 flex min-w-0 max-w-full flex-nowrap items-center gap-1"
           >
-            <FacebookIcon size={12} className="shrink-0 text-[#1877F2]" />
-            <span className="min-w-0 break-all text-[5px] font-semibold leading-tight text-[#1877F2]">
+            <FacebookIcon size={13} className="shrink-0 text-[#1877F2]" />
+            <span className="min-w-0 flex-1 truncate text-[7px] font-semibold leading-none text-[#1877F2]">
               {businessCardUrlDisplay(SITE.facebookUrl)}
             </span>
           </a>
           {siteBaseUrl ? (
-            <p className="mt-1 text-[5px] leading-tight text-[var(--text-muted)] whitespace-nowrap">
-              <span className="font-semibold text-[var(--text)]">Website: </span>
-              {businessCardUrlDisplay(siteBaseUrl)}
+            <p className="mt-1 flex min-w-0 flex-nowrap items-center gap-0.5 text-[7px] leading-none text-[var(--text-muted)]">
+              <span className="shrink-0 font-semibold text-[var(--text)]">
+                Website:
+              </span>
+              <span className="min-w-0 flex-1 truncate font-medium text-[var(--text)]">
+                {businessCardUrlDisplay(siteBaseUrl)}
+              </span>
             </p>
           ) : null}
         </div>
@@ -199,7 +199,7 @@ export function BusinessCardSheet({
             min-height: 2in !important;
             max-width: 3.5in !important;
             max-height: 2in !important;
-            border-radius: 10px !important;
+            border-radius: 0 !important;
             box-shadow: none !important;
             border: 2px solid #0038a8 !important;
             overflow: visible !important;
@@ -211,7 +211,7 @@ export function BusinessCardSheet({
           }
           #print-area .bc-print-sheet .bc-card .bc-card-inner {
             overflow: hidden !important;
-            border-radius: 8px !important;
+            border-radius: 0 !important;
           }
         }
       `}</style>

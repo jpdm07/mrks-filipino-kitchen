@@ -36,7 +36,7 @@ const PT = 72;
 const CARD_W = 3.5 * PT;
 const CARD_H = 2 * PT;
 const CARD_BORDER = 2;
-/** Inset content box inside the blue border (avoids clipping rounded corners with overflow) */
+/** Inset content box inside the blue border */
 const INNER_W = CARD_W - 2 * CARD_BORDER;
 const INNER_H = CARD_H - 2 * CARD_BORDER;
 const INNER_HALF = INNER_W / 2;
@@ -97,15 +97,15 @@ function BrandLogoMarkPdf() {
   const L = LOGO_SM;
   return (
     <Svg width={118} height={46} viewBox={`0 0 ${L.w} ${L.h}`}>
-      <G opacity={0.2}>
+      <G opacity={0.13}>
         {RAY_PATHS.map((d, i) => (
-          <Path key={i} d={d} fill="#e8b923" />
+          <Path key={i} d={d} fill="#fff1c8" />
         ))}
         <Circle
           cx={L.sunCx}
           cy={L.sunCy}
           r={L.sunInner - 0.5}
-          fill="#fff6d6"
+          fill="#ffffff"
         />
       </G>
       <Text
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     borderWidth: CARD_BORDER,
     borderColor: "#0038a8",
     borderStyle: "solid",
-    borderRadius: 10,
+    borderRadius: 0,
   },
   cardInner: {
     flex: 1,
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
     minHeight: 0,
     overflow: "hidden",
-    borderRadius: 8,
+    borderRadius: 0,
   },
   brandWrap: {
     flex: 1,
@@ -233,25 +233,32 @@ const styles = StyleSheet.create({
     color: "#5c5866",
     marginTop: 1,
   },
-  /** Store URL under Facebook row. */
+  /** “Website:” label (URL is sibling Text for one-line layout) */
   websiteLine: {
-    fontSize: 4.25,
-    color: "#5c5866",
-    marginTop: 2,
+    fontSize: 5.75,
+    color: "#14121a",
+    fontWeight: "bold",
+  },
+  websiteUrlPart: {
+    fontSize: 5.75,
+    color: "#14121a",
+    fontWeight: "normal",
   },
   fbRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    flexWrap: "wrap",
+    alignItems: "center",
+    flexWrap: "nowrap",
     marginTop: 2,
-    gap: 3,
+    gap: 2,
+    overflow: "hidden",
   },
   fbUrlText: {
-    fontSize: 4.25,
+    fontSize: 5.75,
     color: "#1877F2",
-    lineHeight: 1.15,
+    lineHeight: 1.1,
     flex: 1,
     minWidth: 0,
+    fontWeight: "bold",
   },
   bottomRow: {
     flexDirection: "row",
@@ -293,7 +300,7 @@ function BrandPanel({ gradientId }: { gradientId: string }) {
             <Stop offset="0.52" stopColor="#0038a8" />
             <Stop offset="0.76" stopColor="#5a1836" />
             <Stop offset="0.9" stopColor="#7a1428" />
-            <Stop offset="1" stopColor="#c9a227" />
+            <Stop offset="1" stopColor="#f2e6a8" />
           </LinearGradient>
         </Defs>
         <Rect
@@ -342,13 +349,37 @@ function SingleCard({
             <Text style={styles.contactMuted}>{SITE.location}</Text>
             <Link src={facebookHref}>
               <View style={styles.fbRow}>
-                <FacebookMarkPdf size={6} />
-                <Text style={styles.fbUrlText}>{facebookDisplay}</Text>
+                <FacebookMarkPdf size={7} />
+                <Text style={styles.fbUrlText} wrap={false}>
+                  {facebookDisplay}
+                </Text>
               </View>
             </Link>
-            <Text style={styles.websiteLine}>
-              Website: {websiteDisplay}
-            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "nowrap",
+                marginTop: 2,
+                gap: 3,
+                alignItems: "center",
+                overflow: "hidden",
+              }}
+            >
+              <Text style={styles.websiteLine} wrap={false}>
+                Website:
+              </Text>
+              <Text
+                style={{
+                  ...styles.websiteUrlPart,
+                  flexGrow: 1,
+                  flexShrink: 1,
+                  minWidth: 0,
+                }}
+                wrap={false}
+              >
+                {websiteDisplay}
+              </Text>
+            </View>
           </View>
           <View style={styles.bottomRow}>
             <View style={styles.qrCol}>

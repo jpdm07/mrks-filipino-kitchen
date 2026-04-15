@@ -9,6 +9,7 @@ import {
 import { safeDb } from "@/lib/safe-db";
 import { overlayPublicMenuItemFromCatalog } from "@/lib/menu-catalog-merge";
 import { FALLBACK_MENU } from "@/lib/static-menu-fallback";
+import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
 
 export async function FeaturedItems() {
   const ids = ["seed-1", "seed-4", "seed-6"];
@@ -61,14 +62,15 @@ export async function FeaturedItems() {
               key={item.id}
               className="card-elevated group flex h-full min-h-0 flex-col overflow-hidden"
             >
-              <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden">
+              <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[var(--bg-section)]">
                 <Image
                   src={item.photoUrl}
-                  alt={item.name}
+                  alt=""
                   fill
                   className="object-cover transition duration-500 group-hover:scale-[1.04]"
                   sizes="(max-width:768px) 100vw, 33vw"
                 />
+                <MenuPhotoComingSoonOverlay />
               </div>
               <div className="flex min-h-0 flex-1 flex-col p-5">
                 <h3 className="font-[family-name:var(--font-playfair)] text-xl font-bold">

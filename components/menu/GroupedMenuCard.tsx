@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { MenuItemDTO } from "@/lib/menu-types";
 import { useCart } from "@/components/cart/CartContext";
+import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
 
 function shortLabel(v: MenuItemDTO): string {
   const t = v.variantShortLabel?.trim();
@@ -207,10 +208,7 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
 
   return (
     <article className="card-elevated group flex h-full min-h-0 flex-col overflow-hidden">
-      <div
-        className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[var(--bg-section)]"
-        aria-hidden
-      >
+      <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[var(--bg-section)]">
         <Image
           src={photoUrl}
           alt=""
@@ -218,8 +216,9 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
           className="object-cover transition duration-500 group-hover:scale-[1.03]"
           sizes="(max-width:768px) 100vw, 33vw"
         />
+        <MenuPhotoComingSoonOverlay />
         {allSoldOut ? (
-          <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-bold text-white">
+          <span className="pointer-events-none absolute left-3 top-3 z-[2] rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-bold text-white">
             Sold Out
           </span>
         ) : null}
