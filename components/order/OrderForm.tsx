@@ -27,6 +27,7 @@ import {
   isValidEmail,
 } from "@/lib/checkout-contact-validation";
 import { playOrderSubmitClick } from "@/lib/checkout-ui-sounds";
+import { sortPickupSlotLabels } from "@/lib/pickup-time-slots";
 
 type CheckoutIssueKey =
   | "name"
@@ -183,9 +184,11 @@ export function OrderForm() {
           setSlotOptions([]);
           return;
         }
-        const slots = Array.isArray(j.slots)
-          ? j.slots.filter((x): x is string => typeof x === "string")
-          : [];
+        const slots = sortPickupSlotLabels(
+          Array.isArray(j.slots)
+            ? j.slots.filter((x): x is string => typeof x === "string")
+            : []
+        );
         setSlotOptions(slots);
         setPickupTime((prev) => (prev && slots.includes(prev) ? prev : ""));
       })

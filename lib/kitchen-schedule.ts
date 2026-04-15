@@ -3,6 +3,7 @@ import { getTakenPickupTimeLabelsForDate } from "@/lib/pickup-slot-holds";
 import {
   isLegacyFullThirtyMinuteSlotGrid,
   pickupTimeSlotLabels,
+  sortPickupSlotLabels,
 } from "@/lib/pickup-time-slots";
 import {
   getTodayInPickupTimezoneYMD,
@@ -105,12 +106,16 @@ export async function getKitchenSlotsForDate(
   if (kind === "mon_thu") {
     if (!cartFlanOnly) return [];
     const taken = await getTakenPickupTimeLabelsForDate(dateYmd);
-    return evening.filter((s) => !taken.has(s.trim()));
+    return sortPickupSlotLabels(
+      evening.filter((s) => !taken.has(s.trim()))
+    );
   }
 
   if (kind === "friday") {
     const taken = await getTakenPickupTimeLabelsForDate(dateYmd);
-    return evening.filter((s) => !taken.has(s.trim()));
+    return sortPickupSlotLabels(
+      evening.filter((s) => !taken.has(s.trim()))
+    );
   }
 
   const row = await prisma.availability.findUnique({
@@ -120,5 +125,5 @@ export async function getKitchenSlotsForDate(
   let raw = effectiveSlotsForOpenDay(slotsJsonFromDb(row.slots));
   if (raw.length === 0) raw = [...ALL_SLOTS];
   const taken = await getTakenPickupTimeLabelsForDate(dateYmd);
-  return raw.filter((s) => !taken.has(s.trim()));
+  return sortPickupSlotLabels(raw.filter((s) => !taken.has(s.trim())));
 }
