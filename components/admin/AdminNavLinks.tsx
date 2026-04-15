@@ -55,6 +55,12 @@ const LINK_DEFS: {
   },
   { href: "/admin/finances", label: "Finances", count: () => 0, badgeLabel: "" },
   {
+    href: "/admin/tax-documentation",
+    label: "Tax export",
+    count: () => 0,
+    badgeLabel: "",
+  },
+  {
     href: "/admin/kitchen-guide",
     label: "Kitchen guide",
     count: () => 0,
