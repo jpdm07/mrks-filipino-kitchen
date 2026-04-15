@@ -1,9 +1,9 @@
 /**
- * Vercel/CI: optionally apply migrations, then generate client, then `next build`.
- * Local: skips `migrate deploy` unless RUN_MIGRATE_ON_BUILD=1.
+ * Vercel/CI: prisma generate + `next build`. Migrations during the Vercel build are
+ * opt-in (`RUN_MIGRATE_ON_VERCEL=1` or `RUN_MIGRATE_ON_BUILD=1`) so a bad migrate
+ * does not block deploy. Apply migrations from your machine or CI when needed.
  *
- * If DATABASE_URL is missing during the Vercel *build*, we skip migrations so the
- * deploy can still finish — run `npx prisma migrate deploy` from your PC (same URL).
+ * Local: `migrate deploy` only when RUN_MIGRATE_ON_BUILD=1 (or not on Vercel with DB URL).
  */
 import { spawnSync } from "node:child_process";
 import process from "node:process";
@@ -22,13 +22,14 @@ function run(label, command, args) {
 
 const onVercel = Boolean(process.env.VERCEL);
 const forceMigrate = process.env.RUN_MIGRATE_ON_BUILD === "1";
-/** Set in Vercel → Environment Variables if migrate fails the deploy (drift, timeout). Run `npx prisma migrate deploy` locally or in CI instead. */
+/** Opt-in: run migrate during Vercel build (default is skip — migrate often fails deploy on drift/locks). */
+const migrateOnVercel =
+  process.env.RUN_MIGRATE_ON_VERCEL === "1" || process.env.RUN_MIGRATE_ON_BUILD === "1";
 const skipMigrateDeploy =
   process.env.VERCEL_SKIP_MIGRATE_DEPLOY === "1" ||
   process.env.SKIP_PRISMA_MIGRATE_DEPLOY === "1";
 
 if ((onVercel || forceMigrate) && !skipMigrateDeploy) {
-  console.log("\n========== [build-production] prisma migrate deploy ==========\n");
   const dbUrl = process.env.DATABASE_URL?.trim();
   if (!dbUrl) {
     console.warn(
@@ -37,7 +38,14 @@ if ((onVercel || forceMigrate) && !skipMigrateDeploy) {
         "  → Then run from your computer (with the same URL in .env.local):\n" +
         "       npx prisma migrate deploy && npx prisma db seed\n"
     );
+  } else if (onVercel && !migrateOnVercel) {
+    console.log(
+      "\n[build-production] Vercel: skipping prisma migrate deploy by default (avoids failed builds).\n" +
+        "  → Apply DB migrations manually: npx prisma migrate deploy (with production DATABASE_URL)\n" +
+        "  → Or set RUN_MIGRATE_ON_VERCEL=1 in Vercel env to run migrate on each production build.\n"
+    );
   } else {
+    console.log("\n========== [build-production] prisma migrate deploy ==========\n");
     run("prisma migrate deploy", "npx", ["prisma", "migrate", "deploy"]);
   }
 } else if (skipMigrateDeploy && (onVercel || forceMigrate)) {
