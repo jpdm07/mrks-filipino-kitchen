@@ -57,8 +57,8 @@ const LS_PANEL_POS = "mrks-opm-panel-pos";
 const LS_EXPANDED = "mrks-opm-panel-expanded";
 const LS_VOLUME = "mrks-opm-volume";
 
-/** Default playback level (~half of the previous 0.35 default). */
-const DEFAULT_VOLUME = 0.175;
+/** Default playback level (5% — subtle until the visitor raises it). */
+const DEFAULT_VOLUME = 0.05;
 
 type QueueState = { deck: number[]; pos: number };
 type PanelPos = { left: number; top: number };

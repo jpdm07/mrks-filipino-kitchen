@@ -22,6 +22,7 @@ import {
   hasValidPhoneDigits,
   isValidEmail,
 } from "@/lib/checkout-contact-validation";
+import { playOrderSubmitClick } from "@/lib/checkout-ui-sounds";
 
 type CheckoutIssueKey =
   | "name"
@@ -300,6 +301,7 @@ export function OrderForm() {
       return;
     }
 
+    playOrderSubmitClick();
     setLoading(true);
     const sets = cart.wantsUtensils ? Math.max(1, cart.utensilSets) : 0;
     const res = await fetch("/api/orders", {

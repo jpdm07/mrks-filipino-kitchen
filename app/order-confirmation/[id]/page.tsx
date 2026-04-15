@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { safeDb } from "@/lib/safe-db";
 import { Logo } from "@/components/ui/Logo";
 import { AnimatedCheck } from "@/components/order/AnimatedCheck";
+import { OrderConfirmationConfetti } from "@/components/order/OrderConfirmationConfetti";
 import type { OrderItemLine } from "@/lib/order-types";
 import { orderHasFrozenLumpia } from "@/lib/order-types";
 import { salesTaxPercentLabel } from "@/lib/config";
@@ -45,6 +46,7 @@ export default async function OrderConfirmationPage({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 text-center">
+      <OrderConfirmationConfetti />
       <div className="flex justify-center">
         <Logo size="xl" />
       </div>
