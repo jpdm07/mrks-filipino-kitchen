@@ -125,12 +125,9 @@ export function PrintableMenu({ items }: { items: MenuItemDTO[] }) {
                         return <p className={descClass}>{raw}</p>;
                       }
                       return (
-                        <>
-                          <p className={descClass}>{parts.lead}</p>
-                          <p className={`${descClass} whitespace-nowrap`}>
-                            {parts.dipNote}
-                          </p>
-                        </>
+                        <p className={descClass}>
+                          {[parts.lead, parts.dipNote].filter(Boolean).join(" ")}
+                        </p>
                       );
                     })()
                   ) : null}

@@ -302,20 +302,13 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
             {title}
           </h3>
           <p className="text-sm text-[var(--text-muted)]">{variant.calories}</p>
-          {takeoutLineSplit?.dipNote ? (
-            <>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
-                {takeoutLineSplit.lead}
-              </p>
-              <p className="mt-2 whitespace-nowrap text-sm leading-relaxed text-[var(--text)]">
-                {takeoutLineSplit.dipNote}
-              </p>
-            </>
-          ) : (
-            <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
-              {variant.description}
-            </p>
-          )}
+          <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
+            {takeoutLineSplit?.dipNote
+              ? [takeoutLineSplit.lead, takeoutLineSplit.dipNote]
+                  .filter(Boolean)
+                  .join(" ")
+              : variant.description}
+          </p>
 
           <div className="mt-3 rounded-lg border border-[var(--gold)]/45 bg-[var(--gold)]/12 px-3 py-2.5">
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--primary)]">

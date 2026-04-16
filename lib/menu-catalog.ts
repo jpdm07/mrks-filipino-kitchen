@@ -90,7 +90,7 @@ export const MENU_CATALOG = [
     id: "seed-1",
     name: "Lumpia: Beef",
     description:
-      "Crispy golden rolls filled with seasoned ground beef, onion, garlic, carrots, soy sauce, salt, and pepper—the Filipino party favorite. Each order is one dozen; choose cooked and ready to eat, or frozen to fry whenever you like.",
+      "Crispy golden rolls filled with seasoned ground beef, onion, garlic, carrots, soy sauce, salt, and pepper—the Filipino party favorite. Each order is one dozen; choose cooked and ready to eat, or frozen to fry whenever you like. 🥡 Comes with a dipping sauce.",
     category: "Sides",
     calories: "~240 cal/dozen cooked · ~180 cal/dozen frozen",
     basePrice: LUMPIA_RETAIL_USD.beef.cookedDozen,
@@ -113,14 +113,12 @@ export const MENU_CATALOG = [
     variantGroup: "lumpia",
     variantShortLabel: "Beef",
     groupCardTitle: "Lumpia",
-    groupServingBlurb:
-      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with a dipping sauce.",
   },
   {
     id: "seed-2",
     name: "Lumpia: Pork",
     description:
-      "Traditional pork lumpia Shanghai with a savory blend of ground pork, onion, garlic, carrots, soy sauce, salt, and pepper. One dozen per order, with your pick of cooked or frozen.",
+      "Traditional pork lumpia Shanghai with a savory blend of ground pork, onion, garlic, carrots, soy sauce, salt, and pepper. One dozen per order, with your pick of cooked or frozen. 🥡 Comes with a dipping sauce.",
     category: "Sides",
     calories: "~260 cal/dozen cooked · ~190 cal/dozen frozen",
     basePrice: LUMPIA_RETAIL_USD.pork.cookedDozen,
@@ -143,14 +141,12 @@ export const MENU_CATALOG = [
     variantGroup: "lumpia",
     variantShortLabel: "Pork",
     groupCardTitle: "Lumpia",
-    groupServingBlurb:
-      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with a dipping sauce.",
   },
   {
     id: "seed-3",
     name: "Lumpia: Turkey",
     description:
-      "A lighter twist on the classic: seasoned ground turkey with onion, garlic, and carrots in a delicate spring roll skin—same hearty dozen as our beef and pork. Choose cooked or frozen to match your plans.",
+      "A lighter twist on the classic: seasoned ground turkey with onion, garlic, and carrots in a delicate spring roll skin—same hearty dozen as our beef and pork. Choose cooked or frozen to match your plans. 🥡 Comes with a dipping sauce.",
     category: "Sides",
     calories: "~215 cal/dozen cooked · ~160 cal/dozen frozen",
     basePrice: LUMPIA_RETAIL_USD.turkey.cookedDozen,
@@ -173,8 +169,6 @@ export const MENU_CATALOG = [
     variantGroup: "lumpia",
     variantShortLabel: "Turkey",
     groupCardTitle: "Lumpia",
-    groupServingBlurb:
-      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with a dipping sauce.",
   },
   {
     id: "seed-4",

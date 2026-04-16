@@ -105,20 +105,13 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
             {item.name}
           </h3>
           <p className="text-sm text-[var(--text-muted)]">{item.calories}</p>
-          {takeoutLineSplit.dipNote ? (
-            <>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
-                {takeoutLineSplit.lead}
-              </p>
-              <p className="mt-2 whitespace-nowrap text-sm leading-relaxed text-[var(--text)]">
-                {takeoutLineSplit.dipNote}
-              </p>
-            </>
-          ) : (
-            <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
-              {item.description}
-            </p>
-          )}
+          <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
+            {takeoutLineSplit.dipNote
+              ? [takeoutLineSplit.lead, takeoutLineSplit.dipNote]
+                  .filter(Boolean)
+                  .join(" ")
+              : item.description}
+          </p>
           {item.id === "seed-6" ? (
             <>
               <p className="mt-2 text-xs font-medium text-[var(--text-muted)]">
