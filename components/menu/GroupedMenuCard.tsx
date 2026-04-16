@@ -7,6 +7,7 @@ import type { MenuItemDTO } from "@/lib/menu-types";
 import { useCart } from "@/components/cart/CartContext";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
 import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
+import { defaultGroupedVariantId } from "@/lib/menu-variant-defaults";
 
 function shortLabel(v: MenuItemDTO): string {
   const t = v.variantShortLabel?.trim();
@@ -50,10 +51,9 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
 
   const isTocinoUnified = sorted[0]?.variantGroup === "tocino";
 
-  const [variantId, setVariantId] = useState(() => {
-    const ok = variants.find((v) => !v.soldOut);
-    return (ok ?? variants[0])?.id ?? "";
-  });
+  const [variantId, setVariantId] = useState(() =>
+    defaultGroupedVariantId(variants)
+  );
 
   const [tocinoMeat, setTocinoMeat] = useState<"pork" | "chicken">(() =>
     variants[0]?.variantGroup === "tocino"
@@ -72,8 +72,7 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
     if (sorted[0]?.variantGroup === "tocino") return;
     const v = sorted.find((x) => x.id === variantId);
     if (v && !v.soldOut) return;
-    const next = sorted.find((x) => !x.soldOut) ?? sorted[0];
-    const nid = next?.id ?? "";
+    const nid = defaultGroupedVariantId(sorted);
     if (nid && nid !== variantId) setVariantId(nid);
   }, [sorted, variantId]);
 
@@ -258,7 +257,7 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
       ? "12 lumpia (1 dozen) per order at the price shown."
       : isTocinoUnified
         ? tocinoStyle === "plate"
-          ? "Ready-made plate with egg, rice, cucumber, tomato, garlic crisps, and dipping sauce."
+          ? "Ready-made plate with egg, rice, cucumber, tomato, and garlic crisps. Comes with a dipping sauce."
           : "12 oz frozen marinated pack in a sealed bag — cook at home."
         : "";
 

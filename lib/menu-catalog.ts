@@ -114,7 +114,7 @@ export const MENU_CATALOG = [
     variantShortLabel: "Beef",
     groupCardTitle: "Lumpia",
     groupServingBlurb:
-      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with 2 dipping sauces per order of dozen.",
+      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with a dipping sauce.",
   },
   {
     id: "seed-2",
@@ -144,7 +144,7 @@ export const MENU_CATALOG = [
     variantShortLabel: "Pork",
     groupCardTitle: "Lumpia",
     groupServingBlurb:
-      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with 2 dipping sauces per order of dozen.",
+      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with a dipping sauce.",
   },
   {
     id: "seed-3",
@@ -174,7 +174,7 @@ export const MENU_CATALOG = [
     variantShortLabel: "Turkey",
     groupCardTitle: "Lumpia",
     groupServingBlurb:
-      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with 2 dipping sauces per order of dozen.",
+      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with a dipping sauce.",
   },
   {
     id: "seed-4",
@@ -270,11 +270,11 @@ export const MENU_CATALOG = [
     id: "seed-7",
     name: "Quail Eggs (10 pcs)",
     description:
-      "Fresh quail eggs coated in seasoned flour, deep-fried until crisp. 🥡 Comes with 2 dipping sauces.",
+      "Fresh quail eggs coated in seasoned flour, deep-fried until crisp. 🥡 Comes with a dipping sauce.",
     category: "Sides",
     calories: "~165 cal / 10 pcs (breaded)",
     basePrice: 7.99,
-    sizes: [{ key: "10pc", label: "Per 10 pcs (with dip)", price: 7.99 }],
+    sizes: [{ key: "10pc", label: "Per 10 pcs", price: 7.99 }],
     photoUrl: CATALOG_PHOTOS.quail,
     hasCooked: false,
     hasFrozen: false,
@@ -284,14 +284,14 @@ export const MENU_CATALOG = [
     id: "seed-8",
     name: "Tocino — Pork with Egg and Rice",
     description:
-      "Tender, sweet-cured pork marinated overnight in a classic Filipino blend of brown sugar, soy sauce, white vinegar, annatto powder, garlic, and salt, then pan-fried to a beautiful caramelized glaze. Served as a complete plate with fluffy jasmine rice, a sunny-side-up egg, fresh cucumber and tomato slices, and crispy garlic crisps. 🥡 Includes dipping sauce on the side.",
+      "Tender, sweet-cured pork marinated overnight in a classic Filipino blend of brown sugar, soy sauce, white vinegar, annatto powder, garlic, and salt, then pan-fried to a beautiful caramelized glaze. Served as a complete plate with fluffy jasmine rice, a sunny-side-up egg, fresh cucumber and tomato slices, and crispy garlic crisps. 🥡 Comes with a dipping sauce.",
     category: "Meals",
     calories: "~540",
     basePrice: TOCINO_RETAIL_USD.cookedPlate,
     sizes: [
       {
         key: "plate",
-        label: "Ready-Made Plate — includes dipping sauce",
+        label: "Ready-Made Plate",
         price: TOCINO_RETAIL_USD.cookedPlate,
       },
     ],
@@ -303,20 +303,20 @@ export const MENU_CATALOG = [
     variantShortLabel: "Pork",
     groupCardTitle: "Tocino",
     groupServingBlurb:
-      "Choose pork or chicken, then a ready-made plate (egg, rice, veg, dip) or a 12 oz frozen pack to cook at home.",
+      "Choose pork or chicken, then a ready-made plate (egg, rice & veg) or a 12 oz frozen pack to cook at home.",
   },
   {
     id: "seed-9",
     name: "Tocino — Chicken with Egg and Rice",
     description:
-      "Sweet-cured chicken marinated in the same beloved Filipino blend, pan-fried to a golden caramelized glaze. Served as a complete plate with fluffy jasmine rice, a sunny-side-up egg, fresh cucumber and tomato slices, and crispy garlic crisps. Lighter than pork, every bit as satisfying. 🥡 Includes dipping sauce on the side.",
+      "Sweet-cured chicken marinated in the same beloved Filipino blend, pan-fried to a golden caramelized glaze. Served as a complete plate with fluffy jasmine rice, a sunny-side-up egg, fresh cucumber and tomato slices, and crispy garlic crisps. Lighter than pork, every bit as satisfying. 🥡 Comes with a dipping sauce.",
     category: "Meals",
     calories: "~510",
     basePrice: TOCINO_RETAIL_USD.cookedPlate,
     sizes: [
       {
         key: "plate",
-        label: "Ready-Made Plate — includes dipping sauce",
+        label: "Ready-Made Plate",
         price: TOCINO_RETAIL_USD.cookedPlate,
       },
     ],
@@ -328,7 +328,7 @@ export const MENU_CATALOG = [
     variantShortLabel: "Chicken",
     groupCardTitle: "Tocino",
     groupServingBlurb:
-      "Choose pork or chicken, then a ready-made plate (egg, rice, veg, dip) or a 12 oz frozen pack to cook at home.",
+      "Choose pork or chicken, then a ready-made plate (egg, rice & veg) or a 12 oz frozen pack to cook at home.",
   },
   {
     id: "seed-10",
@@ -353,7 +353,7 @@ export const MENU_CATALOG = [
     variantShortLabel: "Pork",
     groupCardTitle: "Tocino",
     groupServingBlurb:
-      "Choose pork or chicken, then a ready-made plate (egg, rice, veg, dip) or a 12 oz frozen pack to cook at home.",
+      "Choose pork or chicken, then a ready-made plate (egg, rice & veg) or a 12 oz frozen pack to cook at home.",
   },
   {
     id: "seed-11",
@@ -378,13 +378,13 @@ export const MENU_CATALOG = [
     variantShortLabel: "Chicken",
     groupCardTitle: "Tocino",
     groupServingBlurb:
-      "Choose pork or chicken, then a ready-made plate (egg, rice, veg, dip) or a 12 oz frozen pack to cook at home.",
+      "Choose pork or chicken, then a ready-made plate (egg, rice & veg) or a 12 oz frozen pack to cook at home.",
   },
   {
     id: "seed-12",
     name: "Chicken Adobo",
     description:
-      "Tender bone-in chicken slow-braised in Mr. K's soy-vinegar adobo sauce with garlic, bay leaf, and peppercorns. The sauce is reduced until thick and glossy, coating every piece with that signature savory-tangy flavor. Plate: jasmine rice, a fried egg, 1 drumstick and 1 thigh, plus dipping sauce. Party tray: scaled for the group with small dipping sauces included.",
+      "Tender bone-in chicken slow-braised in Mr. K's soy-vinegar adobo sauce with garlic, bay leaf, and peppercorns. The sauce is reduced until thick and glossy, coating every piece with that signature savory-tangy flavor. Plate: jasmine rice, a fried egg, 1 drumstick and 1 thigh. Party tray: scaled for the group. 🥡 Comes with a dipping sauce.",
     category: "Meals",
     calories: "~520 (plate)",
     basePrice: ADOBO_RETAIL_USD.plate,
