@@ -65,6 +65,7 @@ export function OrderForm() {
   const [notes, setNotes] = useState("");
   const [customCheck, setCustomCheck] = useState(false);
   const [customText, setCustomText] = useState("");
+  const [wantsPrintedReceipt, setWantsPrintedReceipt] = useState(false);
   /** Customer acknowledges they will put the order # in Venmo/Zelle memo after submit. */
   const [paymentMemoAck, setPaymentMemoAck] = useState(false);
   /** Shown only when NEXT_PUBLIC_ALLOW_DEMO_CHECKOUT=true at build time; server must set ALLOW_DEMO_ORDERS_AT_CHECKOUT. */
@@ -375,6 +376,7 @@ export function OrderForm() {
         notes: notes.trim(),
         customInquiry: customCheck ? customText.trim() : null,
         subscribeUpdates: cart.newsletterOptIn,
+        wantsPrintedReceipt,
         ...(showDemoCheckout && checkoutDemo ? { isDemo: true } : {}),
       }),
     });
@@ -652,6 +654,21 @@ export function OrderForm() {
             onChange={(e) => setNotes(e.target.value)}
           />
         </label>
+        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-5 w-5 shrink-0"
+            checked={wantsPrintedReceipt}
+            onChange={(e) => setWantsPrintedReceipt(e.target.checked)}
+          />
+          <span className="leading-snug text-[var(--text)]">
+            <span className="font-semibold">Printed receipt</span>
+            <span className="text-[var(--text-muted)]">
+              {" "}
+              — include a paper copy with my pickup order
+            </span>
+          </span>
+        </label>
         <label className="flex cursor-pointer items-start gap-2 text-sm">
           <input
             type="checkbox"
@@ -712,19 +729,12 @@ export function OrderForm() {
           ) : null}
         </div>
 
-        {canSubmitOrder ? (
-          <p className="text-center text-sm font-medium text-[var(--text)]">
-            Next: order # + pay{" "}
-            <span className="text-[var(--primary)]">
-              ${cart.total.toFixed(2)}
-            </span>
-          </p>
-        ) : (
+        {!canSubmitOrder ? (
           <p className="text-sm text-[var(--text-muted)]">
             Add contact info, pickup date &amp; time, confirm the box above, and
             fix any sample choices in your cart.
           </p>
-        )}
+        ) : null}
 
         <button
           type="submit"

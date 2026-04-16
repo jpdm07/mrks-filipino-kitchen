@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
       notes?: string;
       customInquiry?: string | null;
       subscribeUpdates?: boolean;
+      wantsPrintedReceipt?: boolean;
       /** Honored only when ALLOW_DEMO_ORDERS_AT_CHECKOUT=true on the server. */
       isDemo?: boolean;
     };
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
     const allowDemoCheckout =
       process.env.ALLOW_DEMO_ORDERS_AT_CHECKOUT === "true";
     const isDemo = allowDemoCheckout && body.isDemo === true;
+    const wantsPrintedReceipt = Boolean(body.wantsPrintedReceipt);
 
     const customerName = (body.customerName ?? "").trim();
     const phone = (body.phone ?? "").trim();
@@ -183,6 +185,7 @@ export async function POST(req: NextRequest) {
             wantsRecurring: false,
             customInquiry: (body.customInquiry ?? "").trim() || null,
             subscribeUpdates: Boolean(body.subscribeUpdates),
+            wantsPrintedReceipt,
             status,
             paymentMethod,
             paymentStatus,
@@ -212,15 +215,21 @@ export async function POST(req: NextRequest) {
       throw e;
     }
 
-    const ownerSms = [
+    const ownerSmsLines: string[] = [
       `${isDemo ? "🧪 DEMO " : ""}🍽️ NEW ORDER #${orderNumber}`,
       `Customer: ${customerName} | ${phone}`,
       `Total: $${total.toFixed(2)}`,
       `Pickup: ${pickupDate} @ ${pickupTime}`,
+    ];
+    if (wantsPrintedReceipt) {
+      ownerSmsLines.push(`Printed receipt: yes — pack with pickup`);
+    }
+    ownerSmsLines.push(
       ``,
       `Customer was told to put order #${orderNumber} in Venmo/Zelle memo when paying.`,
-      `Verify payment, then confirm in admin.`,
-    ].join("\n");
+      `Verify payment, then confirm in admin.`
+    );
+    const ownerSms = ownerSmsLines.join("\n");
     const ownerSmsSent = await sendOwnerSms(ownerSms);
 
     const ownerEmailSent = await sendNewOrderEmailToOwner({
@@ -240,6 +249,7 @@ export async function POST(req: NextRequest) {
       utensilCharge: ut,
       customInquiry: (body.customInquiry ?? "").trim() || null,
       subscribeUpdates: Boolean(body.subscribeUpdates),
+      wantsPrintedReceipt,
       isDemo,
     });
 
@@ -266,6 +276,7 @@ export async function POST(req: NextRequest) {
         pickupTime,
         notes: body.notes,
         customInquiry: body.customInquiry ?? undefined,
+        wantsPrintedReceipt,
         status,
         paymentMethod,
         paymentStatus,

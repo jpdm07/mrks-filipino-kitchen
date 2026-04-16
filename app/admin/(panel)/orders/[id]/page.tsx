@@ -63,6 +63,11 @@ export default async function AdminOrderDetailPage({
           <p>
             {order.pickupDate} @ {order.pickupTime}
           </p>
+          {order.wantsPrintedReceipt ? (
+            <p className="mt-2 text-sm font-semibold text-[var(--text)]">
+              Printed receipt requested — pack with order
+            </p>
+          ) : null}
           <p>Status: {order.status}</p>
           {order.paymentMethod ? (
             <p className="mt-1 text-sm text-[var(--text-muted)]">

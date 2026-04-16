@@ -42,6 +42,7 @@ export async function sendNewOrderEmailToOwner(params: {
   utensilCharge: number;
   customInquiry: string | null;
   subscribeUpdates: boolean;
+  wantsPrintedReceipt?: boolean;
   isDemo?: boolean;
 }): Promise<boolean> {
   const to =
@@ -87,6 +88,9 @@ export async function sendNewOrderEmailToOwner(params: {
     params.notes ? `Notes: ${params.notes}` : null,
     params.customInquiry ? `Custom dish inquiry: ${params.customInquiry}` : null,
     params.subscribeUpdates ? `Newsletter opt-in: yes` : null,
+    params.wantsPrintedReceipt
+      ? `Printed receipt: yes — include with pickup bag`
+      : null,
     ``,
     `Customer should put order #${params.orderNumber} in Venmo/Zelle memo and text you after paying.`,
     `Admin: ${adminUrl}`,
@@ -112,6 +116,7 @@ export async function sendNewOrderEmailToOwner(params: {
     ${params.customInquiry ? `<p style="margin:12px 0 0;padding:12px;background:#f5f3ff;border-radius:8px;"><strong>Custom dish</strong><br/>${escapeHtml(params.customInquiry)}</p>` : ""}
     <p style="margin:20px 0 0;font-size:13px;color:#666;">
       ${params.subscribeUpdates ? "• Opted in to menu updates<br/>" : ""}
+      ${params.wantsPrintedReceipt ? "• <strong>Printed receipt</strong> requested with pickup<br/>" : ""}
       • Ask them to use order #${escapeHtml(params.orderNumber)} in Venmo/Zelle memo and text after payment.
     </p>
     <p style="margin:20px 0 0;"><a href="${escapeHtml(adminUrl)}" style="display:inline-block;background:#0038a8;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Open admin</a></p>

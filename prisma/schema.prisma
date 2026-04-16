@@ -35,6 +35,8 @@ model Order {
   paymentStatus    String?
   adminNotes       String?
   subscribeUpdates Boolean  @default(false)
+  /// Customer asked for a printed receipt packed with pickup order.
+  wantsPrintedReceipt Boolean @default(false)
   // Test / practice: excluded from finances; deletable in admin.
   isDemo             Boolean  @default(false)
 }

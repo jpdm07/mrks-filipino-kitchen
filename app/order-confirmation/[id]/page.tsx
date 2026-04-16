@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { safeDb } from "@/lib/safe-db";
@@ -166,6 +165,13 @@ export default async function OrderConfirmationPage({
 
       <SalesTaxDisclosure className="mt-4" />
 
+      {order.wantsPrintedReceipt ? (
+        <p className="mt-4 text-center text-sm text-[var(--text)]">
+          You asked for a <strong>printed receipt</strong> — we&apos;ll pack it
+          with your order at pickup.
+        </p>
+      ) : null}
+
       {order.status === ORDER_STATUS_CONFIRMED ? (
         <div className="mt-6 rounded-[var(--radius)] bg-[var(--gold-light)] p-4 text-left text-sm text-[var(--text)]">
           <p>
@@ -180,22 +186,7 @@ export default async function OrderConfirmationPage({
             .
           </p>
         </div>
-      ) : (
-        <div className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4 text-left text-sm text-[var(--text)] shadow-sm">
-          <p className="font-semibold text-[var(--text)]">
-            We start cooking after payment clears — usually same day.
-          </p>
-          <p className="mt-2 text-[var(--text-muted)]">
-            Something off?{" "}
-            <a
-              href="tel:+19797033827"
-              className="font-bold text-[var(--primary)] underline"
-            >
-              979-703-3827
-            </a>
-          </p>
-        </div>
-      )}
+      ) : null}
       {frozenLumpia ? (
         <div className="mt-4 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-section)] p-4 text-left text-sm">
           <p>
@@ -204,12 +195,6 @@ export default async function OrderConfirmationPage({
           </p>
         </div>
       ) : null}
-
-      <div className="mt-10 flex justify-center">
-        <Link href="/menu" className="btn btn-primary px-8">
-          Back to Menu
-        </Link>
-      </div>
     </div>
   );
 }

@@ -144,6 +144,7 @@ export async function syncOrderToSheets(order: {
   pickupTime?: string;
   notes?: string;
   customInquiry?: string;
+  wantsPrintedReceipt?: boolean;
   status: string;
   paymentMethod: string;
   paymentStatus: string;
@@ -186,6 +187,7 @@ export async function syncOrderToSheets(order: {
         wantsRecurring: "No",
         notes: order.notes || "",
         customInquiry: order.customInquiry || "",
+        wantsPrintedReceipt: order.wantsPrintedReceipt ? "Yes" : "No",
         status: order.status,
         paymentMethod: order.paymentMethod,
         paymentStatus: order.paymentStatus,
