@@ -91,8 +91,10 @@ export default async function AdminOrderDetailPage({
       <div className="mt-6 rounded border border-[var(--border)] bg-[var(--card)] p-4">
         <h2 className="font-bold">Customer receipt</h2>
         <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Print, save as an HTML file, or email a copy to{" "}
-          <span className="font-medium text-[var(--text)]">{order.email}</span>.
+          Print or save as HTML. <strong>Email receipt</strong> sends only to{" "}
+          <span className="font-medium text-[var(--text)]">{order.email}</span> (what
+          the customer typed at checkout). For a blind copy to your inbox, set server
+          env <span className="font-mono text-xs">RECEIPT_EMAIL_BCC</span>.
         </p>
         <div className="mt-3">
           <AdminOrderReceiptActions order={receiptRow} />

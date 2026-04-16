@@ -48,13 +48,13 @@ export async function POST(req: NextRequest) {
       itemBlock,
       unsubscribeUrl: unsub,
     });
-    const ok = await sendMail({
+    const r = await sendMail({
       to: s.email,
       subject,
       html,
       text: message,
     });
-    if (ok) sent++;
+    if (r.ok) sent++;
   }
 
   return NextResponse.json({ sent, total: subs.length });

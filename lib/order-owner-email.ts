@@ -125,12 +125,13 @@ export async function sendNewOrderEmailToOwner(params: {
 
   const demoTag = params.isDemo ? "[DEMO] " : "";
   try {
-    return await sendMail({
+    const r = await sendMail({
       to,
       subject: `${demoTag}New order #${params.orderNumber} — ${params.customerName} ($${params.total.toFixed(2)})`,
       html,
       text,
     });
+    return r.ok;
   } catch (e) {
     console.error("[orders] Owner notification email failed:", e);
     return false;

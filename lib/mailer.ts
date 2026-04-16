@@ -1,6 +1,10 @@
 import nodemailer from "nodemailer";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 
+export type MailSendResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
 function getSmtpFromAddress(): string {
   const explicit = process.env.EMAIL_FROM?.trim();
   const user = process.env.EMAIL_USER?.trim();
@@ -46,6 +50,23 @@ function getTransport() {
   });
 }
 
+function formatResendError(status: number, detail: unknown): string {
+  if (detail && typeof detail === "object") {
+    const o = detail as { message?: unknown; name?: string };
+    if (typeof o.message === "string" && o.message.trim()) {
+      return `Resend HTTP ${status}: ${o.message.trim()}`;
+    }
+    if (Array.isArray(o.message)) {
+      const parts = o.message.filter((x) => typeof x === "string") as string[];
+      if (parts.length) return `Resend HTTP ${status}: ${parts.join("; ")}`;
+    }
+  }
+  if (typeof detail === "string" && detail.trim()) {
+    return `Resend HTTP ${status}: ${detail.trim().slice(0, 400)}`;
+  }
+  return `Resend returned HTTP ${status}. Open Resend → Logs, and verify domain + RESEND_FROM_EMAIL.`;
+}
+
 async function sendMailViaResend(
   apiKey: string,
   opts: {
@@ -53,15 +74,26 @@ async function sendMailViaResend(
     subject: string;
     html: string;
     text?: string;
+    bcc?: string;
   }
-): Promise<boolean> {
+): Promise<MailSendResult> {
   const from = process.env.RESEND_FROM_EMAIL?.trim();
   if (!from) {
-    console.warn(
-      "[mailer] RESEND_API_KEY is set but RESEND_FROM_EMAIL is missing. Add a verified sender in Resend (e.g. orders@yourdomain.com)."
-    );
-    return false;
+    const msg =
+      "RESEND_FROM_EMAIL is not set. In Resend, add a verified sender (e.g. orders@yourdomain.com) and set RESEND_FROM_EMAIL to that exact value.";
+    console.warn("[mailer]", msg);
+    return { ok: false, error: msg };
   }
+
+  const bcc = opts.bcc?.trim();
+  const body: Record<string, unknown> = {
+    from,
+    to: [opts.to],
+    subject: opts.subject,
+    html: opts.html,
+    text: opts.text,
+  };
+  if (bcc) body.bcc = [bcc];
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -69,13 +101,7 @@ async function sendMailViaResend(
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      from,
-      to: [opts.to],
-      subject: opts.subject,
-      html: opts.html,
-      text: opts.text,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -85,11 +111,12 @@ async function sendMailViaResend(
     } catch {
       detail = await res.text();
     }
-    console.error("[mailer] Resend API error:", res.status, detail);
-    return false;
+    const err = formatResendError(res.status, detail);
+    console.error("[mailer] Resend API error:", err, detail);
+    return { ok: false, error: err };
   }
 
-  return true;
+  return { ok: true };
 }
 
 export async function sendMail(opts: {
@@ -97,7 +124,9 @@ export async function sendMail(opts: {
   subject: string;
   html: string;
   text?: string;
-}): Promise<boolean> {
+  /** Optional BCC (e.g. kitchen copy for receipts). Resend + SMTP supported. */
+  bcc?: string;
+}): Promise<MailSendResult> {
   const resendKey = process.env.RESEND_API_KEY?.trim();
   if (resendKey) {
     return sendMailViaResend(resendKey, opts);
@@ -106,10 +135,10 @@ export async function sendMail(opts: {
   const transport = getTransport();
   const fromAddr = getSmtpFromAddress();
   if (!transport || !fromAddr) {
-    console.warn(
-      "[mailer] Skipping send: set RESEND_API_KEY + RESEND_FROM_EMAIL, or EMAIL_USER + EMAIL_PASSWORD on the server (Vercel → Production). Yahoo/Gmail usually need an app password, not your normal login. If SMTP times out from the cloud, try EMAIL_SMTP_PORT=587 or switch to Resend."
-    );
-    return false;
+    const msg =
+      "Mail is not configured on the server. Set RESEND_API_KEY + RESEND_FROM_EMAIL, or EMAIL_USER + EMAIL_PASSWORD (and EMAIL_FROM if it differs), in Vercel → Environment Variables → Production.";
+    console.warn("[mailer]", msg);
+    return { ok: false, error: msg };
   }
 
   const fromName = getFromDisplayName();
@@ -117,11 +146,12 @@ export async function sendMail(opts: {
     await transport.sendMail({
       from: `"${fromName}" <${fromAddr}>`,
       to: opts.to,
+      bcc: opts.bcc?.trim() || undefined,
       subject: opts.subject,
       html: opts.html,
       text: opts.text,
     });
-    return true;
+    return { ok: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     let extra = "";
@@ -133,7 +163,10 @@ export async function sendMail(opts: {
       if (o.code) extra += ` nodemailerCode=${o.code}`;
     }
     console.error("[mailer] SMTP send failed:", msg + extra);
-    return false;
+    return {
+      ok: false,
+      error: `SMTP failed: ${msg}${extra ? ` (${extra.trim()})` : ""}`,
+    };
   }
 }
 

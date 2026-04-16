@@ -21,16 +21,15 @@ export async function POST(
   }
 
   const row = toAdminOrderClientRow(order, "");
-  const ok = await sendCustomerReceiptEmail(row);
-  if (!ok) {
-    return NextResponse.json(
-      {
-        error:
-          "Could not send email. On the server, set RESEND_API_KEY + RESEND_FROM_EMAIL, or EMAIL_USER + EMAIL_PASSWORD (see Vercel → Environment Variables).",
-      },
-      { status: 503 }
-    );
+  const result = await sendCustomerReceiptEmail(row);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 503 });
   }
 
-  return NextResponse.json({ success: true, emailedTo: row.email });
+  return NextResponse.json({
+    success: true,
+    emailedTo: row.email,
+    message:
+      "Receipt was sent to the customer email on this order. If you expected it in your own inbox, set RECEIPT_EMAIL_BCC in env or check the customer’s spam folder.",
+  });
 }

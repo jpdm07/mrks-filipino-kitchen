@@ -23,12 +23,15 @@ export async function POST(req: NextRequest) {
     await prisma.subscriber.create({ data: { email, name } });
 
     const base = getPublicSiteOrigin();
-    await sendMail({
+    const welcome = await sendMail({
       to: email,
       subject: "You're on the list: Mr. K's Filipino Kitchen",
       html: `<p>Mabuhay${name ? `, ${name}` : ""}!</p><p>Thanks for subscribing to updates from Mr. K's Filipino Kitchen. We'll let you know when there are new dishes and specials.</p><p><a href="${base}/menu">View our menu</a></p>`,
       text: `Thanks for subscribing to Mr. K's Filipino Kitchen updates.`,
     });
+    if (!welcome.ok) {
+      console.warn("[subscribe] Welcome email failed:", welcome.error);
+    }
 
     return NextResponse.json({ success: true });
   } catch {

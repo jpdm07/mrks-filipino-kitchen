@@ -22,14 +22,22 @@ export function AdminOrderReceiptActions({ order, onNotice }: Props) {
         `/api/admin/orders/${encodeURIComponent(order.id)}/email-receipt`,
         { method: "POST", credentials: "same-origin" }
       );
-      const data = (await res.json()) as { error?: string; emailedTo?: string };
+      const data = (await res.json()) as {
+        error?: string;
+        emailedTo?: string;
+        message?: string;
+      };
       if (!res.ok) {
-        const msg = data.error ?? "Could not send the receipt email.";
+        const msg =
+          data.error ??
+          "Could not send the receipt email. Check server mail settings (Resend or SMTP).";
         if (onNotice) onNotice({ type: "error", text: msg });
         else window.alert(msg);
         return;
       }
-      const okMsg = `Receipt emailed to ${data.emailedTo ?? order.email}.`;
+      const okMsg =
+        data.message ??
+        `Receipt emailed to ${data.emailedTo ?? order.email}. Check spam if it does not arrive.`;
       if (onNotice) onNotice({ type: "success", text: okMsg });
       else window.alert(okMsg);
     } catch {
