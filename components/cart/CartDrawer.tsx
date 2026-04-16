@@ -25,7 +25,7 @@ export function CartDrawer() {
   const { drawerOpen, closeDrawer } = cart;
   const [mounted, setMounted] = useState(false);
   const [samplesOpen, setSamplesOpen] = useState(false);
-  const [totalsOpen, setTotalsOpen] = useState(true);
+  const [totalsOpen, setTotalsOpen] = useState(false);
   const [checkoutHint, setCheckoutHint] = useState<string | null>(null);
   const [highlightLumpiaSample, setHighlightLumpiaSample] = useState(false);
   const [highlightPancitSample, setHighlightPancitSample] = useState(false);
