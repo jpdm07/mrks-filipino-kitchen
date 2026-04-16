@@ -136,7 +136,7 @@ export function buildAdminReceiptHtml(order: AdminOrderClientRow): string {
           ? `<p style="text-align:center;font-size:11px;font-weight:800;color:#92400e;background:#fef3c7;padding:6px;border-radius:6px;margin:0 0 10px;">DEMO / TEST ORDER — not for production books</p>`
           : ""
       }
-      <p class="sub">Pickup · Cypress, TX · ${escapeHtml(taxLabel)} sales tax</p>
+      <p class="sub">Pickup · Cypress, TX</p>
       <div class="row"><span>Receipt #</span><strong>${escapeHtml(order.orderNumber)}</strong></div>
       <div class="row"><span>Date</span><span>${escapeHtml(created)}</span></div>
       <div class="hr"></div>
@@ -292,7 +292,7 @@ export function buildAdminReceiptEmailHtml(order: AdminOrderClientRow): string {
 </td></tr>
 <tr><td style="padding:20px;">
 ${demoBanner}
-<p style="margin:0 0 16px;font-size:13px;color:#444;text-align:center;">Pickup · Cypress, TX · ${escapeHtml(taxLabel)} sales tax</p>
+<p style="margin:0 0 16px;font-size:13px;color:#444;text-align:center;">Pickup · Cypress, TX</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
 <tr><td style="padding:4px 0;color:#555;">Receipt #</td><td style="padding:4px 0;text-align:right;font-weight:700;">${escapeHtml(order.orderNumber)}</td></tr>
 <tr><td style="padding:4px 0;color:#555;">Date</td><td style="padding:4px 0;text-align:right;">${escapeHtml(created)}</td></tr>
