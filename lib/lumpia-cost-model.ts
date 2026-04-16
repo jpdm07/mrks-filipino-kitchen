@@ -125,6 +125,15 @@ export const LUMPIA_RETAIL_USD = {
   turkey: { cookedDozen: 12.99, frozenDozen: 12.99 },
 } as const;
 
+/** Lowest per-dozen list price across proteins and cooked/frozen (e.g. homepage “From $X”). */
+export function lumpiaCheapestDozenRetailUsd(): number {
+  let min = Number.POSITIVE_INFINITY;
+  for (const row of Object.values(LUMPIA_RETAIL_USD)) {
+    min = Math.min(min, row.cookedDozen, row.frozenDozen);
+  }
+  return min;
+}
+
 function round2(n: number) {
   return Math.round(n * 100) / 100;
 }

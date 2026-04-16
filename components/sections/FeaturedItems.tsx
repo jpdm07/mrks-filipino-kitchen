@@ -9,6 +9,7 @@ import {
 import { safeDb } from "@/lib/safe-db";
 import { overlayPublicMenuItemFromCatalog } from "@/lib/menu-catalog-merge";
 import { FALLBACK_MENU } from "@/lib/static-menu-fallback";
+import { lumpiaCheapestDozenRetailUsd } from "@/lib/lumpia-cost-model";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
 
 export async function FeaturedItems() {
@@ -56,7 +57,10 @@ export async function FeaturedItems() {
       </h2>
       <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-3 [&>*]:min-h-0 [&>*]:h-full">
         {ordered.map((item) => {
-          const price = item.sizes[0]?.price ?? item.basePrice;
+          const price =
+            item.variantGroup === "lumpia"
+              ? lumpiaCheapestDozenRetailUsd()
+              : item.sizes[0]?.price ?? item.basePrice;
           return (
             <article
               key={item.id}
