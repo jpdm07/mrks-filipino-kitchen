@@ -114,13 +114,17 @@ export function buildAdminReceiptHtml(order: AdminOrderClientRow): string {
   button.print {
     display: block;
     margin: 16px auto;
-    padding: 10px 20px;
-    font: 600 14px system-ui, sans-serif;
+    padding: 14px 24px;
+    min-height: 48px;
+    min-width: min(100%, 280px);
+    font: 600 15px system-ui, sans-serif;
     cursor: pointer;
     border-radius: 8px;
     border: 2px solid #0038a8;
     background: #0038a8;
     color: #fff;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 56, 168, 0.15);
   }
 </style>
 </head>
@@ -176,13 +180,76 @@ export function buildAdminReceiptHtml(order: AdminOrderClientRow): string {
 }
 
 /**
- * Prints the receipt without opening a new tab — avoids popup blockers and the
- * “blank tab” that `window.open` triggers in some browsers.
+ * Opens a short-lived window and prints from it (works on mobile Safari where
+ * print() from a zero-size iframe often fails). Falls back to the iframe path
+ * if pop-ups are blocked. Call only synchronously from a click/tap handler.
  */
 export function openAdminReceiptPrintWindow(order: AdminOrderClientRow): void {
   if (typeof document === "undefined") return;
 
   const html = buildAdminReceiptHtml(order);
+
+  const printFromChildWindow = (child: Window): void => {
+    const runPrint = () => {
+      try {
+        child.focus();
+        child.print();
+      } catch {
+        window.alert("Could not open the print dialog. Try “Save receipt”, open the file, then print.");
+      }
+    };
+    if (child.document.readyState === "complete") {
+      requestAnimationFrame(runPrint);
+    } else {
+      child.addEventListener("load", () => requestAnimationFrame(runPrint), {
+        once: true,
+      });
+    }
+  };
+
+  const tryNewWindow = (): Window | null => {
+    try {
+      const child = window.open("", "_blank", "noopener,noreferrer");
+      if (!child) return null;
+      child.opener = null;
+      child.document.open();
+      child.document.write(html);
+      child.document.close();
+      return child;
+    } catch {
+      return null;
+    }
+  };
+
+  const tryBlobWindow = (): Window | null => {
+    try {
+      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const child = window.open(url, "_blank", "noopener,noreferrer");
+      if (!child) {
+        URL.revokeObjectURL(url);
+        return null;
+      }
+      child.opener = null;
+      child.addEventListener(
+        "load",
+        () => {
+          window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+        },
+        { once: true }
+      );
+      return child;
+    } catch {
+      return null;
+    }
+  };
+
+  const child = tryNewWindow() ?? tryBlobWindow();
+  if (child) {
+    printFromChildWindow(child);
+    return;
+  }
+
   const iframe = document.createElement("iframe");
   iframe.setAttribute("title", "Receipt print");
   iframe.setAttribute("aria-hidden", "true");
@@ -205,7 +272,9 @@ export function openAdminReceiptPrintWindow(order: AdminOrderClientRow): void {
   const win = iframe.contentWindow;
   if (!win) {
     cleanup();
-    window.alert("Could not prepare the receipt for printing. Try again.");
+    window.alert(
+      "Could not open the print window. Allow pop-ups for this site, or use “Save receipt” and print from the file."
+    );
     return;
   }
 
@@ -215,7 +284,7 @@ export function openAdminReceiptPrintWindow(order: AdminOrderClientRow): void {
       win.print();
     } catch {
       cleanup();
-      window.alert("Could not open the print dialog. Try again.");
+      window.alert("Could not open the print dialog. Try “Save receipt” and print from the file.");
       return;
     }
     win.addEventListener("afterprint", cleanup, { once: true });

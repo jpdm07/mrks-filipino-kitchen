@@ -540,8 +540,11 @@ export function OrderForm() {
               id="checkout-email"
               name="email"
               type="email"
-              autoComplete="email"
+              autoComplete="billing email"
               inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               enterKeyHint="next"
               className={[
                 "mt-1 w-full min-h-[48px] rounded-lg border px-3 outline-none",
