@@ -138,39 +138,31 @@ export default async function OrderConfirmationPage({
               </tr>
             ))}
             {showUtensilsBlock ? (
-              <>
-                <tr className="border-b border-[var(--border)]">
-                  <td className="px-4 py-2">Utensils</td>
-                  <td className="px-4 py-2 text-right font-semibold">
-                    {order.utensilSets > 0
-                      ? `$${order.utensilCharge.toFixed(2)}`
-                      : "—"}
-                  </td>
-                </tr>
-                {order.utensilSets > 0
-                  ? (() => {
-                      const hint = formatUtensilsCheckoutSubtext(
-                        Boolean(order.wantsUtensils),
-                        order.utensilSets,
-                        order.utensilCharge,
-                        complimentaryUtensils
-                      );
-                      return hint ? (
-                        <tr
-                          key="utensils-detail"
-                          className="border-b border-[var(--border)]"
-                        >
-                          <td
-                            colSpan={2}
-                            className="px-4 pb-3 pt-0 text-xs leading-snug text-[var(--text-muted)]"
-                          >
+              <tr className="border-b border-[var(--border)]">
+                <td className="max-w-[65vw] px-3 py-2 sm:max-w-none sm:px-4">
+                  <span className="font-medium text-[var(--text)]">Utensils</span>
+                  {order.utensilSets > 0
+                    ? (() => {
+                        const hint = formatUtensilsCheckoutSubtext(
+                          Boolean(order.wantsUtensils),
+                          order.utensilSets,
+                          order.utensilCharge,
+                          complimentaryUtensils
+                        );
+                        return hint ? (
+                          <p className="mt-1 text-xs leading-snug text-[var(--text-muted)]">
                             {hint}
-                          </td>
-                        </tr>
-                      ) : null;
-                    })()
-                  : null}
-              </>
+                          </p>
+                        ) : null;
+                      })()
+                    : null}
+                </td>
+                <td className="whitespace-nowrap px-3 py-2 text-right font-semibold align-top sm:px-4">
+                  {order.utensilSets > 0
+                    ? `$${order.utensilCharge.toFixed(2)}`
+                    : "—"}
+                </td>
+              </tr>
             ) : null}
             <tr className="border-b border-[var(--border)]">
               <td className="px-4 py-2">Subtotal</td>
