@@ -158,13 +158,6 @@ export default async function OrderConfirmationPage({
 
       <SalesTaxDisclosure className="mt-4" />
 
-      {order.wantsPrintedReceipt ? (
-        <p className="mt-4 text-center text-sm text-[var(--text)]">
-          You asked for a <strong>printed receipt</strong> — we&apos;ll pack it
-          with your order at pickup.
-        </p>
-      ) : null}
-
       {order.status === ORDER_STATUS_CONFIRMED ? (
         <div className="mt-6 rounded-[var(--radius)] bg-[var(--gold-light)] p-4 text-left text-sm text-[var(--text)]">
           <p>
