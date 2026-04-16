@@ -33,29 +33,6 @@ export function cartLineQualifiesForDipAddon(line: CartLine): boolean {
   return false;
 }
 
-/** One-line cart hint for included dipping sauces (not extra purchased cups). */
-export function includedDippingSauceCartLine(line: CartLine): string | null {
-  if (!cartLineQualifiesForDipAddon(line)) return null;
-  const id = line.menuItemId;
-  const q = Math.max(1, Math.floor(line.quantity));
-  if (id === "seed-1" || id === "seed-2" || id === "seed-3") {
-    return `${2 * q} dipping sauces included (2 per dozen)`;
-  }
-  if (id === "seed-7") {
-    return `${2 * q} dipping sauces included`;
-  }
-  if ((id === "seed-8" || id === "seed-9") && line.sizeKey === "plate") {
-    return `${q} dipping sauce${q === 1 ? "" : "s"} included`;
-  }
-  if (id === "seed-12") {
-    if (line.sizeKey === "party") {
-      return "Dipping sauces included for the party tray";
-    }
-    return `${q} dipping sauce${q === 1 ? "" : "s"} included`;
-  }
-  return null;
-}
-
 export function cartQualifiesForExtraDip(
   lines: CartLine[],
   samples: SampleSelection

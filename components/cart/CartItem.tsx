@@ -4,7 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import type { CartLine } from "@/lib/cart-types";
-import { includedDippingSauceCartLine } from "@/lib/extra-dip-sauce";
+import {
+  cartLineBriefSizeDescription,
+  includedDippingSauceCountLine,
+} from "@/lib/cart-line-display";
 
 export function CartItemRow({
   line,
@@ -19,13 +22,8 @@ export function CartItemRow({
   onNavigateToMenu?: () => void;
 }) {
   const sub = line.unitPrice * line.quantity;
-  const variant =
-    line.cookedOrFrozen === "cooked"
-      ? "Cooked"
-      : line.cookedOrFrozen === "frozen"
-        ? "Frozen"
-        : "";
-  const dipLine = includedDippingSauceCartLine(line);
+  const briefSize = cartLineBriefSizeDescription(line);
+  const dipLine = includedDippingSauceCountLine(line);
   const qs = new URLSearchParams();
   if (line.cookedOrFrozen === "cooked" || line.cookedOrFrozen === "frozen") {
     qs.set("co", line.cookedOrFrozen);
@@ -55,18 +53,13 @@ export function CartItemRow({
         </div>
         <div className="min-w-0 flex-1 text-left">
           <p className="font-semibold text-[var(--text)]">{line.name}</p>
-          <p className="text-sm text-[var(--text-muted)]">
-            {line.sizeLabel}
-            {variant ? ` · ${variant}` : ""}
-          </p>
+          <p className="text-sm text-[var(--text-muted)]">{briefSize}</p>
+          {dipLine ? (
+            <p className="mt-0.5 text-sm text-[var(--text-muted)]">{dipLine}</p>
+          ) : null}
           <p className="mt-0.5 text-sm font-semibold text-[var(--text)]">
             Qty {line.quantity}
           </p>
-          {dipLine ? (
-            <p className="mt-0.5 text-xs font-medium text-[var(--primary)]">
-              {dipLine}
-            </p>
-          ) : null}
         </div>
       </Link>
       <div className="flex shrink-0 flex-col items-end gap-2">

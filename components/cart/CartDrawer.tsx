@@ -457,18 +457,18 @@ export function CartDrawer() {
             </div>
 
             <div className="border-t border-[var(--border)] bg-[var(--bg)] p-4">
+              <div className="flex items-baseline justify-between gap-3 text-lg font-bold text-[var(--primary)]">
+                <span className="text-[var(--text)]">Total</span>
+                <span>${cart.total.toFixed(2)}</span>
+              </div>
+
               <button
                 type="button"
                 onClick={() => setTotalsOpen((v) => !v)}
-                className="flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-left text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--primary)]/[0.04]"
+                className="mt-3 flex w-full items-center justify-between gap-2 py-1 text-left text-sm font-semibold text-[var(--text)] underline-offset-2 hover:underline"
                 aria-expanded={totalsOpen}
               >
-                <span className="flex min-w-0 flex-1 items-baseline justify-between gap-2">
-                  <span>Order total</span>
-                  <span className="shrink-0 font-bold text-[var(--primary)]">
-                    ${cart.total.toFixed(2)}
-                  </span>
-                </span>
+                <span>Subtotal &amp; tax</span>
                 {totalsOpen ? (
                   <ChevronUp className="h-5 w-5 shrink-0 text-[var(--text-muted)]" />
                 ) : (
@@ -476,7 +476,7 @@ export function CartDrawer() {
                 )}
               </button>
               {totalsOpen ? (
-                <div className="mt-3 space-y-1 text-sm">
+                <div className="mt-2 space-y-1 border-t border-[var(--border)]/80 pt-3 text-sm">
                   <div className="flex justify-between">
                     <span>Subtotal (items + utensils)</span>
                     <span>${cart.subtotalBeforeTax.toFixed(2)}</span>
@@ -485,15 +485,11 @@ export function CartDrawer() {
                     <span>Tax ({salesTaxPercentLabel()})</span>
                     <span>${cart.tax.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between border-t border-[var(--border)] pt-2 text-lg font-bold text-[var(--primary)]">
-                    <span>Total</span>
-                    <span>${cart.total.toFixed(2)}</span>
-                  </div>
                   <SalesTaxDisclosure className="mt-3" />
                 </div>
               ) : null}
               {checkoutHint ? (
-                <p className="mt-3 rounded-lg border border-[var(--accent)]/40 bg-[var(--gold-light)] px-3 py-2 text-sm font-medium text-[var(--text)]">
+                <p className="mt-3 text-sm font-medium text-[var(--text)]">
                   {checkoutHint}
                 </p>
               ) : null}
