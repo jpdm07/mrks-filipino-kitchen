@@ -22,10 +22,10 @@ const brandPanelStyle: CSSProperties = {
 };
 
 function BusinessCardFace({
-  orderQrHref,
+  qrHref,
   siteBaseUrl,
 }: {
-  orderQrHref: string | null;
+  qrHref: string | null;
   siteBaseUrl: string | null;
 }) {
   return (
@@ -90,12 +90,12 @@ function BusinessCardFace({
 
         <div className="mt-1 flex shrink-0 justify-end border-t border-[var(--border)] pt-1.5">
           <div className="flex w-[52px] flex-col items-center">
-            {orderQrHref ? (
+            {qrHref ? (
               <QRCodeDisplay
                 size={46}
                 resolutionScale={4}
                 showDownload={false}
-                href={orderQrHref}
+                href={qrHref}
                 className="gap-0"
               />
             ) : (
@@ -106,7 +106,7 @@ function BusinessCardFace({
               />
             )}
             <p className="mt-0.5 text-center text-[6px] font-bold uppercase leading-tight tracking-wide text-[var(--accent)]">
-              Order online
+              Visit website
             </p>
           </div>
         </div>
@@ -121,25 +121,25 @@ export function BusinessCardSheet({
 }: {
   showPrintButton?: boolean;
 }) {
-  const [orderQrHref, setOrderQrHref] = useState<string | null>(null);
+  const [qrHref, setQrHref] = useState<string | null>(null);
   const [siteBaseUrl, setSiteBaseUrl] = useState<string | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
 
   useEffect(() => {
     const base = getPublicSiteOrigin();
     setSiteBaseUrl(base);
-    setOrderQrHref(`${base}/order`);
+    setQrHref(base);
   }, []);
 
   const downloadPdf = useCallback(async () => {
-    if (!orderQrHref || pdfBusy) return;
+    if (!qrHref || pdfBusy) return;
     setPdfBusy(true);
     try {
       const { buildBusinessCardsPdfBlob } = await import(
         "./BusinessCardPdfDocument"
       );
       const blob = await buildBusinessCardsPdfBlob(
-        orderQrHref,
+        qrHref,
         siteBaseUrl ?? undefined
       );
       const url = URL.createObjectURL(blob);
@@ -153,7 +153,7 @@ export function BusinessCardSheet({
     } finally {
       setPdfBusy(false);
     }
-  }, [orderQrHref, siteBaseUrl, pdfBusy]);
+  }, [qrHref, siteBaseUrl, pdfBusy]);
 
   return (
     <>
@@ -253,14 +253,14 @@ export function BusinessCardSheet({
         className="flex flex-col items-center print:block print:text-left"
       >
         <div className="bc-preview flex w-full max-w-[336px] flex-col items-stretch px-1 sm:px-0">
-          <BusinessCardFace orderQrHref={orderQrHref} siteBaseUrl={siteBaseUrl} />
+          <BusinessCardFace qrHref={qrHref} siteBaseUrl={siteBaseUrl} />
         </div>
 
         <div className="bc-print-sheet hidden" aria-hidden>
           {Array.from({ length: CARDS_PER_SHEET }, (_, i) => (
             <BusinessCardFace
               key={i}
-              orderQrHref={orderQrHref}
+              qrHref={qrHref}
               siteBaseUrl={siteBaseUrl}
             />
           ))}

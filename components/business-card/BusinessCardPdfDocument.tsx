@@ -25,8 +25,8 @@ import { businessCardUrlDisplay, hrefWithHttps } from "@/lib/url-display";
 
 const LOGO_WORDMARK_TITLE = "Mr. K\u2019s";
 
-function siteBaseFromOrderUrl(orderUrl: string): string {
-  return orderUrl
+function siteBaseFromQrUrl(qrUrl: string): string {
+  return qrUrl
     .trim()
     .replace(/\/?order\/?$/i, "")
     .replace(/\/+$/, "");
@@ -322,17 +322,17 @@ function BrandPanel({ gradientId }: { gradientId: string }) {
 
 function SingleCard({
   qrSrc,
-  orderUrl,
+  qrUrl,
   siteBaseUrl,
   index,
 }: {
   qrSrc: string;
-  orderUrl: string;
+  qrUrl: string;
   siteBaseUrl?: string;
   index: number;
 }) {
   const websiteHref = hrefWithHttps(
-    siteBaseUrl?.trim() || siteBaseFromOrderUrl(orderUrl)
+    siteBaseUrl?.trim() || siteBaseFromQrUrl(qrUrl)
   );
   const websiteDisplay = businessCardUrlDisplay(websiteHref);
   const facebookHref = hrefWithHttps(SITE.facebookUrl);
@@ -396,24 +396,24 @@ function SingleCard({
 
 export function BusinessCardPdfDocument({
   qrSrc,
-  orderUrl,
+  qrUrl,
   siteBaseUrl,
 }: {
   qrSrc: string;
-  orderUrl: string;
+  qrUrl: string;
   siteBaseUrl?: string;
 }) {
   const rows = [0, 1, 2, 3].map((r) => (
     <View key={r} style={styles.row}>
       <SingleCard
         qrSrc={qrSrc}
-        orderUrl={orderUrl}
+        qrUrl={qrUrl}
         siteBaseUrl={siteBaseUrl}
         index={r * 2}
       />
       <SingleCard
         qrSrc={qrSrc}
-        orderUrl={orderUrl}
+        qrUrl={qrUrl}
         siteBaseUrl={siteBaseUrl}
         index={r * 2 + 1}
       />
@@ -430,10 +430,10 @@ export function BusinessCardPdfDocument({
 }
 
 export async function buildBusinessCardsPdfBlob(
-  orderUrl: string,
+  qrUrl: string,
   siteBaseUrl?: string
 ): Promise<Blob> {
-  const qrSrc = await QRCode.toDataURL(orderUrl, {
+  const qrSrc = await QRCode.toDataURL(qrUrl, {
     width: 200,
     margin: 1,
     color: { dark: "#0038a8", light: "#ffffff" },
@@ -441,7 +441,7 @@ export async function buildBusinessCardsPdfBlob(
   return pdf(
     <BusinessCardPdfDocument
       qrSrc={qrSrc}
-      orderUrl={orderUrl}
+      qrUrl={qrUrl}
       siteBaseUrl={siteBaseUrl}
     />
   ).toBlob();
