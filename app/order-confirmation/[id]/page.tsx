@@ -6,7 +6,10 @@ import { AnimatedCheck } from "@/components/order/AnimatedCheck";
 import { OrderConfirmationConfetti } from "@/components/order/OrderConfirmationConfetti";
 import type { OrderItemLine } from "@/lib/order-types";
 import { orderHasFrozenLumpia } from "@/lib/order-types";
-import { salesTaxPercentLabel } from "@/lib/config";
+import {
+  formatUtensilsCheckoutSubtext,
+  salesTaxPercentLabel,
+} from "@/lib/config";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 import { ORDER_STATUS_CONFIRMED } from "@/lib/order-payment";
 import {
@@ -128,12 +131,34 @@ export default async function OrderConfirmationPage({
             ))}
             <tr className="border-b border-[var(--border)]">
               <td className="px-4 py-2">Utensils</td>
-              <td className="px-4 py-2 text-right">
+              <td className="px-4 py-2 text-right font-semibold">
                 {order.utensilSets > 0
-                  ? `${order.utensilSets} sets · $${order.utensilCharge.toFixed(2)}`
-                  : "None"}
+                  ? `$${order.utensilCharge.toFixed(2)}`
+                  : "—"}
               </td>
             </tr>
+            {order.utensilSets > 0
+              ? (() => {
+                  const hint = formatUtensilsCheckoutSubtext(
+                    Boolean(order.wantsUtensils),
+                    order.utensilSets,
+                    order.utensilCharge
+                  );
+                  return hint ? (
+                    <tr
+                      key="utensils-detail"
+                      className="border-b border-[var(--border)]"
+                    >
+                      <td
+                        colSpan={2}
+                        className="px-4 pb-3 pt-0 text-xs leading-snug text-[var(--text-muted)]"
+                      >
+                        {hint}
+                      </td>
+                    </tr>
+                  ) : null;
+                })()
+              : null}
             <tr className="border-b border-[var(--border)]">
               <td className="px-4 py-2">Subtotal</td>
               <td className="px-4 py-2 text-right">

@@ -2,8 +2,10 @@ import { getFacebookPageUrl } from "@/lib/facebook-url";
 import { CANONICAL_SITE_ORIGIN } from "@/lib/public-site-url";
 
 export const PRICING = {
-  /** Per extra set (fork + knife + spoon) — cart, checkout, and POST /api/orders. */
+  /** Per paid set after complimentary allowance (fork + knife + spoon). */
   UTENSIL_PER_SET: 0.25,
+  /** Included free when the customer opts in to utensils (per order). */
+  COMPLIMENTARY_UTENSIL_SETS_PER_ORDER: 1,
   UTENSIL_COST_MRK: 0.095,
   /**
    * Texas sales & use tax on the customer’s taxable sale (order subtotal).
@@ -13,11 +15,74 @@ export const PRICING = {
   TAX_RATE: 0.0825,
 } as const;
 
-/** Cart/menu copy: whole cents + USD, tied to {@link PRICING.UTENSIL_PER_SET}. */
-export function utensilPerSetCustomerLabel(): string {
+/** Billable utensil fee: first {@link PRICING.COMPLIMENTARY_UTENSIL_SETS_PER_ORDER} set(s) per order are $0. */
+export function computeUtensilChargeUsd(
+  wantsUtensils: boolean,
+  utensilSets: number
+): number {
+  if (!wantsUtensils) return 0;
+  const sets = Math.min(50, Math.max(0, Math.floor(utensilSets)));
+  if (sets <= 0) return 0;
+  const billable = Math.max(
+    0,
+    sets - PRICING.COMPLIMENTARY_UTENSIL_SETS_PER_ORDER
+  );
+  return Math.round(billable * PRICING.UTENSIL_PER_SET * 100) / 100;
+}
+
+/** Short policy line for cart / checkout. */
+export function utensilsPolicyHelpText(): string {
   const u = PRICING.UTENSIL_PER_SET;
   const cents = Math.round(u * 100);
-  return `${cents}¢ per set ($${u.toFixed(2)})`;
+  const n = PRICING.COMPLIMENTARY_UTENSIL_SETS_PER_ORDER;
+  return `We include ${n} complimentary set per order (fork, knife, spoon). Each additional set is ${cents}¢ ($${u.toFixed(2)}).`;
+}
+
+/**
+ * Cart, checkout summary, and confirmation — one line (no “Utensils:” prefix).
+ * `charge` must match {@link computeUtensilChargeUsd}(wants, sets).
+ */
+export function formatUtensilsCartOneLiner(
+  wantsUtensils: boolean,
+  sets: number,
+  charge: number
+): string {
+  if (!wantsUtensils || sets <= 0) return "None";
+  if (charge <= 0) {
+    return `${sets} set${sets === 1 ? "" : "s"} — complimentary`;
+  }
+  const free = PRICING.COMPLIMENTARY_UTENSIL_SETS_PER_ORDER;
+  const paid = sets - free;
+  return `${sets} sets (${free} complimentary + ${paid} × $${PRICING.UTENSIL_PER_SET.toFixed(2)}) = $${charge.toFixed(2)}`;
+}
+
+/** Checkout summary line under the price (avoids repeating the dollar amount). */
+export function formatUtensilsCheckoutSubtext(
+  wantsUtensils: boolean,
+  sets: number,
+  charge: number
+): string | null {
+  if (!wantsUtensils || sets <= 0) return null;
+  if (charge <= 0) {
+    return `${sets} set${sets === 1 ? "" : "s"} — complimentary with your order.`;
+  }
+  const free = PRICING.COMPLIMENTARY_UTENSIL_SETS_PER_ORDER;
+  const paid = sets - free;
+  return `${free} set included; ${paid} extra at $${PRICING.UTENSIL_PER_SET.toFixed(2)} each.`;
+}
+
+/** Owner / confirmation copy (includes “Utensils:” prefix). */
+export function formatUtensilsOwnerLine(
+  wantsUtensils: boolean,
+  sets: number,
+  charge: number
+): string {
+  if (!wantsUtensils || sets <= 0) return "Utensils: none";
+  if (charge <= 0) {
+    return `Utensils: ${sets} set${sets === 1 ? "" : "s"} (complimentary)`;
+  }
+  const free = PRICING.COMPLIMENTARY_UTENSIL_SETS_PER_ORDER;
+  return `Utensils: ${sets} sets — $${charge.toFixed(2)} (${free} complimentary + ${sets - free} paid)`;
 }
 
 /** Label for receipts/UI, always in sync with PRICING.TAX_RATE. */

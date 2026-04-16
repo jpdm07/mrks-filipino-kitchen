@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { PRICING, SUGGESTION_OPTIONS } from "../lib/config";
+import { computeUtensilChargeUsd, PRICING, SUGGESTION_OPTIONS } from "../lib/config";
 import { MENU_CATALOG } from "../lib/menu-catalog";
 import { COOK_MINUTES_BY_MENU_ITEM } from "../lib/menu-capacity-catalog";
 import { FLAN_RETAIL_PER_RAMEKIN_USD } from "../lib/flan-cost-model";
@@ -150,7 +150,7 @@ async function main() {
   ];
   const itemsSub = 2 * lumpiaUnit + pancitPartyUnit;
   const demoUtensilSets = 2;
-  const ut = demoUtensilSets * PRICING.UTENSIL_PER_SET;
+  const ut = computeUtensilChargeUsd(true, demoUtensilSets);
   const sub = Math.round((itemsSub + ut) * 100) / 100;
   const tax = Math.round(sub * PRICING.TAX_RATE * 100) / 100;
   const total = Math.round((sub + tax) * 100) / 100;

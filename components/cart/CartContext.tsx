@@ -11,7 +11,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { PRICING } from "@/lib/config";
+import { computeUtensilChargeUsd, PRICING } from "@/lib/config";
 import {
   LUMPIA_SAMPLE_4PC_RETAIL_BY_PROTEIN,
   type LumpiaSampleProtein,
@@ -169,14 +169,17 @@ function readStoredCart(): {
       0,
       Math.min(EXTRA_DIP_MAX_QTY, dipRaw)
     );
+    const wantsUtensils = Boolean(data.wantsUtensils);
+    let utensilSets =
+      typeof data.utensilSets === "number"
+        ? Math.max(0, Math.min(50, Math.floor(data.utensilSets)))
+        : 0;
+    if (wantsUtensils && utensilSets < 1) utensilSets = 1;
     return {
       lines: data.lines,
       samples: data.samples,
-      wantsUtensils: Boolean(data.wantsUtensils),
-      utensilSets:
-        typeof data.utensilSets === "number"
-          ? Math.max(1, Math.min(50, Math.floor(data.utensilSets)))
-          : 1,
+      wantsUtensils,
+      utensilSets,
       newsletterOptIn: Boolean(data.newsletterOptIn),
       extraDipSauceQty,
     };
@@ -199,7 +202,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [samples, setSamples] = useState<SampleSelection>(() => emptySamples());
   const [samplePrices, setSamplePrices] = useState<SamplePrices>(defaultPrices);
   const [wantsUtensils, setWantsUtensils] = useState(false);
-  const [utensilSets, setUtensilSets] = useState(1);
+  const [utensilSets, setUtensilSets] = useState(0);
   const [newsletterOptIn, setNewsletterOptIn] = useState(false);
   const [extraDipSauceQty, setExtraDipSauceQty] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -322,7 +325,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLines([]);
     setSamples(emptySamples());
     setWantsUtensils(false);
-    setUtensilSets(1);
+    setUtensilSets(0);
     setNewsletterOptIn(false);
     setExtraDipSauceQty(0);
     setDrawerOpen(false);
@@ -347,10 +350,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return fromCart + fromSamples + dip;
   }, [lines, samples, samplePrices, extraDipSauceQty]);
 
-  const utensilCharge = useMemo(() => {
-    if (!wantsUtensils || utensilSets <= 0) return 0;
-    return utensilSets * PRICING.UTENSIL_PER_SET;
-  }, [wantsUtensils, utensilSets]);
+  const utensilCharge = useMemo(
+    () => computeUtensilChargeUsd(wantsUtensils, utensilSets),
+    [wantsUtensils, utensilSets]
+  );
 
   const subtotalBeforeTax = useMemo(
     () => itemsSubtotal + utensilCharge,

@@ -1,7 +1,10 @@
 "use client";
 
 import type { OrderItemLine } from "@/lib/order-types";
-import { PRICING, salesTaxPercentLabel } from "@/lib/config";
+import {
+  formatUtensilsCheckoutSubtext,
+  salesTaxPercentLabel,
+} from "@/lib/config";
 import { SalesTaxDisclosure } from "@/components/checkout/SalesTaxDisclosure";
 
 export function OrderSummary({
@@ -21,6 +24,12 @@ export function OrderSummary({
   tax: number;
   total: number;
 }) {
+  const utensilsHint = formatUtensilsCheckoutSubtext(
+    wantsUtensils,
+    utensilSets,
+    utensilCharge
+  );
+
   return (
     <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-5 shadow-[var(--shadow)]">
       <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold">
@@ -44,19 +53,19 @@ export function OrderSummary({
         ))}
       </ul>
       <div className="mt-4 border-t border-[var(--border)] pt-4 text-sm">
-        <div className="flex justify-between">
-          <span>
-            Utensils
-            {wantsUtensils && utensilSets > 0
-              ? ` (${utensilSets} sets @ $${PRICING.UTENSIL_PER_SET.toFixed(2)})`
-              : ""}
-          </span>
-          <span>
+        <div className="flex justify-between gap-3">
+          <span className="min-w-0 shrink font-medium">Utensils</span>
+          <span className="shrink-0 font-semibold">
             {wantsUtensils && utensilSets > 0
               ? `$${utensilCharge.toFixed(2)}`
-              : "None"}
+              : "—"}
           </span>
         </div>
+        {utensilsHint ? (
+          <p className="mt-1 text-xs leading-snug text-[var(--text-muted)]">
+            {utensilsHint}
+          </p>
+        ) : null}
         <div className="mt-3 flex justify-between font-semibold">
           <span>Subtotal</span>
           <span>${subtotal.toFixed(2)}</span>

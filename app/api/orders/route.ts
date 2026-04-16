@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { PRICING } from "@/lib/config";
+import { computeUtensilChargeUsd, PRICING } from "@/lib/config";
 import { generateOrderNumber } from "@/lib/orderNumber";
 import { sendOwnerSms } from "@/lib/twilio";
 import { sendNewOrderEmailToOwner } from "@/lib/order-owner-email";
@@ -102,8 +102,12 @@ function computeTotals(
   utensilSets: number
 ) {
   const itemsSub = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-  const sets = wantsUtensils ? Math.max(0, Math.min(50, utensilSets)) : 0;
-  const ut = wantsUtensils && sets > 0 ? sets * PRICING.UTENSIL_PER_SET : 0;
+  let sets = 0;
+  if (wantsUtensils) {
+    const raw = Math.max(0, Math.min(50, Math.floor(Number(utensilSets) || 0)));
+    sets = raw >= 1 ? raw : 1;
+  }
+  const ut = computeUtensilChargeUsd(wantsUtensils, sets);
   const sub = Math.round((itemsSub + ut) * 100) / 100;
   const tax = Math.round(sub * PRICING.TAX_RATE * 100) / 100;
   const total = Math.round((sub + tax) * 100) / 100;

@@ -8,9 +8,9 @@ import { useCart } from "./CartContext";
 import { samplesSelectionComplete } from "@/lib/cart-types";
 import { CartItemRow } from "./CartItem";
 import {
-  PRICING,
+  formatUtensilsCartOneLiner,
   salesTaxPercentLabel,
-  utensilPerSetCustomerLabel,
+  utensilsPolicyHelpText,
 } from "@/lib/config";
 import { SalesTaxDisclosure } from "@/components/checkout/SalesTaxDisclosure";
 import { CartPaymentMethodsStrip } from "@/components/payment/PaymentBrandIcons";
@@ -378,41 +378,38 @@ export function CartDrawer() {
                   🍴 Utensils (fork, knife, spoon)
                 </p>
                 <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
-                  Available upon request. Extra sets are{" "}
-                  <span className="font-medium text-[var(--text)]">
-                    {utensilPerSetCustomerLabel()}
-                  </span>{" "}
-                  and are added to your cart total when you choose them below.
+                  {utensilsPolicyHelpText()}
                 </p>
-                <div className="mt-3 flex flex-col gap-2">
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="radio"
-                      name="utensils"
-                      checked={!cart.wantsUtensils}
-                      onChange={() => {
-                        cart.setWantsUtensils(false);
-                        cart.setUtensilSets(0);
-                      }}
-                    />
-                    No thanks
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="radio"
-                      name="utensils"
-                      checked={cart.wantsUtensils}
-                      onChange={() => {
-                        cart.setWantsUtensils(true);
+                <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-[var(--border)]/60 bg-white/50 px-3 py-3">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--border)]"
+                    checked={cart.wantsUtensils}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      cart.setWantsUtensils(on);
+                      if (on) {
                         cart.setUtensilSets((s) => (s < 1 ? 1 : s));
-                      }}
-                    />
-                    Yes, add extra sets
-                  </label>
-                </div>
+                      } else {
+                        cart.setUtensilSets(0);
+                      }
+                    }}
+                  />
+                  <span>
+                    <span className="font-semibold text-[var(--text)]">
+                      Include utensils with my order
+                    </span>
+                    <span className="mt-1 block text-sm leading-snug text-[var(--text-muted)]">
+                      Check this to request utensils. Use the counter for how many
+                      sets you need for your group — your first set is free.
+                    </span>
+                  </span>
+                </label>
                 {cart.wantsUtensils ? (
-                  <div className="mt-3 flex items-center gap-2">
-                    <span className="text-sm font-medium">How many sets?</span>
+                  <div className="mt-4 flex flex-wrap items-center gap-2 pl-7">
+                    <span className="text-sm font-medium text-[var(--text)]">
+                      How many sets total?
+                    </span>
                     <button
                       type="button"
                       className="btn-qty"
@@ -421,6 +418,7 @@ export function CartDrawer() {
                           Math.max(1, cart.utensilSets - 1)
                         )
                       }
+                      aria-label="Remove one utensil set"
                     >
                       −
                     </button>
@@ -435,16 +433,21 @@ export function CartDrawer() {
                           Math.min(50, cart.utensilSets + 1)
                         )
                       }
+                      aria-label="Add one utensil set"
                     >
                       +
                     </button>
                   </div>
                 ) : null}
-                <p className="mt-3 text-sm font-semibold text-[var(--text)]">
-                  Utensil charge:{" "}
-                  {cart.wantsUtensils && cart.utensilSets > 0
-                    ? `${cart.utensilSets} sets × $${PRICING.UTENSIL_PER_SET.toFixed(2)} = $${cart.utensilCharge.toFixed(2)}`
-                    : "None"}
+                <p className="mt-4 text-sm text-[var(--text)]">
+                  <span className="font-semibold">Utensils: </span>
+                  <span className="text-[var(--text-muted)]">
+                    {formatUtensilsCartOneLiner(
+                      cart.wantsUtensils,
+                      cart.utensilSets,
+                      cart.utensilCharge
+                    )}
+                  </span>
                 </p>
               </div>
 
