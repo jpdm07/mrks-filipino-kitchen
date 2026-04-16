@@ -94,7 +94,57 @@ export const PickupCalendar = forwardRef<
     }
   );
 
+  /** True when this cart’s kitchen load hides at least one date that would open for a lighter cart. */
+  const [fewerDatesForThisCart, setFewerDatesForThisCart] = useState(false);
+
   const openSet = useMemo(() => new Set(openDates), [openDates]);
+
+  useEffect(() => {
+    const needsCompare =
+      (cartMode === "mixed" && (mainCookNeed > 0 || flanRamekinsNeed > 0)) ||
+      (cartMode === "flan" && flanRamekinsNeed > 0);
+    if (!needsCompare) {
+      setFewerDatesForThisCart(false);
+      return;
+    }
+
+    let cancelled = false;
+    const qs = (main: number, flan: number) =>
+      `from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&cartMode=${encodeURIComponent(cartMode)}&mainNeed=${encodeURIComponent(String(main))}&flanNeed=${encodeURIComponent(String(flan))}`;
+
+    Promise.all([
+      fetch(`/api/availability?${qs(0, 0)}`, { cache: "no-store" }),
+      fetch(`/api/availability?${qs(mainCookNeed, flanRamekinsNeed)}`, {
+        cache: "no-store",
+      }),
+    ])
+      .then(async ([rb, rw]) => {
+        if (cancelled) return;
+        if (!rb.ok || !rw.ok) {
+          setFewerDatesForThisCart(false);
+          return;
+        }
+        const jb = (await rb.json()) as { openDates?: unknown };
+        const jw = (await rw.json()) as { openDates?: unknown };
+        const base = Array.isArray(jb.openDates)
+          ? jb.openDates.filter((d): d is string => typeof d === "string")
+          : [];
+        const weighted = new Set(
+          Array.isArray(jw.openDates)
+            ? jw.openDates.filter((d): d is string => typeof d === "string")
+            : []
+        );
+        const narrowed = base.some((d) => !weighted.has(d));
+        setFewerDatesForThisCart(narrowed);
+      })
+      .catch(() => {
+        if (!cancelled) setFewerDatesForThisCart(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [from, to, cartMode, mainCookNeed, flanRamekinsNeed]);
 
   useEffect(() => {
     if (loading || loadError) return;
@@ -162,6 +212,14 @@ export const PickupCalendar = forwardRef<
       {loadError ? (
         <p className="text-xs font-medium text-[var(--accent)]">
           Could not load availability. Please refresh or try again.
+        </p>
+      ) : null}
+      {fewerDatesForThisCart && !loading && !loadError ? (
+        <p className="rounded-lg border border-[var(--border)] bg-[var(--bg-section)] px-3 py-2 text-sm leading-snug text-[var(--text)]">
+          <span className="font-medium">Kindly note:</span> We only show pickup
+          days when your whole order fits what we can take on; a busier week
+          means fewer openings. Thank you for understanding—another date often
+          helps.
         </p>
       ) : null}
       <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-[var(--text-muted)]">
@@ -264,8 +322,17 @@ export const PickupCalendar = forwardRef<
       </div>
       {noDatesInRange ? (
         <p className="rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-3 py-2 text-sm text-[var(--text)]">
-          No pickup dates are currently available. Please check back soon or
-          contact us at{" "}
+          {(cartMode === "mixed" &&
+            (mainCookNeed > 0 || flanRamekinsNeed > 0)) ||
+          (cartMode === "flan" && flanRamekinsNeed > 0) ? (
+            <span className="mb-2 block font-medium">
+              With this cart, nothing in this month lines up with what we can
+              offer right now—try another month, or call us and we&apos;ll do
+              our best to help.
+            </span>
+          ) : null}
+          No pickup dates are currently available in this view. Please check
+          back soon or contact us at{" "}
           <a href="tel:+19797033827" className="font-bold text-[var(--primary)]">
             979-703-3827
           </a>

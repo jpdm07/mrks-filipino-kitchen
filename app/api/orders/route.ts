@@ -338,7 +338,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             error:
-              "That pickup week just filled up while you were checking out. Please go back and select a different date.",
+              "We can't take this order for that pickup week anymore—our schedule filled up. Please choose another open date; thank you for your patience.",
           },
           { status: 409 }
         );
