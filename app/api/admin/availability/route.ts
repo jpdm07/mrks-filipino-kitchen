@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
-import { getAvailabilityMapForRange } from "@/lib/availability-server";
+import { getAdminAvailabilityMapForRange } from "@/lib/availability-server";
 import { eachYmdInRangeInclusive } from "@/lib/availability-range";
 import {
   ALL_ITEMS_DAY_NOTE,
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
   const from = `${year}-${String(month).padStart(2, "0")}-01`;
   const last = lastDayOfMonth(year, month - 1);
   const to = `${year}-${String(month).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
-  const days = await getAvailabilityMapForRange(from, to);
+  const days = await getAdminAvailabilityMapForRange(from, to);
   return NextResponse.json({ from, to, days });
 }
 

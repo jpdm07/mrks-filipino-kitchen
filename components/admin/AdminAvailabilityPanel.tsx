@@ -5,7 +5,16 @@ import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
 import { isFlanPickupOnlyNote } from "@/lib/kitchen-schedule";
 import { FlanPickupDayBadge } from "@/components/calendar/FlanPickupDayBadge";
 
-type DayMap = Record<string, { isOpen: boolean; note: string; slots: string[] }>;
+type DayMap = Record<
+  string,
+  {
+    isOpen: boolean;
+    note: string;
+    slots: string[];
+    /** Checkout offers this day (schedule + DB + capacity); may be true when DB row is closed/missing. */
+    customerFacingOpen?: boolean;
+  }
+>;
 
 const ALL_SLOT_LABELS = pickupTimeSlotLabels();
 
@@ -106,11 +115,23 @@ export function AdminAvailabilityPanel() {
         j && typeof j === "object" && "days" in j
           ? (j as { days: unknown }).days
           : null;
-      setDays(
-        daysPayload && typeof daysPayload === "object" && !Array.isArray(daysPayload)
-          ? (daysPayload as DayMap)
-          : {}
-      );
+      if (daysPayload && typeof daysPayload === "object" && !Array.isArray(daysPayload)) {
+        const raw = daysPayload as Record<string, Record<string, unknown>>;
+        const normalized: DayMap = {};
+        for (const [ymd, row] of Object.entries(raw)) {
+          normalized[ymd] = {
+            isOpen: row.isOpen === true,
+            note: typeof row.note === "string" ? row.note : "",
+            slots: Array.isArray(row.slots)
+              ? row.slots.filter((x): x is string => typeof x === "string")
+              : [],
+            customerFacingOpen: row.customerFacingOpen === true,
+          };
+        }
+        setDays(normalized);
+      } else {
+        setDays({});
+      }
     } catch {
       setMsg("Could not load availability (network error). Check your connection and try again.");
     } finally {
@@ -548,10 +569,13 @@ export function AdminAvailabilityPanel() {
                 return <div key={`e-${idx}`} className="aspect-square" />;
               }
               const ymd = cell.ymd;
-              const open = days[ymd]?.isOpen === true;
+              const dbOpen = days[ymd]?.isOpen === true;
+              const customerOpen = days[ymd]?.customerFacingOpen === true;
+              const showOpen = dbOpen || customerOpen;
+              const scheduleOnly = customerOpen && !dbOpen;
               const sel = selected === ymd;
               const flanOpen =
-                open && isFlanPickupOnlyNote(days[ymd]?.note);
+                showOpen && isFlanPickupOnlyNote(days[ymd]?.note);
               return (
                 <button
                   key={ymd}
@@ -561,13 +585,19 @@ export function AdminAvailabilityPanel() {
                     e.preventDefault();
                     toggleDay(ymd);
                   }}
-                  title="Click to select (edit note). Double-click to toggle open/closed."
+                  title={
+                    scheduleOnly
+                      ? "Open at checkout from the weekly schedule — no DB row yet. Double-click to add/remove a saved day."
+                      : "Click to select (edit note). Double-click to toggle open/closed."
+                  }
                   className={[
                     "flex aspect-square flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border px-0.5 py-0.5 text-sm font-semibold",
-                    open
+                    showOpen
                       ? flanOpen
                         ? "border-amber-500 bg-amber-100 text-amber-950"
-                        : "border-emerald-600 bg-emerald-100 text-emerald-900"
+                        : scheduleOnly
+                          ? "border-sky-600 bg-sky-100 text-sky-950"
+                          : "border-emerald-600 bg-emerald-100 text-emerald-900"
                       : "border-[var(--border)] bg-[var(--bg-section)] text-[var(--text-muted)]",
                     sel ? "ring-2 ring-[var(--primary)]" : "",
                   ].join(" ")}
@@ -582,15 +612,27 @@ export function AdminAvailabilityPanel() {
           </div>
         </div>
         <p className="mt-2 text-xs text-[var(--text-muted)]">
-          Green = available · Amber + “Flan only” = open with a flan-pickup-only
-          note · Gray = unavailable · Double-click toggles · Click once to add a
-          note below
+          <strong>Green</strong> = saved open in the database ·{" "}
+          <strong>Sky</strong> = open at checkout from the weekly schedule (often
+          Friday evening) even before Google/DB has a row — matches the customer
+          calendar · <strong>Amber</strong> + “Flan only” = flan-pickup note ·{" "}
+          <strong>Gray</strong> = not offered · Double-click toggles the saved
+          row · Click once to edit note/slots below
         </p>
       </div>
 
       {selected ? (
         <div className="max-w-lg rounded-lg border border-[var(--border)] bg-[var(--card)] p-4">
           <p className="font-bold">Note for {selected}</p>
+          {days[selected]?.customerFacingOpen &&
+          !days[selected]?.isOpen ? (
+            <p className="mt-2 rounded-md border border-sky-500/50 bg-sky-50 px-2 py-1.5 text-xs text-sky-950">
+              This day appears on the customer calendar from the kitchen schedule
+              (same rules as checkout). There isn&apos;t a database row yet—
+              double-click the day on the grid to add one if you want custom notes
+              or Saturday-style slot lists.
+            </p>
+          ) : null}
           {days[selected]?.isOpen &&
           isFlanPickupOnlyNote(days[selected]?.note) ? (
             <p className="mt-2 rounded-md border border-amber-500/50 bg-amber-50 px-2 py-1.5 text-xs font-semibold text-amber-950">

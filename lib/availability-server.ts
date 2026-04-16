@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { eachYmdInRangeInclusive } from "@/lib/availability-range";
+import { buildKitchenOpenDatesPayload } from "@/lib/kitchen-availability-merge";
 import { getTakenPickupTimeLabelsForDate } from "@/lib/pickup-slot-holds";
 import {
   isLegacyFullThirtyMinuteSlotGrid,
@@ -10,6 +11,11 @@ const ALL_SLOTS = pickupTimeSlotLabels();
 const SLOT_SET = new Set(ALL_SLOTS);
 
 export type DayAvailability = { isOpen: boolean; note: string; slots: string[] };
+
+/** Admin calendar: checkout would offer this date (mixed cart, baseline load). */
+export type AdminDayAvailability = DayAvailability & {
+  customerFacingOpen: boolean;
+};
 
 function parseStoredSlots(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
@@ -59,6 +65,32 @@ export async function getAvailabilityMapForRange(
     };
   }
   return map;
+}
+
+/**
+ * Admin month view aligned with checkout: same merge as `buildKitchenOpenDatesPayload`
+ * (kitchen week + Saturday DB + capacity baseline). Fridays can be customer-open without
+ * a DB row; `customerFacingOpen` reflects that. `isOpen` stays the database flag.
+ */
+export async function getAdminAvailabilityMapForRange(
+  fromYmd: string,
+  toYmd: string
+): Promise<Record<string, AdminDayAvailability>> {
+  const base = await getAvailabilityMapForRange(fromYmd, toYmd);
+  const { openDates } = await buildKitchenOpenDatesPayload(fromYmd, toYmd, {
+    cartFlanOnly: false,
+    mainMinutesNeeded: 0,
+    flanRamekinsNeeded: 0,
+  });
+  const openSet = new Set(openDates);
+  const out: Record<string, AdminDayAvailability> = {};
+  for (const ymd of Object.keys(base)) {
+    out[ymd] = {
+      ...base[ymd],
+      customerFacingOpen: openSet.has(ymd),
+    };
+  }
+  return out;
 }
 
 export type OpenPickupDate = { date: string; note: string };
