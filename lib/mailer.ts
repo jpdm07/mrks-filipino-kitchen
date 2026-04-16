@@ -136,7 +136,7 @@ export async function sendMail(opts: {
   const fromAddr = getSmtpFromAddress();
   if (!transport || !fromAddr) {
     const msg =
-      "Mail is not configured on the server. Set RESEND_API_KEY + RESEND_FROM_EMAIL, or EMAIL_USER + EMAIL_PASSWORD (and EMAIL_FROM if it differs), in Vercel → Environment Variables → Production.";
+      "Mail is not configured on the server. Without Resend: set EMAIL_USER + EMAIL_PASSWORD (Yahoo/Gmail app password), and EMAIL_FROM if the sender address is not the same as EMAIL_USER. On Vercel, add those under Production → Environment Variables. (Optional: Resend later with RESEND_API_KEY + RESEND_FROM_EMAIL.)";
     console.warn("[mailer]", msg);
     return { ok: false, error: msg };
   }

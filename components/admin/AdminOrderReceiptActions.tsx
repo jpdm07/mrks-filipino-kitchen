@@ -30,7 +30,7 @@ export function AdminOrderReceiptActions({ order, onNotice }: Props) {
       if (!res.ok) {
         const msg =
           data.error ??
-          "Could not send the receipt email. Check server mail settings (Resend or SMTP).";
+          "Could not send the receipt email. Check server env: EMAIL_USER + EMAIL_PASSWORD (SMTP), or Resend when you add it.";
         if (onNotice) onNotice({ type: "error", text: msg });
         else window.alert(msg);
         return;
