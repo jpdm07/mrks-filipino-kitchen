@@ -48,23 +48,14 @@ class CapacityExceededError extends Error {
 const PRINTED_RECEIPT_NOTE =
   "[Printed receipt requested — pack with order]";
 
-/** Production DB may lag migrations (Vercel skips migrate deploy unless opted in). */
-function isMissingWantsPrintedReceiptColumnError(err: unknown): boolean {
-  if (!(err instanceof Prisma.PrismaClientKnownRequestError)) return false;
-  if (err.code !== "P2022") return false;
-  const meta = err.meta;
-  const col =
-    meta &&
-    typeof meta === "object" &&
-    "column" in meta &&
-    typeof (meta as { column?: unknown }).column === "string"
-      ? (meta as { column: string }).column
-      : "";
-  const msg = err.message.toLowerCase();
-  return (
-    col.toLowerCase().includes("wantsprintedreceipt") ||
-    msg.includes("wantsprintedreceipt")
-  );
+/** Column Prisma reports for P2022 (shape varies by DB/driver). */
+function prismaP2022ColumnHint(err: unknown): string {
+  if (!(err instanceof Prisma.PrismaClientKnownRequestError) || err.code !== "P2022") {
+    return "";
+  }
+  const meta = err.meta as { column?: unknown } | undefined;
+  if (meta && typeof meta.column === "string") return meta.column;
+  return err.message;
 }
 
 function notesWithPrintedReceiptFallback(
@@ -120,7 +111,13 @@ function computeTotals(
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as {
+    let parsed: unknown;
+    try {
+      parsed = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    const body = parsed as {
       customerName?: string;
       phone?: string;
       email?: string;
@@ -206,7 +203,19 @@ export async function POST(req: NextRequest) {
       utensilSets
     );
 
-    const orderNumber = await generateOrderNumber();
+    let orderNumber: string;
+    try {
+      orderNumber = await generateOrderNumber();
+    } catch (counterErr) {
+      console.error("[orders] OrderCounter / generateOrderNumber failed:", counterErr);
+      return NextResponse.json(
+        {
+          error:
+            "We couldn't start your order (database setup). Run: npx prisma migrate deploy. Or call/text 979-703-3827.",
+        },
+        { status: 503 }
+      );
+    }
 
     const status = ORDER_STATUS_PENDING_PAYMENT_VERIFICATION;
     const paymentMethod = PAYMENT_METHOD_UNVERIFIED;
@@ -249,28 +258,52 @@ export async function POST(req: NextRequest) {
           status,
           paymentMethod,
           paymentStatus,
-          isDemo,
         };
-        try {
-          return await tx.order.create({
-            data: {
-              ...common,
-              notes: baseNotes,
-              wantsPrintedReceipt,
-            },
-          });
-        } catch (e) {
-          if (!isMissingWantsPrintedReceiptColumnError(e)) throw e;
-          return await tx.order.create({
-            data: {
-              ...common,
-              notes: notesWithPrintedReceiptFallback(
-                baseNotes,
-                wantsPrintedReceipt
-              ),
-            },
-          });
+
+        let notesForRow = baseNotes;
+        let omitWantsPrintedReceipt = false;
+        let omitIsDemo = false;
+
+        for (let attempt = 0; attempt < 12; attempt++) {
+          const data = {
+            ...common,
+            notes: notesForRow,
+            ...(!omitWantsPrintedReceipt && wantsPrintedReceipt
+              ? { wantsPrintedReceipt: true as const }
+              : {}),
+            ...(!omitIsDemo ? { isDemo } : {}),
+          } satisfies Record<string, unknown>;
+
+          try {
+            return await tx.order.create({
+              data: data as Prisma.OrderCreateInput,
+            });
+          } catch (e) {
+            if (
+              !(e instanceof Prisma.PrismaClientKnownRequestError) ||
+              e.code !== "P2022"
+            ) {
+              throw e;
+            }
+            const hint = prismaP2022ColumnHint(e).toLowerCase();
+            let handled = false;
+            if (hint.includes("wantsprintedreceipt")) {
+              if (wantsPrintedReceipt && !omitWantsPrintedReceipt) {
+                notesForRow = notesWithPrintedReceiptFallback(
+                  baseNotes,
+                  wantsPrintedReceipt
+                );
+              }
+              omitWantsPrintedReceipt = true;
+              handled = true;
+            } else if (hint.includes("isdemo")) {
+              omitIsDemo = true;
+              handled = true;
+            }
+            if (!handled) throw e;
+          }
         }
+        throw new Error("Order create: migration fallback exhausted");
       });
     } catch (e) {
       if (e instanceof PickupSlotTakenError) {
@@ -421,6 +454,14 @@ export async function POST(req: NextRequest) {
             devCode: code,
           }
         : {};
-    return NextResponse.json({ error: "Server error", ...devDetail }, { status: 500 });
+    return NextResponse.json(
+      {
+        error:
+          "Something went wrong saving your order. Try again, or call/text 979-703-3827. If you manage the site: confirm DATABASE_URL and run npx prisma migrate deploy.",
+        ...(code ? { prismaCode: code } : {}),
+        ...devDetail,
+      },
+      { status: 500 }
+    );
   }
 }

@@ -385,6 +385,7 @@ export function OrderForm() {
       devHint?: string;
       devDetail?: string;
       devCode?: string | null;
+      prismaCode?: string | null;
       orderNumber?: string;
     };
     setLoading(false);
@@ -398,9 +399,13 @@ export function OrderForm() {
         typeof data.devDetail === "string" && data.devDetail.trim()
           ? `\n\n[debug] ${data.devCode ? `${data.devCode}: ` : ""}${data.devDetail.trim()}`
           : "";
+      const prismaHint =
+        typeof data.prismaCode === "string" && data.prismaCode.trim()
+          ? `\n\n(Error code: ${data.prismaCode.trim()})`
+          : "";
       setErr(
-        hint || devExtra
-          ? `${msg}${hint ? `\n\n${hint}` : ""}${devExtra}`
+        hint || devExtra || prismaHint
+          ? `${msg}${hint ? `\n\n${hint}` : ""}${devExtra}${prismaHint}`
           : msg
       );
       return;
