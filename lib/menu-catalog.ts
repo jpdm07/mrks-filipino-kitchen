@@ -180,7 +180,7 @@ export const MENU_CATALOG = [
     id: "seed-4",
     name: "Pancit: Chicken",
     description:
-      "Rice vermicelli noodles stir-fried with tender chicken, cabbage, carrots, and a savory soy–fish sauce. A Filipino birthday classic symbolizing long life. Garlic crisps on top; lime on the side. Order 1 serving (single to-go container), 2–4 servings, or a full party tray (8–10).",
+      "Rice vermicelli noodles stir-fried with tender chicken, cabbage, carrots, and a savory soy–fish sauce. A Filipino birthday classic symbolizing long life. Garlic crisps on top; lime on the side. Order 1 serving (single to-go container), 2–4 servings (9×9 container), or a full party tray (8–10).",
     category: "Meals",
     calories: "~320 cal/serving",
     basePrice: 10.99,
@@ -192,7 +192,7 @@ export const MENU_CATALOG = [
       },
       {
         key: "twoFour",
-        label: "Chicken — 2–4 servings",
+        label: "Chicken — 2–4 servings (9×9 container)",
         price: 25,
       },
       {
@@ -209,13 +209,13 @@ export const MENU_CATALOG = [
     variantShortLabel: "Chicken",
     groupCardTitle: "Pancit",
     groupServingBlurb:
-      "1 serving: single to-go container with a lime wedge. 2–4 servings: scaled tray for a few people. Party: full 9×13 tray, 8–10 servings, limes for the group.",
+      "1 serving: single to-go container with a lime wedge. 2–4 servings: 9×9 container. Party: full 9×13 tray, 8–10 servings, limes for the group.",
   },
   {
     id: "seed-5",
     name: "Pancit: Shrimp",
     description:
-      "Perfectly seasoned bihon noodles with plump shrimp, cabbage, carrots, and garlic crisps. A seafood lover's favorite. Order 1 serving (single to-go container), 2–4 servings, or a full party tray (8–10).",
+      "Perfectly seasoned bihon noodles with plump shrimp, cabbage, carrots, and garlic crisps. A seafood lover's favorite. Order 1 serving (single to-go container), 2–4 servings (9×9 container), or a full party tray (8–10).",
     category: "Meals",
     calories: "~290 cal/serving",
     basePrice: 12.99,
@@ -227,7 +227,7 @@ export const MENU_CATALOG = [
       },
       {
         key: "twoFour",
-        label: "Shrimp — 2–4 servings",
+        label: "Shrimp — 2–4 servings (9×9 container)",
         price: 28,
       },
       {
@@ -244,7 +244,7 @@ export const MENU_CATALOG = [
     variantShortLabel: "Shrimp",
     groupCardTitle: "Pancit",
     groupServingBlurb:
-      "1 serving: single to-go container, plump shrimp, lime wedge. 2–4 servings: scaled tray. Party: full 9×13 for the group, limes included.",
+      "1 serving: single to-go container, plump shrimp, lime wedge. 2–4 servings: 9×9 container. Party: full 9×13 for the group, limes included.",
   },
   {
     id: "seed-6",
