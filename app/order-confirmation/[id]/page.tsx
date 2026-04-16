@@ -105,13 +105,6 @@ export default async function OrderConfirmationPage({
             amountDue={order.total}
           />
         </div>
-        <p className="mt-4 rounded-lg border border-[var(--gold)] bg-[var(--gold-light)] px-3 py-2 text-sm text-[var(--text)]">
-          <strong>Memo:</strong>{" "}
-          <span className="font-mono font-semibold text-[var(--primary)]">
-            {order.orderNumber}
-          </span>{" "}
-          (Venmo fills this when you tap Pay.)
-        </p>
       </div>
 
       <div className="mt-8 overflow-x-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] text-left shadow-[var(--shadow)]">
