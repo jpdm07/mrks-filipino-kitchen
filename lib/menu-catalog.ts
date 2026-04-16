@@ -270,7 +270,7 @@ export const MENU_CATALOG = [
     id: "seed-7",
     name: "Quail Eggs (10 pcs)",
     description:
-      "Fresh quail eggs coated in seasoned flour, deep-fried until crisp, and served with the same dipping sauce profile as lumpia. 🥡 Comes with 2 dipping sauces.",
+      "Fresh quail eggs coated in seasoned flour, deep-fried until crisp. 🥡 Comes with 2 dipping sauces.",
     category: "Sides",
     calories: "~165 cal / 10 pcs (breaded)",
     basePrice: 7.99,
