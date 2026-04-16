@@ -3,9 +3,10 @@ import { isExtraDipOrderLine } from "@/lib/extra-dip-sauce";
 import type { OrderItemLine } from "@/lib/order-types";
 
 /**
- * Counts ready-made tocino plates, single-serving pancit orders, and pancit
- * sample containers — each maps to one complimentary utensil set (on top of
- * the per-order minimum in `PRICING.COMPLIMENTARY_UTENSIL_SETS_PER_ORDER`.
+ * Counts ready-made tocino plates, pancit single (1-serving) or 2–4 serving
+ * lines, and pancit sample containers — each maps to one complimentary
+ * utensil set (on top of the per-order minimum in
+ * `PRICING.COMPLIMENTARY_UTENSIL_SETS_PER_ORDER`.
  */
 export function plateBasedUtensilComplimentaryBasisFromOrderItems(
   items: OrderItemLine[]
@@ -19,11 +20,17 @@ export function plateBasedUtensilComplimentaryBasisFromOrderItems(
     }
     const id = i.menuItemId ?? "";
     const sk = i.sizeKey ?? "";
-    if ((id === "seed-8" || id === "seed-9") && sk === "plate") {
+    if (
+      (id === "seed-8" || id === "seed-9") &&
+      sk === "plate"
+    ) {
       n += i.quantity;
       continue;
     }
-    if ((id === "seed-4" || id === "seed-5") && sk === "small") {
+    if (
+      (id === "seed-4" || id === "seed-5") &&
+      (sk === "small" || sk === "twoFour")
+    ) {
       n += i.quantity;
       continue;
     }
@@ -36,11 +43,27 @@ export function plateBasedUtensilComplimentaryBasisFromOrderItems(
       n += i.quantity;
       continue;
     }
-    if (nameLower.startsWith("pancit:") && sk === "small") {
+    if (
+      nameLower.startsWith("pancit:") &&
+      (sk === "small" || sk === "twoFour")
+    ) {
       n += i.quantity;
     }
   }
   return n;
+}
+
+/**
+ * Order confirmation: show utensils subtext only for plate-style lines (or
+ * when the customer paid for extra utensil sets). Hide for lumpia/quail-only
+ * style carts where the subtext would only restate the default free set.
+ */
+export function shouldShowComplimentaryUtensilsHintFromOrderItems(
+  items: OrderItemLine[],
+  utensilChargeUsd: number
+): boolean {
+  if (utensilChargeUsd > 0) return true;
+  return plateBasedUtensilComplimentaryBasisFromOrderItems(items) > 0;
 }
 
 export function complimentaryUtensilAllowanceFromOrderItems(

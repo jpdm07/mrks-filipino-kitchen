@@ -10,7 +10,10 @@ import {
   formatUtensilsCheckoutSubtext,
   salesTaxPercentLabel,
 } from "@/lib/config";
-import { complimentaryUtensilAllowanceFromOrderItems } from "@/lib/utensils-allowance";
+import {
+  complimentaryUtensilAllowanceFromOrderItems,
+  shouldShowComplimentaryUtensilsHintFromOrderItems,
+} from "@/lib/utensils-allowance";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 import { ORDER_STATUS_CONFIRMED } from "@/lib/order-payment";
 import {
@@ -139,7 +142,11 @@ export default async function OrderConfirmationPage({
                   : "—"}
               </td>
             </tr>
-            {order.utensilSets > 0
+            {order.utensilSets > 0 &&
+            shouldShowComplimentaryUtensilsHintFromOrderItems(
+              items,
+              order.utensilCharge
+            )
               ? (() => {
                   const hint = formatUtensilsCheckoutSubtext(
                     Boolean(order.wantsUtensils),

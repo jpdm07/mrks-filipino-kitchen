@@ -30,14 +30,6 @@ export function computeUtensilChargeUsd(
   return Math.round(billable * PRICING.UTENSIL_PER_SET * 100) / 100;
 }
 
-/** Short policy line for cart / checkout. */
-export function utensilsPolicyHelpText(): string {
-  const u = PRICING.UTENSIL_PER_SET;
-  const cents = Math.round(u * 100);
-  const n = PRICING.COMPLIMENTARY_UTENSIL_SETS_PER_ORDER;
-  return `We include at least ${n} complimentary utensil set per order, plus 1 per ready-made tocino plate, per single pancit serving, and per pancit sample. Each set beyond that total is ${cents}¢ ($${u.toFixed(2)}).`;
-}
-
 /**
  * Cart, checkout summary, and confirmation — one line (no “Utensils:” prefix).
  * `charge` must match {@link computeUtensilChargeUsd}(wants, sets, complimentarySets).

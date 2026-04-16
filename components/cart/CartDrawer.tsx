@@ -10,7 +10,6 @@ import { CartItemRow } from "./CartItem";
 import {
   formatUtensilsCartOneLiner,
   salesTaxPercentLabel,
-  utensilsPolicyHelpText,
 } from "@/lib/config";
 import { SalesTaxDisclosure } from "@/components/checkout/SalesTaxDisclosure";
 import { CartPaymentMethodsStrip } from "@/components/payment/PaymentBrandIcons";
@@ -377,10 +376,7 @@ export function CartDrawer() {
                 <p className="font-semibold text-[var(--text)]">
                   🍴 Utensils
                 </p>
-                <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
-                  {utensilsPolicyHelpText()}
-                </p>
-                <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-[var(--border)]/60 bg-white/50 px-3 py-3">
+                <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-lg border border-[var(--border)]/60 bg-white/50 px-3 py-3">
                   <input
                     type="checkbox"
                     className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--border)]"
@@ -389,7 +385,8 @@ export function CartDrawer() {
                       const on = e.target.checked;
                       cart.setWantsUtensils(on);
                       if (on) {
-                        cart.setUtensilSets((s) => (s < 1 ? 1 : s));
+                        const min = cart.complimentaryUtensilAllowance;
+                        cart.setUtensilSets((s) => Math.max(min, s));
                       } else {
                         cart.setUtensilSets(0);
                       }
@@ -400,8 +397,7 @@ export function CartDrawer() {
                       Include utensils with my order
                     </span>
                     <span className="mt-1 block text-sm leading-snug text-[var(--text-muted)]">
-                      Check this to request utensils. Use the counter for how many
-                      sets you need for your group — your first set is free.
+                      Use +/− for how many sets your group needs.
                     </span>
                   </span>
                 </label>
@@ -415,7 +411,10 @@ export function CartDrawer() {
                       className="btn-qty"
                       onClick={() =>
                         cart.setUtensilSets(
-                          Math.max(1, cart.utensilSets - 1)
+                          Math.max(
+                            cart.complimentaryUtensilAllowance,
+                            cart.utensilSets - 1
+                          )
                         )
                       }
                       aria-label="Remove one utensil set"
