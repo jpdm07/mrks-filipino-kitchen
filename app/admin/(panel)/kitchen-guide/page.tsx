@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 
 const RECIPES = [
@@ -20,7 +21,15 @@ export default async function KitchenGuidePage() {
         Kitchen & shopping guide
       </h1>
       <p className="text-base text-[var(--text-muted)]">
-        Owner reference only — static copy. Use the print dialog on the shopping list below for a paper copy.
+        Owner reference only — static copy. For a budgeted, printable list with
+        checkboxes, open{" "}
+        <Link
+          href="/admin/grocery-list"
+          className="font-semibold text-[var(--primary)] underline"
+        >
+          Grocery trip planner
+        </Link>
+        .
       </p>
       <div className="rounded-lg border-2 border-[#FFC200] bg-[var(--gold-light)] p-4 text-sm">
         <strong className="text-[#0038A8]">Print shopping list</strong>

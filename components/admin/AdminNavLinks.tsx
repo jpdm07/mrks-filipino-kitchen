@@ -67,6 +67,12 @@ const LINK_DEFS: {
     badgeLabel: "",
   },
   {
+    href: "/admin/grocery-list",
+    label: "Grocery list",
+    count: () => 0,
+    badgeLabel: "",
+  },
+  {
     href: "/admin/business-card",
     label: "Business Card",
     count: () => 0,
