@@ -24,7 +24,8 @@ export function CartDrawer() {
   const cart = useCart();
   const { drawerOpen, closeDrawer } = cart;
   const [mounted, setMounted] = useState(false);
-  const [samplesOpen, setSamplesOpen] = useState(true);
+  const [samplesOpen, setSamplesOpen] = useState(false);
+  const [totalsOpen, setTotalsOpen] = useState(false);
   const [checkoutHint, setCheckoutHint] = useState<string | null>(null);
   const [highlightLumpiaSample, setHighlightLumpiaSample] = useState(false);
   const [highlightPancitSample, setHighlightPancitSample] = useState(false);
@@ -148,6 +149,7 @@ export function CartDrawer() {
                   line={line}
                   onQty={(q) => cart.updateQuantity(line.id, q)}
                   onRemove={() => cart.removeLine(line.id)}
+                  onNavigateToMenu={closeDrawer}
                 />
               ))}
 
@@ -455,21 +457,41 @@ export function CartDrawer() {
             </div>
 
             <div className="border-t border-[var(--border)] bg-[var(--bg)] p-4">
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span>Subtotal (items + utensils)</span>
-                  <span>${cart.subtotalBeforeTax.toFixed(2)}</span>
+              <button
+                type="button"
+                onClick={() => setTotalsOpen((v) => !v)}
+                className="flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-left text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--primary)]/[0.04]"
+                aria-expanded={totalsOpen}
+              >
+                <span className="flex min-w-0 flex-1 items-baseline justify-between gap-2">
+                  <span>Order total</span>
+                  <span className="shrink-0 font-bold text-[var(--primary)]">
+                    ${cart.total.toFixed(2)}
+                  </span>
+                </span>
+                {totalsOpen ? (
+                  <ChevronUp className="h-5 w-5 shrink-0 text-[var(--text-muted)]" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 shrink-0 text-[var(--text-muted)]" />
+                )}
+              </button>
+              {totalsOpen ? (
+                <div className="mt-3 space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span>Subtotal (items + utensils)</span>
+                    <span>${cart.subtotalBeforeTax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-[var(--text-muted)]">
+                    <span>Tax ({salesTaxPercentLabel()})</span>
+                    <span>${cart.tax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-[var(--border)] pt-2 text-lg font-bold text-[var(--primary)]">
+                    <span>Total</span>
+                    <span>${cart.total.toFixed(2)}</span>
+                  </div>
+                  <SalesTaxDisclosure className="mt-3" />
                 </div>
-                <div className="flex justify-between text-[var(--text-muted)]">
-                  <span>Tax ({salesTaxPercentLabel()})</span>
-                  <span>${cart.tax.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between border-t border-[var(--border)] pt-2 text-lg font-bold text-[var(--primary)]">
-                  <span>Total</span>
-                  <span>${cart.total.toFixed(2)}</span>
-                </div>
-                <SalesTaxDisclosure className="mt-3" />
-              </div>
+              ) : null}
               {checkoutHint ? (
                 <p className="mt-3 rounded-lg border border-[var(--accent)]/40 bg-[var(--gold-light)] px-3 py-2 text-sm font-medium text-[var(--text)]">
                   {checkoutHint}

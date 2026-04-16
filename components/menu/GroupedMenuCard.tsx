@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { MenuItemDTO } from "@/lib/menu-types";
@@ -66,6 +66,8 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
       : "plate"
   );
 
+  const pendingMenuScrollId = useRef<string | null>(null);
+
   useEffect(() => {
     if (sorted[0]?.variantGroup === "tocino") return;
     const v = sorted.find((x) => x.id === variantId);
@@ -74,6 +76,31 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
     const nid = next?.id ?? "";
     if (nid && nid !== variantId) setVariantId(nid);
   }, [sorted, variantId]);
+
+  useEffect(() => {
+    const run = () => {
+      if (typeof window === "undefined") return;
+      const raw = window.location.hash.replace(/^#/, "");
+      if (!raw.startsWith("menu-item-")) return;
+      const targetId = decodeURIComponent(raw.slice("menu-item-".length));
+      if (!targetId) return;
+      const match = sorted.find((v) => v.id === targetId);
+      if (!match) return;
+      if (sorted[0]?.variantGroup === "tocino") {
+        const lbl = (match.variantShortLabel ?? "").toLowerCase();
+        if (lbl === "chicken" || lbl === "pork") {
+          setTocinoMeat(lbl === "chicken" ? "chicken" : "pork");
+        }
+        setTocinoStyle(match.hasFrozen ? "frozen" : "plate");
+      } else {
+        setVariantId(match.id);
+      }
+      pendingMenuScrollId.current = targetId;
+    };
+    run();
+    window.addEventListener("hashchange", run);
+    return () => window.removeEventListener("hashchange", run);
+  }, [sorted]);
 
   useEffect(() => {
     if (sorted[0]?.variantGroup !== "tocino") return;
@@ -116,6 +143,19 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
     return sorted.find((v) => v.id === variantId) ?? sorted[0];
   }, [sorted, tocinoMeat, tocinoStyle, variantId]);
 
+  useEffect(() => {
+    const t = pendingMenuScrollId.current;
+    if (!t || !variant || variant.id !== t) return;
+    pendingMenuScrollId.current = null;
+    const id = window.requestAnimationFrame(() => {
+      document.getElementById(`menu-item-${variant.id}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [variant]);
+
   const cookedFrozenPick = Boolean(variant?.hasCooked && variant?.hasFrozen);
   const isLumpiaGroup = variant?.variantGroup === "lumpia";
 
@@ -127,8 +167,34 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
 
   useEffect(() => {
     if (!variant) return;
-    setCookedOrFrozen("cooked");
-    setSizeKey(variant.sizes[0]?.key ?? "default");
+    const win = typeof window !== "undefined" ? window : undefined;
+    const params = new URLSearchParams(win?.location.search ?? "");
+    const hash = win?.location.hash.replace(/^#/, "") ?? "";
+    const hm = /^menu-item-(.+)$/.exec(hash);
+    const hashId = hm?.[1] ? decodeURIComponent(hm[1]) : "";
+    const defaultKey = variant.sizes[0]?.key ?? "default";
+    if (variant.id === hashId) {
+      const sk = params.get("sk");
+      if (sk && variant.sizes.some((s) => s.key === sk)) {
+        setSizeKey(sk);
+      } else {
+        setSizeKey(defaultKey);
+      }
+      const co = params.get("co");
+      if (
+        variant.hasCooked &&
+        variant.hasFrozen &&
+        (co === "cooked" || co === "frozen")
+      ) {
+        setCookedOrFrozen(co);
+        return;
+      }
+    } else {
+      setSizeKey(defaultKey);
+    }
+    if (variant.hasCooked && variant.hasFrozen) {
+      setCookedOrFrozen("cooked");
+    }
   }, [variant]);
 
   const selectedSize = useMemo(() => {
@@ -212,7 +278,10 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
   };
 
   return (
-    <article className="card-elevated group flex h-full min-h-0 flex-col overflow-hidden">
+    <article
+      id={`menu-item-${variant.id}`}
+      className="card-elevated group flex h-full min-h-0 scroll-mt-24 flex-col overflow-hidden"
+    >
       <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[var(--bg-section)]">
         <Image
           src={photoUrl}

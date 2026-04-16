@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { MenuItemDTO } from "@/lib/menu-types";
@@ -20,6 +20,31 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
   const defaultKey = sizeKeys[0] ?? "default";
   const [sizeKey, setSizeKey] = useState(defaultKey);
   const [qty, setQty] = useState(1);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = window.location.hash.replace(/^#/, "");
+    const hm = /^menu-item-(.+)$/.exec(raw);
+    if (!hm?.[1]) return;
+    const targetId = decodeURIComponent(hm[1]);
+    if (targetId !== item.id) return;
+    const params = new URLSearchParams(window.location.search);
+    const co = params.get("co");
+    if (lumpia && (co === "cooked" || co === "frozen")) {
+      setCookedOrFrozen(co);
+    }
+    const sk = params.get("sk");
+    if (sk && item.sizes.some((s) => s.key === sk)) {
+      setSizeKey(sk);
+    }
+    const id = window.requestAnimationFrame(() => {
+      document.getElementById(`menu-item-${item.id}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [item.id, lumpia]);
 
   const selectedSize = useMemo(() => {
     if (lumpia) {
@@ -55,7 +80,10 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
   };
 
   return (
-    <article className="card-elevated group flex h-full min-h-0 flex-col overflow-hidden">
+    <article
+      id={`menu-item-${item.id}`}
+      className="card-elevated group flex h-full min-h-0 scroll-mt-24 flex-col overflow-hidden"
+    >
       <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[var(--bg-section)]">
         <Image
           src={item.photoUrl}

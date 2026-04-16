@@ -16,11 +16,7 @@ import {
 } from "@/lib/utensils-allowance";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 import { ORDER_STATUS_CONFIRMED } from "@/lib/order-payment";
-import {
-  formatPickupYmdLong,
-  getTodayInPickupTimezoneYMD,
-} from "@/lib/pickup-lead-time";
-import { mondayOfCalendarWeekContaining } from "@/lib/pickup-week";
+import { formatPickupYmdLong } from "@/lib/pickup-lead-time";
 import { SalesTaxDisclosure } from "@/components/checkout/SalesTaxDisclosure";
 
 export const dynamic = "force-dynamic";
@@ -61,10 +57,7 @@ export default async function OrderConfirmationPage({
   const frozenLumpia = orderHasFrozenLumpia(items);
 
   const pickupYmd = order.pickupDate?.trim();
-  const futurePickupWeek =
-    pickupYmd &&
-    mondayOfCalendarWeekContaining(pickupYmd) >
-      mondayOfCalendarWeekContaining(getTodayInPickupTimezoneYMD());
+  const pickupTime = order.pickupTime?.trim();
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 text-center">
@@ -76,14 +69,6 @@ export default async function OrderConfirmationPage({
       <h1 className="mt-6 font-[family-name:var(--font-playfair)] text-3xl font-bold text-[var(--text)]">
         Thank you!
       </h1>
-      <div className="mx-auto mt-4 max-w-md rounded-xl border-2 border-amber-500/80 bg-amber-50 px-4 py-3 text-center shadow-sm">
-        <p className="text-base font-bold text-amber-950">
-          Your order isn&apos;t final until we receive payment.
-        </p>
-        <p className="mt-1 text-sm text-amber-950/90">
-          Pay below — then we&apos;ll prep your food.
-        </p>
-      </div>
       <p className="mt-6 text-sm text-[var(--text-muted)]">Order #</p>
       <p
         className="select-all text-3xl font-black tracking-tight text-[var(--primary)]"
@@ -95,14 +80,28 @@ export default async function OrderConfirmationPage({
         Show this # at pickup.
       </p>
 
-      {futurePickupWeek && pickupYmd ? (
+      {pickupYmd ? (
         <p className="mx-auto mt-6 max-w-lg rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-4 py-3 text-sm text-[var(--text)]">
-          Pickup: <strong>{formatPickupYmdLong(pickupYmd)}</strong>. We may
-          reach out as the date gets closer.
+          Pickup: <strong>{formatPickupYmdLong(pickupYmd)}</strong>
+          {pickupTime ? (
+            <>
+              {" "}
+              at <strong>{pickupTime}</strong>
+            </>
+          ) : null}
+          .
         </p>
       ) : null}
 
       <div className="mt-8 rounded-[var(--radius)] border-2 border-[var(--primary)] bg-[var(--primary)]/5 p-5 text-left shadow-[var(--shadow)]">
+        <div className="mb-4 rounded-xl border-2 border-amber-500/80 bg-amber-50 px-4 py-3 text-center shadow-sm">
+          <p className="text-base font-bold text-amber-950">
+            Your order isn&apos;t final until we receive payment.
+          </p>
+          <p className="mt-1 text-sm text-amber-950/90">
+            Check your email for order confirmation.
+          </p>
+        </div>
         <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[var(--primary)]">
           Pay now
         </h2>

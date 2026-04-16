@@ -56,12 +56,12 @@ export function ZelleBrandIcon({
 /** Cart: payment marks with labels (checkout has full instructions). */
 export function CartPaymentMethodsStrip() {
   return (
-    <div className="mb-4 rounded-xl border border-[var(--border)] bg-gradient-to-r from-[var(--gold-light)]/35 to-white px-3 py-3 shadow-sm">
+    <div className="mb-4 rounded-xl border border-[var(--border)] bg-gradient-to-r from-[var(--gold-light)]/35 to-white px-3 py-3 text-center shadow-sm">
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
         Accepted forms of payment
       </p>
       <div
-        className="flex flex-wrap items-center gap-4"
+        className="flex flex-wrap items-center justify-center gap-4"
         role="group"
         aria-label="Accepted payment methods: Venmo and Zelle"
       >
