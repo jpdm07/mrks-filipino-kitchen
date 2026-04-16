@@ -37,6 +37,7 @@ import {
   hasValidPhoneDigits,
   isValidEmail,
 } from "@/lib/checkout-contact-validation";
+import { sanitizeExtraDipOrderLines } from "@/lib/extra-dip-sauce";
 
 class CapacityExceededError extends Error {
   constructor() {
@@ -142,8 +143,20 @@ export async function POST(req: NextRequest) {
     const customerName = (body.customerName ?? "").trim();
     const phone = (body.phone ?? "").trim();
     const email = (body.email ?? "").trim();
-    const items = Array.isArray(body.items) ? body.items : [];
-    if (!customerName || !phone || !email || items.length === 0) {
+    const rawItems = Array.isArray(body.items) ? body.items : [];
+    if (!customerName || !phone || !email || rawItems.length === 0) {
+      return NextResponse.json(
+        { error: "Missing required fields or empty cart" },
+        { status: 400 }
+      );
+    }
+
+    const dipSanitized = sanitizeExtraDipOrderLines(rawItems as OrderItemLine[]);
+    if (dipSanitized.error) {
+      return NextResponse.json({ error: dipSanitized.error }, { status: 400 });
+    }
+    const items = dipSanitized.items;
+    if (items.length === 0) {
       return NextResponse.json(
         { error: "Missing required fields or empty cart" },
         { status: 400 }

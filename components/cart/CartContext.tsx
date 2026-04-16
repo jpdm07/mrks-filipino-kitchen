@@ -23,6 +23,12 @@ import {
   emptySamples,
   samplesToLines,
 } from "@/lib/cart-types";
+import {
+  cartQualifiesForExtraDip,
+  EXTRA_DIP_MAX_QTY,
+  EXTRA_DIP_UNIT_PRICE_USD,
+  makeExtraDipOrderLine,
+} from "@/lib/extra-dip-sauce";
 import type { OrderItemLine } from "@/lib/order-types";
 
 const MRKS_CART_KEY = "mrks_cart";
@@ -82,6 +88,8 @@ type CartContextValue = {
   setUtensilSets: Dispatch<SetStateAction<number>>;
   newsletterOptIn: boolean;
   setNewsletterOptIn: (v: boolean) => void;
+  extraDipSauceQty: number;
+  setExtraDipSauceQty: Dispatch<SetStateAction<number>>;
   itemsSubtotal: number;
   utensilCharge: number;
   subtotalBeforeTax: number;
@@ -129,6 +137,7 @@ function readStoredCart(): {
   wantsUtensils: boolean;
   utensilSets: number;
   newsletterOptIn: boolean;
+  extraDipSauceQty: number;
 } | null {
   if (typeof window === "undefined") return null;
   try {
@@ -141,6 +150,7 @@ function readStoredCart(): {
       wantsUtensils?: unknown;
       utensilSets?: unknown;
       newsletterOptIn?: unknown;
+      extraDipSauceQty?: unknown;
     };
     if (
       typeof data.savedAt === "number" &&
@@ -151,6 +161,14 @@ function readStoredCart(): {
     }
     if (!Array.isArray(data.lines) || !data.lines.every(isCartLine)) return null;
     if (!isSampleSelection(data.samples)) return null;
+    const dipRaw =
+      typeof data.extraDipSauceQty === "number"
+        ? Math.floor(data.extraDipSauceQty)
+        : 0;
+    const extraDipSauceQty = Math.max(
+      0,
+      Math.min(EXTRA_DIP_MAX_QTY, dipRaw)
+    );
     return {
       lines: data.lines,
       samples: data.samples,
@@ -160,6 +178,7 @@ function readStoredCart(): {
           ? Math.max(1, Math.min(50, Math.floor(data.utensilSets)))
           : 1,
       newsletterOptIn: Boolean(data.newsletterOptIn),
+      extraDipSauceQty,
     };
   } catch {
     return null;
@@ -182,6 +201,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [wantsUtensils, setWantsUtensils] = useState(false);
   const [utensilSets, setUtensilSets] = useState(1);
   const [newsletterOptIn, setNewsletterOptIn] = useState(false);
+  const [extraDipSauceQty, setExtraDipSauceQty] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -196,6 +216,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setWantsUtensils(s.wantsUtensils);
       setUtensilSets(s.utensilSets);
       setNewsletterOptIn(s.newsletterOptIn);
+      setExtraDipSauceQty(s.extraDipSauceQty);
     }
     setHydrated(true);
   }, []);
@@ -212,6 +233,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           wantsUtensils,
           utensilSets,
           newsletterOptIn,
+          extraDipSauceQty,
         })
       );
     } catch {
@@ -224,7 +246,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     wantsUtensils,
     utensilSets,
     newsletterOptIn,
+    extraDipSauceQty,
   ]);
+
+  useEffect(() => {
+    if (!cartQualifiesForExtraDip(lines, samples) && extraDipSauceQty > 0) {
+      setExtraDipSauceQty(0);
+    }
+  }, [lines, samples, extraDipSauceQty]);
 
   useEffect(() => {
     fetch("/api/pricing")
@@ -295,6 +324,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setWantsUtensils(false);
     setUtensilSets(1);
     setNewsletterOptIn(false);
+    setExtraDipSauceQty(0);
     setDrawerOpen(false);
   }, []);
 
@@ -310,8 +340,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       (s, l) => s + l.unitPrice * l.quantity,
       0
     );
-    return fromCart + fromSamples;
-  }, [lines, samples, samplePrices]);
+    const dip =
+      extraDipSauceQty > 0 && cartQualifiesForExtraDip(lines, samples)
+        ? extraDipSauceQty * EXTRA_DIP_UNIT_PRICE_USD
+        : 0;
+    return fromCart + fromSamples + dip;
+  }, [lines, samples, samplePrices, extraDipSauceQty]);
 
   const utensilCharge = useMemo(() => {
     if (!wantsUtensils || utensilSets <= 0) return 0;
@@ -334,11 +368,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const buildOrderItems = useCallback((): OrderItemLine[] => {
-    return [
+    const base = [
       ...cartLinesToOrderItems(lines),
       ...samplesToLines(samples, samplePrices),
     ];
-  }, [lines, samples, samplePrices]);
+    if (
+      extraDipSauceQty > 0 &&
+      cartQualifiesForExtraDip(lines, samples)
+    ) {
+      return [...base, makeExtraDipOrderLine(extraDipSauceQty)];
+    }
+    return base;
+  }, [lines, samples, samplePrices, extraDipSauceQty]);
 
   const value = useMemo(
     () => ({
@@ -360,6 +401,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setUtensilSets,
       newsletterOptIn,
       setNewsletterOptIn,
+      extraDipSauceQty,
+      setExtraDipSauceQty,
       itemsSubtotal,
       utensilCharge,
       subtotalBeforeTax,
@@ -382,6 +425,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       wantsUtensils,
       utensilSets,
       newsletterOptIn,
+      extraDipSauceQty,
       itemsSubtotal,
       utensilCharge,
       subtotalBeforeTax,

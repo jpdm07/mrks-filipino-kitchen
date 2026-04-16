@@ -10,6 +10,11 @@ import { CartItemRow } from "./CartItem";
 import { PRICING, salesTaxPercentLabel } from "@/lib/config";
 import { SalesTaxDisclosure } from "@/components/checkout/SalesTaxDisclosure";
 import { CartPaymentMethodsStrip } from "@/components/payment/PaymentBrandIcons";
+import {
+  cartQualifiesForExtraDip,
+  EXTRA_DIP_MAX_QTY,
+  EXTRA_DIP_UNIT_PRICE_USD,
+} from "@/lib/extra-dip-sauce";
 
 export function CartDrawer() {
   const router = useRouter();
@@ -313,6 +318,56 @@ export function CartDrawer() {
                   </div>
                 ) : null}
               </div>
+
+              {cartQualifiesForExtraDip(cart.lines, cart.samples) ? (
+                <div className="mb-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4">
+                  <p className="font-semibold text-[var(--text)]">
+                    Extra dipping sauce
+                  </p>
+                  <p className="mt-1 text-sm text-[var(--text-muted)]">
+                    ${EXTRA_DIP_UNIT_PRICE_USD.toFixed(2)} per 2 oz cup — for the
+                    lumpia, quail, tocino plates, adobo, or samples in your cart.
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-medium">How many extra?</span>
+                    <button
+                      type="button"
+                      className="btn-qty"
+                      onClick={() =>
+                        cart.setExtraDipSauceQty((q) =>
+                          Math.max(0, q - 1)
+                        )
+                      }
+                      aria-label="Remove one extra dipping sauce"
+                    >
+                      −
+                    </button>
+                    <span className="w-8 text-center font-bold">
+                      {cart.extraDipSauceQty}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn-qty"
+                      onClick={() =>
+                        cart.setExtraDipSauceQty((q) =>
+                          Math.min(EXTRA_DIP_MAX_QTY, q + 1)
+                        )
+                      }
+                      aria-label="Add one extra dipping sauce"
+                    >
+                      +
+                    </button>
+                    {cart.extraDipSauceQty > 0 ? (
+                      <span className="text-sm font-semibold text-[var(--primary)]">
+                        +$
+                        {(
+                          cart.extraDipSauceQty * EXTRA_DIP_UNIT_PRICE_USD
+                        ).toFixed(2)}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
 
               <div className="mb-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--gold-light)]/40 p-4">
                 <p className="font-semibold text-[var(--text)]">

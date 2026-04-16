@@ -111,6 +111,7 @@ export function getSauceCupsFromOrderLine(
   line: Pick<OrderItemLine, "name" | "size" | "cookedOrFrozen">
 ): number {
   const h = `${line.name} ${line.size ?? ""} ${line.cookedOrFrozen ?? ""}`.toLowerCase();
+  if (h.includes("extra dipping")) return 1;
   if (h.includes("lumpia") && h.includes("frozen")) return 1;
   if (h.includes("lumpia") && (h.includes("cooked") || h.includes("cook"))) return 3;
   if (h.includes("quail")) return 2;

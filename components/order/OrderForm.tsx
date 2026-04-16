@@ -5,11 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/components/cart/CartContext";
 import { OrderSummary } from "./OrderSummary";
 import { PickupCalendar } from "./PickupCalendar";
-import {
-  cartLinesToOrderItems,
-  samplesSelectionComplete,
-  samplesToLines,
-} from "@/lib/cart-types";
+import { samplesSelectionComplete } from "@/lib/cart-types";
 import {
   isWellFormedPickupYMD,
   pickupDateRejectedMessage,
@@ -82,11 +78,8 @@ export function OrderForm() {
   );
 
   const items = useMemo(
-    () => [
-      ...cartLinesToOrderItems(cart.lines),
-      ...samplesToLines(cart.samples, cart.samplePrices),
-    ],
-    [cart.lines, cart.samples, cart.samplePrices]
+    () => cart.buildOrderItems(),
+    [cart.lines, cart.samples, cart.samplePrices, cart.extraDipSauceQty]
   );
 
   const cartFlanOnly = useMemo(() => cartHasOnlyFlanItems(items), [items]);
