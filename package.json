@@ -14,6 +14,7 @@
     "lint": "next lint",
     "postinstall": "node scripts/postinstall-prisma.mjs",
     "db:generate": "node scripts/prisma-generate.mjs",
+    "db:migrate": "prisma migrate deploy",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "bootstrap:availability": "tsx scripts/bootstrap-availability.ts",
