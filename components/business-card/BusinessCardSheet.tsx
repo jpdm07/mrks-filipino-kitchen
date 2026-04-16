@@ -106,7 +106,7 @@ function BusinessCardFace({
               />
             )}
             <p className="mt-0.5 text-center text-[6px] font-bold uppercase leading-tight tracking-wide text-[var(--accent)]">
-              Visit website
+              Order online
             </p>
           </div>
         </div>
