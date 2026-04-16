@@ -123,18 +123,25 @@ export function AcceptedPaymentMethods({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
-        {canVenmoPrefill ? (
-          <a
-            href={venmoPayHref}
-            target="_self"
-            className="inline-flex min-h-[48px] min-w-[min(100%,220px)] flex-1 items-center justify-center gap-2 rounded-xl bg-[#008CFF] px-4 py-3 text-center text-base font-bold text-white shadow-sm transition hover:brightness-95"
-          >
-            <VenmoBrandIcon size={26} />
-            Pay {amountCopyText} in Venmo
-          </a>
-        ) : null}
-      </div>
+      {canVenmoPrefill ? (
+        <a
+          href={venmoPayHref}
+          target="_self"
+          className="inline-flex min-h-[48px] w-full min-w-[min(100%,220px)] items-center justify-center gap-2 rounded-xl bg-[#008CFF] px-4 py-3 text-center text-base font-bold text-white shadow-sm transition hover:brightness-95"
+        >
+          <VenmoBrandIcon size={26} />
+          Pay {amountCopyText} in Venmo
+        </a>
+      ) : null}
+
+      {canVenmoPrefill ? (
+        <p
+          className="text-center text-sm font-semibold tracking-wide text-[var(--text-muted)]"
+          aria-hidden
+        >
+          or
+        </p>
+      ) : null}
 
       <div className="rounded-xl border border-[var(--border)] bg-white/80 px-3 py-3">
         <div className="flex items-start gap-2">
