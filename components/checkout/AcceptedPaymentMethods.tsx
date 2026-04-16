@@ -65,20 +65,24 @@ export function AcceptedPaymentMethods({
   if (variant === "checkout") {
     return (
       <div
-        className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-section)] px-4 py-5 text-center"
+        className="flex flex-wrap items-center justify-center gap-4"
         role="group"
         aria-label="Venmo and Zelle accepted; pay on the next screen after you submit"
       >
         <span className="sr-only">
           Venmo and Zelle accepted. You will pay on the next screen.
         </span>
-        <div className="flex items-center justify-center gap-10">
-          <span title="Venmo">
-            <VenmoBrandIcon size={44} />
-          </span>
-          <span title="Zelle">
-            <ZelleBrandIcon size={44} />
-          </span>
+        <div
+          className="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm"
+          title="Venmo"
+        >
+          <VenmoBrandIcon size={40} />
+        </div>
+        <div
+          className="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm"
+          title="Zelle"
+        >
+          <ZelleBrandIcon size={40} />
         </div>
       </div>
     );
