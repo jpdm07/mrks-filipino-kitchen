@@ -257,7 +257,7 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
       ? "12 lumpia (1 dozen) per order at the price shown."
       : isTocinoUnified
         ? tocinoStyle === "plate"
-          ? "Ready-made plate with egg, rice, cucumber, tomato, and garlic crisps. Comes with a dipping sauce."
+          ? "Ready-made plate with egg, rice, cucumber, tomato, and garlic crisps."
           : "12 oz frozen marinated pack in a sealed bag — cook at home."
         : "";
 

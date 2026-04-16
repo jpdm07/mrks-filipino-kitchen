@@ -1,4 +1,5 @@
 import { MENU_CATALOG } from "./menu-catalog";
+import { ensureMenuDescriptionIncludesDip } from "./menu-included-dip";
 import type { MenuItemDTO } from "./menu-types";
 
 type CatalogRow = (typeof MENU_CATALOG)[number];
@@ -7,7 +8,7 @@ function catalogRowToDtoBase(c: CatalogRow): Omit<MenuItemDTO, "isActive" | "sol
   return {
     id: c.id,
     name: c.name,
-    description: c.description,
+    description: ensureMenuDescriptionIncludesDip(c.id, c.description),
     category: c.category,
     calories: c.calories,
     basePrice: c.basePrice,
