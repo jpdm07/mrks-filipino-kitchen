@@ -25,7 +25,7 @@ export function CartDrawer() {
   const { drawerOpen, closeDrawer } = cart;
   const [mounted, setMounted] = useState(false);
   const [samplesOpen, setSamplesOpen] = useState(false);
-  const [totalsOpen, setTotalsOpen] = useState(false);
+  const [totalsOpen, setTotalsOpen] = useState(true);
   const [checkoutHint, setCheckoutHint] = useState<string | null>(null);
   const [highlightLumpiaSample, setHighlightLumpiaSample] = useState(false);
   const [highlightPancitSample, setHighlightPancitSample] = useState(false);
@@ -375,13 +375,11 @@ export function CartDrawer() {
               ) : null}
 
               <div className="mb-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--gold-light)]/40 p-4">
-                <p className="font-semibold text-[var(--text)]">
-                  🍴 Utensils
-                </p>
-                <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-lg border border-[var(--border)]/60 bg-white/50 px-3 py-3">
+                <div className="flex items-start gap-3">
                   <input
+                    id="cart-wants-utensils"
                     type="checkbox"
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-[var(--border)]"
+                    className="mt-1 h-4 w-4 shrink-0 rounded border-[var(--border)]"
                     checked={cart.wantsUtensils}
                     onChange={(e) => {
                       const on = e.target.checked;
@@ -394,17 +392,20 @@ export function CartDrawer() {
                       }
                     }}
                   />
-                  <span>
+                  <label
+                    htmlFor="cart-wants-utensils"
+                    className="min-w-0 flex-1 cursor-pointer"
+                  >
                     <span className="font-semibold text-[var(--text)]">
                       Include utensils with my order
                     </span>
                     <span className="mt-1 block text-sm leading-snug text-[var(--text-muted)]">
                       Use +/− for how many sets your group needs.
                     </span>
-                  </span>
-                </label>
+                  </label>
+                </div>
                 {cart.wantsUtensils ? (
-                  <div className="mt-4 flex flex-wrap items-center gap-2 pl-7">
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <span className="text-sm font-medium text-[var(--text)]">
                       How many sets total?
                     </span>
