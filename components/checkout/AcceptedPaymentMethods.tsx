@@ -62,30 +62,30 @@ export function AcceptedPaymentMethods({
   orderNumber,
   amountDue,
 }: Props) {
-  const phoneLink = SITE.phoneTel;
-  const phoneDisplay = SITE.phoneDisplay;
-
   if (variant === "checkout") {
     return (
-      <div className="space-y-2 rounded-xl border border-[var(--border)] bg-[var(--bg-section)] px-4 py-3">
-        <p className="text-sm font-bold text-[var(--text)]">Payment is next</p>
-        <p className="text-sm leading-snug text-[var(--text-muted)]">
-          We take <strong className="text-[var(--text)]">Venmo</strong> and{" "}
-          <strong className="text-[var(--text)]">Zelle</strong>. After you submit,
-          you&apos;ll see your total and pay there — nothing to pay on this page.
-        </p>
-        <p className="text-xs text-[var(--text-muted)]">
-          Need help?{" "}
-          <a
-            href={phoneLink}
-            className="font-semibold text-[var(--primary)] underline"
-          >
-            {phoneDisplay}
-          </a>
-        </p>
+      <div
+        className="flex flex-col items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-section)] px-4 py-5 text-center"
+        role="group"
+        aria-label="Venmo and Zelle accepted; pay on the next screen after you submit"
+      >
+        <span className="sr-only">
+          Venmo and Zelle accepted. You will pay on the next screen.
+        </span>
+        <div className="flex items-center justify-center gap-10">
+          <span title="Venmo">
+            <VenmoBrandIcon size={44} />
+          </span>
+          <span title="Zelle">
+            <ZelleBrandIcon size={44} />
+          </span>
+        </div>
       </div>
     );
   }
+
+  const phoneLink = SITE.phoneTel;
+  const phoneDisplay = SITE.phoneDisplay;
 
   const zelle = PAYMENT_INSTRUCTIONS.zellePhone;
   const zelleDigits = zelle.replace(/\D/g, "");

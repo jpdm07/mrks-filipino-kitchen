@@ -11,7 +11,6 @@ import {
   samplesToLines,
 } from "@/lib/cart-types";
 import {
-  formatPickupYmdLong,
   isWellFormedPickupYMD,
   pickupDateRejectedMessage,
 } from "@/lib/pickup-lead-time";
@@ -20,7 +19,6 @@ import {
   cartHasOnlyFlanItems,
   totalCookContribution,
 } from "@/lib/menu-cook-capacity";
-import { orderFormPickupConfirmationLine } from "@/lib/pickup-availability-copy";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 import {
   hasValidPhoneDigits,
@@ -439,15 +437,13 @@ export function OrderForm() {
         </div>
         {urlLeadReject ? (
           <p className="rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-3 py-2 text-sm text-[var(--text)]">
-            The date in your link isn&apos;t available for your cart (pickup rules
-            depend on what you&apos;re ordering). Pick another open date on the
-            calendar.
+            That linked date isn&apos;t open for this cart — pick another day
+            below.
           </p>
         ) : null}
         {capacityWeeks[0] && !cartFlanOnly && capacityWeeks[0].mainSoldOut ? (
           <p className="rounded-lg border border-[var(--primary)]/30 bg-[var(--primary)]/10 px-3 py-2 text-sm font-medium text-[var(--text)]">
-            📅 This week&apos;s pickups are full — but you can still place your
-            order for next Friday or Saturday! Select your pickup date below.
+            This week is full — choose a Fri or Sat below.
           </p>
         ) : null}
         {capacityWeeks[0] &&
@@ -456,16 +452,7 @@ export function OrderForm() {
         capacityWeeks[0].mainCookRemaining > 0 &&
         capacityWeeks[0].mainCookRemaining < 60 ? (
           <p className="rounded-lg border border-amber-400/50 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-950">
-            ⏳ Limited availability left this week — order soon before we&apos;re
-            fully booked!
-          </p>
-        ) : null}
-        {pickupDate && isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly) ? (
-          <p
-            className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--text)]"
-            role="status"
-          >
-            {orderFormPickupConfirmationLine(formatPickupYmdLong(pickupDate))}
+            Limited spots left this week.
           </p>
         ) : null}
         {err ? (
@@ -545,7 +532,7 @@ export function OrderForm() {
         <div
           ref={paymentRef}
           className={[
-            "space-y-4 rounded-xl border bg-[var(--card)] p-4 shadow-sm",
+            "space-y-3 rounded-xl border bg-[var(--card)] p-4 shadow-sm",
             issues.payment
               ? "border-red-500 ring-2 ring-red-500/40"
               : "border-[var(--border)]",
@@ -592,7 +579,7 @@ export function OrderForm() {
         >
           <p className="text-sm font-semibold">Pickup date *</p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
-            Choose an open day (Central Time), then a pickup time.
+            Central Time — then pick a time slot.
           </p>
           <div
             ref={calendarRef}
@@ -726,19 +713,16 @@ export function OrderForm() {
         </div>
 
         {canSubmitOrder ? (
-          <div className="rounded-xl border-2 border-[var(--primary)]/25 bg-[var(--bg-section)] p-4 text-left">
-            <p className="text-sm font-semibold leading-relaxed text-[var(--text)]">
-              Ready to submit? You&apos;ll see your <strong>order number</strong>{" "}
-              and total <strong>${cart.total.toFixed(2)}</strong> on the next
-              screen — use that number in your payment memo, then text us after
-              you pay. Prep starts after payment is verified.
-            </p>
-          </div>
+          <p className="text-center text-sm font-medium text-[var(--text)]">
+            Next: order # + pay{" "}
+            <span className="text-[var(--primary)]">
+              ${cart.total.toFixed(2)}
+            </span>
+          </p>
         ) : (
           <p className="text-sm text-[var(--text-muted)]">
-            Enter your details (including a valid email and phone with at least 10
-            digits), choose pickup date and time, confirm payment memo, and resolve
-            any sample choices in your cart to continue.
+            Add contact info, pickup date &amp; time, confirm the box above, and
+            fix any sample choices in your cart.
           </p>
         )}
 
@@ -747,7 +731,7 @@ export function OrderForm() {
           disabled={loading || !canSubmitOrder}
           className="btn btn-accent btn-block disabled:pointer-events-none disabled:opacity-40"
         >
-          {loading ? "Submitting order…" : "Submit order & get order number"}
+          {loading ? "Submitting…" : "Submit Order"}
         </button>
       </div>
       <div className="min-w-0">
