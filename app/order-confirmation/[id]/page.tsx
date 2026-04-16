@@ -12,7 +12,7 @@ import {
 } from "@/lib/config";
 import {
   complimentaryUtensilAllowanceFromOrderItems,
-  shouldShowComplimentaryUtensilsHintFromOrderItems,
+  shouldShowUtensilsOnOrderConfirmation,
 } from "@/lib/utensils-allowance";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 import { ORDER_STATUS_CONFIRMED } from "@/lib/order-payment";
@@ -54,6 +54,10 @@ export default async function OrderConfirmationPage({
 
   const items = parseItems(order.items);
   const complimentaryUtensils = complimentaryUtensilAllowanceFromOrderItems(items);
+  const showUtensilsBlock = shouldShowUtensilsOnOrderConfirmation(
+    items,
+    order.utensilCharge
+  );
   const frozenLumpia = orderHasFrozenLumpia(items);
 
   const pickupYmd = order.pickupDate?.trim();
@@ -134,41 +138,41 @@ export default async function OrderConfirmationPage({
                 </td>
               </tr>
             ))}
-            <tr className="border-b border-[var(--border)]">
-              <td className="px-4 py-2">Utensils</td>
-              <td className="px-4 py-2 text-right font-semibold">
+            {showUtensilsBlock ? (
+              <>
+                <tr className="border-b border-[var(--border)]">
+                  <td className="px-4 py-2">Utensils</td>
+                  <td className="px-4 py-2 text-right font-semibold">
+                    {order.utensilSets > 0
+                      ? `$${order.utensilCharge.toFixed(2)}`
+                      : "—"}
+                  </td>
+                </tr>
                 {order.utensilSets > 0
-                  ? `$${order.utensilCharge.toFixed(2)}`
-                  : "—"}
-              </td>
-            </tr>
-            {order.utensilSets > 0 &&
-            shouldShowComplimentaryUtensilsHintFromOrderItems(
-              items,
-              order.utensilCharge
-            )
-              ? (() => {
-                  const hint = formatUtensilsCheckoutSubtext(
-                    Boolean(order.wantsUtensils),
-                    order.utensilSets,
-                    order.utensilCharge,
-                    complimentaryUtensils
-                  );
-                  return hint ? (
-                    <tr
-                      key="utensils-detail"
-                      className="border-b border-[var(--border)]"
-                    >
-                      <td
-                        colSpan={2}
-                        className="px-4 pb-3 pt-0 text-xs leading-snug text-[var(--text-muted)]"
-                      >
-                        {hint}
-                      </td>
-                    </tr>
-                  ) : null;
-                })()
-              : null}
+                  ? (() => {
+                      const hint = formatUtensilsCheckoutSubtext(
+                        Boolean(order.wantsUtensils),
+                        order.utensilSets,
+                        order.utensilCharge,
+                        complimentaryUtensils
+                      );
+                      return hint ? (
+                        <tr
+                          key="utensils-detail"
+                          className="border-b border-[var(--border)]"
+                        >
+                          <td
+                            colSpan={2}
+                            className="px-4 pb-3 pt-0 text-xs leading-snug text-[var(--text-muted)]"
+                          >
+                            {hint}
+                          </td>
+                        </tr>
+                      ) : null;
+                    })()
+                  : null}
+              </>
+            ) : null}
             <tr className="border-b border-[var(--border)]">
               <td className="px-4 py-2">Subtotal</td>
               <td className="px-4 py-2 text-right">

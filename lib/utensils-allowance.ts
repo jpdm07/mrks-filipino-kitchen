@@ -54,11 +54,12 @@ export function plateBasedUtensilComplimentaryBasisFromOrderItems(
 }
 
 /**
- * Order confirmation: show utensils subtext only for plate-style lines (or
- * when the customer paid for extra utensil sets). Hide for lumpia/quail-only
- * style carts where the subtext would only restate the default free set.
+ * Order confirmation: show the Utensils line (and any subtext) only when the
+ * cart includes plate-style food (tocino plate, pancit 1-serving or 2–4,
+ * pancit sample) or the customer paid for extra utensil sets. Omit entirely
+ * otherwise so finger-food-only orders do not surface utensils.
  */
-export function shouldShowComplimentaryUtensilsHintFromOrderItems(
+export function shouldShowUtensilsOnOrderConfirmation(
   items: OrderItemLine[],
   utensilChargeUsd: number
 ): boolean {
