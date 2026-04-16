@@ -10,6 +10,7 @@ import {
   formatUtensilsCheckoutSubtext,
   salesTaxPercentLabel,
 } from "@/lib/config";
+import { complimentaryUtensilAllowanceFromOrderItems } from "@/lib/utensils-allowance";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 import { ORDER_STATUS_CONFIRMED } from "@/lib/order-payment";
 import {
@@ -49,6 +50,7 @@ export default async function OrderConfirmationPage({
   if (!order) notFound();
 
   const items = parseItems(order.items);
+  const complimentaryUtensils = complimentaryUtensilAllowanceFromOrderItems(items);
   const frozenLumpia = orderHasFrozenLumpia(items);
 
   const pickupYmd = order.pickupDate?.trim();
@@ -142,7 +144,8 @@ export default async function OrderConfirmationPage({
                   const hint = formatUtensilsCheckoutSubtext(
                     Boolean(order.wantsUtensils),
                     order.utensilSets,
-                    order.utensilCharge
+                    order.utensilCharge,
+                    complimentaryUtensils
                   );
                   return hint ? (
                     <tr

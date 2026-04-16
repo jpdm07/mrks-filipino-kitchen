@@ -12,6 +12,7 @@ export function OrderSummary({
   wantsUtensils,
   utensilSets,
   utensilCharge,
+  complimentaryUtensilAllowance,
   subtotal,
   tax,
   total,
@@ -20,6 +21,7 @@ export function OrderSummary({
   wantsUtensils: boolean;
   utensilSets: number;
   utensilCharge: number;
+  complimentaryUtensilAllowance: number;
   subtotal: number;
   tax: number;
   total: number;
@@ -27,7 +29,8 @@ export function OrderSummary({
   const utensilsHint = formatUtensilsCheckoutSubtext(
     wantsUtensils,
     utensilSets,
-    utensilCharge
+    utensilCharge,
+    complimentaryUtensilAllowance
   );
 
   return (

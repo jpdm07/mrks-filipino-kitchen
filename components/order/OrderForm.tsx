@@ -448,8 +448,7 @@ export function OrderForm() {
         </div>
         {urlLeadReject ? (
           <p className="rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-3 py-2 text-sm text-[var(--text)]">
-            That linked date isn&apos;t open for this cart — pick another day
-            below.
+            That link&apos;s date isn&apos;t open for this cart — pick another day.
           </p>
         ) : null}
         {capacityWeeks[0] && !cartFlanOnly && capacityWeeks[0].mainSoldOut ? (
@@ -523,7 +522,7 @@ export function OrderForm() {
             />
             {phone.trim() && !hasValidPhoneDigits(phone) ? (
               <span className="mt-1 block text-xs font-medium text-red-700">
-                Enter at least 10 digits (area code + number).
+                At least 10 digits, including area code.
               </span>
             ) : null}
           </label>
@@ -551,7 +550,7 @@ export function OrderForm() {
             />
             {email.trim() && !isValidEmail(email) ? (
               <span className="mt-1 block text-xs font-medium text-red-700">
-                Enter a valid email (example: name@domain.com).
+                Check the format (e.g. name@domain.com).
               </span>
             ) : null}
           </label>
@@ -576,8 +575,8 @@ export function OrderForm() {
                 onChange={(e) => setCheckoutDemo(e.target.checked)}
               />
               <span>
-                <strong>Test / demo order</strong> — won&apos;t count in finances
-                or Google Sheet; you can delete it from admin anytime.
+                <strong>Demo order</strong> — skipped in finances &amp; Sheets;
+                delete anytime in admin.
               </span>
             </label>
           ) : null}
@@ -591,10 +590,7 @@ export function OrderForm() {
                 if (e.target.checked) setIssues((p) => ({ ...p, payment: false }));
               }}
             />
-            <span>
-              I know my order isn&apos;t locked in until I pay on the next
-              screen.
-            </span>
+            <span>My order isn&apos;t final until I pay on the next page.</span>
           </label>
         </div>
 
@@ -607,7 +603,7 @@ export function OrderForm() {
         >
           <p className="text-sm font-semibold">Pickup date *</p>
           <p className="mt-1 text-xs text-[var(--text-muted)]">
-            Central Time — then pick a time slot.
+            Times shown in Central Time.
           </p>
           <div
             ref={calendarRef}
@@ -641,7 +637,7 @@ export function OrderForm() {
               <p className="mt-2 text-xs text-[var(--text-muted)]">Loading times…</p>
             ) : slotOptions.length === 0 ? (
               <p className="mt-2 text-sm text-[var(--accent)]">
-                No time slots are set for this date. Please pick another day.
+                No slots this day — choose another date.
               </p>
             ) : (
               <div className="mt-2 flex flex-wrap gap-2">
@@ -675,7 +671,7 @@ export function OrderForm() {
           className="block text-sm font-semibold"
           htmlFor="checkout-notes"
         >
-          Special instructions
+          Notes for the kitchen (optional)
           <textarea
             id="checkout-notes"
             name="orderNotes"
@@ -686,15 +682,22 @@ export function OrderForm() {
             onChange={(e) => setNotes(e.target.value)}
           />
         </label>
-        <label className="flex cursor-pointer items-start gap-2 text-sm">
-          <input
-            type="checkbox"
-            className="mt-1"
-            checked={wantsPrintedReceipt}
-            onChange={(e) => setWantsPrintedReceipt(e.target.checked)}
-          />
-          Printed receipt — include a paper copy with my pickup order
-        </label>
+        <div className="space-y-2 rounded-lg border border-[var(--border)]/80 bg-[var(--card)]/60 px-3 py-3 text-sm">
+          <p className="leading-snug text-[var(--text-muted)]">
+            After we confirm your order, we&apos;ll email a{" "}
+            <span className="font-semibold text-[var(--text)]">digital receipt</span>{" "}
+            to the address above.
+          </p>
+          <label className="flex cursor-pointer items-start gap-2 text-[var(--text)]">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={wantsPrintedReceipt}
+              onChange={(e) => setWantsPrintedReceipt(e.target.checked)}
+            />
+            <span>Also include a printed receipt with pickup</span>
+          </label>
+        </div>
         <label className="flex cursor-pointer items-start gap-2 text-sm">
           <input
             type="checkbox"
@@ -702,7 +705,7 @@ export function OrderForm() {
             checked={cart.newsletterOptIn}
             onChange={(e) => cart.setNewsletterOptIn(e.target.checked)}
           />
-          Keep me updated on new menu items and specials
+          Email me menu updates &amp; specials
         </label>
         <label className="flex cursor-pointer items-start gap-2 text-sm">
           <input
@@ -716,7 +719,7 @@ export function OrderForm() {
             }}
             className="mt-1"
           />
-          I&apos;d like to inquire about a custom dish not on the menu
+          Ask about a custom dish (not on the menu)
         </label>
         {customCheck ? (
           <div
@@ -758,22 +761,22 @@ export function OrderForm() {
         >
           {!samplesOk ? (
             <p className="rounded-lg border border-[var(--accent)]/40 bg-[var(--gold-light)] px-4 py-3 text-sm font-medium text-[var(--text)]">
-              Your cart includes samples that need a choice:{" "}
+              Samples need a choice:{" "}
               {cart.samples.lumpiaQty > 0 && !cart.samples.lumpiaProtein
-                ? "pick beef, pork, or turkey for lumpia samples. "
+                ? "lumpia — beef, pork, or turkey. "
                 : null}
               {cart.samples.pancitQty > 0 && !cart.samples.pancitType
-                ? "pick chicken or shrimp for pancit samples."
-                : null}
-              Open the cart from the bag icon to finish.
+                ? "pancit — chicken or shrimp."
+                : null}{" "}
+              Open the cart (bag icon) to fix.
             </p>
           ) : null}
         </div>
 
         {!canSubmitOrder ? (
           <p className="text-sm text-[var(--text-muted)]">
-            Add contact info, pickup date &amp; time, confirm the box above, and
-            fix any sample choices in your cart.
+            Fill contact + pickup, tick the payment line, and fix any sample
+            picks in the cart.
           </p>
         ) : null}
 
@@ -791,6 +794,7 @@ export function OrderForm() {
           wantsUtensils={cart.wantsUtensils}
           utensilSets={cart.wantsUtensils ? cart.utensilSets : 0}
           utensilCharge={cart.utensilCharge}
+          complimentaryUtensilAllowance={cart.complimentaryUtensilAllowance}
           subtotal={cart.subtotalBeforeTax}
           tax={cart.tax}
           total={cart.total}

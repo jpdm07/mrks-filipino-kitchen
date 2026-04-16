@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { computeUtensilChargeUsd, PRICING, SUGGESTION_OPTIONS } from "../lib/config";
+import { complimentaryUtensilAllowanceFromOrderItems } from "../lib/utensils-allowance";
+import type { OrderItemLine } from "../lib/order-types";
 import { MENU_CATALOG } from "../lib/menu-catalog";
 import { COOK_MINUTES_BY_MENU_ITEM } from "../lib/menu-capacity-catalog";
 import { FLAN_RETAIL_PER_RAMEKIN_USD } from "../lib/flan-cost-model";
@@ -131,13 +133,14 @@ async function main() {
   const lumpiaUnit = lumpiaPork.sizes.find((s) => s.key === "cooked")!.price;
   const pancitPartySize = pancitCh.sizes.find((s) => s.key === "party")!;
   const pancitPartyUnit = pancitPartySize.price;
-  const demoItems = [
+  const demoItems: OrderItemLine[] = [
     {
       name: "Lumpia: Pork",
       quantity: 2,
       unitPrice: lumpiaUnit,
       size: "Cooked · per dozen",
-      cookedOrFrozen: "cooked" as const,
+      sizeKey: "cooked",
+      cookedOrFrozen: "cooked",
       menuItemId: "seed-2",
     },
     {
@@ -145,12 +148,14 @@ async function main() {
       quantity: 1,
       unitPrice: pancitPartyUnit,
       size: pancitPartySize.label,
+      sizeKey: "party",
       menuItemId: "seed-4",
     },
   ];
   const itemsSub = 2 * lumpiaUnit + pancitPartyUnit;
   const demoUtensilSets = 2;
-  const ut = computeUtensilChargeUsd(true, demoUtensilSets);
+  const demoComplimentary = complimentaryUtensilAllowanceFromOrderItems(demoItems);
+  const ut = computeUtensilChargeUsd(true, demoUtensilSets, demoComplimentary);
   const sub = Math.round((itemsSub + ut) * 100) / 100;
   const tax = Math.round(sub * PRICING.TAX_RATE * 100) / 100;
   const total = Math.round((sub + tax) * 100) / 100;

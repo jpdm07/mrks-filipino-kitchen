@@ -259,7 +259,7 @@ export function CartDrawer() {
                     <SampleRow
                       highlight={highlightPancitSample}
                       title={`Pancit sample (1 container) · $${cart.samplePrices.pancit.toFixed(2)} ea`}
-                      subtitle="Small foil container · ~1 serving"
+                      subtitle="Small container · ~1 serving"
                       qty={cart.samples.pancitQty}
                       setQty={(n) => {
                         const next = Math.max(0, Math.min(10, n));
@@ -445,7 +445,8 @@ export function CartDrawer() {
                     {formatUtensilsCartOneLiner(
                       cart.wantsUtensils,
                       cart.utensilSets,
-                      cart.utensilCharge
+                      cart.utensilCharge,
+                      cart.complimentaryUtensilAllowance
                     )}
                   </span>
                 </p>

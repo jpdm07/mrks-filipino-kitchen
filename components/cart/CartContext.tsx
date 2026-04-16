@@ -12,6 +12,7 @@ import {
   type SetStateAction,
 } from "react";
 import { computeUtensilChargeUsd, PRICING } from "@/lib/config";
+import { complimentaryUtensilAllowanceFromOrderItems } from "@/lib/utensils-allowance";
 import {
   LUMPIA_SAMPLE_4PC_RETAIL_BY_PROTEIN,
   type LumpiaSampleProtein,
@@ -91,6 +92,7 @@ type CartContextValue = {
   extraDipSauceQty: number;
   setExtraDipSauceQty: Dispatch<SetStateAction<number>>;
   itemsSubtotal: number;
+  complimentaryUtensilAllowance: number;
   utensilCharge: number;
   subtotalBeforeTax: number;
   tax: number;
@@ -331,6 +333,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setDrawerOpen(false);
   }, []);
 
+  const buildOrderItems = useCallback((): OrderItemLine[] => {
+    const base = [
+      ...cartLinesToOrderItems(lines),
+      ...samplesToLines(samples, samplePrices),
+    ];
+    if (
+      extraDipSauceQty > 0 &&
+      cartQualifiesForExtraDip(lines, samples)
+    ) {
+      return [...base, makeExtraDipOrderLine(extraDipSauceQty)];
+    }
+    return base;
+  }, [lines, samples, samplePrices, extraDipSauceQty]);
+
+  const complimentaryUtensilAllowance = useMemo(
+    () => complimentaryUtensilAllowanceFromOrderItems(buildOrderItems()),
+    [buildOrderItems]
+  );
+
+  useEffect(() => {
+    if (!hydrated || !wantsUtensils) return;
+    setUtensilSets((prev) => {
+      const minSets = complimentaryUtensilAllowance;
+      return prev < minSets ? minSets : prev;
+    });
+  }, [hydrated, wantsUtensils, complimentaryUtensilAllowance]);
+
   const itemCount = useMemo(
     () => lines.reduce((s, l) => s + l.quantity, 0),
     [lines]
@@ -351,8 +380,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [lines, samples, samplePrices, extraDipSauceQty]);
 
   const utensilCharge = useMemo(
-    () => computeUtensilChargeUsd(wantsUtensils, utensilSets),
-    [wantsUtensils, utensilSets]
+    () =>
+      computeUtensilChargeUsd(
+        wantsUtensils,
+        utensilSets,
+        complimentaryUtensilAllowance
+      ),
+    [wantsUtensils, utensilSets, complimentaryUtensilAllowance]
   );
 
   const subtotalBeforeTax = useMemo(
@@ -369,20 +403,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => Math.round((subtotalBeforeTax + tax) * 100) / 100,
     [subtotalBeforeTax, tax]
   );
-
-  const buildOrderItems = useCallback((): OrderItemLine[] => {
-    const base = [
-      ...cartLinesToOrderItems(lines),
-      ...samplesToLines(samples, samplePrices),
-    ];
-    if (
-      extraDipSauceQty > 0 &&
-      cartQualifiesForExtraDip(lines, samples)
-    ) {
-      return [...base, makeExtraDipOrderLine(extraDipSauceQty)];
-    }
-    return base;
-  }, [lines, samples, samplePrices, extraDipSauceQty]);
 
   const value = useMemo(
     () => ({
@@ -407,6 +427,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       extraDipSauceQty,
       setExtraDipSauceQty,
       itemsSubtotal,
+      complimentaryUtensilAllowance,
       utensilCharge,
       subtotalBeforeTax,
       tax,
@@ -430,6 +451,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       newsletterOptIn,
       extraDipSauceQty,
       itemsSubtotal,
+      complimentaryUtensilAllowance,
       utensilCharge,
       subtotalBeforeTax,
       tax,

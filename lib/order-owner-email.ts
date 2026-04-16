@@ -1,6 +1,7 @@
 import { sendMail } from "@/lib/mailer";
 import type { OrderItemLine } from "@/lib/order-types";
 import { formatUtensilsOwnerLine } from "@/lib/config";
+import { complimentaryUtensilAllowanceFromOrderItems } from "@/lib/utensils-allowance";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 
 function escapeHtml(s: string): string {
@@ -60,6 +61,8 @@ export async function sendNewOrderEmailToOwner(params: {
   const base = getPublicSiteOrigin();
   const adminUrl = `${base}/admin`;
 
+  const complimentaryUtensils =
+    complimentaryUtensilAllowanceFromOrderItems(params.items);
   const linesText = params.items.map(formatLine).join("\n");
   const linesRows = params.items
     .map(
@@ -87,7 +90,8 @@ export async function sendNewOrderEmailToOwner(params: {
       ? formatUtensilsOwnerLine(
           params.wantsUtensils,
           params.utensilSets,
-          params.utensilCharge
+          params.utensilCharge,
+          complimentaryUtensils
         )
       : null,
     params.notes ? `Notes: ${params.notes}` : null,
@@ -116,7 +120,7 @@ export async function sendNewOrderEmailToOwner(params: {
       <tbody>${linesRows}</tbody>
     </table>
     <p style="margin:16px 0 0;text-align:right;font-size:16px;"><strong>Subtotal</strong> $${params.subtotal.toFixed(2)}<br/><span style="color:#666;">Tax</span> $${params.tax.toFixed(2)}<br/><strong style="color:#0038a8;font-size:18px;">Total $${params.total.toFixed(2)}</strong></p>
-    ${params.wantsUtensils && params.utensilSets > 0 ? `<p style="margin:12px 0 0;font-size:14px;">${escapeHtml(formatUtensilsOwnerLine(params.wantsUtensils, params.utensilSets, params.utensilCharge))}</p>` : ""}
+    ${params.wantsUtensils && params.utensilSets > 0 ? `<p style="margin:12px 0 0;font-size:14px;">${escapeHtml(formatUtensilsOwnerLine(params.wantsUtensils, params.utensilSets, params.utensilCharge, complimentaryUtensils))}</p>` : ""}
     ${params.notes ? `<p style="margin:16px 0 0;padding:12px;background:#fffbeb;border-radius:8px;border:1px solid #fcd34d;"><strong>Instructions</strong><br/>${escapeHtml(params.notes)}</p>` : ""}
     ${params.customInquiry ? `<p style="margin:12px 0 0;padding:12px;background:#f5f3ff;border-radius:8px;"><strong>Custom dish</strong><br/>${escapeHtml(params.customInquiry)}</p>` : ""}
     <p style="margin:20px 0 0;font-size:13px;color:#666;">
