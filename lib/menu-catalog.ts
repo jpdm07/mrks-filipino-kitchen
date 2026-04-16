@@ -114,7 +114,7 @@ export const MENU_CATALOG = [
     variantShortLabel: "Beef",
     groupCardTitle: "Lumpia",
     groupServingBlurb:
-      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with 3 dipping sauces per order of dozen.",
+      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with 2 dipping sauces per order of dozen.",
   },
   {
     id: "seed-2",
@@ -144,7 +144,7 @@ export const MENU_CATALOG = [
     variantShortLabel: "Pork",
     groupCardTitle: "Lumpia",
     groupServingBlurb:
-      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with 3 dipping sauces per order of dozen.",
+      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with 2 dipping sauces per order of dozen.",
   },
   {
     id: "seed-3",
@@ -174,7 +174,7 @@ export const MENU_CATALOG = [
     variantShortLabel: "Turkey",
     groupCardTitle: "Lumpia",
     groupServingBlurb:
-      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with 3 dipping sauces per order of dozen.",
+      "Prices are per dozen. Choose protein and cooked or frozen below. 🥡 Comes with 2 dipping sauces per order of dozen.",
   },
   {
     id: "seed-4",
