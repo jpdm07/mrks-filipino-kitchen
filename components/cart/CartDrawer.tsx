@@ -375,7 +375,7 @@ export function CartDrawer() {
 
               <div className="mb-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--gold-light)]/40 p-4">
                 <p className="font-semibold text-[var(--text)]">
-                  🍴 Utensils (fork, knife, spoon)
+                  🍴 Utensils
                 </p>
                 <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
                   {utensilsPolicyHelpText()}

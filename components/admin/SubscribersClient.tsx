@@ -16,7 +16,9 @@ function Inner({
   menuItems: { id: string; name: string }[];
 }) {
   const sp = useSearchParams();
-  const [subs] = useState(initialSubscribers);
+  const [subs, setSubs] = useState(initialSubscribers);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteErr, setDeleteErr] = useState<string | null>(null);
   const [showNews, setShowNews] = useState(sp.get("newsletter") === "1");
   const [subject, setSubject] = useState("Update from Mr. K's Filipino Kitchen");
   const [message, setMessage] = useState(
@@ -45,6 +47,32 @@ function Inner({
     URL.revokeObjectURL(a.href);
   };
 
+  const deleteSubscriber = async (id: string, email: string) => {
+    if (
+      !window.confirm(
+        `Remove subscriber?\n\n${email}\n\nThey can subscribe again later from the site.`
+      )
+    ) {
+      return;
+    }
+    setDeleteErr(null);
+    setDeletingId(id);
+    try {
+      const res = await fetch(
+        `/api/admin/subscribers/${encodeURIComponent(id)}`,
+        { method: "DELETE" }
+      );
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setDeleteErr(data.error ?? "Delete failed");
+        return;
+      }
+      setSubs((prev) => prev.filter((s) => s.id !== id));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const sendNewsletter = async () => {
     setSent(null);
     const res = await fetch("/api/admin/newsletter", {
@@ -62,7 +90,15 @@ function Inner({
   };
 
   return (
-    <div className="mt-8 space-y-6">
+    <div className="mt-6 space-y-6">
+      <p className="text-sm text-[var(--text-muted)]">
+        Total: {subs.length}
+      </p>
+      {deleteErr ? (
+        <p className="text-sm font-semibold text-red-700" role="alert">
+          {deleteErr}
+        </p>
+      ) : null}
       <div className="flex flex-wrap gap-3">
         <button
           type="button"
@@ -133,15 +169,38 @@ function Inner({
               <th className="px-3 py-2">Name</th>
               <th className="px-3 py-2">Email</th>
               <th className="px-3 py-2">Date</th>
+              <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
+            {subs.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="px-3 py-6 text-center text-sm text-[var(--text-muted)]"
+                >
+                  No subscribers yet.
+                </td>
+              </tr>
+            ) : null}
             {subs.map((s) => (
               <tr key={s.id} className="border-t border-[var(--border)]">
-                <td className="px-3 py-2">{s.name ?? "None"}</td>
+                <td className="px-3 py-2">{s.name ?? "—"}</td>
                 <td className="px-3 py-2">{s.email}</td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {new Date(s.createdAt).toLocaleString()}
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <button
+                    type="button"
+                    className="rounded border border-red-200 bg-red-50 px-2 py-1 text-xs font-semibold text-red-800 transition hover:bg-red-100 disabled:opacity-50"
+                    disabled={deletingId === s.id}
+                    onClick={() => deleteSubscriber(s.id, s.email)}
+                  >
+                    {deletingId === s.id ? "…" : "Delete"}
+                  </button>
                 </td>
               </tr>
             ))}

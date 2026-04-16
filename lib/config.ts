@@ -2,7 +2,7 @@ import { getFacebookPageUrl } from "@/lib/facebook-url";
 import { CANONICAL_SITE_ORIGIN } from "@/lib/public-site-url";
 
 export const PRICING = {
-  /** Per paid set after complimentary allowance (fork + knife + spoon). */
+  /** Per paid utensil set after complimentary allowance. */
   UTENSIL_PER_SET: 0.25,
   /** Included free when the customer opts in to utensils (per order). */
   COMPLIMENTARY_UTENSIL_SETS_PER_ORDER: 1,
@@ -35,7 +35,7 @@ export function utensilsPolicyHelpText(): string {
   const u = PRICING.UTENSIL_PER_SET;
   const cents = Math.round(u * 100);
   const n = PRICING.COMPLIMENTARY_UTENSIL_SETS_PER_ORDER;
-  return `We include at least ${n} complimentary set per order (fork, knife, spoon), plus 1 per ready-made tocino plate, per single pancit serving, and per pancit sample. Each set beyond that total is ${cents}¢ ($${u.toFixed(2)}).`;
+  return `We include at least ${n} complimentary utensil set per order, plus 1 per ready-made tocino plate, per single pancit serving, and per pancit sample. Each set beyond that total is ${cents}¢ ($${u.toFixed(2)}).`;
 }
 
 /**
