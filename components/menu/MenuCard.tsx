@@ -112,14 +112,7 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
                   .join(" ")
               : item.description}
           </p>
-          {item.id === "seed-6" ? (
-            <>
-              <p className="mt-2 text-xs font-medium text-[var(--text-muted)]">
-                Baked and served in its own aluminum ramekin
-              </p>
-              <FlanWeekStockNote />
-            </>
-          ) : null}
+          {item.id === "seed-6" ? <FlanWeekStockNote /> : null}
 
           {lumpia ? (
             <div className="mt-3 space-y-2">

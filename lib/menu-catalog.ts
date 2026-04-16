@@ -202,8 +202,6 @@ export const MENU_CATALOG = [
     variantGroup: "pancit",
     variantShortLabel: "Chicken",
     groupCardTitle: "Pancit",
-    groupServingBlurb:
-      "1 serving: single to-go container with a lime wedge. 2–4 servings: scaled tray for a few people. Party: full 9×13 tray, 8–10 servings, limes for the group.",
   },
   {
     id: "seed-5",
@@ -237,14 +235,12 @@ export const MENU_CATALOG = [
     variantGroup: "pancit",
     variantShortLabel: "Shrimp",
     groupCardTitle: "Pancit",
-    groupServingBlurb:
-      "1 serving: single to-go container, plump shrimp, lime wedge. 2–4 servings: scaled tray. Party: full 9×13 for the group, limes included.",
   },
   {
     id: "seed-6",
     name: "Caramel Flan (Leche Flan)",
     description:
-      "Silky-smooth Filipino egg custard with a rich caramel glaze, slow-steamed to perfection and baked in its own silver aluminum ramekin. A beloved Filipino dessert passed down through generations.",
+      "Silky-smooth Filipino egg custard with a rich caramel glaze, slow-steamed to perfection. A beloved Filipino dessert passed down through generations.",
     category: "Desserts",
     calories: "~280 cal",
     basePrice: FLAN_RETAIL_PER_RAMEKIN_USD,
