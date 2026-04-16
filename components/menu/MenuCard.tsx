@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { MenuItemDTO } from "@/lib/menu-types";
 import { useCart } from "@/components/cart/CartContext";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
+import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
 import { FlanWeekStockNote } from "@/components/menu/FlanWeekStockNote";
 
 export function MenuCard({ item }: { item: MenuItemDTO }) {
@@ -31,6 +32,10 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
 
   const unitPrice = Number(selectedSize?.price ?? item.basePrice);
   const safeUnitPrice = Number.isFinite(unitPrice) ? unitPrice : 0;
+  const takeoutLineSplit = useMemo(
+    () => splitMenuTakeoutLine(item.description),
+    [item.description]
+  );
   const disabled =
     !item.isActive || item.soldOut || !Number.isFinite(unitPrice);
 
@@ -72,9 +77,20 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
             {item.name}
           </h3>
           <p className="text-sm text-[var(--text-muted)]">{item.calories}</p>
-          <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
-            {item.description}
-          </p>
+          {takeoutLineSplit.dipNote ? (
+            <>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
+                {takeoutLineSplit.lead}
+              </p>
+              <p className="mt-2 whitespace-nowrap text-sm leading-relaxed text-[var(--text)]">
+                {takeoutLineSplit.dipNote}
+              </p>
+            </>
+          ) : (
+            <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
+              {item.description}
+            </p>
+          )}
           {item.id === "seed-6" ? (
             <>
               <p className="mt-2 text-xs font-medium text-[var(--text-muted)]">

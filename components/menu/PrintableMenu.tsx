@@ -5,7 +5,7 @@ import {
   normalizePrintMenuDescription,
 } from "@/lib/printable-menu";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
-import { splitTocinoPlateDipDescription } from "@/lib/tocino-plate-description";
+import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
 
 const siteUrl = getPublicSiteOrigin();
 
@@ -118,7 +118,7 @@ export function PrintableMenu({ items }: { items: MenuItemDTO[] }) {
                       const raw = normalizePrintMenuDescription(
                         item.description
                       );
-                      const parts = splitTocinoPlateDipDescription(raw);
+                      const parts = splitMenuTakeoutLine(raw);
                       const descClass =
                         "mt-1 text-left text-xs leading-relaxed text-neutral-700 sm:text-sm print:text-[10pt] print:leading-snug";
                       if (!parts.dipNote) {

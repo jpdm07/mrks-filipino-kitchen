@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { MenuItemDTO } from "@/lib/menu-types";
 import { useCart } from "@/components/cart/CartContext";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
-import { splitTocinoPlateDipDescription } from "@/lib/tocino-plate-description";
+import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
 
 function shortLabel(v: MenuItemDTO): string {
   const t = v.variantShortLabel?.trim();
@@ -145,10 +145,10 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
     variant?.groupCardTitle?.trim() || variant?.category || "Menu item";
 
   const groupBlurb = variant?.groupServingBlurb?.trim() ?? null;
-  const tocinoPlateDipSplit = useMemo(() => {
-    if (!isTocinoUnified || !variant) return null;
-    return splitTocinoPlateDipDescription(variant.description);
-  }, [isTocinoUnified, variant]);
+  const takeoutLineSplit = useMemo(() => {
+    if (!variant) return null;
+    return splitMenuTakeoutLine(variant.description);
+  }, [variant]);
   const photoUrl = sorted[0]?.photoUrl ?? "";
   const allSoldOut = sorted.length > 0 && sorted.every((v) => v.soldOut);
 
@@ -234,13 +234,13 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
             {title}
           </h3>
           <p className="text-sm text-[var(--text-muted)]">{variant.calories}</p>
-          {isTocinoUnified && tocinoPlateDipSplit?.dipNote ? (
+          {takeoutLineSplit?.dipNote ? (
             <>
               <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
-                {tocinoPlateDipSplit.lead}
+                {takeoutLineSplit.lead}
               </p>
               <p className="mt-2 whitespace-nowrap text-sm leading-relaxed text-[var(--text)]">
-                {tocinoPlateDipSplit.dipNote}
+                {takeoutLineSplit.dipNote}
               </p>
             </>
           ) : (
