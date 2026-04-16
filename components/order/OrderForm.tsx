@@ -30,10 +30,16 @@ type CheckoutIssueKey =
   | "payment"
   | "pickup"
   | "time"
-  | "samples"
-  | "custom";
+  | "samples";
 
 type CheckoutIssues = Partial<Record<CheckoutIssueKey, boolean>>;
+
+/** Keeps every checkout checkbox the same size and top offset for a straight left edge. */
+const checkoutCheckboxInputClass =
+  "mt-0.5 h-5 w-5 shrink-0 rounded border-[var(--border)] text-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)]/30";
+
+const checkoutCheckboxLabelClass =
+  "flex cursor-pointer items-start gap-3 text-sm text-[var(--text)]";
 
 function inputIssueClass(active: boolean) {
   return active
@@ -51,7 +57,6 @@ export function OrderForm() {
   const pickupSectionRef = useRef<HTMLDivElement>(null);
   const timeSectionRef = useRef<HTMLDivElement>(null);
   const samplesRef = useRef<HTMLDivElement>(null);
-  const customRef = useRef<HTMLDivElement>(null);
   const appliedUrlPickup = useRef(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -59,8 +64,6 @@ export function OrderForm() {
   const [pickupDate, setPickupDate] = useState("");
   const [pickupTime, setPickupTime] = useState("");
   const [notes, setNotes] = useState("");
-  const [customCheck, setCustomCheck] = useState(false);
-  const [customText, setCustomText] = useState("");
   const [wantsPrintedReceipt, setWantsPrintedReceipt] = useState(false);
   /** Customer acknowledges they will put the order # in Venmo/Zelle memo after submit. */
   const [paymentMemoAck, setPaymentMemoAck] = useState(false);
@@ -236,9 +239,7 @@ export function OrderForm() {
                 ? timeSectionRef.current
                 : i.samples
                   ? samplesRef.current
-                  : i.custom
-                    ? customRef.current
-                    : null;
+                  : null;
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
     };
     window.setTimeout(run, 50);
@@ -274,10 +275,6 @@ export function OrderForm() {
 
     if (!samplesOk) {
       next.samples = true;
-    }
-
-    if (customCheck && !customText.trim()) {
-      next.custom = true;
     }
 
     if (Object.keys(next).length > 0) {
@@ -343,9 +340,6 @@ export function OrderForm() {
             : "Complete sample choices in your cart."
         );
       }
-      if (next.custom) {
-        parts.push("Please describe your custom dish, or turn off that option.");
-      }
       setErr(parts.filter(Boolean).join("\n\n"));
       scrollToFirstIssue(next);
       return;
@@ -367,7 +361,7 @@ export function OrderForm() {
         pickupDate,
         pickupTime,
         notes: notes.trim(),
-        customInquiry: customCheck ? customText.trim() : null,
+        customInquiry: null,
         subscribeUpdates: cart.newsletterOptIn,
         wantsPrintedReceipt,
         ...(showDemoCheckout && checkoutDemo ? { isDemo: true } : {}),
@@ -567,30 +561,34 @@ export function OrderForm() {
         >
           <AcceptedPaymentMethods variant="checkout" />
           {showDemoCheckout ? (
-            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-dashed border-amber-500/60 bg-amber-50/80 px-3 py-2 text-sm font-medium text-[var(--text)]">
+            <label
+              className={`${checkoutCheckboxLabelClass} rounded-lg border border-dashed border-amber-500/60 bg-amber-50/80 px-3 py-2 font-medium`}
+            >
               <input
                 type="checkbox"
-                className="mt-1 h-5 w-5 shrink-0"
+                className={checkoutCheckboxInputClass}
                 checked={checkoutDemo}
                 onChange={(e) => setCheckoutDemo(e.target.checked)}
               />
-              <span>
+              <span className="min-w-0 leading-snug">
                 <strong>Demo order</strong> — skipped in finances &amp; Sheets;
                 delete anytime in admin.
               </span>
             </label>
           ) : null}
-          <label className="flex cursor-pointer items-start gap-3 text-sm font-medium">
+          <label className={`${checkoutCheckboxLabelClass} font-medium`}>
             <input
               type="checkbox"
-              className="mt-1 h-5 w-5 shrink-0"
+              className={checkoutCheckboxInputClass}
               checked={paymentMemoAck}
               onChange={(e) => {
                 setPaymentMemoAck(e.target.checked);
                 if (e.target.checked) setIssues((p) => ({ ...p, payment: false }));
               }}
             />
-            <span>My order isn&apos;t final until I pay on the next page.</span>
+            <span className="min-w-0 leading-snug">
+              My order isn&apos;t final until I pay on the next page.
+            </span>
           </label>
         </div>
 
@@ -682,75 +680,33 @@ export function OrderForm() {
             onChange={(e) => setNotes(e.target.value)}
           />
         </label>
-        <div className="space-y-2 rounded-lg border border-[var(--border)]/80 bg-[var(--card)]/60 px-3 py-3 text-sm">
-          <p className="leading-snug text-[var(--text-muted)]">
+        <div className="space-y-2 rounded-lg border border-[var(--border)]/80 bg-[var(--card)]/60 py-3 text-sm">
+          <p className="px-3 leading-snug text-[var(--text-muted)]">
             After we confirm your order, we&apos;ll email a{" "}
             <span className="font-semibold text-[var(--text)]">digital receipt</span>{" "}
             to the address above.
           </p>
-          <label className="flex cursor-pointer items-start gap-2 text-[var(--text)]">
+          <label className={`${checkoutCheckboxLabelClass} pr-3`}>
             <input
               type="checkbox"
-              className="mt-1"
+              className={checkoutCheckboxInputClass}
               checked={wantsPrintedReceipt}
               onChange={(e) => setWantsPrintedReceipt(e.target.checked)}
             />
-            <span>Also include a printed receipt with pickup</span>
+            <span className="min-w-0 leading-snug">
+              Also include a printed receipt with pickup
+            </span>
           </label>
         </div>
-        <label className="flex cursor-pointer items-start gap-2 text-sm">
+        <label className={checkoutCheckboxLabelClass}>
           <input
             type="checkbox"
-            className="mt-1"
+            className={checkoutCheckboxInputClass}
             checked={cart.newsletterOptIn}
             onChange={(e) => cart.setNewsletterOptIn(e.target.checked)}
           />
-          Email me menu updates &amp; specials
+          <span className="min-w-0 leading-snug">Email me menu updates &amp; specials</span>
         </label>
-        <label className="flex cursor-pointer items-start gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={customCheck}
-            onChange={(e) => {
-              setCustomCheck(e.target.checked);
-              if (!e.target.checked) {
-                setIssues((p) => ({ ...p, custom: false }));
-              }
-            }}
-            className="mt-1"
-          />
-          Ask about a custom dish (not on the menu)
-        </label>
-        {customCheck ? (
-          <div
-            ref={customRef}
-            className={[
-              "rounded-lg p-1",
-              issues.custom ? "ring-2 ring-red-500 ring-offset-2" : "",
-            ].join(" ")}
-          >
-            <label htmlFor="checkout-custom-inquiry" className="sr-only">
-              Custom dish details
-            </label>
-            <textarea
-              id="checkout-custom-inquiry"
-              name="customInquiry"
-              rows={3}
-              autoComplete="off"
-              className={[
-                "w-full rounded-lg border px-3 py-2 outline-none",
-                inputIssueClass(Boolean(issues.custom)),
-              ].join(" ")}
-              placeholder="Describe what you'd like us to make"
-              value={customText}
-              onChange={(e) => {
-                setCustomText(e.target.value);
-                setIssues((p) => ({ ...p, custom: false }));
-              }}
-            />
-          </div>
-        ) : null}
-
         <div
           ref={samplesRef}
           className={
