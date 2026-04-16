@@ -292,8 +292,6 @@ export const MENU_CATALOG = [
     variantGroup: "tocino",
     variantShortLabel: "Pork",
     groupCardTitle: "Tocino",
-    groupServingBlurb:
-      "Choose pork or chicken, then a ready-made plate (egg, rice & veg) or a 12 oz frozen pack to cook at home.",
   },
   {
     id: "seed-9",
@@ -317,8 +315,6 @@ export const MENU_CATALOG = [
     variantGroup: "tocino",
     variantShortLabel: "Chicken",
     groupCardTitle: "Tocino",
-    groupServingBlurb:
-      "Choose pork or chicken, then a ready-made plate (egg, rice & veg) or a 12 oz frozen pack to cook at home.",
   },
   {
     id: "seed-10",
@@ -342,8 +338,6 @@ export const MENU_CATALOG = [
     variantGroup: "tocino",
     variantShortLabel: "Pork",
     groupCardTitle: "Tocino",
-    groupServingBlurb:
-      "Choose pork or chicken, then a ready-made plate (egg, rice & veg) or a 12 oz frozen pack to cook at home.",
   },
   {
     id: "seed-11",
@@ -367,8 +361,6 @@ export const MENU_CATALOG = [
     variantGroup: "tocino",
     variantShortLabel: "Chicken",
     groupCardTitle: "Tocino",
-    groupServingBlurb:
-      "Choose pork or chicken, then a ready-made plate (egg, rice & veg) or a 12 oz frozen pack to cook at home.",
   },
   {
     id: "seed-12",

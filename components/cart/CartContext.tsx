@@ -17,6 +17,7 @@ import {
   LUMPIA_SAMPLE_4PC_RETAIL_BY_PROTEIN,
   type LumpiaSampleProtein,
 } from "@/lib/lumpia-cost-model";
+import { sampleCartPricesFromMenuCatalog } from "@/lib/sample-cart-pricing";
 import type { CartLine, SampleSelection } from "@/lib/cart-types";
 import {
   cartLineKey,
@@ -192,12 +193,7 @@ function readStoredCart(): {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-const defaultPrices: SamplePrices = {
-  lumpia: { ...LUMPIA_SAMPLE_4PC_RETAIL_BY_PROTEIN },
-  quail: 2.49,
-  flan: 5.0,
-  pancit: 6.3,
-};
+const defaultPrices: SamplePrices = sampleCartPricesFromMenuCatalog();
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);

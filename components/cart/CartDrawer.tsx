@@ -91,6 +91,14 @@ export function CartDrawer() {
 
   if (!mounted || !drawerOpen) return null;
 
+  const cartHasAnyOrderContent =
+    cart.lines.length > 0 ||
+    cart.samples.lumpiaQty > 0 ||
+    cart.samples.quailQty > 0 ||
+    cart.samples.flanQty > 0 ||
+    cart.samples.pancitQty > 0 ||
+    cart.extraDipSauceQty > 0;
+
   const lumpPx = cart.samplePrices.lumpia;
   const lumpProt = cart.samples.lumpiaProtein;
   const lumpiaSampleTitle = lumpProt
@@ -374,85 +382,87 @@ export function CartDrawer() {
                 </div>
               ) : null}
 
-              <div className="mb-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--gold-light)]/40 p-4">
-                <div className="flex items-start gap-3">
-                  <input
-                    id="cart-wants-utensils"
-                    type="checkbox"
-                    className="mt-1 h-4 w-4 shrink-0 rounded border-[var(--border)]"
-                    checked={cart.wantsUtensils}
-                    onChange={(e) => {
-                      const on = e.target.checked;
-                      cart.setWantsUtensils(on);
-                      if (on) {
-                        const min = cart.complimentaryUtensilAllowance;
-                        cart.setUtensilSets((s) => Math.max(min, s));
-                      } else {
-                        cart.setUtensilSets(0);
-                      }
-                    }}
-                  />
-                  <label
-                    htmlFor="cart-wants-utensils"
-                    className="min-w-0 flex-1 cursor-pointer"
-                  >
-                    <span className="font-semibold text-[var(--text)]">
-                      Include utensils with my order
-                    </span>
-                    <span className="mt-1 block text-sm leading-snug text-[var(--text-muted)]">
-                      Use +/− for how many sets your group needs.
-                    </span>
-                  </label>
-                </div>
-                {cart.wantsUtensils ? (
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-medium text-[var(--text)]">
-                      How many sets total?
-                    </span>
-                    <button
-                      type="button"
-                      className="btn-qty"
-                      onClick={() =>
-                        cart.setUtensilSets(
-                          Math.max(
-                            cart.complimentaryUtensilAllowance,
-                            cart.utensilSets - 1
-                          )
-                        )
-                      }
-                      aria-label="Remove one utensil set"
+              {cartHasAnyOrderContent ? (
+                <div className="mb-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--gold-light)]/40 p-4">
+                  <div className="flex items-start gap-3">
+                    <input
+                      id="cart-wants-utensils"
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 shrink-0 rounded border-[var(--border)]"
+                      checked={cart.wantsUtensils}
+                      onChange={(e) => {
+                        const on = e.target.checked;
+                        cart.setWantsUtensils(on);
+                        if (on) {
+                          const min = cart.complimentaryUtensilAllowance;
+                          cart.setUtensilSets((s) => Math.max(min, s));
+                        } else {
+                          cart.setUtensilSets(0);
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="cart-wants-utensils"
+                      className="min-w-0 flex-1 cursor-pointer"
                     >
-                      −
-                    </button>
-                    <span className="w-8 text-center font-bold">
-                      {cart.utensilSets}
-                    </span>
-                    <button
-                      type="button"
-                      className="btn-qty"
-                      onClick={() =>
-                        cart.setUtensilSets(
-                          Math.min(50, cart.utensilSets + 1)
-                        )
-                      }
-                      aria-label="Add one utensil set"
-                    >
-                      +
-                    </button>
+                      <span className="font-semibold text-[var(--text)]">
+                        Include utensils with my order
+                      </span>
+                      <span className="mt-1 block text-sm leading-snug text-[var(--text-muted)]">
+                        Use +/− for how many sets your group needs.
+                      </span>
+                    </label>
                   </div>
-                ) : null}
-                <p className="mt-4 text-sm text-[var(--text)]">
-                  <span className="font-semibold">Utensils: </span>
-                  <span className="text-[var(--text-muted)]">
-                    {formatUtensilsCartOneLiner(
-                      cart.wantsUtensils,
-                      cart.utensilSets,
-                      cart.utensilCharge,
-                      cart.complimentaryUtensilAllowance
-                    )}
-                  </span>
-                </p>
-              </div>
+                  {cart.wantsUtensils ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-medium text-[var(--text)]">
+                        How many sets total?
+                      </span>
+                      <button
+                        type="button"
+                        className="btn-qty"
+                        onClick={() =>
+                          cart.setUtensilSets(
+                            Math.max(
+                              cart.complimentaryUtensilAllowance,
+                              cart.utensilSets - 1
+                            )
+                          )
+                        }
+                        aria-label="Remove one utensil set"
+                      >
+                        −
+                      </button>
+                      <span className="w-8 text-center font-bold">
+                        {cart.utensilSets}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn-qty"
+                        onClick={() =>
+                          cart.setUtensilSets(
+                            Math.min(50, cart.utensilSets + 1)
+                          )
+                        }
+                        aria-label="Add one utensil set"
+                      >
+                        +
+                      </button>
+                    </div>
+                  ) : null}
+                  <p className="mt-4 text-sm text-[var(--text)]">
+                    <span className="font-semibold">Utensils: </span>
+                    <span className="text-[var(--text-muted)]">
+                      {formatUtensilsCartOneLiner(
+                        cart.wantsUtensils,
+                        cart.utensilSets,
+                        cart.utensilCharge,
+                        cart.complimentaryUtensilAllowance
+                      )}
+                    </span>
+                  </p>
+                </div>
+              ) : null}
 
               <CartPaymentMethodsStrip />
             </div>

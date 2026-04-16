@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
-import { FLAN_RETAIL_PER_RAMEKIN_USD } from "@/lib/flan-cost-model";
 import { LUMPIA_SAMPLE_4PC_RETAIL_USD } from "@/lib/lumpia-cost-model";
+import { FALLBACK_SAMPLE_PRICING } from "@/lib/static-menu-fallback";
 
 export async function GET() {
   if (!(await isAdminSession())) {
@@ -14,9 +14,9 @@ export async function GET() {
   return NextResponse.json(
     p ?? {
       sampleLumpia: LUMPIA_SAMPLE_4PC_RETAIL_USD,
-      sampleQuail: 2.49,
-      sampleFlan: FLAN_RETAIL_PER_RAMEKIN_USD,
-      samplePancit: 6.3,
+      sampleQuail: FALLBACK_SAMPLE_PRICING.quail,
+      sampleFlan: FALLBACK_SAMPLE_PRICING.flan,
+      samplePancit: FALLBACK_SAMPLE_PRICING.pancit,
     }
   );
 }
@@ -35,9 +35,9 @@ export async function PATCH(req: NextRequest) {
     create: {
       id: "default",
       sampleLumpia: LUMPIA_SAMPLE_4PC_RETAIL_USD,
-      sampleQuail: body.sampleQuail ?? 2.49,
-      sampleFlan: body.sampleFlan ?? FLAN_RETAIL_PER_RAMEKIN_USD,
-      samplePancit: body.samplePancit ?? 6.3,
+      sampleQuail: body.sampleQuail ?? FALLBACK_SAMPLE_PRICING.quail,
+      sampleFlan: body.sampleFlan ?? FALLBACK_SAMPLE_PRICING.flan,
+      samplePancit: body.samplePancit ?? FALLBACK_SAMPLE_PRICING.pancit,
     },
     update: {
       ...(body.sampleQuail != null ? { sampleQuail: body.sampleQuail } : {}),
