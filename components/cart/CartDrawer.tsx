@@ -7,7 +7,11 @@ import { ShoppingBag, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useCart } from "./CartContext";
 import { samplesSelectionComplete } from "@/lib/cart-types";
 import { CartItemRow } from "./CartItem";
-import { PRICING, salesTaxPercentLabel } from "@/lib/config";
+import {
+  PRICING,
+  salesTaxPercentLabel,
+  utensilPerSetCustomerLabel,
+} from "@/lib/config";
 import { SalesTaxDisclosure } from "@/components/checkout/SalesTaxDisclosure";
 import { CartPaymentMethodsStrip } from "@/components/payment/PaymentBrandIcons";
 import {
@@ -371,10 +375,14 @@ export function CartDrawer() {
 
               <div className="mb-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--gold-light)]/40 p-4">
                 <p className="font-semibold text-[var(--text)]">
-                  🍴 Need Utensils? (Fork + Knife + Spoon)
+                  🍴 Utensils (fork, knife, spoon)
                 </p>
-                <p className="text-sm text-[var(--text-muted)]">
-                  Each set: ${PRICING.UTENSIL_PER_SET.toFixed(2)}
+                <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
+                  Available upon request. Extra sets are{" "}
+                  <span className="font-medium text-[var(--text)]">
+                    {utensilPerSetCustomerLabel()}
+                  </span>{" "}
+                  and are added to your cart total when you choose them below.
                 </p>
                 <div className="mt-3 flex flex-col gap-2">
                   <label className="flex cursor-pointer items-center gap-2">
@@ -399,7 +407,7 @@ export function CartDrawer() {
                         cart.setUtensilSets((s) => (s < 1 ? 1 : s));
                       }}
                     />
-                    Yes, add sets
+                    Yes, add extra sets
                   </label>
                 </div>
                 {cart.wantsUtensils ? (

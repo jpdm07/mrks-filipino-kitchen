@@ -2,7 +2,8 @@ import { getFacebookPageUrl } from "@/lib/facebook-url";
 import { CANONICAL_SITE_ORIGIN } from "@/lib/public-site-url";
 
 export const PRICING = {
-  UTENSIL_PER_SET: 0.75,
+  /** Per extra set (fork + knife + spoon) — cart, checkout, and POST /api/orders. */
+  UTENSIL_PER_SET: 0.25,
   UTENSIL_COST_MRK: 0.095,
   /**
    * Texas sales & use tax on the customer’s taxable sale (order subtotal).
@@ -11,6 +12,13 @@ export const PRICING = {
    */
   TAX_RATE: 0.0825,
 } as const;
+
+/** Cart/menu copy: whole cents + USD, tied to {@link PRICING.UTENSIL_PER_SET}. */
+export function utensilPerSetCustomerLabel(): string {
+  const u = PRICING.UTENSIL_PER_SET;
+  const cents = Math.round(u * 100);
+  return `${cents}¢ per set ($${u.toFixed(2)})`;
+}
 
 /** Label for receipts/UI, always in sync with PRICING.TAX_RATE. */
 export function salesTaxPercentLabel(): string {

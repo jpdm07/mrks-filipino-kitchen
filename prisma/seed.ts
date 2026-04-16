@@ -149,7 +149,8 @@ async function main() {
     },
   ];
   const itemsSub = 2 * lumpiaUnit + pancitPartyUnit;
-  const ut = 1.5;
+  const demoUtensilSets = 2;
+  const ut = demoUtensilSets * PRICING.UTENSIL_PER_SET;
   const sub = Math.round((itemsSub + ut) * 100) / 100;
   const tax = Math.round(sub * PRICING.TAX_RATE * 100) / 100;
   const total = Math.round((sub + tax) * 100) / 100;
@@ -169,7 +170,7 @@ async function main() {
       pickupTime: "2:00 PM",
       notes: "Demo order from seed",
       wantsUtensils: true,
-      utensilSets: 2,
+      utensilSets: demoUtensilSets,
       utensilCharge: ut,
       wantsRecurring: false,
       status: ORDER_STATUS_CONFIRMED,
