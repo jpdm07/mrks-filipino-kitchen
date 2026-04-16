@@ -435,6 +435,7 @@ export function OrderForm() {
   return (
     <form
       noValidate
+      autoComplete="on"
       onSubmit={submit}
       className="grid min-w-0 gap-10 lg:grid-cols-2 lg:items-start"
     >
@@ -486,9 +487,17 @@ export function OrderForm() {
           </p>
         ) : null}
         <div ref={contactRef} className="space-y-4">
-          <label className="block text-sm font-semibold">
+          <label
+            className="block text-sm font-semibold"
+            htmlFor="checkout-customer-name"
+          >
             Customer name *
             <input
+              id="checkout-customer-name"
+              name="customerName"
+              type="text"
+              autoComplete="name"
+              enterKeyHint="next"
               className={[
                 "mt-1 w-full min-h-[48px] rounded-lg border px-3 outline-none",
                 inputIssueClass(Boolean(issues.name)),
@@ -500,12 +509,15 @@ export function OrderForm() {
               }}
             />
           </label>
-          <label className="block text-sm font-semibold">
+          <label className="block text-sm font-semibold" htmlFor="checkout-phone">
             Phone *
             <input
+              id="checkout-phone"
+              name="phone"
               type="tel"
               autoComplete="tel"
               inputMode="tel"
+              enterKeyHint="next"
               className={[
                 "mt-1 w-full min-h-[48px] rounded-lg border px-3 outline-none",
                 inputIssueClass(Boolean(issues.phone)),
@@ -522,12 +534,15 @@ export function OrderForm() {
               </span>
             ) : null}
           </label>
-          <label className="block text-sm font-semibold">
+          <label className="block text-sm font-semibold" htmlFor="checkout-email">
             Email *
             <input
+              id="checkout-email"
+              name="email"
               type="email"
               autoComplete="email"
               inputMode="email"
+              enterKeyHint="next"
               className={[
                 "mt-1 w-full min-h-[48px] rounded-lg border px-3 outline-none",
                 inputIssueClass(Boolean(issues.email)),
@@ -660,10 +675,16 @@ export function OrderForm() {
           </div>
         ) : null}
 
-        <label className="block text-sm font-semibold">
+        <label
+          className="block text-sm font-semibold"
+          htmlFor="checkout-notes"
+        >
           Special instructions
           <textarea
+            id="checkout-notes"
+            name="orderNotes"
             rows={3}
+            autoComplete="off"
             className="mt-1 w-full rounded-lg border border-[var(--border)] px-3 py-2"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -700,8 +721,14 @@ export function OrderForm() {
               issues.custom ? "ring-2 ring-red-500 ring-offset-2" : "",
             ].join(" ")}
           >
+            <label htmlFor="checkout-custom-inquiry" className="sr-only">
+              Custom dish details
+            </label>
             <textarea
+              id="checkout-custom-inquiry"
+              name="customInquiry"
               rows={3}
+              autoComplete="off"
               className={[
                 "w-full rounded-lg border px-3 py-2 outline-none",
                 inputIssueClass(Boolean(issues.custom)),
