@@ -5,6 +5,8 @@ import { requireAdmin } from "@/lib/admin-auth";
 import type { OrderItemLine } from "@/lib/order-types";
 import { AdminOrderPaymentPanel } from "@/components/admin/AdminOrderPaymentPanel";
 import { AdminOrderDemoDeletePanel } from "@/components/admin/AdminOrderDemoDeletePanel";
+import { AdminOrderReceiptActions } from "@/components/admin/AdminOrderReceiptActions";
+import { toAdminOrderClientRow } from "@/lib/admin-order-client";
 import {
   getSauceCupsFromOrderLine,
   totalSauceCupsForItems,
@@ -32,6 +34,7 @@ export default async function AdminOrderDetailPage({
   if (!order) notFound();
 
   const items = parseItems(order.items);
+  const receiptRow = toAdminOrderClientRow(order, "");
 
   return (
     <div>
@@ -85,6 +88,16 @@ export default async function AdminOrderDetailPage({
         orderNumber={order.orderNumber}
         status={order.status}
       />
+      <div className="mt-6 rounded border border-[var(--border)] bg-[var(--card)] p-4">
+        <h2 className="font-bold">Customer receipt</h2>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">
+          Print, save as an HTML file, or email a copy to{" "}
+          <span className="font-medium text-[var(--text)]">{order.email}</span>.
+        </p>
+        <div className="mt-3">
+          <AdminOrderReceiptActions order={receiptRow} />
+        </div>
+      </div>
       <div className="mt-6 rounded border border-[var(--border)] bg-[var(--card)] p-4">
         <h2 className="font-bold">Items</h2>
         <ul className="mt-2 list-disc pl-5 text-sm">

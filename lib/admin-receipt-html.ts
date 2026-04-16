@@ -233,3 +233,140 @@ export function openAdminReceiptPrintWindow(order: AdminOrderClientRow): void {
     window.alert("Could not prepare the receipt for printing. Try again.");
   }
 }
+
+/** Save the same printable HTML as a file (share or open in a browser / print to PDF). */
+export function downloadAdminReceiptHtmlFile(order: AdminOrderClientRow): void {
+  if (typeof document === "undefined") return;
+  const html = buildAdminReceiptHtml(order);
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const safeNum = String(order.orderNumber).replace(/[^\w.-]+/g, "_");
+  a.href = url;
+  a.download = `receipt-${safeNum}.html`;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Email-friendly HTML (tables + inline styles). Mirrors the print receipt content.
+ */
+export function buildAdminReceiptEmailHtml(order: AdminOrderClientRow): string {
+  const items = parseItems(order.items);
+  const lines = items.map((i) => formatLine(i));
+  const taxLabel = salesTaxPercentLabel();
+  const created = new Date(order.createdAt).toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+
+  const itemsBlock = lines.length
+    ? lines
+        .map(
+          (l) =>
+            `<tr><td colspan="2" style="padding:4px 0;font-size:13px;line-height:1.4;color:#111;">${escapeHtml(l)}</td></tr>`
+        )
+        .join("")
+    : `<tr><td colspan="2" style="padding:8px 0;font-size:13px;color:#555;">(no line items)</td></tr>`;
+
+  const demoBanner = order.isDemo
+    ? `<tr><td colspan="2" style="padding:10px;background:#fef3c7;border-radius:6px;text-align:center;font-size:12px;font-weight:800;color:#92400e;">DEMO / TEST ORDER — not for production books</td></tr>`
+    : "";
+
+  const notesRow = order.notes
+    ? `<tr><td colspan="2" style="padding-top:12px;border-top:1px solid #e5e7eb;font-size:13px;"><strong>Notes:</strong> ${escapeHtml(order.notes)}</td></tr>`
+    : "";
+
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Georgia,'Times New Roman',serif;color:#111;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:24px 12px;">
+<tr><td align="center">
+<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+<tr><td style="background:#0038A8;padding:20px 20px 16px;text-align:center;">
+<h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">Mr. K&apos;s Filipino Kitchen</h1>
+<p style="margin:8px 0 0;color:#FFC200;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;">Receipt</p>
+</td></tr>
+<tr><td style="padding:20px;">
+${demoBanner}
+<p style="margin:0 0 16px;font-size:13px;color:#444;text-align:center;">Pickup · Cypress, TX · ${escapeHtml(taxLabel)} sales tax</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+<tr><td style="padding:4px 0;color:#555;">Receipt #</td><td style="padding:4px 0;text-align:right;font-weight:700;">${escapeHtml(order.orderNumber)}</td></tr>
+<tr><td style="padding:4px 0;color:#555;">Date</td><td style="padding:4px 0;text-align:right;">${escapeHtml(created)}</td></tr>
+</table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;padding-top:16px;border-top:1px dashed #cbd5e1;font-size:14px;">
+<tr><td style="padding:4px 0;color:#555;">Customer</td><td style="padding:4px 0;text-align:right;">${escapeHtml(order.customerName)}</td></tr>
+<tr><td style="padding:4px 0;color:#555;">Phone</td><td style="padding:4px 0;text-align:right;">${escapeHtml(order.phone)}</td></tr>
+<tr><td style="padding:4px 0;color:#555;vertical-align:top;">Email</td><td style="padding:4px 0;text-align:right;word-break:break-all;">${escapeHtml(order.email)}</td></tr>
+</table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;padding-top:16px;border-top:1px dashed #cbd5e1;">
+${itemsBlock}
+</table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1;font-size:14px;">
+<tr><td style="padding:4px 0;">Utensils</td><td style="padding:4px 0;text-align:right;">${
+    order.utensilSets > 0
+      ? `${order.utensilSets} sets · $${order.utensilCharge.toFixed(2)}`
+      : "None"
+  }</td></tr>
+<tr><td style="padding:4px 0;">Subtotal</td><td style="padding:4px 0;text-align:right;">$${order.subtotal.toFixed(2)}</td></tr>
+<tr><td style="padding:4px 0;">Tax (${escapeHtml(taxLabel)})</td><td style="padding:4px 0;text-align:right;">$${order.tax.toFixed(2)}</td></tr>
+<tr><td style="padding:8px 0 4px;font-size:17px;font-weight:800;">TOTAL</td><td style="padding:8px 0 4px;text-align:right;font-size:17px;font-weight:800;">$${order.total.toFixed(2)}</td></tr>
+</table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1;font-size:14px;">
+<tr><td style="padding:4px 0;color:#555;">Pickup</td><td style="padding:4px 0;text-align:right;">${escapeHtml(order.pickupDate ?? "—")} @ ${escapeHtml(order.pickupTime ?? "—")}</td></tr>
+<tr><td style="padding:4px 0;color:#555;">Payment</td><td style="padding:4px 0;text-align:right;">${escapeHtml(order.paymentMethod ?? "—")} · ${escapeHtml(order.paymentStatus ?? "—")}</td></tr>
+<tr><td style="padding:4px 0;color:#555;">Order status</td><td style="padding:4px 0;text-align:right;">${escapeHtml(order.status)}</td></tr>
+</table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${notesRow}</table>
+<p style="margin:20px 0 0;font-size:12px;line-height:1.5;color:#555;text-align:center;">This receipt documents the order total and payment record for your files.<br/>Thank you for supporting Mr. K&apos;s Filipino Kitchen.</p>
+</td></tr>
+</table>
+<p style="margin:16px;font-size:11px;color:#888;text-align:center;">Sent from Mr. K&apos;s Filipino Kitchen · Cypress, TX</p>
+</td></tr></table>
+</body></html>`;
+}
+
+export function buildAdminReceiptPlainText(order: AdminOrderClientRow): string {
+  const items = parseItems(order.items);
+  const lines = items.map((i) => formatLine(i));
+  const taxLabel = salesTaxPercentLabel();
+  const created = new Date(order.createdAt).toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  const itemBlock = lines.length ? lines.join("\n") : "(no line items)";
+  const parts: string[] = [
+    "Mr. K's Filipino Kitchen",
+    `Receipt #${order.orderNumber}`,
+  ];
+  if (order.isDemo) parts.push("[DEMO / TEST ORDER]");
+  parts.push(
+    `Date: ${created}`,
+    "",
+    `Customer: ${order.customerName}`,
+    `Phone: ${order.phone}`,
+    `Email: ${order.email}`,
+    "",
+    "Items:",
+    itemBlock,
+    "",
+    `Utensils: ${
+      order.utensilSets > 0
+        ? `${order.utensilSets} sets · $${order.utensilCharge.toFixed(2)}`
+        : "None"
+    }`,
+    `Subtotal: $${order.subtotal.toFixed(2)}`,
+    `Tax (${taxLabel}): $${order.tax.toFixed(2)}`,
+    `TOTAL: $${order.total.toFixed(2)}`,
+    "",
+    `Pickup: ${order.pickupDate ?? "—"} @ ${order.pickupTime ?? "—"}`,
+    `Payment: ${order.paymentMethod ?? "—"} · ${order.paymentStatus ?? "—"}`,
+    `Order status: ${order.status}`
+  );
+  if (order.notes?.trim()) parts.push("", `Notes: ${order.notes}`);
+  parts.push("", "Thank you for supporting Mr. K's Filipino Kitchen.");
+  return parts.join("\n");
+}

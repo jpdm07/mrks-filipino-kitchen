@@ -12,7 +12,7 @@ import type { OrderItemLine } from "@/lib/order-types";
 import type { AdminOrderClientRow } from "@/lib/admin-order-client";
 import { OrderPaymentAdminActions } from "./OrderPaymentAdminActions";
 import { ORDER_STATUS_PENDING_PAYMENT_VERIFICATION } from "@/lib/order-payment";
-import { openAdminReceiptPrintWindow } from "@/lib/admin-receipt-html";
+import { AdminOrderReceiptActions } from "@/components/admin/AdminOrderReceiptActions";
 import { ADMIN_POLL_INTERVAL_MS } from "@/lib/admin-poll-interval";
 
 type Row = AdminOrderClientRow;
@@ -707,13 +707,10 @@ export function DashboardOrders() {
               >
                 Save notes
               </button>
-              <button
-                type="button"
-                className="rounded border border-[var(--primary)] bg-[var(--gold-light)] px-4 py-2 text-sm font-bold text-[var(--primary)]"
-                onClick={() => openAdminReceiptPrintWindow(modal)}
-              >
-                Print receipt
-              </button>
+              <AdminOrderReceiptActions
+                order={modal}
+                onNotice={setModalNotice}
+              />
               <button
                 type="button"
                 className="rounded border px-4 py-2 text-sm font-semibold"
