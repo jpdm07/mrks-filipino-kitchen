@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { PRICING } from "@/lib/config";
 import { generateOrderNumber } from "@/lib/orderNumber";
@@ -6,7 +7,11 @@ import { sendOwnerSms } from "@/lib/twilio";
 import { sendNewOrderEmailToOwner } from "@/lib/order-owner-email";
 import { syncOrderToSheets } from "@/lib/sheets";
 import type { OrderItemLine } from "@/lib/order-types";
-import { isDatabaseUnavailableError, isPrismaEngineError } from "@/lib/safe-db";
+import {
+  isDatabaseUnavailableError,
+  isPrismaEngineError,
+  prismaDiagnosticCode,
+} from "@/lib/safe-db";
 import {
   isWellFormedPickupYMD,
   pickupDateRejectedMessage,
@@ -38,6 +43,37 @@ class CapacityExceededError extends Error {
     super("Capacity exceeded");
     this.name = "CapacityExceededError";
   }
+}
+
+const PRINTED_RECEIPT_NOTE =
+  "[Printed receipt requested — pack with order]";
+
+/** Production DB may lag migrations (Vercel skips migrate deploy unless opted in). */
+function isMissingWantsPrintedReceiptColumnError(err: unknown): boolean {
+  if (!(err instanceof Prisma.PrismaClientKnownRequestError)) return false;
+  if (err.code !== "P2022") return false;
+  const meta = err.meta;
+  const col =
+    meta &&
+    typeof meta === "object" &&
+    "column" in meta &&
+    typeof (meta as { column?: unknown }).column === "string"
+      ? (meta as { column: string }).column
+      : "";
+  const msg = err.message.toLowerCase();
+  return (
+    col.toLowerCase().includes("wantsprintedreceipt") ||
+    msg.includes("wantsprintedreceipt")
+  );
+}
+
+function notesWithPrintedReceiptFallback(
+  base: string | null,
+  wants: boolean
+): string | null {
+  if (!wants) return base;
+  if (!base?.trim()) return PRINTED_RECEIPT_NOTE;
+  return `${base.trim()}\n\n${PRINTED_RECEIPT_NOTE}`;
 }
 
 function computeTotals(
@@ -147,6 +183,7 @@ export async function POST(req: NextRequest) {
     const status = ORDER_STATUS_PENDING_PAYMENT_VERIFICATION;
     const paymentMethod = PAYMENT_METHOD_UNVERIFIED;
     const paymentStatus = PAYMENT_STATUS_PENDING;
+    const baseNotes = (body.notes ?? "").trim() || null;
 
     let order;
     try {
@@ -166,32 +203,48 @@ export async function POST(req: NextRequest) {
           }
           await assertPickupSlotFreeInTx(tx, pickupDate, pickupTime);
         }
-        return tx.order.create({
-          data: {
-            orderNumber,
-            customerName,
-            phone,
-            email,
-            items: JSON.stringify(items),
-            subtotal: sub,
-            tax,
-            total,
-            pickupDate,
-            pickupTime,
-            notes: (body.notes ?? "").trim() || null,
-            wantsUtensils,
-            utensilSets: sets,
-            utensilCharge: ut,
-            wantsRecurring: false,
-            customInquiry: (body.customInquiry ?? "").trim() || null,
-            subscribeUpdates: Boolean(body.subscribeUpdates),
-            wantsPrintedReceipt,
-            status,
-            paymentMethod,
-            paymentStatus,
-            isDemo,
-          },
-        });
+        const common = {
+          orderNumber,
+          customerName,
+          phone,
+          email,
+          items: JSON.stringify(items),
+          subtotal: sub,
+          tax,
+          total,
+          pickupDate,
+          pickupTime,
+          wantsUtensils,
+          utensilSets: sets,
+          utensilCharge: ut,
+          wantsRecurring: false,
+          customInquiry: (body.customInquiry ?? "").trim() || null,
+          subscribeUpdates: Boolean(body.subscribeUpdates),
+          status,
+          paymentMethod,
+          paymentStatus,
+          isDemo,
+        };
+        try {
+          return await tx.order.create({
+            data: {
+              ...common,
+              notes: baseNotes,
+              wantsPrintedReceipt,
+            },
+          });
+        } catch (e) {
+          if (!isMissingWantsPrintedReceiptColumnError(e)) throw e;
+          return await tx.order.create({
+            data: {
+              ...common,
+              notes: notesWithPrintedReceiptFallback(
+                baseNotes,
+                wantsPrintedReceipt
+              ),
+            },
+          });
+        }
       });
     } catch (e) {
       if (e instanceof PickupSlotTakenError) {
@@ -320,6 +373,16 @@ export async function POST(req: NextRequest) {
           : "Check DATABASE_URL, file permissions on the SQLite file, and that npx prisma db push completed.";
       }
       return NextResponse.json(body, { status: 503 });
+    }
+    const code = prismaDiagnosticCode(e);
+    if (code === "P2022") {
+      return NextResponse.json(
+        {
+          error:
+            "We couldn't save your order — the site database needs an update. Please call or text 979-703-3827 to place your order, or try again later.",
+        },
+        { status: 503 }
+      );
     }
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
