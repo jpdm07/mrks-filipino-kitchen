@@ -698,6 +698,15 @@ export function OrderForm() {
         <label className="flex cursor-pointer items-start gap-2 text-sm">
           <input
             type="checkbox"
+            className="mt-1"
+            checked={cart.newsletterOptIn}
+            onChange={(e) => cart.setNewsletterOptIn(e.target.checked)}
+          />
+          Keep me updated on new menu items and specials
+        </label>
+        <label className="flex cursor-pointer items-start gap-2 text-sm">
+          <input
+            type="checkbox"
             checked={customCheck}
             onChange={(e) => {
               setCustomCheck(e.target.checked);

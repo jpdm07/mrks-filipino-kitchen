@@ -451,16 +451,6 @@ export function CartDrawer() {
                 </p>
               </div>
 
-              <label className="mb-4 flex cursor-pointer items-start gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={cart.newsletterOptIn}
-                  onChange={(e) => cart.setNewsletterOptIn(e.target.checked)}
-                  className="mt-1"
-                />
-                Keep me updated on new menu items and specials
-              </label>
-
               <CartPaymentMethodsStrip />
             </div>
 
