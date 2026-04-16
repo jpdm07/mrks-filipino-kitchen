@@ -108,6 +108,8 @@ export function CartDrawer() {
     ? "⅓ dozen at your protein’s cooked dozen price."
     : `Beef $${lumpPx.beef.toFixed(2)} · Pork $${lumpPx.pork.toFixed(2)} · Turkey $${lumpPx.turkey.toFixed(2)} each — choose protein below`;
 
+  const breakdownOrderItems = totalsOpen ? cart.buildOrderItems() : [];
+
   return createPortal(
     <>
       <button
@@ -479,7 +481,7 @@ export function CartDrawer() {
                 className="mt-3 flex w-full items-center justify-between gap-2 py-1 text-left text-sm font-semibold text-[var(--text)] underline-offset-2 hover:underline"
                 aria-expanded={totalsOpen}
               >
-                <span>Subtotal &amp; tax</span>
+                <span>Order breakdown &amp; tax</span>
                 {totalsOpen ? (
                   <ChevronUp className="h-5 w-5 shrink-0 text-[var(--text-muted)]" />
                 ) : (
@@ -487,16 +489,108 @@ export function CartDrawer() {
                 )}
               </button>
               {totalsOpen ? (
-                <div className="mt-2 space-y-1 border-t border-[var(--border)]/80 pt-3 text-sm">
-                  <div className="flex justify-between">
-                    <span>Subtotal (items + utensils)</span>
-                    <span>${cart.subtotalBeforeTax.toFixed(2)}</span>
+                <div className="mt-2 space-y-3 border-t border-[var(--border)]/80 pt-3 text-sm">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                      Charged in this total
+                    </p>
+                    <ul className="mt-2 space-y-2.5">
+                      {breakdownOrderItems.map((item, idx) => {
+                        const lineTotal = item.quantity * item.unitPrice;
+                        const meta = [
+                          item.size,
+                          item.cookedOrFrozen === "cooked" ||
+                          item.cookedOrFrozen === "frozen"
+                            ? item.cookedOrFrozen
+                            : null,
+                        ].filter(Boolean);
+                        return (
+                          <li
+                            key={`${item.name}-${idx}-${item.menuItemId ?? ""}`}
+                            className="flex justify-between gap-3"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p
+                                className={
+                                  item.isSample
+                                    ? "font-medium text-[var(--text)]"
+                                    : "text-[var(--text)]"
+                                }
+                              >
+                                {item.name}
+                              </p>
+                              {meta.length > 0 ? (
+                                <p className="text-xs capitalize text-[var(--text-muted)]">
+                                  {meta.join(" · ")}
+                                </p>
+                              ) : null}
+                              <p className="text-xs text-[var(--text-muted)]">
+                                {item.quantity} × ${item.unitPrice.toFixed(2)}
+                              </p>
+                            </div>
+                            <span className="shrink-0 tabular-nums font-semibold text-[var(--text)]">
+                              ${lineTotal.toFixed(2)}
+                            </span>
+                          </li>
+                        );
+                      })}
+                      {cart.wantsUtensils && cart.utensilSets > 0 ? (
+                        <li className="flex justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[var(--text)]">Utensils</p>
+                            <p className="text-xs text-[var(--text-muted)]">
+                              {formatUtensilsCartOneLiner(
+                                cart.wantsUtensils,
+                                cart.utensilSets,
+                                cart.utensilCharge,
+                                cart.complimentaryUtensilAllowance
+                              )}
+                            </p>
+                          </div>
+                          <span className="shrink-0 tabular-nums font-semibold text-[var(--text)]">
+                            ${cart.utensilCharge.toFixed(2)}
+                          </span>
+                        </li>
+                      ) : null}
+                    </ul>
+                    {breakdownOrderItems.length === 0 &&
+                    !(cart.wantsUtensils && cart.utensilSets > 0) ? (
+                      <p className="mt-2 text-xs text-[var(--text-muted)]">
+                        No priced items yet. Add menu items or complete sample
+                        choices above.
+                      </p>
+                    ) : null}
+                    {!samplesSelectionComplete(cart.samples) &&
+                    (cart.samples.lumpiaQty > 0 ||
+                      cart.samples.pancitQty > 0) ? (
+                      <p
+                        className="mt-2 rounded-md bg-amber-500/10 px-2 py-1.5 text-xs text-amber-900 dark:text-amber-200"
+                        role="status"
+                      >
+                        Sample quantities without a protein or pancit type are
+                        not included here yet. Open{" "}
+                        <span className="font-semibold">
+                          Add samples to your order
+                        </span>{" "}
+                        to finish.
+                      </p>
+                    ) : null}
                   </div>
-                  <div className="flex justify-between text-[var(--text-muted)]">
-                    <span>Tax ({salesTaxPercentLabel()})</span>
-                    <span>${cart.tax.toFixed(2)}</span>
+                  <div className="space-y-1 border-t border-[var(--border)]/80 pt-2">
+                    <div className="flex justify-between font-medium">
+                      <span>Subtotal (items + utensils)</span>
+                      <span className="tabular-nums">
+                        ${cart.subtotalBeforeTax.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[var(--text-muted)]">
+                      <span>Tax ({salesTaxPercentLabel()})</span>
+                      <span className="tabular-nums">
+                        ${cart.tax.toFixed(2)}
+                      </span>
+                    </div>
                   </div>
-                  <SalesTaxDisclosure className="mt-3" />
+                  <SalesTaxDisclosure className="pt-1" />
                 </div>
               ) : null}
               {checkoutHint ? (
