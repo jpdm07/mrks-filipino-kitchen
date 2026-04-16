@@ -209,7 +209,7 @@ export const MENU_CATALOG = [
     variantShortLabel: "Chicken",
     groupCardTitle: "Pancit",
     groupServingBlurb:
-      "1 serving: single to-go container (not an 8×8 pan), with a lime wedge. 2–4 servings: scaled tray for a few people. Party: full 9×13 tray, 8–10 servings, limes for the group.",
+      "1 serving: single to-go container with a lime wedge. 2–4 servings: scaled tray for a few people. Party: full 9×13 tray, 8–10 servings, limes for the group.",
   },
   {
     id: "seed-5",
@@ -244,7 +244,7 @@ export const MENU_CATALOG = [
     variantShortLabel: "Shrimp",
     groupCardTitle: "Pancit",
     groupServingBlurb:
-      "1 serving: single to-go container (not an 8×8 pan), plump shrimp, lime wedge. 2–4 servings: scaled tray. Party: full 9×13 for the group, limes included.",
+      "1 serving: single to-go container, plump shrimp, lime wedge. 2–4 servings: scaled tray. Party: full 9×13 for the group, limes included.",
   },
   {
     id: "seed-6",
