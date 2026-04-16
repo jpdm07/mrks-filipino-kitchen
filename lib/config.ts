@@ -23,6 +23,7 @@ export const SITE = {
   publicUrl: CANONICAL_SITE_ORIGIN,
   phoneDisplay: "979-703-3827",
   phoneTel: "tel:+19797033827",
+  /** Public inbox — contact page, footer, printable menu, business card (screen + PDF). */
   email: "mrksfilipinokitchen@gmail.com",
   location: "Cypress, TX 77433",
   /** Canonical Page URL — see `lib/facebook-url.ts` (mobile-safe default). */
