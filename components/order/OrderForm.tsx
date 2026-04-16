@@ -383,6 +383,8 @@ export function OrderForm() {
     const data = (await res.json()) as {
       error?: string;
       devHint?: string;
+      devDetail?: string;
+      devCode?: string | null;
       orderNumber?: string;
     };
     setLoading(false);
@@ -392,7 +394,15 @@ export function OrderForm() {
         typeof data.devHint === "string" && data.devHint.trim()
           ? data.devHint.trim()
           : "";
-      setErr(hint ? `${msg}\n\n${hint}` : msg);
+      const devExtra =
+        typeof data.devDetail === "string" && data.devDetail.trim()
+          ? `\n\n[debug] ${data.devCode ? `${data.devCode}: ` : ""}${data.devDetail.trim()}`
+          : "";
+      setErr(
+        hint || devExtra
+          ? `${msg}${hint ? `\n\n${hint}` : ""}${devExtra}`
+          : msg
+      );
       return;
     }
     if (!data.orderNumber) {

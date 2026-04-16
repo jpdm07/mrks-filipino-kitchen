@@ -76,6 +76,34 @@ function notesWithPrintedReceiptFallback(
   return `${base.trim()}\n\n${PRINTED_RECEIPT_NOTE}`;
 }
 
+/** Local/prod DBs sometimes lag migrations — table missing breaks checkout otherwise. */
+async function safeManualSoldOutWeekStart(
+  tx: Prisma.TransactionClient
+): Promise<string | null> {
+  try {
+    const settings = await tx.kitchenCapacitySettings.findUnique({
+      where: { id: "default" },
+    });
+    return settings?.manualSoldOutWeekStart ?? null;
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2021") {
+      console.warn(
+        "[orders] KitchenCapacitySettings table missing — run: npx prisma migrate deploy. Using no manual sold-out override."
+      );
+      return null;
+    }
+    const msg = e instanceof Error ? e.message : String(e);
+    if (
+      msg.includes("KitchenCapacitySettings") &&
+      (msg.includes("does not exist") || msg.includes("Unknown model"))
+    ) {
+      console.warn("[orders] KitchenCapacitySettings unavailable:", msg);
+      return null;
+    }
+    throw e;
+  }
+}
+
 function computeTotals(
   items: OrderItemLine[],
   wantsUtensils: boolean,
@@ -189,14 +217,12 @@ export async function POST(req: NextRequest) {
     try {
       order = await prisma.$transaction(async (tx) => {
         if (!isDemo) {
-          const settings = await tx.kitchenCapacitySettings.findUnique({
-            where: { id: "default" },
-          });
+          const manualSoldOutWeekStart = await safeManualSoldOutWeekStart(tx);
           const cap = await wouldExceedCapacityForPickupWeekWithTx(
             tx,
             pickupDate,
             items,
-            { manualSoldOutWeekStart: settings?.manualSoldOutWeekStart ?? null }
+            { manualSoldOutWeekStart }
           );
           if (!cap.ok) {
             throw new CapacityExceededError();
@@ -342,14 +368,18 @@ export async function POST(req: NextRequest) {
     }
 
     if (body.subscribeUpdates && !isDemo) {
-      const em = email.toLowerCase();
-      const existing = await prisma.subscriber.findUnique({
-        where: { email: em },
-      });
-      if (!existing) {
-        await prisma.subscriber.create({
-          data: { email: em, name: customerName },
+      try {
+        const em = email.toLowerCase();
+        const existing = await prisma.subscriber.findUnique({
+          where: { email: em },
         });
+        if (!existing) {
+          await prisma.subscriber.create({
+            data: { email: em, name: customerName },
+          });
+        }
+      } catch (subErr) {
+        console.warn("[orders] Newsletter subscriber row not saved (order still placed):", subErr);
       }
     }
 
@@ -375,15 +405,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(body, { status: 503 });
     }
     const code = prismaDiagnosticCode(e);
-    if (code === "P2022") {
+    if (code === "P2022" || code === "P2021") {
       return NextResponse.json(
         {
           error:
-            "We couldn't save your order — the site database needs an update. Please call or text 979-703-3827 to place your order, or try again later.",
+            "We couldn't save your order — the database needs migrations applied. On your machine run: npx prisma migrate deploy. Or call/text 979-703-3827 to place your order.",
         },
         { status: 503 }
       );
     }
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    const devDetail =
+      process.env.NODE_ENV === "development"
+        ? {
+            devDetail: e instanceof Error ? e.message : String(e),
+            devCode: code,
+          }
+        : {};
+    return NextResponse.json({ error: "Server error", ...devDetail }, { status: 500 });
   }
 }
