@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { MenuItemDTO } from "@/lib/menu-types";
 import { useCart } from "@/components/cart/CartContext";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
+import { splitTocinoPlateDipDescription } from "@/lib/tocino-plate-description";
 
 function shortLabel(v: MenuItemDTO): string {
   const t = v.variantShortLabel?.trim();
@@ -144,6 +145,10 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
     variant?.groupCardTitle?.trim() || variant?.category || "Menu item";
 
   const groupBlurb = variant?.groupServingBlurb?.trim() ?? null;
+  const tocinoPlateDipSplit = useMemo(() => {
+    if (!isTocinoUnified || !variant) return null;
+    return splitTocinoPlateDipDescription(variant.description);
+  }, [isTocinoUnified, variant]);
   const photoUrl = sorted[0]?.photoUrl ?? "";
   const allSoldOut = sorted.length > 0 && sorted.every((v) => v.soldOut);
 
@@ -229,9 +234,20 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
             {title}
           </h3>
           <p className="text-sm text-[var(--text-muted)]">{variant.calories}</p>
-          <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
-            {variant.description}
-          </p>
+          {isTocinoUnified && tocinoPlateDipSplit?.dipNote ? (
+            <>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
+                {tocinoPlateDipSplit.lead}
+              </p>
+              <p className="mt-2 whitespace-nowrap text-sm leading-relaxed text-[var(--text)]">
+                {tocinoPlateDipSplit.dipNote}
+              </p>
+            </>
+          ) : (
+            <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
+              {variant.description}
+            </p>
+          )}
 
           <div className="mt-3 rounded-lg border border-[var(--gold)]/45 bg-[var(--gold)]/12 px-3 py-2.5">
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--primary)]">

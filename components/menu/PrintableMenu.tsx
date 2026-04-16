@@ -5,6 +5,7 @@ import {
   normalizePrintMenuDescription,
 } from "@/lib/printable-menu";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
+import { splitTocinoPlateDipDescription } from "@/lib/tocino-plate-description";
 
 const siteUrl = getPublicSiteOrigin();
 
@@ -113,9 +114,25 @@ export function PrintableMenu({ items }: { items: MenuItemDTO[] }) {
                     </span>
                   </div>
                   {item.description ? (
-                    <p className="mt-1 text-left text-xs leading-relaxed text-neutral-700 sm:text-sm print:text-[10pt] print:leading-snug">
-                      {normalizePrintMenuDescription(item.description)}
-                    </p>
+                    (() => {
+                      const raw = normalizePrintMenuDescription(
+                        item.description
+                      );
+                      const parts = splitTocinoPlateDipDescription(raw);
+                      const descClass =
+                        "mt-1 text-left text-xs leading-relaxed text-neutral-700 sm:text-sm print:text-[10pt] print:leading-snug";
+                      if (!parts.dipNote) {
+                        return <p className={descClass}>{raw}</p>;
+                      }
+                      return (
+                        <>
+                          <p className={descClass}>{parts.lead}</p>
+                          <p className={`${descClass} whitespace-nowrap`}>
+                            {parts.dipNote}
+                          </p>
+                        </>
+                      );
+                    })()
                   ) : null}
                   <ul className="mt-2 space-y-1 text-sm text-neutral-800 print:text-[10pt]">
                     {item.sizes.map((s) => (
