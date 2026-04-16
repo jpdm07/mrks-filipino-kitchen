@@ -654,20 +654,14 @@ export function OrderForm() {
             onChange={(e) => setNotes(e.target.value)}
           />
         </label>
-        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm">
+        <label className="flex cursor-pointer items-start gap-2 text-sm">
           <input
             type="checkbox"
-            className="mt-0.5 h-5 w-5 shrink-0"
+            className="mt-1"
             checked={wantsPrintedReceipt}
             onChange={(e) => setWantsPrintedReceipt(e.target.checked)}
           />
-          <span className="leading-snug text-[var(--text)]">
-            <span className="font-semibold">Printed receipt</span>
-            <span className="text-[var(--text-muted)]">
-              {" "}
-              — include a paper copy with my pickup order
-            </span>
-          </span>
+          Printed receipt — include a paper copy with my pickup order
         </label>
         <label className="flex cursor-pointer items-start gap-2 text-sm">
           <input
