@@ -65,38 +65,39 @@ export default async function OrderConfirmationPage({
       <h1 className="mt-6 font-[family-name:var(--font-playfair)] text-3xl font-bold text-[var(--text)]">
         Thank you!
       </h1>
-      <p className="mt-2 text-sm text-[var(--text-muted)]">
-        Order number
-      </p>
+      <div className="mx-auto mt-4 max-w-md rounded-xl border-2 border-amber-500/80 bg-amber-50 px-4 py-3 text-center shadow-sm">
+        <p className="text-base font-bold text-amber-950">
+          Your order isn&apos;t final until we receive payment.
+        </p>
+        <p className="mt-1 text-sm text-amber-950/90">
+          Pay below — then we&apos;ll prep your food.
+        </p>
+      </div>
+      <p className="mt-6 text-sm text-[var(--text-muted)]">Order #</p>
       <p
         className="select-all text-3xl font-black tracking-tight text-[var(--primary)]"
-        title="Select and copy this for your payment memo"
+        title="Your order number"
       >
         #{order.orderNumber}
       </p>
-      <p className="mt-2 text-balance text-center text-xs text-[var(--text-muted)]">
-        Keep this number handy for pickup. The payment section below fills Venmo
-        memo for you and has copy buttons for Zelle.
+      <p className="mt-2 text-center text-xs text-[var(--text-muted)]">
+        Show this # at pickup.
       </p>
 
       {futurePickupWeek && pickupYmd ? (
-        <p className="mx-auto mt-6 max-w-lg rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-4 py-3 text-sm leading-relaxed text-[var(--text)]">
-          You&apos;re all set! Your order is confirmed for pickup on{" "}
-          <strong>{formatPickupYmdLong(pickupYmd)}</strong>. This is a future
-          pickup — we&apos;ll be
-          in touch to confirm once the week gets closer.
+        <p className="mx-auto mt-6 max-w-lg rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-4 py-3 text-sm text-[var(--text)]">
+          Pickup: <strong>{formatPickupYmdLong(pickupYmd)}</strong>. We may
+          reach out as the date gets closer.
         </p>
       ) : null}
 
-      <div className="mt-8 rounded-[var(--radius)] border-2 border-[var(--primary)] bg-[var(--primary)]/5 p-6 text-left shadow-[var(--shadow)]">
+      <div className="mt-8 rounded-[var(--radius)] border-2 border-[var(--primary)] bg-[var(--primary)]/5 p-5 text-left shadow-[var(--shadow)]">
         <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[var(--primary)]">
-          Send payment
+          Pay now
         </h2>
-        <p className="mt-3 text-base font-bold text-[var(--text)]">
-          Amount due:{" "}
-          <span className="text-[var(--primary)]">
-            ${order.total.toFixed(2)}
-          </span>
+        <p className="mt-2 text-lg font-bold text-[var(--text)]">
+          Total:{" "}
+          <span className="text-[var(--primary)]">${order.total.toFixed(2)}</span>
         </p>
         <div className="mt-4">
           <AcceptedPaymentMethods
@@ -105,17 +106,12 @@ export default async function OrderConfirmationPage({
             amountDue={order.total}
           />
         </div>
-        <p className="mt-4 rounded-lg border border-[var(--gold)] bg-[var(--gold-light)] px-4 py-3 text-sm font-semibold text-[var(--text)]">
-          <strong>Venmo:</strong> the blue button opens Venmo with{" "}
-          <span className="font-mono text-[var(--primary)]">
+        <p className="mt-4 rounded-lg border border-[var(--gold)] bg-[var(--gold-light)] px-3 py-2 text-sm text-[var(--text)]">
+          <strong>Memo:</strong>{" "}
+          <span className="font-mono font-semibold text-[var(--primary)]">
             {order.orderNumber}
           </span>{" "}
-          in the memo. <strong>Zelle:</strong> use{" "}
-          <span className="font-mono text-[var(--primary)]">
-            {order.orderNumber}
-          </span>{" "}
-          in the memo — tap <strong>Copy order # (memo)</strong> above if
-          needed.
+          (Venmo fills this when you tap Pay.)
         </p>
       </div>
 
@@ -185,25 +181,18 @@ export default async function OrderConfirmationPage({
           </p>
         </div>
       ) : (
-        <div className="mt-6 rounded-[var(--radius)] border-2 border-[var(--primary)] bg-[var(--primary)]/5 p-6 text-left text-base leading-relaxed text-[var(--text)] shadow-[var(--shadow)]">
-          <p className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[var(--primary)]">
-            Your order has been received! 🎉
+        <div className="mt-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4 text-left text-sm text-[var(--text)] shadow-sm">
+          <p className="font-semibold text-[var(--text)]">
+            We start cooking after payment clears — usually same day.
           </p>
-          <p className="mt-4">
-            Mr. K will verify your payment and be in touch shortly. If you
-            don&apos;t hear back within a few hours, call or text{" "}
+          <p className="mt-2 text-[var(--text-muted)]">
+            Something off?{" "}
             <a
               href="tel:+19797033827"
               className="font-bold text-[var(--primary)] underline"
             >
               979-703-3827
             </a>
-            .
-          </p>
-          <p className="mt-4 font-medium">
-            Please note: your order will not begin preparation until payment has
-            been verified. Thank you for your patience and for supporting Mr.
-            K&apos;s Filipino Kitchen!
           </p>
         </div>
       )}

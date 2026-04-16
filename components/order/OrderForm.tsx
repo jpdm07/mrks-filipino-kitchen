@@ -577,9 +577,8 @@ export function OrderForm() {
               }}
             />
             <span>
-              I understand I&apos;ll complete payment on the next screen using
-              Venmo (memo can be filled automatically) or Zelle (copy buttons
-              provided), and I&apos;ll keep my order number to show at pickup.
+              I know my order isn&apos;t locked in until I pay on the next
+              screen.
             </span>
           </label>
         </div>
