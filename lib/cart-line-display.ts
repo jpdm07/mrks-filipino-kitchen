@@ -42,10 +42,12 @@ export function includedDippingSauceCountLine(line: CartLine): string | null {
   const q = Math.max(1, Math.floor(line.quantity));
 
   if (id === "seed-1" || id === "seed-2" || id === "seed-3") {
+    if (q >= 2) return "Dipping sauce included";
     const n = 2 * q;
     return `${n} dipping sauce${n === 1 ? "" : "s"} included`;
   }
   if (id === "seed-7") {
+    if (q >= 2) return "Dipping sauce included";
     const n = 2 * q;
     return `${n} dipping sauce${n === 1 ? "" : "s"} included`;
   }
