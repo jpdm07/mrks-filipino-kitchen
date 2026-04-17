@@ -4,6 +4,8 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { OrderItemLine } from "@/lib/order-types";
 import { verifyAdminToken, getAdminTokenFromRequest } from "@/lib/admin-auth";
+import { toAdminOrderClientRow } from "@/lib/admin-order-client";
+import { sendCustomerReceiptEmail } from "@/lib/send-customer-receipt-email";
 import { sendOwnerSms, sendCustomerSms } from "@/lib/twilio";
 import { formatItemsForSms, formatSamplesForSms } from "@/lib/order-types";
 import { syncOrderStatusToSheets } from "@/lib/sheets";
@@ -140,6 +142,16 @@ export async function PATCH(
     const pt = updated.pickupTime ?? "";
     const msg = `✅ Hi ${updated.customerName}! Mr. K has confirmed your payment. Your order #${updated.orderNumber} is confirmed for pickup on ${pd} around ${pt}. We'll see you then! Questions? Call or text 979-703-3827.`;
     await sendCustomerSms(updated.phone, msg).catch(() => {});
+
+    const receiptRow = toAdminOrderClientRow(updated, "");
+    void sendCustomerReceiptEmail(receiptRow).then((result) => {
+      if (!result.ok) {
+        console.warn(
+          "[Orders PATCH verify] Customer receipt email skipped or failed:",
+          result.error
+        );
+      }
+    });
 
     const lines = parseItems(updated.items);
     const sauceTotal = totalSauceCupsForItems(lines);
