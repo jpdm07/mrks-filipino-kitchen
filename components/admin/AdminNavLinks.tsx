@@ -33,6 +33,7 @@ const LINK_DEFS: {
     badgeLabel: "Unread contact messages",
   },
   { href: "/admin/availability", label: "Availability", count: () => 0, badgeLabel: "" },
+  { href: "/admin/mail-setup", label: "Mail setup", count: () => 0, badgeLabel: "" },
   { href: "/admin/inventory", label: "Inventory", count: () => 0, badgeLabel: "" },
   {
     href: "/admin/menu-manager",

@@ -1,3 +1,4 @@
+import { getOwnerOrderNotificationEmail } from "@/lib/mail-env-status";
 import { sendMail } from "@/lib/mailer";
 import type { OrderItemLine } from "@/lib/order-types";
 import { formatUtensilsOwnerLine } from "@/lib/config";
@@ -47,10 +48,7 @@ export async function sendNewOrderEmailToOwner(params: {
   wantsPrintedReceipt?: boolean;
   isDemo?: boolean;
 }): Promise<boolean> {
-  const to =
-    process.env.OWNER_ORDER_EMAIL?.trim() ||
-    process.env.EMAIL_USER?.trim() ||
-    "";
+  const to = getOwnerOrderNotificationEmail();
   if (!to) {
     console.warn(
       "[orders] Owner notification email skipped: set EMAIL_USER (and EMAIL_PASSWORD) or OWNER_ORDER_EMAIL."
