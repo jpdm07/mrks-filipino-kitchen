@@ -374,6 +374,7 @@ export function OrderForm() {
       devCode?: string | null;
       prismaCode?: string | null;
       orderNumber?: string;
+      ownerEmailSent?: boolean;
     };
     setLoading(false);
     if (!res.ok) {
@@ -400,6 +401,11 @@ export function OrderForm() {
     if (!data.orderNumber) {
       setErr("Order placed but confirmation number missing. Please contact us.");
       return;
+    }
+    if (data.ownerEmailSent === false) {
+      console.warn(
+        "[checkout] Order saved but kitchen email was not sent (ownerEmailSent=false). Open DevTools → Network → the POST /api/orders response JSON. On Vercel: set EMAIL_USER + EMAIL_PASSWORD for SMTP, or fix Resend (RESEND_API_KEY + RESEND_FROM_EMAIL). OWNER_ORDER_EMAIL only sets who receives mail. Remove RESEND_API_KEY if you are not using Resend."
+      );
     }
     cart.clearCart();
     router.push(`/order-confirmation/${encodeURIComponent(data.orderNumber)}`);

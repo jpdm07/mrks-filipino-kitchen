@@ -140,6 +140,12 @@ export async function sendNewOrderEmailToOwner(params: {
       html,
       text,
     });
+    if (!r.ok) {
+      console.error(
+        "[orders] Owner notification email was not delivered:",
+        r.error
+      );
+    }
     return r.ok;
   } catch (e) {
     console.error("[orders] Owner notification email failed:", e);
