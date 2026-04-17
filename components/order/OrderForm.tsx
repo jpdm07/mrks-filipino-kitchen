@@ -65,7 +65,7 @@ export function OrderForm() {
   const [pickupTime, setPickupTime] = useState("");
   const [notes, setNotes] = useState("");
   const [wantsPrintedReceipt, setWantsPrintedReceipt] = useState(false);
-  /** Customer acknowledges they will put the order # in Venmo/Zelle memo after submit. */
+  /** Customer acknowledges payment rules (memo with order #; verified at pickup). */
   const [paymentMemoAck, setPaymentMemoAck] = useState(false);
   /** Shown only when NEXT_PUBLIC_ALLOW_DEMO_CHECKOUT=true at build time; server must set ALLOW_DEMO_ORDERS_AT_CHECKOUT. */
   const [checkoutDemo, setCheckoutDemo] = useState(false);
@@ -301,7 +301,7 @@ export function OrderForm() {
       }
       if (next.payment) {
         parts.push(
-          "Please confirm you will use your order number in the payment memo and text it after paying."
+          "Please confirm you will put your order number in the Venmo or Zelle memo when you pay (Mr. K will match it with you at pickup)."
         );
       }
       if (
@@ -598,7 +598,9 @@ export function OrderForm() {
               }}
             />
             <span className="min-w-0 leading-snug">
-              My order isn&apos;t final until I pay on the next page.
+              My order isn&apos;t final until I pay on the next page. I&apos;ll put my
+              order number in the Venmo or Zelle memo when I pay so Mr. K can match it
+              with me at pickup.
             </span>
           </label>
         </div>

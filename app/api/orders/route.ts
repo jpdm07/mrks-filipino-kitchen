@@ -357,8 +357,8 @@ export async function POST(req: NextRequest) {
     }
     ownerSmsLines.push(
       ``,
-      `Customer was told to put order #${orderNumber} in Venmo/Zelle memo when paying.`,
-      `Verify payment, then confirm in admin.`
+      `Customer was told to put order #${orderNumber} in Venmo/Zelle memo when paying (no text required).`,
+      `Match order # at pickup, then verify payment and confirm in admin.`
     );
     const ownerSms = ownerSmsLines.join("\n");
     const ownerSmsSent = await sendOwnerSms(ownerSms);
