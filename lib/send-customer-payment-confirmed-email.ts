@@ -1,4 +1,5 @@
 import type { Order } from "@prisma/client";
+import { buildEmailBrandBannerHtml } from "@/lib/email-brand-header";
 import {
   buildCustomerReplyFooterHtml,
   buildCustomerReplyFooterPlainText,
@@ -67,8 +68,10 @@ export async function sendCustomerPaymentConfirmedEmail(
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/></head>
-<body style="margin:0;padding:24px;font-family:system-ui,Segoe UI,sans-serif;font-size:16px;line-height:1.5;color:#1a1a1a;background:#fafafa;">
-  <div style="max-width:520px;margin:0 auto;background:#fff;padding:24px 28px;border-radius:12px;border:1px solid #e8e8e8;">
+<body style="margin:0;padding:24px 12px;font-family:system-ui,Segoe UI,sans-serif;font-size:16px;line-height:1.5;color:#1a1a1a;background:#fafafa;">
+  <div style="max-width:520px;margin:0 auto;border-radius:12px;overflow:hidden;border:1px solid #e8e8e8;">
+    ${buildEmailBrandBannerHtml()}
+    <div style="background:#fff;padding:24px 28px;">
     <p style="margin:0 0 16px;">Hi ${name},</p>
     <p style="margin:0 0 16px;">We&apos;ve received your payment for order <strong>#${num}</strong>. Thank you!</p>
     <p style="margin:0 0 8px;"><strong>Pickup</strong><br/>${whenH}</p>
@@ -78,6 +81,7 @@ export async function sendCustomerPaymentConfirmedEmail(
     <p style="margin:24px 0 0;font-size:14px;color:#555;">Questions? Call or text <a href="tel:+19797033827" style="color:#0d6efd;">979-703-3827</a>.</p>
     <p style="margin:16px 0 0;font-size:14px;color:#888;">— Mr. K&apos;s Filipino Kitchen</p>
     ${buildCustomerReplyFooterHtml()}
+    </div>
   </div>
 </body>
 </html>`;

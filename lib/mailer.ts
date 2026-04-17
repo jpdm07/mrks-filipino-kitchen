@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
+import { buildEmailBrandBannerHtml } from "@/lib/email-brand-header";
 import {
   buildCustomerReplyFooterHtml,
   getReplyToEmail,
@@ -189,15 +190,10 @@ export function newsletterHtml(params: {
 }): string {
   const base = getPublicSiteOrigin();
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;background:#FFFDF5;font-family:Georgia,serif;color:#1A1A1A;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0038A8;padding:24px 16px;">
-    <tr><td align="center">
-      <h1 style="margin:0;color:#FFFFFF;font-size:26px;font-weight:700;">Mr. K's</h1>
-      <p style="color:#FFC200;font-size:13px;margin:8px 0 0;letter-spacing:0.12em;text-transform:uppercase;">Filipino Kitchen</p>
-      <p style="color:#FFC200;font-size:14px;margin:12px 0 0;">Authentic Filipino Kitchen · Cypress, TX</p>
-    </td></tr>
-  </table>
-  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;margin:0 auto;padding:24px;">
-    <tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation"><tr><td align="center" style="padding:0;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:640px;margin:0 auto;">
+    <tr><td style="padding:0;">${buildEmailBrandBannerHtml()}</td></tr>
+    <tr><td style="padding:24px 16px 32px;">
       ${params.itemBlock ?? ""}
       <div style="font-size:16px;line-height:1.6;">${params.message}</div>
       <p style="margin-top:32px;text-align:center;">
@@ -209,5 +205,6 @@ export function newsletterHtml(params: {
       </p>
     </td></tr>
   </table>
+  </td></tr></table>
 </body></html>`;
 }

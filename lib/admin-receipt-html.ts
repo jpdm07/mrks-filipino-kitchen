@@ -1,3 +1,4 @@
+import { buildEmailBrandBannerHtml } from "@/lib/email-brand-header";
 import { formatPaymentDisplayLine } from "@/lib/order-payment";
 import { salesTaxPercentLabel } from "@/lib/config";
 import type { OrderItemLine } from "@/lib/order-types";
@@ -356,9 +357,8 @@ export function buildAdminReceiptEmailHtml(order: AdminOrderClientRow): string {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:24px 12px;">
 <tr><td align="center">
 <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
-<tr><td style="background:#0038A8;padding:20px 20px 16px;text-align:center;">
-<h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">Mr. K&apos;s Filipino Kitchen</h1>
-<p style="margin:8px 0 0;color:#FFC200;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;">Receipt</p>
+<tr><td style="padding:0;">
+${buildEmailBrandBannerHtml({ subtitle: "Receipt" })}
 </td></tr>
 <tr><td style="padding:20px;">
 ${demoBanner}
