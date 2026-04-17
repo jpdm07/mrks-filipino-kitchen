@@ -17,7 +17,8 @@ function getFromDisplayName(): string {
 
 function getTransport() {
   const user = process.env.EMAIL_USER?.trim();
-  const pass = process.env.EMAIL_PASSWORD?.trim();
+  /** Gmail app passwords may include spaces; SMTP auth uses the 16 chars without spaces. */
+  const pass = (process.env.EMAIL_PASSWORD?.trim() ?? "").replace(/\s/g, "");
   if (!user || !pass) return null;
 
   const host = (process.env.EMAIL_SMTP_HOST || "smtp.mail.yahoo.com").trim();
