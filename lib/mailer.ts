@@ -10,6 +10,19 @@ export type MailSendResult =
   | { ok: true }
   | { ok: false; error: string };
 
+/** Unique per send so clients (notably Gmail) are less likely to trim or thread as one blob. */
+function withHtmlUniquenessStamp(html: string): string {
+  const id =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+  const stamp = `<!-- mrk:${id} -->`;
+  if (/<\/body\s*>/i.test(html)) {
+    return html.replace(/<\/body\s*>/i, `${stamp}</body>`);
+  }
+  return `${html}\n${stamp}\n`;
+}
+
 function getSmtpFromAddress(): string {
   const explicit = process.env.EMAIL_FROM?.trim();
   const user = process.env.EMAIL_USER?.trim();
@@ -139,9 +152,11 @@ export async function sendMail(opts: {
   replyTo?: string;
 }): Promise<MailSendResult> {
   const replyTo = (opts.replyTo?.trim() || getReplyToEmail()) ?? undefined;
+  const htmlOut = withHtmlUniquenessStamp(opts.html);
+  const stamped = { ...opts, html: htmlOut };
   const resendKey = process.env.RESEND_API_KEY?.trim();
   if (resendKey) {
-    return sendMailViaResend(resendKey, { ...opts, replyTo });
+    return sendMailViaResend(resendKey, { ...stamped, replyTo });
   }
 
   const transport = getTransport();
@@ -161,8 +176,12 @@ export async function sendMail(opts: {
       bcc: opts.bcc?.trim() || undefined,
       replyTo: replyTo || undefined,
       subject: opts.subject,
-      html: opts.html,
+      html: htmlOut,
       text: opts.text,
+      priority: "high",
+      headers: {
+        "X-Entity-Ref-ID": `${Date.now()}-${Math.random().toString(36).slice(2, 10)}@mrkskitchen.com`,
+      },
     });
     return { ok: true };
   } catch (e) {

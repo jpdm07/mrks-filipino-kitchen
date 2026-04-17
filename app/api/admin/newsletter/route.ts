@@ -60,6 +60,14 @@ export async function POST(req: NextRequest) {
 
   const subs = await prisma.subscriber.findMany();
   const base = getPublicSiteOrigin();
+  /** Distinct subject per send so Gmail is less likely to stack campaigns in one thread. */
+  const mailSubject = `${subject} · ${new Date().toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  })}`;
   const spotlightText = buildNewsletterSpotlightPlainText(spotlightItems);
   const textCore = spotlightText
     ? `${message}\n\n${spotlightText}\nOrder: ${base}/menu`
@@ -79,7 +87,7 @@ export async function POST(req: NextRequest) {
     });
     const r = await sendMail({
       to: s.email,
-      subject,
+      subject: mailSubject,
       html,
       text: textBody,
     });
