@@ -64,7 +64,6 @@ export function DashboardOrders() {
   } | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
-  const [deleteAllBusy, setDeleteAllBusy] = useState(false);
   const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
 
   const closeModal = useCallback(() => {
@@ -204,7 +203,23 @@ export function DashboardOrders() {
     const tail = nums.length > 15 ? `\n… and ${nums.length - 15} more` : "";
     const list = head.map((n) => `#${n}`).join("\n");
 
-    if (
+    /** Every order in the DB is selected — use delete-all (no 500-row bulk cap). */
+    const deletingEntireDatabase =
+      ids.length === orders.length && orders.length > 0;
+
+    if (deletingEntireDatabase) {
+      const typed = window.prompt(
+        `Delete ALL ${orders.length} order(s) from the database permanently? This cannot be undone.\n\nType exactly: DELETE ALL ORDERS`
+      );
+      if (typed?.trim() !== "DELETE ALL ORDERS") {
+        if (typed != null) {
+          window.alert(
+            'Cancelled — you must type the phrase exactly: DELETE ALL ORDERS'
+          );
+        }
+        return;
+      }
+    } else if (
       !window.confirm(
         `Permanently delete ${ids.length} order(s)? They will disappear from the dashboard, finances, and lists. This cannot be undone.\n\n${list}${tail}`
       )
@@ -214,6 +229,28 @@ export function DashboardOrders() {
 
     setBulkDeleting(true);
     try {
+      if (deletingEntireDatabase) {
+        const res = await fetch("/api/admin/orders/delete-all", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirm: "DELETE ALL ORDERS" }),
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          deleted?: number;
+        };
+        if (!res.ok) {
+          window.alert(data.error ?? "Could not delete all orders.");
+          return;
+        }
+        setOrders([]);
+        setSelectedIds(new Set());
+        closeModal();
+        router.refresh();
+        return;
+      }
+
       const res = await fetch("/api/admin/orders/bulk-delete", {
         method: "POST",
         credentials: "same-origin",
@@ -241,42 +278,6 @@ export function DashboardOrders() {
       }
     } finally {
       setBulkDeleting(false);
-    }
-  };
-
-  const deleteAllOrders = async () => {
-    if (orders.length === 0) return;
-    const typed = window.prompt(
-      `Delete ALL ${orders.length} order(s) permanently? This cannot be undone.\n\nType exactly: DELETE ALL ORDERS`
-    );
-    if (typed?.trim() !== "DELETE ALL ORDERS") {
-      if (typed != null) {
-        window.alert('Cancelled — you must type the phrase exactly: DELETE ALL ORDERS');
-      }
-      return;
-    }
-    setDeleteAllBusy(true);
-    try {
-      const res = await fetch("/api/admin/orders/delete-all", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ confirm: "DELETE ALL ORDERS" }),
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        error?: string;
-        deleted?: number;
-      };
-      if (!res.ok) {
-        window.alert(data.error ?? "Could not delete all orders.");
-        return;
-      }
-      setOrders([]);
-      setSelectedIds(new Set());
-      closeModal();
-      router.refresh();
-    } finally {
-      setDeleteAllBusy(false);
     }
   };
 
@@ -426,26 +427,14 @@ export function DashboardOrders() {
           </button>
         ) : null}
       </div>
-      {orders.length > 0 ? (
-        <div className="mb-4 rounded-lg border border-red-300 bg-red-50/90 px-4 py-3 text-sm text-red-950">
-          <p className="font-bold">Delete every order in the database</p>
-          <p className="mt-1 text-red-900/90">
-            For test resets or a full clear. You will be asked to type{" "}
-            <kbd className="rounded bg-white px-1 font-mono text-xs">
-              DELETE ALL ORDERS
-            </kbd>{" "}
-            exactly.
-          </p>
-          <button
-            type="button"
-            disabled={deleteAllBusy || bulkDeleting}
-            className="mt-3 min-h-[44px] rounded-lg border-2 border-red-700 bg-white px-4 text-sm font-bold text-red-800 hover:bg-red-100 disabled:pointer-events-none disabled:opacity-50"
-            onClick={() => void deleteAllOrders()}
-          >
-            {deleteAllBusy ? "Deleting all…" : "Delete ALL orders…"}
-          </button>
-        </div>
-      ) : null}
+      <p className="mb-3 text-xs text-[var(--text-muted)]">
+        To remove <strong>every</strong> order: set filters so all orders appear, tick the
+        header checkbox, then <strong>Delete selected</strong>. You will be asked to type{" "}
+        <kbd className="rounded border border-[var(--border)] bg-[var(--card)] px-1 font-mono">
+          DELETE ALL ORDERS
+        </kbd>{" "}
+        exactly.
+      </p>
       <div className="overflow-x-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)]">
         <table className="min-w-[960px] w-full text-left text-sm">
           <thead className="bg-[var(--primary)] text-white">

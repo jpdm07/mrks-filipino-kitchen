@@ -106,6 +106,54 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
+  if (body.action === "setDateRange") {
+    const rawFrom = typeof body.from === "string" ? body.from.trim() : "";
+    const rawTo = typeof body.to === "string" ? body.to.trim() : "";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(rawFrom) || !/^\d{4}-\d{2}-\d{2}$/.test(rawTo)) {
+      return NextResponse.json(
+        { error: "from and to must be calendar dates (YYYY-MM-DD)." },
+        { status: 400 }
+      );
+    }
+    let fromYmd = rawFrom;
+    let toYmd = rawTo;
+    if (fromYmd > toYmd) {
+      const swap = fromYmd;
+      fromYmd = toYmd;
+      toYmd = swap;
+    }
+    const span = eachYmdInRangeInclusive(fromYmd, toYmd);
+    if (span.length === 0) {
+      return NextResponse.json({ error: "Invalid date range." }, { status: 400 });
+    }
+    if (span.length > 400) {
+      return NextResponse.json(
+        {
+          error:
+            "That range is too long (max 400 days). Save a shorter span, then repeat if needed.",
+        },
+        { status: 400 }
+      );
+    }
+    const isOpen = Boolean(body.isOpen);
+    const noteTrim =
+      typeof body.note === "string" ? body.note.trim().slice(0, 500) : "";
+    const note = noteTrim.length > 0 ? noteTrim : null;
+    const entries = span.map((date) => ({
+      date,
+      isOpen,
+      note,
+      slots: null as string[] | null,
+    }));
+    await upsertAvailabilityEntries(entries);
+    return NextResponse.json({
+      ok: true,
+      updated: span.length,
+      from: fromYmd,
+      to: toYmd,
+    });
+  }
+
   if (body.action === "setMonth" && body.year && body.month) {
     const y = body.year;
     const m = body.month;

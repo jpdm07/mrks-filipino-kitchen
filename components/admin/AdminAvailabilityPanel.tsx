@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
 import { isFlanPickupOnlyNote } from "@/lib/kitchen-schedule";
 import { FlanPickupDayBadge } from "@/components/calendar/FlanPickupDayBadge";
+import { eachYmdInRangeInclusive } from "@/lib/availability-range";
+import { addCalendarDaysYMD, getTodayInPickupTimezoneYMD } from "@/lib/pickup-lead-time";
 
 type DayMap = Record<
   string,
@@ -88,6 +90,10 @@ export function AdminAvailabilityPanel() {
   );
   const [loadFromYmd, setLoadFromYmd] = useState("");
   const [flanTplSaturdays, setFlanTplSaturdays] = useState(false);
+  /** Inclusive YYYY-MM-DD (pickup calendar); for “trip / time away” bulk close. */
+  const [awayFrom, setAwayFrom] = useState(() => getTodayInPickupTimezoneYMD());
+  const [awayTo, setAwayTo] = useState(() => getTodayInPickupTimezoneYMD());
+  const [awayNote, setAwayNote] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -166,7 +172,7 @@ export function AdminAvailabilityPanel() {
 
   const post = async (
     body: object,
-    opts?: { quietSuccess?: boolean }
+    opts?: { quietSuccess?: boolean; successMessage?: string }
   ): Promise<boolean> => {
     setMsg(null);
     setSaveDayAck(false);
@@ -181,10 +187,85 @@ export function AdminAvailabilityPanel() {
       setMsg("Save failed.");
       return false;
     }
-    if (!opts?.quietSuccess) {
+    if (opts?.successMessage) {
+      setMsg(opts.successMessage);
+    } else if (!opts?.quietSuccess) {
       setMsg("Changes saved.");
     }
     return true;
+  };
+
+  const awayRangeDayCount = useMemo(() => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(awayFrom) || !/^\d{4}-\d{2}-\d{2}$/.test(awayTo)) {
+      return 0;
+    }
+    const a = awayFrom <= awayTo ? awayFrom : awayTo;
+    const b = awayFrom <= awayTo ? awayTo : awayFrom;
+    return eachYmdInRangeInclusive(a, b).length;
+  }, [awayFrom, awayTo]);
+
+  const setAwayPresetInclusiveDays = (numDays: number) => {
+    const t = getTodayInPickupTimezoneYMD();
+    setAwayFrom(t);
+    setAwayTo(addCalendarDaysYMD(t, Math.max(0, numDays - 1)));
+  };
+
+  const applyAwayRange = async (isOpen: boolean) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(awayFrom) || !/^\d{4}-\d{2}-\d{2}$/.test(awayTo)) {
+      setMsg("Use valid start and end dates (YYYY-MM-DD).");
+      return;
+    }
+    if (awayRangeDayCount <= 0) {
+      setMsg("Pick a start and end date.");
+      return;
+    }
+    if (awayRangeDayCount > 400) {
+      setMsg("That range is too long (max 400 days). Shorten it or save in chunks.");
+      return;
+    }
+    const label = isOpen ? "re-open pickup for" : "close pickup for";
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `${isOpen ? "Re-open" : "Close"} ${awayRangeDayCount} calendar day(s) (${label} customers)? You can still edit individual days in the grid below.`
+      )
+    ) {
+      return;
+    }
+    setMsg(null);
+    const r = await fetch("/api/admin/availability", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "setDateRange",
+        from: awayFrom,
+        to: awayTo,
+        isOpen,
+        ...(!isOpen && awayNote.trim()
+          ? { note: awayNote.trim().slice(0, 500) }
+          : {}),
+      }),
+    });
+    let errText: string | null = null;
+    try {
+      const j = (await r.json()) as { error?: string; updated?: number };
+      if (!r.ok) {
+        errText = typeof j.error === "string" ? j.error : "Save failed.";
+      } else {
+        const n = typeof j.updated === "number" ? j.updated : awayRangeDayCount;
+        await load();
+        setMsg(
+          isOpen
+            ? `Re-opened ${n} day(s). Use the month arrows to check other months if the range was long.`
+            : `Marked ${n} day(s) unavailable.${awayNote.trim() ? ` Note: ${awayNote.trim().slice(0, 80)}${awayNote.trim().length > 80 ? "…" : ""}` : ""}`
+        );
+        return;
+      }
+    } catch {
+      errText = "Save failed.";
+    }
+    setMsg(errText ?? "Save failed.");
   };
 
   const syncFromGoogle = async (closeMissingInRange: boolean) => {
@@ -411,6 +492,91 @@ export function AdminAvailabilityPanel() {
         >
           Clear whole month
         </button>
+      </div>
+
+      <div className="rounded-lg border border-rose-200 bg-rose-50/70 p-4 text-sm text-[var(--text)]">
+        <p className="font-bold text-rose-950">Time away (trip, etc.)</p>
+        <p className="mt-1 text-xs text-[var(--text-muted)]">
+          Pick a <strong>first</strong> and <strong>last</strong> calendar day you want closed — one save
+          blocks the whole span (dates use your normal pickup timezone). Optional note is only for
+          your records in this admin screen.
+        </p>
+        <div className="mt-3 flex flex-wrap items-end gap-3">
+          <div>
+            <label className="block text-xs font-semibold text-rose-950">From</label>
+            <input
+              type="date"
+              className="mt-1 rounded border border-[var(--border)] bg-white px-2 py-2"
+              value={awayFrom}
+              onChange={(e) => setAwayFrom(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-rose-950">Through</label>
+            <input
+              type="date"
+              className="mt-1 rounded border border-[var(--border)] bg-white px-2 py-2"
+              value={awayTo}
+              onChange={(e) => setAwayTo(e.target.value)}
+            />
+          </div>
+          <div className="min-w-[10rem] flex-1">
+            <label className="block text-xs font-semibold text-rose-950">Note (optional)</label>
+            <input
+              type="text"
+              className="mt-1 w-full max-w-md rounded border border-[var(--border)] bg-white px-2 py-2"
+              placeholder="e.g. Family trip"
+              value={awayNote}
+              onChange={(e) => setAwayNote(e.target.value)}
+              maxLength={500}
+            />
+          </div>
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-[var(--text-muted)]">Quick:</span>
+          <button
+            type="button"
+            className="rounded border border-rose-300 bg-white px-2 py-1 text-xs font-semibold text-rose-950 hover:bg-rose-100"
+            onClick={() => setAwayPresetInclusiveDays(7)}
+          >
+            Next 7 days
+          </button>
+          <button
+            type="button"
+            className="rounded border border-rose-300 bg-white px-2 py-1 text-xs font-semibold text-rose-950 hover:bg-rose-100"
+            onClick={() => setAwayPresetInclusiveDays(14)}
+          >
+            Next 14 days
+          </button>
+          <button
+            type="button"
+            className="rounded border border-rose-300 bg-white px-2 py-1 text-xs font-semibold text-rose-950 hover:bg-rose-100"
+            onClick={() => setAwayPresetInclusiveDays(30)}
+          >
+            Next 30 days
+          </button>
+          {awayRangeDayCount > 0 ? (
+            <span className="text-xs text-[var(--text-muted)]">
+              ({awayRangeDayCount} day{awayRangeDayCount === 1 ? "" : "s"})
+            </span>
+          ) : null}
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="rounded bg-rose-800 px-4 py-2 text-sm font-bold text-white hover:bg-rose-900"
+            onClick={() => void applyAwayRange(false)}
+          >
+            Mark range unavailable
+          </button>
+          <button
+            type="button"
+            className="rounded border border-rose-400 bg-white px-4 py-2 text-sm font-semibold text-rose-950 hover:bg-rose-100"
+            onClick={() => void applyAwayRange(true)}
+          >
+            Re-open this range
+          </button>
+        </div>
       </div>
 
       <div className="rounded-lg border border-blue-200 bg-blue-50/80 p-4 text-sm text-[var(--text)]">
