@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import type { OrderItemLine } from "@/lib/order-types";
 import { verifyAdminToken, getAdminTokenFromRequest } from "@/lib/admin-auth";
 import { toAdminOrderClientRow } from "@/lib/admin-order-client";
+import { sendCustomerPaymentConfirmedEmail } from "@/lib/send-customer-payment-confirmed-email";
 import { sendCustomerReceiptEmail } from "@/lib/send-customer-receipt-email";
 import { sendOwnerSms, sendCustomerSms } from "@/lib/twilio";
 import { formatItemsForSms, formatSamplesForSms } from "@/lib/order-types";
@@ -148,6 +149,14 @@ export async function PATCH(
       if (!result.ok) {
         console.warn(
           "[Orders PATCH verify] Customer receipt email skipped or failed:",
+          result.error
+        );
+      }
+    });
+    void sendCustomerPaymentConfirmedEmail(updated).then((result) => {
+      if (!result.ok) {
+        console.warn(
+          "[Orders PATCH verify] Customer payment-confirmed email skipped or failed:",
           result.error
         );
       }
