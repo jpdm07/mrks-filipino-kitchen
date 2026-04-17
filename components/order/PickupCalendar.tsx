@@ -237,7 +237,8 @@ export const PickupCalendar = forwardRef<
           const leadOkForCart = (() => {
             if (cartMode === "flan") {
               const kd = kitchenDayKind(ymd);
-              if (kd === "mon_thu") return isFlanWeekdayLeadTimeOk(ymd);
+              if (kd === "tue_thu") return isFlanWeekdayLeadTimeOk(ymd);
+              if (kd === "sunday" || kd === "monday") return false;
             }
             return isPickupYmdAllowed(ymd);
           })();
@@ -341,8 +342,8 @@ export const PickupCalendar = forwardRef<
       ) : (
         <p className="text-xs text-[var(--text-muted)]">
           Only <strong>clickable</strong> dates can be chosen. Gray = not open.
-          Amber / <strong>Flan only</strong> = flan pickup that day (full menu Fri
-          &amp; Sat). 🔒 = open on our calendar but before the first
+          Amber / <strong>Flan only</strong> = flan pickup that day (Tue–Thu; full
+          menu Fri &amp; Sat). 🔒 = open on our calendar but before the first
           Friday/Saturday pickup window (Central Time). Hover for details.
         </p>
       )}

@@ -654,8 +654,8 @@ export function AdminAvailabilityPanel() {
       <div className="rounded-lg border border-amber-200 bg-amber-50/90 p-4 text-sm text-[var(--text)]">
         <p className="font-bold text-amber-950">Flan pickup habit (this month)</p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
-          One click opens <strong>Mon–Thu</strong> with the standard flan-only note and{" "}
-          <strong>6:00–8:00 PM</strong> slots (same as checkout). On the website, Mon–Thu
+          One click opens <strong>Tue–Thu</strong> with the standard flan-only note and{" "}
+          <strong>6:00–8:00 PM</strong> slots (same as checkout). On the website, Tue–Thu
           flan-only days for a week <strong>lock after Saturday 11:59 PM Central</strong>{" "}
           (same every week) unless a qualifying flan order was placed before{" "}
           <strong>Sunday 12:00 AM Central</strong> after that Saturday. If you don’t see

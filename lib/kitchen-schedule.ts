@@ -59,12 +59,18 @@ export function eveningPickupSlots1800to2000(): string[] {
   });
 }
 
-export type KitchenDayKind = "sunday" | "mon_thu" | "friday" | "saturday";
+export type KitchenDayKind =
+  | "sunday"
+  | "monday"
+  | "tue_thu"
+  | "friday"
+  | "saturday";
 
 export function kitchenDayKind(ymd: string): KitchenDayKind {
   const d = ymdUtcWeekday(ymd);
   if (d === 0) return "sunday";
-  if (d >= 1 && d <= 4) return "mon_thu";
+  if (d === 1) return "monday";
+  if (d >= 2 && d <= 4) return "tue_thu";
   if (d === 5) return "friday";
   return "saturday";
 }
@@ -76,23 +82,23 @@ export function calendarDaysFromToday(ymd: string, todayYmd?: string): number {
   return Math.round((b - a) / 86400000);
 }
 
-/** Mon–Thu flan pickup: minimum 3 calendar days lead (unchanged 3–4 day rule for weekdays). */
+/** Tue–Thu flan pickup: minimum 3 calendar days lead (unchanged 3–4 day rule for weekdays). */
 export function isFlanWeekdayLeadTimeOk(ymd: string, now = new Date()): boolean {
-  if (kitchenDayKind(ymd) !== "mon_thu") return false;
+  if (kitchenDayKind(ymd) !== "tue_thu") return false;
   const today = getTodayInPickupTimezoneYMD(now);
   if (ymd < today) return false;
   return calendarDaysFromToday(ymd, today) >= 3;
 }
 
-/** Fri/Sat use existing lead rules; Mon–Thu only when cart is flan-only and lead time ok. */
+/** Fri/Sat use existing lead rules; Tue–Thu only when cart is flan-only and lead time ok. */
 export function isPickupYmdAllowedForOrderCart(
   ymd: string,
   cartFlanOnly: boolean,
   now = new Date()
 ): boolean {
   const kind = kitchenDayKind(ymd);
-  if (kind === "sunday") return false;
-  if (kind === "mon_thu") {
+  if (kind === "sunday" || kind === "monday") return false;
+  if (kind === "tue_thu") {
     if (!cartFlanOnly) return false;
     return isFlanWeekdayLeadTimeOk(ymd, now);
   }
@@ -106,9 +112,9 @@ export async function getKitchenSlotsForDate(
   const kind = kitchenDayKind(dateYmd);
   const evening = eveningPickupSlots1800to2000();
 
-  if (kind === "sunday") return [];
+  if (kind === "sunday" || kind === "monday") return [];
 
-  if (kind === "mon_thu") {
+  if (kind === "tue_thu") {
     if (!cartFlanOnly) return [];
     const taken = await getTakenPickupTimeLabelsForDate(dateYmd);
     return sortPickupSlotLabels(

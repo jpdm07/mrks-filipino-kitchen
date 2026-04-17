@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { eachYmdInRangeInclusive } from "@/lib/availability-range";
 import {
   fetchFlanWeekdayUnlockWeekMondays,
-  isMonThuFlanSuppressedAfterSaturdayCutoff,
+  isTueThuFlanSuppressedAfterSaturdayCutoff,
 } from "@/lib/flan-weekday-unlock";
 import {
   getWeekCapacitySnapshot,
@@ -95,13 +95,13 @@ export async function buildKitchenOpenDatesPayload(
     const snap = snapMap.get(weekMon);
     if (!snap) continue;
 
-    if (kind === "sunday") continue;
+    if (kind === "sunday" || kind === "monday") continue;
 
-    if (kind === "mon_thu") {
+    if (kind === "tue_thu") {
       if (!opts.cartFlanOnly) continue;
       if (!isFlanWeekdayLeadTimeOk(ymd)) continue;
       if (
-        isMonThuFlanSuppressedAfterSaturdayCutoff(
+        isTueThuFlanSuppressedAfterSaturdayCutoff(
           weekMon,
           nowClock,
           flanUnlockWeekMondays
@@ -150,7 +150,7 @@ export async function buildKitchenOpenDatesPayload(
 
 /**
  * View-only: union of mixed + flan-only payloads so the public calendar shows both
- * full-menu Fri/Sat and Mon–Thu flan days (matches what the admin panel saves for flan template).
+ * full-menu Fri/Sat and Tue–Thu flan days (matches what the admin panel saves for flan template).
  * Checkout still uses `cartMode=mixed` or `flan` only.
  */
 export async function buildUnifiedDisplayOpenDatesPayload(
@@ -172,7 +172,7 @@ export async function buildUnifiedDisplayOpenDatesPayload(
   const notes: Record<string, string> = { ...mixed.notes };
   for (const ymd of flan.openDates) {
     const kd = kitchenDayKind(ymd);
-    if (kd === "mon_thu") {
+    if (kd === "tue_thu") {
       notes[ymd] = flan.notes[ymd] ?? notes[ymd] ?? "";
     } else if (!notes[ymd]) {
       notes[ymd] = flan.notes[ymd] ?? "";

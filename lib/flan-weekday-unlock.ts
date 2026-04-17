@@ -18,7 +18,7 @@ function parseItemsJson(raw: string): OrderItemLine[] {
 
 /**
  * Weeks (Monday YYYY-MM-DD) where at least one qualifying flan order exists:
- * pickup Mon–Thu, flan ramekins &gt; 0, and order placed at or before Saturday 11:59:59 PM Central
+ * pickup Tue–Thu, flan ramekins &gt; 0, and order placed at or before Saturday 11:59:59 PM Central
  * (i.e. strictly before Sunday 12:00 AM Central after the Saturday before that week).
  */
 export async function fetchFlanWeekdayUnlockWeekMondays(
@@ -42,7 +42,7 @@ export async function fetchFlanWeekdayUnlockWeekMondays(
   for (const o of orders) {
     const pd = o.pickupDate?.trim();
     if (!pd) continue;
-    if (kitchenDayKind(pd) !== "mon_thu") continue;
+    if (kitchenDayKind(pd) !== "tue_thu") continue;
     const t = totalCookContribution(parseItemsJson(o.items));
     if (t.flanRamekins <= 0) continue;
     const weekMon = mondayOfCalendarWeekContaining(pd);
@@ -56,10 +56,10 @@ export async function fetchFlanWeekdayUnlockWeekMondays(
 }
 
 /**
- * True = do not offer Mon–Thu flan-only pickup for this week (deadline passed, no unlock).
+ * True = do not offer Tue–Thu flan-only pickup for this week (deadline passed, no unlock).
  * Weekly rule: lock after Saturday 11:59:59 PM Central — enforced as `now` ≥ Sunday 12:00 AM Central.
  */
-export function isMonThuFlanSuppressedAfterSaturdayCutoff(
+export function isTueThuFlanSuppressedAfterSaturdayCutoff(
   weekMondayYmd: string,
   now: Date,
   unlockWeekMondays: Set<string>

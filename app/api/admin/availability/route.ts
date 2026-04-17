@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
     for (const ymd of eachYmdInRangeInclusive(from, to)) {
       if (ymd < today) continue;
       const dow = ymdUtcWeekday(ymd);
-      if (dow >= 1 && dow <= 4) {
+      if (dow >= 2 && dow <= 4) {
         entries.push({
           date: ymd,
           isOpen: true,
