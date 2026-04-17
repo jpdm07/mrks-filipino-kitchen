@@ -6,7 +6,9 @@ export default async function SubscribersPage() {
   await requireAdmin();
   const [subscribersRaw, menuItems] = await Promise.all([
     prisma.subscriber.findMany({ orderBy: { createdAt: "desc" } }),
-    prisma.menuItem.findMany({ orderBy: { name: "asc" } }),
+    prisma.menuItem.findMany({
+      orderBy: [{ category: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
+    }),
   ]);
   const subscribers = JSON.parse(JSON.stringify(subscribersRaw));
   return (
@@ -16,7 +18,11 @@ export default async function SubscribersPage() {
       </h1>
       <SubscribersClient
         initialSubscribers={subscribers}
-        menuItems={menuItems.map((m) => ({ id: m.id, name: m.name }))}
+        menuItems={menuItems.map((m) => ({
+          id: m.id,
+          name: m.name,
+          category: m.category,
+        }))}
       />
     </div>
   );

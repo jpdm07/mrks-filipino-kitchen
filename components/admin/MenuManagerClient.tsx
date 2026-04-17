@@ -160,7 +160,7 @@ export function MenuManagerClient({
             className="w-full rounded border border-[var(--gold)] py-2 font-bold text-[var(--primary)]"
             onClick={() =>
               window.open(
-                `/admin/subscribers?newsletter=1&item=${sentItemId}`,
+                `/admin/subscribers?newsletter=1&items=${encodeURIComponent(sentItemId)}`,
                 "_self"
               )
             }
