@@ -145,22 +145,23 @@ export async function PATCH(
     await sendCustomerSms(updated.phone, msg).catch(() => {});
 
     const receiptRow = toAdminOrderClientRow(updated, "");
-    void sendCustomerReceiptEmail(receiptRow).then((result) => {
-      if (!result.ok) {
-        console.warn(
-          "[Orders PATCH verify] Customer receipt email skipped or failed:",
-          result.error
-        );
-      }
-    });
-    void sendCustomerPaymentConfirmedEmail(updated).then((result) => {
-      if (!result.ok) {
-        console.warn(
-          "[Orders PATCH verify] Customer payment-confirmed email skipped or failed:",
-          result.error
-        );
-      }
-    });
+    const [receiptEmailResult, paymentConfirmedEmailResult] =
+      await Promise.all([
+        sendCustomerReceiptEmail(receiptRow),
+        sendCustomerPaymentConfirmedEmail(updated),
+      ]);
+    if (!receiptEmailResult.ok) {
+      console.warn(
+        "[Orders PATCH verify] Customer receipt email skipped or failed:",
+        receiptEmailResult.error
+      );
+    }
+    if (!paymentConfirmedEmailResult.ok) {
+      console.warn(
+        "[Orders PATCH verify] Customer payment-confirmed email skipped or failed:",
+        paymentConfirmedEmailResult.error
+      );
+    }
 
     const lines = parseItems(updated.items);
     const sauceTotal = totalSauceCupsForItems(lines);
