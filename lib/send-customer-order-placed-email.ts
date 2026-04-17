@@ -61,7 +61,7 @@ export async function sendCustomerOrderPlacedEmail(
     `- Venmo: ${venmoHandle}`,
     "",
     `Please put order #${params.orderNumber} in the payment memo when you send.`,
-    "Mr. K will match that order number with you at pickup—no need to text the number after paying.",
+    "Mr. K will match that order number with you at pickup.",
     "",
     `Open your order summary anytime:`,
     summaryUrl,
@@ -91,7 +91,7 @@ export async function sendCustomerOrderPlacedEmail(
       <li>Zelle: <strong>${escapeHtml(zellePhone)}</strong></li>
       <li>Venmo: <strong>${escapeHtml(venmoHandle)}</strong></li>
     </ul>
-    <p style="margin:0 0 16px;">Put order <strong>#${num}</strong> in the payment memo when you send. We&apos;ll match that number with you at pickup—no need to text it after paying.</p>
+    <p style="margin:0 0 16px;">Put order <strong>#${num}</strong> in the payment memo when you send. We&apos;ll match that number with you at pickup.</p>
     <p style="margin:0 0 8px;"><a href="${urlH}" style="color:#0d6efd;">View your order summary</a></p>
     <p style="margin:24px 0 0;font-size:14px;color:#555;">Questions? Call or text <a href="tel:+19797033827" style="color:#0d6efd;">979-703-3827</a>.</p>
     <p style="margin:16px 0 0;font-size:14px;color:#888;">— Mr. K&apos;s Filipino Kitchen</p>
