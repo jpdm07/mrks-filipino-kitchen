@@ -6,6 +6,7 @@ import { complimentaryUtensilAllowanceFromOrderItems } from "@/lib/utensils-allo
 import { generateOrderNumber } from "@/lib/orderNumber";
 import { sendOwnerSms } from "@/lib/twilio";
 import { sendNewOrderEmailToOwner } from "@/lib/order-owner-email";
+import { sendCustomerOrderPlacedEmail } from "@/lib/send-customer-order-placed-email";
 import { syncOrderToSheets } from "@/lib/sheets";
 import type { OrderItemLine } from "@/lib/order-types";
 import {
@@ -363,7 +364,7 @@ export async function POST(req: NextRequest) {
     const ownerSms = ownerSmsLines.join("\n");
     const ownerSmsSent = await sendOwnerSms(ownerSms);
 
-    const ownerEmailResult = await sendNewOrderEmailToOwner({
+    const ownerEmailPromise = sendNewOrderEmailToOwner({
       orderNumber,
       customerName,
       phone,
@@ -383,12 +384,34 @@ export async function POST(req: NextRequest) {
       wantsPrintedReceipt,
       isDemo,
     });
+    const customerOrderEmailPromise = isDemo
+      ? Promise.resolve({ ok: true as const })
+      : sendCustomerOrderPlacedEmail({
+          customerName,
+          email,
+          orderNumber,
+          pickupDate,
+          pickupTime,
+          total,
+        });
+
+    const [ownerEmailResult, customerOrderEmailResult] = await Promise.all([
+      ownerEmailPromise,
+      customerOrderEmailPromise,
+    ]);
     const ownerEmailSent = ownerEmailResult.ok;
+    const customerOrderEmailSent = customerOrderEmailResult.ok;
 
     if (!ownerEmailSent) {
       console.warn(
         "[orders] Order saved but owner notification email was not sent:",
         ownerEmailResult.error
+      );
+    }
+    if (!isDemo && !customerOrderEmailSent) {
+      console.warn(
+        "[orders] Order saved but customer order-confirmation email was not sent:",
+        customerOrderEmailResult.error
       );
     }
 
@@ -443,9 +466,13 @@ export async function POST(req: NextRequest) {
       orderId: order.id,
       ownerSmsSent,
       ownerEmailSent,
+      customerOrderEmailSent,
       ...(ownerEmailSent
         ? {}
         : { ownerEmailHint: ownerEmailResult.error }),
+      ...(!isDemo && !customerOrderEmailSent
+        ? { customerOrderEmailHint: customerOrderEmailResult.error }
+        : {}),
     });
   } catch (e) {
     console.error(e);

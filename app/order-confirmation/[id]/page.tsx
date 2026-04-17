@@ -99,7 +99,8 @@ export default async function OrderConfirmationPage({
             Your order isn&apos;t final until we receive payment.
           </p>
           <p className="mt-1 text-sm text-amber-950/90">
-            Check your email for order confirmation.
+            We email a copy of this order and payment steps to the address you used at
+            checkout—check spam if you don&apos;t see it within a few minutes.
           </p>
         </div>
         <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[var(--primary)]">

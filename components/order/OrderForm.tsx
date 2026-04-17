@@ -376,6 +376,8 @@ export function OrderForm() {
       orderNumber?: string;
       ownerEmailSent?: boolean;
       ownerEmailHint?: string;
+      customerOrderEmailSent?: boolean;
+      customerOrderEmailHint?: string;
     };
     setLoading(false);
     if (!res.ok) {
@@ -410,6 +412,16 @@ export function OrderForm() {
           : "";
       console.warn(
         `[checkout] Order saved but kitchen email was not sent.${hint} Open Network → POST /api/orders → Response for ownerEmailHint. On Vercel set EMAIL_USER + EMAIL_PASSWORD (Gmail: also EMAIL_SMTP_HOST=smtp.gmail.com, PORT=587, SECURE=false).`
+      );
+    }
+    if (data.customerOrderEmailSent === false) {
+      const hint =
+        typeof data.customerOrderEmailHint === "string" &&
+        data.customerOrderEmailHint.trim()
+          ? ` Server says: ${data.customerOrderEmailHint.trim()}`
+          : "";
+      console.warn(
+        `[checkout] Order saved but your confirmation email was not sent.${hint} Check POST /api/orders → customerOrderEmailHint. Same mail env as kitchen (Resend or SMTP).`
       );
     }
     cart.clearCart();
