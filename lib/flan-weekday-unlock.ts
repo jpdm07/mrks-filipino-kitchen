@@ -1,71 +1,49 @@
-import { prisma } from "@/lib/prisma";
-import { ORDER_STATUSES_COUNTING_TOWARD_CAPACITY } from "@/lib/menu-capacity-catalog";
-import { totalCookContribution } from "@/lib/menu-cook-capacity";
-import type { OrderItemLine } from "@/lib/order-types";
-import { kitchenDayKind } from "@/lib/kitchen-schedule";
 import { mondayOfCalendarWeekContaining } from "@/lib/pickup-week";
-import { addCalendarDaysYMD } from "@/lib/pickup-lead-time";
+import {
+  addCalendarDaysYMD,
+  getTodayInPickupTimezoneYMD,
+  ymdUtcWeekday,
+} from "@/lib/pickup-lead-time";
 import { instantSundayAfterPickupSaturday } from "@/lib/pickup-tz-instants";
 
-function parseItemsJson(raw: string): OrderItemLine[] {
-  try {
-    const v = JSON.parse(raw) as unknown;
-    return Array.isArray(v) ? (v as OrderItemLine[]) : [];
-  } catch {
-    return [];
-  }
+/**
+ * First instant (Central) of the Sunday after the Saturday that falls two calendar
+ * days before `weekMondayYmd`. New flan orders for Tue–Thu pickup in that Mon–Sun
+ * week must be placed strictly before this instant (i.e. by Saturday 11:59:59 PM
+ * Central of the prior week).
+ */
+export function flanOrderCutoffInstantUtcForWeekMonday(
+  weekMondayYmd: string
+): Date {
+  const satBefore = addCalendarDaysYMD(weekMondayYmd.trim(), -2);
+  return instantSundayAfterPickupSaturday(satBefore);
 }
 
 /**
- * Weeks (Monday YYYY-MM-DD) where at least one qualifying flan order exists:
- * pickup Tue–Thu, flan ramekins &gt; 0, and order placed at or before Saturday 11:59:59 PM Central
- * (i.e. strictly before Sunday 12:00 AM Central after the Saturday before that week).
+ * True once it is Sunday 12:00:00 AM Central or later for the cutoff that applies
+ * to Tue–Thu pickup in the week starting `weekMondayYmd`.
  */
-export async function fetchFlanWeekdayUnlockWeekMondays(
-  pickupRangeFromYmd: string,
-  pickupRangeToYmd: string
-): Promise<Set<string>> {
-  const orders = await prisma.order.findMany({
-    where: {
-      isDemo: false,
-      status: { in: [...ORDER_STATUSES_COUNTING_TOWARD_CAPACITY] },
-      pickupDate: {
-        not: null,
-        gte: pickupRangeFromYmd,
-        lte: pickupRangeToYmd,
-      },
-    },
-    select: { createdAt: true, pickupDate: true, items: true },
-  });
-
-  const unlock = new Set<string>();
-  for (const o of orders) {
-    const pd = o.pickupDate?.trim();
-    if (!pd) continue;
-    if (kitchenDayKind(pd) !== "tue_thu") continue;
-    const t = totalCookContribution(parseItemsJson(o.items));
-    if (t.flanRamekins <= 0) continue;
-    const weekMon = mondayOfCalendarWeekContaining(pd);
-    const satBefore = addCalendarDaysYMD(weekMon, -2);
-    const sundayStart = instantSundayAfterPickupSaturday(satBefore);
-    const placed = new Date(o.createdAt).getTime();
-    if (placed >= sundayStart.getTime()) continue;
-    unlock.add(weekMon);
-  }
-  return unlock;
-}
-
-/**
- * True = do not offer Tue–Thu flan-only pickup for this week (deadline passed, no unlock).
- * Weekly rule: lock after Saturday 11:59:59 PM Central — enforced as `now` ≥ Sunday 12:00 AM Central.
- */
-export function isTueThuFlanSuppressedAfterSaturdayCutoff(
+export function isPastFlanOrderDeadlineForPickupWeekMonday(
   weekMondayYmd: string,
-  now: Date,
-  unlockWeekMondays: Set<string>
+  now: Date
 ): boolean {
-  const satBefore = addCalendarDaysYMD(weekMondayYmd, -2);
-  const sundayStart = instantSundayAfterPickupSaturday(satBefore);
-  if (now.getTime() < sundayStart.getTime()) return false;
-  return !unlockWeekMondays.has(weekMondayYmd);
+  return now.getTime() >= flanOrderCutoffInstantUtcForWeekMonday(weekMondayYmd).getTime();
+}
+
+/**
+ * Tue–Thu pickup dates for a flan-only cart: pickup must be on or after “today”
+ * (Central) and the customer must still be before the weekly flan order deadline
+ * (Saturday 11:59 PM Central the week before that pickup week).
+ */
+export function isFlanTueThuPickupYmdBookableAt(
+  pickupYmd: string,
+  now: Date = new Date()
+): boolean {
+  const t = pickupYmd.trim();
+  const dow = ymdUtcWeekday(t);
+  if (dow < 2 || dow > 4) return false;
+  const today = getTodayInPickupTimezoneYMD(now);
+  if (t < today) return false;
+  const weekMon = mondayOfCalendarWeekContaining(t);
+  return !isPastFlanOrderDeadlineForPickupWeekMonday(weekMon, now);
 }

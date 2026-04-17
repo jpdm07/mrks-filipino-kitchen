@@ -6,11 +6,8 @@ import {
   isPickupLockedByThursdayNoonCutoff,
   isPickupYmdAllowed,
 } from "@/lib/pickup-lead-time";
-import {
-  isFlanPickupOnlyNote,
-  isFlanWeekdayLeadTimeOk,
-  kitchenDayKind,
-} from "@/lib/kitchen-schedule";
+import { isFlanPickupOnlyNote, kitchenDayKind } from "@/lib/kitchen-schedule";
+import { isFlanTueThuPickupYmdBookableAt } from "@/lib/flan-weekday-unlock";
 import { FlanPickupDayBadge } from "@/components/calendar/FlanPickupDayBadge";
 import {
   customerAvailabilityQueryRange,
@@ -237,7 +234,8 @@ export const PickupCalendar = forwardRef<
           const leadOkForCart = (() => {
             if (cartMode === "flan") {
               const kd = kitchenDayKind(ymd);
-              if (kd === "tue_thu") return isFlanWeekdayLeadTimeOk(ymd);
+              if (kd === "tue_thu")
+                return isFlanTueThuPickupYmdBookableAt(ymd, new Date());
               if (kd === "sunday" || kd === "monday") return false;
             }
             return isPickupYmdAllowed(ymd);

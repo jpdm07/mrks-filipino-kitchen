@@ -5,11 +5,8 @@ import {
   pickupTimeSlotLabels,
   sortPickupSlotLabels,
 } from "@/lib/pickup-time-slots";
-import {
-  getTodayInPickupTimezoneYMD,
-  isPickupYmdAllowed,
-  ymdUtcWeekday,
-} from "@/lib/pickup-lead-time";
+import { isPickupYmdAllowed, ymdUtcWeekday } from "@/lib/pickup-lead-time";
+import { isFlanTueThuPickupYmdBookableAt } from "@/lib/flan-weekday-unlock";
 
 export const FLAN_ONLY_DAY_NOTE =
   "Flan pickup only — other items available Friday and Saturday";
@@ -75,22 +72,7 @@ export function kitchenDayKind(ymd: string): KitchenDayKind {
   return "saturday";
 }
 
-export function calendarDaysFromToday(ymd: string, todayYmd?: string): number {
-  const t = todayYmd ?? getTodayInPickupTimezoneYMD();
-  const a = new Date(`${t}T12:00:00.000Z`).getTime();
-  const b = new Date(`${ymd.trim()}T12:00:00.000Z`).getTime();
-  return Math.round((b - a) / 86400000);
-}
-
-/** Tue–Thu flan pickup: minimum 3 calendar days lead (unchanged 3–4 day rule for weekdays). */
-export function isFlanWeekdayLeadTimeOk(ymd: string, now = new Date()): boolean {
-  if (kitchenDayKind(ymd) !== "tue_thu") return false;
-  const today = getTodayInPickupTimezoneYMD(now);
-  if (ymd < today) return false;
-  return calendarDaysFromToday(ymd, today) >= 3;
-}
-
-/** Fri/Sat use existing lead rules; Tue–Thu only when cart is flan-only and lead time ok. */
+/** Fri/Sat use existing lead rules; Tue–Thu flan only when before the weekly Saturday cutoff. */
 export function isPickupYmdAllowedForOrderCart(
   ymd: string,
   cartFlanOnly: boolean,
@@ -100,7 +82,7 @@ export function isPickupYmdAllowedForOrderCart(
   if (kind === "sunday" || kind === "monday") return false;
   if (kind === "tue_thu") {
     if (!cartFlanOnly) return false;
-    return isFlanWeekdayLeadTimeOk(ymd, now);
+    return isFlanTueThuPickupYmdBookableAt(ymd, now);
   }
   return isPickupYmdAllowed(ymd, now);
 }
@@ -116,6 +98,7 @@ export async function getKitchenSlotsForDate(
 
   if (kind === "tue_thu") {
     if (!cartFlanOnly) return [];
+    if (!isFlanTueThuPickupYmdBookableAt(dateYmd, new Date())) return [];
     const taken = await getTakenPickupTimeLabelsForDate(dateYmd);
     return sortPickupSlotLabels(
       evening.filter((s) => !taken.has(s.trim()))

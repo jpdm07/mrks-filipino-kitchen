@@ -655,12 +655,11 @@ export function AdminAvailabilityPanel() {
         <p className="font-bold text-amber-950">Flan pickup habit (this month)</p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
           One click opens <strong>Tue–Thu</strong> with the standard flan-only note and{" "}
-          <strong>6:00–8:00 PM</strong> slots (same as checkout). On the website, Tue–Thu
-          flan-only days for a week <strong>lock after Saturday 11:59 PM Central</strong>{" "}
-          (same every week) unless a qualifying flan order was placed before{" "}
-          <strong>Sunday 12:00 AM Central</strong> after that Saturday. If you don’t see
-          this box after an update, hard-refresh the page or confirm the latest deploy on
-          Vercel.
+          <strong>6:00–8:00 PM</strong> slots (same as checkout). Customers can add flan
+          pickup for that Tue–Thu week until <strong>Saturday 11:59 PM Central</strong>{" "}
+          the week before (orders close at <strong>Sunday 12:00 AM Central</strong> right
+          after that Saturday). If you don’t see this box after an update, hard-refresh
+          the page or confirm the latest deploy on Vercel.
         </p>
         <label className="mt-3 flex cursor-pointer items-start gap-2 text-sm">
           <input
