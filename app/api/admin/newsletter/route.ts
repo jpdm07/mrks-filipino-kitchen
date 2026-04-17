@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
 import { sendMail, newsletterHtml } from "@/lib/mailer";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
+import { buildCustomerReplyFooterPlainText } from "@/lib/mail-reply-routing";
 import {
   buildNewsletterSpotlightHtml,
   buildNewsletterSpotlightPlainText,
@@ -60,7 +61,10 @@ export async function POST(req: NextRequest) {
   const subs = await prisma.subscriber.findMany();
   const base = getPublicSiteOrigin();
   const spotlightText = buildNewsletterSpotlightPlainText(spotlightItems);
-  const textBody = spotlightText ? `${message}\n\n${spotlightText}\nOrder: ${base}/menu` : message;
+  const textCore = spotlightText
+    ? `${message}\n\n${spotlightText}\nOrder: ${base}/menu`
+    : message;
+  const textBody = textCore + buildCustomerReplyFooterPlainText();
 
   let sent = 0;
   let failed = 0;

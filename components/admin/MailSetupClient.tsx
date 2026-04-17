@@ -12,6 +12,8 @@ type Status = {
   recipientUsesOwnerOrderEmail: boolean;
   transportReady: boolean;
   issues: string[];
+  replyToSet: boolean;
+  replyTo: string | null;
 };
 
 export function MailSetupClient() {
@@ -109,7 +111,22 @@ export function MailSetupClient() {
               <strong>Transport ready:</strong>{" "}
               {status.transportReady ? "yes" : "no"}
             </li>
+            <li>
+              <strong>EMAIL_REPLY_TO:</strong>{" "}
+              {status.replyToSet ? (
+                <span className="font-mono text-xs">{status.replyTo}</span>
+              ) : (
+                <span className="text-[var(--text-muted)]">not set</span>
+              )}
+            </li>
           </ul>
+          {!status.replyToSet && status.transportReady ? (
+            <p className="mt-3 text-xs text-[var(--text-muted)]">
+              Set <code className="text-xs">EMAIL_REPLY_TO</code> to your kitchen inbox
+              (e.g. mrksfilipinokitchen@gmail.com) so customer replies skip the SMTP
+              login address.
+            </p>
+          ) : null}
           {status.issues.length > 0 ? (
             <ul className="mt-4 list-disc space-y-2 border-t border-[var(--border)] pt-4 pl-5 text-[var(--accent)]">
               {status.issues.map((x) => (

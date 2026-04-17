@@ -1,4 +1,8 @@
 import { PAYMENT_INSTRUCTIONS } from "@/lib/config";
+import {
+  buildCustomerReplyFooterHtml,
+  buildCustomerReplyFooterPlainText,
+} from "@/lib/mail-reply-routing";
 import { formatPickupDisplay } from "@/lib/format-pickup";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { sendMail, type MailSendResult } from "@/lib/mailer";
@@ -65,7 +69,7 @@ export async function sendCustomerOrderPlacedEmail(
     "Questions? Call or text 979-703-3827.",
     "",
     "— Mr. K's Filipino Kitchen",
-  ].join("\n");
+  ].join("\n") + buildCustomerReplyFooterPlainText();
 
   const name = escapeHtml(params.customerName);
   const num = escapeHtml(params.orderNumber);
@@ -91,6 +95,7 @@ export async function sendCustomerOrderPlacedEmail(
     <p style="margin:0 0 8px;"><a href="${urlH}" style="color:#0d6efd;">View your order summary</a></p>
     <p style="margin:24px 0 0;font-size:14px;color:#555;">Questions? Call or text <a href="tel:+19797033827" style="color:#0d6efd;">979-703-3827</a>.</p>
     <p style="margin:16px 0 0;font-size:14px;color:#888;">— Mr. K&apos;s Filipino Kitchen</p>
+    ${buildCustomerReplyFooterHtml()}
   </div>
 </body>
 </html>`;

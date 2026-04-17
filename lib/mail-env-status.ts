@@ -2,6 +2,8 @@
  * Read-only summary of server mail env (for admin diagnostics). No secrets returned.
  */
 
+import { getReplyToEmail } from "@/lib/mail-reply-routing";
+
 export function getOwnerOrderNotificationEmail(): string {
   return (
     process.env.OWNER_ORDER_EMAIL?.trim() ||
@@ -22,6 +24,9 @@ export type MailEnvStatus = {
   transportReady: boolean;
   /** Human-readable problems to fix on Vercel. */
   issues: string[];
+  /** Customer “Reply” target (separate from SMTP login / From when set). */
+  replyToSet: boolean;
+  replyTo: string | null;
 };
 
 export function getMailEnvStatus(): MailEnvStatus {
@@ -83,6 +88,9 @@ export function getMailEnvStatus(): MailEnvStatus {
     ? resendFromSet && Boolean(process.env.RESEND_API_KEY?.trim())
     : smtpUserSet && smtpPasswordSet && Boolean(fromAddr);
 
+  const replyTo = getReplyToEmail() ?? null;
+  const replyToSet = Boolean(replyTo);
+
   return {
     usesResend,
     resendFromSet,
@@ -93,5 +101,7 @@ export function getMailEnvStatus(): MailEnvStatus {
     recipientUsesOwnerOrderEmail,
     transportReady,
     issues,
+    replyToSet,
+    replyTo,
   };
 }

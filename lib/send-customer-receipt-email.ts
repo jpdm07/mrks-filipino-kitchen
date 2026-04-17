@@ -3,6 +3,10 @@ import {
   buildAdminReceiptEmailHtml,
   buildAdminReceiptPlainText,
 } from "@/lib/admin-receipt-html";
+import {
+  buildCustomerReplyFooterHtml,
+  buildCustomerReplyFooterPlainText,
+} from "@/lib/mail-reply-routing";
 import { sendMail, type MailSendResult } from "@/lib/mailer";
 
 export async function sendCustomerReceiptEmail(
@@ -17,12 +21,17 @@ export async function sendCustomerReceiptEmail(
   }
 
   const bcc = process.env.RECEIPT_EMAIL_BCC?.trim();
+  const footerHtml = buildCustomerReplyFooterHtml();
+  const baseHtml = buildAdminReceiptEmailHtml(order);
+  const html = footerHtml
+    ? baseHtml.replace("</body>", `${footerHtml}</body>`)
+    : baseHtml;
 
   return sendMail({
     to,
     subject: `Receipt #${order.orderNumber} — Mr. K's Filipino Kitchen`,
-    html: buildAdminReceiptEmailHtml(order),
-    text: buildAdminReceiptPlainText(order),
+    html,
+    text: buildAdminReceiptPlainText(order) + buildCustomerReplyFooterPlainText(),
     bcc: bcc || undefined,
   });
 }

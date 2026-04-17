@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  buildCustomerReplyFooterHtml,
+  buildCustomerReplyFooterPlainText,
+} from "@/lib/mail-reply-routing";
 import { sendMail } from "@/lib/mailer";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 
@@ -26,8 +30,8 @@ export async function POST(req: NextRequest) {
     const welcome = await sendMail({
       to: email,
       subject: "You're on the list: Mr. K's Filipino Kitchen",
-      html: `<p>Mabuhay${name ? `, ${name}` : ""}!</p><p>Thanks for subscribing to updates from Mr. K's Filipino Kitchen. We'll let you know when there are new dishes and specials.</p><p><a href="${base}/menu">View our menu</a></p>`,
-      text: `Thanks for subscribing to Mr. K's Filipino Kitchen updates.`,
+      html: `<p>Mabuhay${name ? `, ${name}` : ""}!</p><p>Thanks for subscribing to updates from Mr. K's Filipino Kitchen. We'll let you know when there are new dishes and specials.</p><p><a href="${base}/menu">View our menu</a></p>${buildCustomerReplyFooterHtml()}`,
+      text: `Thanks for subscribing to Mr. K's Filipino Kitchen updates.${buildCustomerReplyFooterPlainText()}`,
     });
     if (!welcome.ok) {
       console.warn("[subscribe] Welcome email failed:", welcome.error);

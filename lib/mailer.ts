@@ -1,5 +1,9 @@
 import nodemailer from "nodemailer";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
+import {
+  buildCustomerReplyFooterHtml,
+  getReplyToEmail,
+} from "@/lib/mail-reply-routing";
 
 export type MailSendResult =
   | { ok: true }
@@ -76,6 +80,7 @@ async function sendMailViaResend(
     html: string;
     text?: string;
     bcc?: string;
+    replyTo?: string;
   }
 ): Promise<MailSendResult> {
   const from = process.env.RESEND_FROM_EMAIL?.trim();
@@ -95,6 +100,8 @@ async function sendMailViaResend(
     text: opts.text,
   };
   if (bcc) body.bcc = [bcc];
+  const rt = opts.replyTo?.trim();
+  if (rt) body.reply_to = rt;
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -127,10 +134,13 @@ export async function sendMail(opts: {
   text?: string;
   /** Optional BCC (e.g. kitchen copy for receipts). Resend + SMTP supported. */
   bcc?: string;
+  /** Overrides env EMAIL_REPLY_TO for this message only. */
+  replyTo?: string;
 }): Promise<MailSendResult> {
+  const replyTo = (opts.replyTo?.trim() || getReplyToEmail()) ?? undefined;
   const resendKey = process.env.RESEND_API_KEY?.trim();
   if (resendKey) {
-    return sendMailViaResend(resendKey, opts);
+    return sendMailViaResend(resendKey, { ...opts, replyTo });
   }
 
   const transport = getTransport();
@@ -148,6 +158,7 @@ export async function sendMail(opts: {
       from: `"${fromName}" <${fromAddr}>`,
       to: opts.to,
       bcc: opts.bcc?.trim() || undefined,
+      replyTo: replyTo || undefined,
       subject: opts.subject,
       html: opts.html,
       text: opts.text,
@@ -192,6 +203,7 @@ export function newsletterHtml(params: {
       <p style="margin-top:32px;text-align:center;">
         <a href="${base}/menu" style="display:inline-block;background:#FFC200;color:#1A1A1A;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:bold;">Order Now</a>
       </p>
+      ${buildCustomerReplyFooterHtml()}
       <p style="margin-top:40px;font-size:12px;color:#6B6B6B;text-align:center;">
         <a href="${params.unsubscribeUrl}" style="color:#0038A8;">Unsubscribe</a>
       </p>

@@ -1,4 +1,8 @@
 import type { Order } from "@prisma/client";
+import {
+  buildCustomerReplyFooterHtml,
+  buildCustomerReplyFooterPlainText,
+} from "@/lib/mail-reply-routing";
 import { formatPickupDisplay } from "@/lib/format-pickup";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { sendMail, type MailSendResult } from "@/lib/mailer";
@@ -53,7 +57,7 @@ export async function sendCustomerPaymentConfirmedEmail(
     "Questions? Call or text 979-703-3827.",
     "",
     "— Mr. K's Filipino Kitchen",
-  ].join("\n");
+  ].join("\n") + buildCustomerReplyFooterPlainText();
 
   const name = escapeHtml(order.customerName);
   const num = escapeHtml(order.orderNumber);
@@ -73,6 +77,7 @@ export async function sendCustomerPaymentConfirmedEmail(
     <p style="margin:16px 0 0;font-size:14px;color:#555;">You&apos;ll also get a separate email with your full receipt and line items.</p>
     <p style="margin:24px 0 0;font-size:14px;color:#555;">Questions? Call or text <a href="tel:+19797033827" style="color:#0d6efd;">979-703-3827</a>.</p>
     <p style="margin:16px 0 0;font-size:14px;color:#888;">— Mr. K&apos;s Filipino Kitchen</p>
+    ${buildCustomerReplyFooterHtml()}
   </div>
 </body>
 </html>`;
