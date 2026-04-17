@@ -375,6 +375,7 @@ export function OrderForm() {
       prismaCode?: string | null;
       orderNumber?: string;
       ownerEmailSent?: boolean;
+      ownerEmailHint?: string;
     };
     setLoading(false);
     if (!res.ok) {
@@ -403,8 +404,12 @@ export function OrderForm() {
       return;
     }
     if (data.ownerEmailSent === false) {
+      const hint =
+        typeof data.ownerEmailHint === "string" && data.ownerEmailHint.trim()
+          ? ` Server says: ${data.ownerEmailHint.trim()}`
+          : "";
       console.warn(
-        "[checkout] Order saved but kitchen email was not sent (ownerEmailSent=false). Open DevTools → Network → the POST /api/orders response JSON. On Vercel: set EMAIL_USER + EMAIL_PASSWORD for SMTP, or fix Resend (RESEND_API_KEY + RESEND_FROM_EMAIL). OWNER_ORDER_EMAIL only sets who receives mail. Remove RESEND_API_KEY if you are not using Resend."
+        `[checkout] Order saved but kitchen email was not sent.${hint} Open Network → POST /api/orders → Response for ownerEmailHint. On Vercel set EMAIL_USER + EMAIL_PASSWORD (Gmail: also EMAIL_SMTP_HOST=smtp.gmail.com, PORT=587, SECURE=false).`
       );
     }
     cart.clearCart();

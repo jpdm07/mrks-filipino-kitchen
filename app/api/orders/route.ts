@@ -363,7 +363,7 @@ export async function POST(req: NextRequest) {
     const ownerSms = ownerSmsLines.join("\n");
     const ownerSmsSent = await sendOwnerSms(ownerSms);
 
-    const ownerEmailSent = await sendNewOrderEmailToOwner({
+    const ownerEmailResult = await sendNewOrderEmailToOwner({
       orderNumber,
       customerName,
       phone,
@@ -383,10 +383,12 @@ export async function POST(req: NextRequest) {
       wantsPrintedReceipt,
       isDemo,
     });
+    const ownerEmailSent = ownerEmailResult.ok;
 
     if (!ownerEmailSent) {
       console.warn(
-        "[orders] Order saved but owner notification email was not sent. Set Production env EMAIL_USER + EMAIL_PASSWORD (Yahoo app password). Response JSON includes ownerEmailSent for debugging."
+        "[orders] Order saved but owner notification email was not sent:",
+        ownerEmailResult.error
       );
     }
 
@@ -441,6 +443,9 @@ export async function POST(req: NextRequest) {
       orderId: order.id,
       ownerSmsSent,
       ownerEmailSent,
+      ...(ownerEmailSent
+        ? {}
+        : { ownerEmailHint: ownerEmailResult.error }),
     });
   } catch (e) {
     console.error(e);

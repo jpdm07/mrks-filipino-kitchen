@@ -23,6 +23,15 @@ function formatLine(i: OrderItemLine): string {
   return `${i.name}${sz}${cf}${sample} × ${i.quantity} @ $${i.unitPrice.toFixed(2)} = $${(i.unitPrice * i.quantity).toFixed(2)}`;
 }
 
+export type SendOwnerOrderEmailResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+function truncateHint(s: string, max = 360): string {
+  const t = s.trim();
+  return t.length <= max ? t : `${t.slice(0, max)}…`;
+}
+
 /**
  * Email the shop owner a full copy of the new order (Resend or SMTP; see lib/mailer.ts).
  * Uses OWNER_ORDER_EMAIL if set, otherwise EMAIL_USER (same inbox you send from).
@@ -47,13 +56,13 @@ export async function sendNewOrderEmailToOwner(params: {
   subscribeUpdates: boolean;
   wantsPrintedReceipt?: boolean;
   isDemo?: boolean;
-}): Promise<boolean> {
+}): Promise<SendOwnerOrderEmailResult> {
   const to = getOwnerOrderNotificationEmail();
   if (!to) {
-    console.warn(
-      "[orders] Owner notification email skipped: set EMAIL_USER (and EMAIL_PASSWORD) or OWNER_ORDER_EMAIL."
-    );
-    return false;
+    const err =
+      "No recipient configured on the server (set OWNER_ORDER_EMAIL or EMAIL_USER).";
+    console.warn("[orders] Owner notification email skipped:", err);
+    return { ok: false, error: err };
   }
 
   const base = getPublicSiteOrigin();
@@ -139,14 +148,14 @@ export async function sendNewOrderEmailToOwner(params: {
       text,
     });
     if (!r.ok) {
-      console.error(
-        "[orders] Owner notification email was not delivered:",
-        r.error
-      );
+      const err = truncateHint(r.error);
+      console.error("[orders] Owner notification email was not delivered:", err);
+      return { ok: false, error: err };
     }
-    return r.ok;
+    return { ok: true };
   } catch (e) {
-    console.error("[orders] Owner notification email failed:", e);
-    return false;
+    const err = truncateHint(e instanceof Error ? e.message : String(e));
+    console.error("[orders] Owner notification email failed:", err);
+    return { ok: false, error: err };
   }
 }
