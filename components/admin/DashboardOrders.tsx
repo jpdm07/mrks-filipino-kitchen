@@ -11,7 +11,10 @@ import Link from "next/link";
 import type { OrderItemLine } from "@/lib/order-types";
 import type { AdminOrderClientRow } from "@/lib/admin-order-client";
 import { OrderPaymentAdminActions } from "./OrderPaymentAdminActions";
-import { ORDER_STATUS_PENDING_PAYMENT_VERIFICATION } from "@/lib/order-payment";
+import {
+  ORDER_STATUS_PENDING_PAYMENT_VERIFICATION,
+  formatPaymentDisplayLine,
+} from "@/lib/order-payment";
 import { AdminOrderReceiptActions } from "@/components/admin/AdminOrderReceiptActions";
 import { ADMIN_POLL_INTERVAL_MS } from "@/lib/admin-poll-interval";
 
@@ -622,9 +625,13 @@ export function DashboardOrders() {
             <p className="mt-2 text-sm">
               Pickup: {modal.pickupDate} @ {modal.pickupTime}
             </p>
-            {modal.paymentStatus ? (
+            {modal.paymentStatus || modal.paymentMethod ? (
               <p className="mt-2 text-sm text-[var(--text-muted)]">
-                Payment: {modal.paymentMethod ?? "—"} · {modal.paymentStatus}
+                Payment:{" "}
+                {formatPaymentDisplayLine(
+                  modal.paymentMethod,
+                  modal.paymentStatus
+                )}
               </p>
             ) : null}
             {modal.notes ? (

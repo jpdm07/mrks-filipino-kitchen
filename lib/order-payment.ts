@@ -13,3 +13,17 @@ export const PAYMENT_METHOD_VERIFIED_LABEL = "Verified";
 export const PAYMENT_STATUS_PENDING = "Pending";
 export const PAYMENT_STATUS_VERIFIED = "Verified";
 export const PAYMENT_STATUS_NOT_RECEIVED = "Not Received";
+
+/** Receipts / admin UI: avoid "Verified · Verified" when both fields match. */
+export function formatPaymentDisplayLine(
+  paymentMethod: string | null | undefined,
+  paymentStatus: string | null | undefined
+): string {
+  const m = (paymentMethod ?? "").trim();
+  const s = (paymentStatus ?? "").trim();
+  if (!m && !s) return "—";
+  if (!m) return s;
+  if (!s) return m;
+  if (m === s) return m;
+  return `${m} · ${s}`;
+}

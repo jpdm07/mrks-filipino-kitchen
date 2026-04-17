@@ -1,3 +1,4 @@
+import { formatPaymentDisplayLine } from "@/lib/order-payment";
 import { salesTaxPercentLabel } from "@/lib/config";
 import type { OrderItemLine } from "@/lib/order-types";
 import type { AdminOrderClientRow } from "@/lib/admin-order-client";
@@ -162,8 +163,8 @@ export function buildAdminReceiptHtml(order: AdminOrderClientRow): string {
       <div class="row"><span>Pickup</span><span>${escapeHtml(order.pickupDate ?? "—")} @ ${escapeHtml(
         order.pickupTime ?? "—"
       )}</span></div>
-      <div class="row"><span>Payment</span><span>${escapeHtml(order.paymentMethod ?? "—")} · ${escapeHtml(
-        order.paymentStatus ?? "—"
+      <div class="row"><span>Payment</span><span>${escapeHtml(
+        formatPaymentDisplayLine(order.paymentMethod, order.paymentStatus)
       )}</span></div>
       <div class="row"><span>Order status</span><span>${escapeHtml(order.status)}</span></div>
       ${
@@ -386,7 +387,9 @@ ${itemsBlock}
 </table>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1;font-size:14px;">
 <tr><td style="padding:4px 0;color:#555;">Pickup</td><td style="padding:4px 0;text-align:right;">${escapeHtml(order.pickupDate ?? "—")} @ ${escapeHtml(order.pickupTime ?? "—")}</td></tr>
-<tr><td style="padding:4px 0;color:#555;">Payment</td><td style="padding:4px 0;text-align:right;">${escapeHtml(order.paymentMethod ?? "—")} · ${escapeHtml(order.paymentStatus ?? "—")}</td></tr>
+<tr><td style="padding:4px 0;color:#555;">Payment</td><td style="padding:4px 0;text-align:right;">${escapeHtml(
+    formatPaymentDisplayLine(order.paymentMethod, order.paymentStatus)
+  )}</td></tr>
 <tr><td style="padding:4px 0;color:#555;">Order status</td><td style="padding:4px 0;text-align:right;">${escapeHtml(order.status)}</td></tr>
 </table>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${notesRow}</table>
@@ -432,7 +435,7 @@ export function buildAdminReceiptPlainText(order: AdminOrderClientRow): string {
     `TOTAL: $${order.total.toFixed(2)}`,
     "",
     `Pickup: ${order.pickupDate ?? "—"} @ ${order.pickupTime ?? "—"}`,
-    `Payment: ${order.paymentMethod ?? "—"} · ${order.paymentStatus ?? "—"}`,
+    `Payment: ${formatPaymentDisplayLine(order.paymentMethod, order.paymentStatus)}`,
     `Order status: ${order.status}`
   );
   if (order.notes?.trim()) parts.push("", `Notes: ${order.notes}`);
