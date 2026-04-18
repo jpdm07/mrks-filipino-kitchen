@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { MenuItemDTO } from "@/lib/menu-types";
 import { useCart } from "@/components/cart/CartContext";
+import { CartQuantityField } from "@/components/cart/CartQuantityField";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
 import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
 import { defaultGroupedVariantId } from "@/lib/menu-variant-defaults";
@@ -507,25 +508,13 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
         </div>
 
         <div className="mt-auto flex flex-col border-t border-[var(--border)]/60 pt-4">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="btn-qty"
-              onClick={() => setQty((q) => Math.max(1, q - 1))}
-              aria-label="Decrease quantity"
-            >
-              −
-            </button>
-            <span className="w-8 text-center font-bold">{qty}</span>
-            <button
-              type="button"
-              className="btn-qty"
-              onClick={() => setQty((q) => Math.min(99, q + 1))}
-              aria-label="Increase quantity"
-            >
-              +
-            </button>
-          </div>
+          <CartQuantityField
+            value={qty}
+            min={1}
+            max={99}
+            onChange={(n) => setQty(n)}
+            variant="menu"
+          />
 
           <button
             type="button"

@@ -18,6 +18,7 @@ import {
   EXTRA_DIP_MAX_QTY,
   EXTRA_DIP_UNIT_PRICE_USD,
 } from "@/lib/extra-dip-sauce";
+import { CartQuantityField } from "@/components/cart/CartQuantityField";
 
 export function CartDrawer() {
   const router = useRouter();
@@ -345,33 +346,16 @@ export function CartDrawer() {
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <span className="text-sm font-medium">How many extra?</span>
-                    <button
-                      type="button"
-                      className="btn-qty"
-                      onClick={() =>
-                        cart.setExtraDipSauceQty((q) =>
-                          Math.max(0, q - 1)
-                        )
-                      }
-                      aria-label="Remove one extra dipping sauce"
-                    >
-                      −
-                    </button>
-                    <span className="w-8 text-center font-bold">
-                      {cart.extraDipSauceQty}
-                    </span>
-                    <button
-                      type="button"
-                      className="btn-qty"
-                      onClick={() =>
-                        cart.setExtraDipSauceQty((q) =>
-                          Math.min(EXTRA_DIP_MAX_QTY, q + 1)
-                        )
-                      }
-                      aria-label="Add one extra dipping sauce"
-                    >
-                      +
-                    </button>
+                    <CartQuantityField
+                      value={cart.extraDipSauceQty}
+                      min={0}
+                      max={EXTRA_DIP_MAX_QTY}
+                      onChange={(n) => cart.setExtraDipSauceQty(n)}
+                      variant="menu"
+                      decAriaLabel="Remove one extra dipping sauce"
+                      incAriaLabel="Add one extra dipping sauce"
+                      inputAriaLabel="Extra dipping sauce quantity"
+                    />
                     {cart.extraDipSauceQty > 0 ? (
                       <span className="text-sm font-semibold text-[var(--primary)]">
                         +$
@@ -411,7 +395,7 @@ export function CartDrawer() {
                         Include utensils with my order
                       </span>
                       <span className="mt-1 block text-sm leading-snug text-[var(--text-muted)]">
-                        Use +/− for how many sets your group needs.
+                        Use +/− or type how many sets your group needs.
                       </span>
                     </label>
                   </div>
@@ -420,36 +404,16 @@ export function CartDrawer() {
                       <span className="text-sm font-medium text-[var(--text)]">
                         How many sets total?
                       </span>
-                      <button
-                        type="button"
-                        className="btn-qty"
-                        onClick={() =>
-                          cart.setUtensilSets(
-                            Math.max(
-                              cart.complimentaryUtensilAllowance,
-                              cart.utensilSets - 1
-                            )
-                          )
-                        }
-                        aria-label="Remove one utensil set"
-                      >
-                        −
-                      </button>
-                      <span className="w-8 text-center font-bold">
-                        {cart.utensilSets}
-                      </span>
-                      <button
-                        type="button"
-                        className="btn-qty"
-                        onClick={() =>
-                          cart.setUtensilSets(
-                            Math.min(50, cart.utensilSets + 1)
-                          )
-                        }
-                        aria-label="Add one utensil set"
-                      >
-                        +
-                      </button>
+                      <CartQuantityField
+                        value={cart.utensilSets}
+                        min={cart.complimentaryUtensilAllowance}
+                        max={50}
+                        onChange={(n) => cart.setUtensilSets(n)}
+                        variant="menu"
+                        decAriaLabel="Remove one utensil set"
+                        incAriaLabel="Add one utensil set"
+                        inputAriaLabel="Utensil sets total"
+                      />
                     </div>
                   ) : null}
                   <p className="mt-4 text-sm text-[var(--text)]">
@@ -717,23 +681,18 @@ function SampleRow({
             <div className="mt-2">{children}</div>
           ) : null}
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
           <span className="text-xs text-[var(--text-muted)]">Qty</span>
-          <button
-            type="button"
-            className="btn-qty"
-            onClick={() => setQty(Math.max(0, qty - 1))}
-          >
-            −
-          </button>
-          <span className="w-6 text-center font-bold">{qty}</span>
-          <button
-            type="button"
-            className="btn-qty"
-            onClick={() => setQty(Math.min(max, qty + 1))}
-          >
-            +
-          </button>
+          <CartQuantityField
+            value={qty}
+            min={0}
+            max={max}
+            onChange={setQty}
+            variant="menu"
+            decAriaLabel={`Decrease ${title} quantity`}
+            incAriaLabel={`Increase ${title} quantity`}
+            inputAriaLabel={`${title} quantity`}
+          />
         </div>
       </div>
       {!selectorsFirst && children ? (

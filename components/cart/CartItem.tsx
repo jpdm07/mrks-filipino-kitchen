@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import type { CartLine } from "@/lib/cart-types";
+import { CartQuantityField } from "@/components/cart/CartQuantityField";
 import {
   cartLineBriefSizeDescription,
   includedDippingSauceCountLine,
@@ -64,32 +65,13 @@ export function CartItemRow({
       </Link>
       <div className="flex shrink-0 flex-col items-end gap-2">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--border)] bg-white"
-            onClick={() => onQty(line.quantity - 1)}
-            aria-label="Decrease quantity"
-          >
-            <Minus className="h-4 w-4" />
-          </button>
-          <input
-            className="h-11 w-12 rounded-lg border border-[var(--border)] text-center text-sm font-semibold"
+          <CartQuantityField
             value={line.quantity}
-            inputMode="numeric"
-            onChange={(e) => {
-              const v = parseInt(e.target.value, 10);
-              if (!Number.isNaN(v)) onQty(v);
-            }}
-            aria-label="Quantity"
+            min={0}
+            max={99}
+            onChange={onQty}
+            variant="drawer"
           />
-          <button
-            type="button"
-            className="flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--border)] bg-white"
-            onClick={() => onQty(line.quantity + 1)}
-            aria-label="Increase quantity"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
           <button
             type="button"
             onClick={onRemove}
