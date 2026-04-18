@@ -21,6 +21,26 @@ function firstWeekdayOfMonth(year: number, month1: number) {
   return new Date(Date.UTC(year, month1 - 1, 1)).getUTCDay();
 }
 
+/** Matches grid logic: customer can tap this day (yellow) in the current month. */
+function isBookablePickupDayInCalendar(
+  ymd: string,
+  todayYmd: string,
+  openSet: Set<string>,
+  cartMode: "flan" | "mixed"
+): boolean {
+  if (ymd < todayYmd) return false;
+  const leadOkForCart = (() => {
+    if (cartMode === "flan") {
+      const kd = kitchenDayKind(ymd);
+      if (kd === "tue_thu")
+        return isFlanTueThuPickupYmdBookableAt(ymd, new Date());
+      if (kd === "sunday" || kd === "monday") return false;
+    }
+    return isPickupYmdAllowed(ymd);
+  })();
+  return openSet.has(ymd) && leadOkForCart;
+}
+
 /**
  * Pickup dates are a whitelist: only YYYY-MM-DD strings returned by the API
  * (explicit DB rows with isOpen === true) are selectable.
@@ -171,6 +191,19 @@ export const PickupCalendar = forwardRef<
 
   const noDatesInRange = !loading && !loadError && openDates.length === 0;
 
+  const hasBookableDayInVisibleMonth = useMemo(() => {
+    if (loading || loadError) return false;
+    for (const cell of grid) {
+      if (
+        cell.ymd &&
+        isBookablePickupDayInCalendar(cell.ymd, todayYmd, openSet, cartMode)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }, [grid, loading, loadError, todayYmd, openSet, cartMode]);
+
   const cannotGoToPreviousMonth =
     !allowNavigateToPastMonths && year === ty && month === tm;
 
@@ -212,7 +245,10 @@ export const PickupCalendar = forwardRef<
           Could not load availability. Please refresh or try again.
         </p>
       ) : null}
-      {fewerDatesForThisCart && !loading && !loadError ? (
+      {fewerDatesForThisCart &&
+      !loading &&
+      !loadError &&
+      !hasBookableDayInVisibleMonth ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium leading-snug text-red-800 dark:border-red-900/50 dark:bg-red-950/35 dark:text-red-200">
           <span className="font-bold text-red-900 dark:text-red-100">
             Kindly note:
@@ -252,7 +288,12 @@ export const PickupCalendar = forwardRef<
           })();
           const tooSoon = !leadOkForCart;
           const whitelisted = openSet.has(ymd);
-          const bookable = whitelisted && !past && !tooSoon;
+          const bookable = isBookablePickupDayInCalendar(
+            ymd,
+            todayYmd,
+            openSet,
+            cartMode
+          );
           const bookingWindowLocked = whitelisted && !past && tooSoon;
           const note = (notes[ymd] ?? "").trim();
           const flanOnly = isFlanPickupOnlyNote(note);
