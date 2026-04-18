@@ -9,6 +9,8 @@ export const ORDER_STATUS_PENDING = "Pending";
 
 export const PAYMENT_METHOD_UNVERIFIED = "Zelle or Venmo (unverified)";
 export const PAYMENT_METHOD_VERIFIED_LABEL = "Verified";
+/** Admin-entered walk-in / phone order (not website checkout). */
+export const PAYMENT_METHOD_MANUAL_OFFSITE = "Off-site / manual entry";
 
 export const PAYMENT_STATUS_PENDING = "Pending";
 export const PAYMENT_STATUS_VERIFIED = "Verified";

@@ -16,6 +16,7 @@ import {
 import { useAvailabilityWhitelist } from "@/lib/hooks/useAvailabilityWhitelist";
 import { isFlanPickupOnlyNote } from "@/lib/kitchen-schedule";
 import { FlanPickupDayBadge } from "@/components/calendar/FlanPickupDayBadge";
+import { CalendarTodayMark } from "@/components/calendar/CalendarTodayMark";
 
 function firstWeekdayOfMonth(year: number, month1: number) {
   return new Date(Date.UTC(year, month1 - 1, 1)).getUTCDay();
@@ -186,6 +187,7 @@ export function PublicAvailabilityCalendar() {
             const bookable = whitelisted && !past && !tooSoon;
             const lockedHighlight = whitelisted && !past && tooSoon;
             const selected = selectedYmd === ymd;
+            const isToday = ymd === todayYmd;
             const note = (notes[ymd] ?? "").trim();
             const flanOnly = isFlanPickupOnlyNote(note);
 
@@ -201,11 +203,15 @@ export function PublicAvailabilityCalendar() {
                   }
                   className={[
                     "relative flex aspect-square flex-col items-center justify-center rounded-lg text-sm font-bold select-none",
-                    past
-                      ? "bg-[var(--bg-section)] text-[var(--text-muted)] opacity-45"
-                      : "bg-[#f3f4f6] text-[var(--text-muted)] ring-1 ring-inset ring-[var(--border)]/50",
+                    isToday
+                      ? "rounded-xl border-2 border-red-600 bg-red-50 text-red-700"
+                      : past
+                        ? "bg-[var(--bg-section)] text-[var(--text-muted)] opacity-45"
+                        : "bg-[#f3f4f6] text-[var(--text-muted)] ring-1 ring-inset ring-[var(--border)]/50",
+                    past && isToday ? "opacity-80" : "",
                   ].join(" ")}
                 >
+                  {isToday ? <CalendarTodayMark /> : null}
                   <span aria-hidden>{Number(ymd.slice(8))}</span>
                 </div>
               );
@@ -230,7 +236,11 @@ export function PublicAvailabilityCalendar() {
                     : lockedHighlight
                       ? "cursor-pointer border-2 border-[#FFC200] bg-[#FFC200] text-[var(--text)] shadow-[0_0_16px_rgba(255,194,0,0.55)]"
                       : "cursor-pointer border-2 border-[#FFC200] bg-[#FFC200] text-[var(--text)] shadow-[0_0_14px_rgba(255,194,0,0.4)] hover:shadow-[0_0_20px_rgba(255,194,0,0.65)]",
-                  selected ? "ring-2 ring-[#0038A8] ring-offset-2" : "",
+                  selected
+                    ? "ring-2 ring-[#0038A8] ring-offset-2"
+                    : isToday
+                      ? "ring-2 ring-red-600 ring-offset-2 rounded-xl"
+                      : "",
                 ].join(" ")}
               >
                 {lockedHighlight ? (
@@ -238,6 +248,7 @@ export function PublicAvailabilityCalendar() {
                     🔒
                   </span>
                 ) : null}
+                {isToday ? <CalendarTodayMark /> : null}
                 <span className="tabular-nums leading-none">
                   {Number(ymd.slice(8))}
                 </span>

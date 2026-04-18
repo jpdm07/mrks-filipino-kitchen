@@ -41,6 +41,8 @@ model Order {
   isDemo             Boolean  @default(false)
   /// JSON array of refund ledger entries (admin-recorded; funds returned outside the app via Venmo/Zelle/etc.).
   refundLog          String?
+  /// True when the order was entered in admin (walk-in / phone) rather than website checkout.
+  manualEntry        Boolean  @default(false)
 }
 
 model Availability {

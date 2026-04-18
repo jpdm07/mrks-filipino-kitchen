@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
 import { isFlanPickupOnlyNote } from "@/lib/kitchen-schedule";
 import { FlanPickupDayBadge } from "@/components/calendar/FlanPickupDayBadge";
+import { CalendarTodayMark } from "@/components/calendar/CalendarTodayMark";
 import { eachYmdInRangeInclusive } from "@/lib/availability-range";
 import { addCalendarDaysYMD, getTodayInPickupTimezoneYMD } from "@/lib/pickup-lead-time";
 
@@ -729,11 +730,14 @@ export function AdminAvailabilityPanel() {
             ))}
           </div>
           <div className="mt-1 grid grid-cols-7 gap-1">
-            {grid.map((cell, idx) => {
+            {(() => {
+              const todayPickupYmd = getTodayInPickupTimezoneYMD();
+              return grid.map((cell, idx) => {
               if (!cell.ymd) {
                 return <div key={`e-${idx}`} className="aspect-square" />;
               }
               const ymd = cell.ymd;
+              const isToday = ymd === todayPickupYmd;
               const dbOpen = days[ymd]?.isOpen === true;
               const customerOpen = days[ymd]?.customerFacingOpen === true;
               const showOpen = dbOpen || customerOpen;
@@ -764,16 +768,24 @@ export function AdminAvailabilityPanel() {
                           ? "border-sky-600 bg-sky-100 text-sky-950"
                           : "border-emerald-600 bg-emerald-100 text-emerald-900"
                       : "border-[var(--border)] bg-[var(--bg-section)] text-[var(--text-muted)]",
-                    sel ? "ring-2 ring-[var(--primary)]" : "",
+                    sel
+                      ? isToday
+                        ? "ring-2 ring-red-600 ring-offset-2"
+                        : "ring-2 ring-[var(--primary)]"
+                      : isToday
+                        ? "rounded-xl border-2 border-red-600 bg-red-50 text-red-700"
+                        : "",
                   ].join(" ")}
                 >
+                  {isToday ? <CalendarTodayMark /> : null}
                   <span className="tabular-nums leading-none">
                     {Number(ymd.slice(8))}
                   </span>
                   {flanOpen ? <FlanPickupDayBadge /> : null}
                 </button>
               );
-            })}
+            });
+            })()}
           </div>
         </div>
         <p className="mt-2 text-xs text-[var(--text-muted)]">

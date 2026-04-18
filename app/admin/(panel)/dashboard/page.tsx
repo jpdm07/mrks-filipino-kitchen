@@ -61,6 +61,13 @@ export default async function AdminDashboardPage() {
       ) : null}
       <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm">
         <Link
+          href="/admin/orders/manual"
+          className="font-semibold text-[var(--primary)] underline-offset-2 hover:underline"
+        >
+          Record off-site order
+        </Link>
+        <span className="text-[var(--text-muted)]">·</span>
+        <Link
           href="/admin/inquiries"
           className="font-semibold text-[var(--primary)] underline-offset-2 hover:underline"
         >

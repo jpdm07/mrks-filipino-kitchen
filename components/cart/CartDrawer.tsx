@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, X, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, ShoppingBag, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useCart } from "./CartContext";
 import { samplesSelectionComplete } from "@/lib/cart-types";
 import { CartItemRow } from "./CartItem";
@@ -139,19 +139,6 @@ export function CartDrawer() {
                 aria-label="Close cart"
               >
                 <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="border-b border-[var(--border)] bg-[var(--bg-section)] px-4 py-3">
-              <button
-                type="button"
-                onClick={() => {
-                  closeDrawer();
-                  router.push("/menu");
-                }}
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-center text-sm font-semibold text-[var(--primary)] shadow-sm transition hover:bg-[var(--gold-light)]/30"
-              >
-                Continue shopping — browse the menu for more items
               </button>
             </div>
 
@@ -667,6 +654,17 @@ export function CartDrawer() {
                 }}
               >
                 Proceed to Checkout
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  closeDrawer();
+                  router.push("/menu");
+                }}
+                className="mt-3 flex w-full items-center justify-center gap-2 py-2 text-sm font-semibold text-[var(--primary)] underline underline-offset-2"
+              >
+                <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+                Continue shopping
               </button>
             </div>
           </aside>

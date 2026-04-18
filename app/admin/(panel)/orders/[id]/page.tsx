@@ -54,6 +54,11 @@ export default async function AdminOrderDetailPage({
             Demo
           </span>
         ) : null}
+        {order.manualEntry ? (
+          <span className="ml-2 rounded bg-sky-200 px-2 py-0.5 text-xs font-bold text-sky-950">
+            Off-site / manual
+          </span>
+        ) : null}
       </p>
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <div className="rounded border border-[var(--border)] bg-[var(--card)] p-4">

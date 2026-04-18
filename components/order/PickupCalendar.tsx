@@ -9,6 +9,7 @@ import {
 import { isFlanPickupOnlyNote, kitchenDayKind } from "@/lib/kitchen-schedule";
 import { isFlanTueThuPickupYmdBookableAt } from "@/lib/flan-weekday-unlock";
 import { FlanPickupDayBadge } from "@/components/calendar/FlanPickupDayBadge";
+import { CalendarTodayMark } from "@/components/calendar/CalendarTodayMark";
 import {
   customerAvailabilityQueryRange,
   daysInCalendarMonth,
@@ -247,6 +248,7 @@ export const PickupCalendar = forwardRef<
           const note = (notes[ymd] ?? "").trim();
           const flanOnly = isFlanPickupOnlyNote(note);
           const selected = value === ymd;
+          const isToday = ymd === todayYmd;
           const notOffered = !whitelisted && !past;
           const staticTitle = bookingWindowLocked
             ? isPickupLockedByThursdayNoonCutoff(ymd)
@@ -270,14 +272,21 @@ export const PickupCalendar = forwardRef<
                 className={[
                   "relative flex aspect-square flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border px-0.5 py-0.5 text-sm font-semibold transition-colors",
                   selected
-                    ? "!border-[#0038A8] !bg-[#0038A8] !text-white hover:!bg-[#0038A8]"
-                    : flanOnly
-                      ? "border-amber-500 bg-amber-100 text-amber-950 ring-1 ring-amber-400/45 hover:bg-amber-200"
-                      : "border-[var(--border)] text-[var(--text)] hover:bg-[#FFC200]",
+                    ? `!border-[#0038A8] !bg-[#0038A8] !text-white hover:!bg-[#0038A8]${isToday ? " ring-2 ring-red-600 ring-offset-2" : ""}`
+                    : isToday
+                      ? "rounded-xl border-2 !border-red-600 bg-red-50 text-red-700 hover:bg-red-100"
+                      : flanOnly
+                        ? "border-amber-500 bg-amber-100 text-amber-950 ring-1 ring-amber-400/45 hover:bg-amber-200"
+                        : "border-[var(--border)] text-[var(--text)] hover:bg-[#FFC200]",
                 ]
                   .filter(Boolean)
                   .join(" ")}
               >
+                {isToday ? (
+                  <CalendarTodayMark
+                    className={selected ? "!text-white" : ""}
+                  />
+                ) : null}
                 <span className="text-sm font-semibold leading-none tabular-nums">
                   {Number(ymd.slice(8))}
                 </span>
@@ -295,16 +304,20 @@ export const PickupCalendar = forwardRef<
               title={staticTitle}
               className={[
                 "relative flex aspect-square select-none flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md px-0.5 py-0.5 text-sm font-semibold",
-                past
-                  ? "bg-[var(--bg-section)] text-[var(--text-muted)] opacity-50"
-                  : bookingWindowLocked
-                    ? flanOnly
-                      ? "border-2 border-amber-500 bg-amber-100/90 text-amber-950 shadow-[0_0_12px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/40"
-                      : "border-2 border-[#FFC200] bg-[#FFC200]/25 text-[var(--text)] shadow-[0_0_12px_rgba(255,194,0,0.35)]"
-                    : "bg-[var(--bg-section)] text-[var(--text-muted)] opacity-70 ring-1 ring-inset ring-[var(--border)]/60",
+                isToday
+                  ? "rounded-xl border-2 border-red-600 bg-red-50 text-red-700"
+                  : past
+                    ? "bg-[var(--bg-section)] text-[var(--text-muted)] opacity-50"
+                    : bookingWindowLocked
+                      ? flanOnly
+                        ? "border-2 border-amber-500 bg-amber-100/90 text-amber-950 shadow-[0_0_12px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/40"
+                        : "border-2 border-[#FFC200] bg-[#FFC200]/25 text-[var(--text)] shadow-[0_0_12px_rgba(255,194,0,0.35)]"
+                      : "bg-[var(--bg-section)] text-[var(--text-muted)] opacity-70 ring-1 ring-inset ring-[var(--border)]/60",
+                past && isToday ? "opacity-80" : "",
               ].join(" ")}
             >
               <span className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-0.5">
+                {isToday ? <CalendarTodayMark /> : null}
                 {bookingWindowLocked ? (
                   <span className="text-[10px] leading-none" aria-hidden>
                     🔒
