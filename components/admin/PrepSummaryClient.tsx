@@ -369,8 +369,17 @@ export function PrepSummaryClient({
                 {formatPickupYmdLong(payload.meta.sat)}
               </p>
               <p className="mt-2 text-sm text-[var(--text-muted)]">
-                Weekend orders counted: {payload.meta.weekendOrderCount} · Statuses:{" "}
+                Orders in this week: {payload.meta.weekOrderCount} (Fri/Sat pickups:{" "}
+                {payload.meta.weekendOrderCount}) · Statuses:{" "}
                 {payload.meta.statusesIncluded.join(", ")}
+              </p>
+              <p className="prep-no-print mt-2 text-sm text-[var(--text-muted)]">
+                Pickup window for this summary:{" "}
+                <strong>
+                  {payload.meta.weekStartSun} – {payload.meta.weekEndSat}
+                </strong>
+                . If this is empty but you have orders, your pickup date may be in a
+                different week — use <strong>Next week</strong> / <strong>Previous week</strong>.
               </p>
               {payload.emailSentAt ? (
                 <p className="prep-no-print mt-2 text-xs text-[var(--text-muted)]">
@@ -395,11 +404,11 @@ export function PrepSummaryClient({
             <div className="print:hidden">
               <section className="mt-6">
                 <h3 className="text-lg font-bold text-[var(--text)]">
-                  Main menu (Fri/Sat pickups)
+                  Main menu (this Sun–Sat week)
                 </h3>
                 <p className="mb-3 text-sm text-[var(--text-muted)]">
-                  Edit qty, notes, hide lines, or add manual rows. Save before email
-                  or print if you changed anything.
+                  All non-dessert lines for pickups any day this week (updates live —
+                  not gated on Thursday). Edit, save, then print or email.
                 </p>
                 <PrepEditTable
                   rows={mainRows}

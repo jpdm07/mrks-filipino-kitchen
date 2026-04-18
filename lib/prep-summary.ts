@@ -3,6 +3,7 @@ import type { OrderItemLine } from "@/lib/order-types";
 import {
   addCalendarDaysYMD,
   getThisWeeksFridaySaturdayAfterThursday,
+  isWellFormedPickupYMD,
 } from "@/lib/pickup-lead-time";
 import { itemLineKey, itemLineLabel } from "@/lib/sales-analytics";
 
@@ -97,6 +98,25 @@ export function weekSunToSatFromThursday(thursdayYmd: string): {
   };
 }
 
+/**
+ * Normalize DB pickup strings to YYYY-MM-DD (handles stray whitespace or
+ * lightly malformed legacy values). Returns null if not parseable.
+ */
+export function normalizePickupYmd(raw: string | null | undefined): string | null {
+  const t = (raw ?? "").trim();
+  if (!t) return null;
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t);
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d)) return null;
+  const mm = String(mo).padStart(2, "0");
+  const dd = String(d).padStart(2, "0");
+  const ymd = `${y}-${mm}-${dd}`;
+  return isWellFormedPickupYMD(ymd) ? ymd : null;
+}
+
 export function isDessertFlanLine(line: OrderItemLine): boolean {
   if (line.isSample) return false;
   const cat = (line.category ?? "").toLowerCase();
@@ -125,7 +145,10 @@ export type PrepSummaryComputed = {
     sat: string;
     weekStartSun: string;
     weekEndSat: string;
+    /** Orders with pickup on Fri or Sat this week (weekend batch). */
     weekendOrderCount: number;
+    /** All orders with pickup any day Sun–Sat this week (after filters). */
+    weekOrderCount: number;
     statusesIncluded: string[];
   };
 };
@@ -142,8 +165,9 @@ function mapToSortedLines(m: Map<string, { label: string; qty: number }>): PrepL
 }
 
 /**
- * Main prep: Fri/Sat pickups for this Thursday week (weekend batch).
- * Desserts & flan: same calendar week (Sun–Sat) including Tue–Thu flan pickups.
+ * Main prep: non-dessert lines for any pickup Sun–Sat this week (so you see
+ * totals before Thursday and for weekday pickups too). Desserts & flan: same
+ * week, including Tue–Thu flan slots.
  */
 export function aggregatePrepForWeek(
   orders: Array<{
@@ -160,31 +184,32 @@ export function aggregatePrepForWeek(
   const mainMap = new Map<string, { label: string; qty: number }>();
   const dessertMap = new Map<string, { label: string; qty: number }>();
   let weekendOrderCount = 0;
+  let weekOrderCount = 0;
 
   for (const o of orders) {
     if (o.isDemo) continue;
     if (!STATUS_OK.has(o.status)) continue;
-    const pd = o.pickupDate?.trim();
-    if (!pd) continue;
-    if (pd < sun || pd > weekEndSat) continue;
+    const pdNorm = normalizePickupYmd(o.pickupDate);
+    if (!pdNorm) continue;
+    if (pdNorm < sun || pdNorm > weekEndSat) continue;
 
     const items = parseOrderItemsJson(o.items);
     if (items.length === 0) continue;
 
-    const isWeekendPickup = pd === fri || pd === sat;
+    weekOrderCount += 1;
+
+    const isWeekendPickup = pdNorm === fri || pdNorm === sat;
     if (isWeekendPickup) weekendOrderCount += 1;
 
-    if (isWeekendPickup) {
-      for (const line of items) {
-        if (line.isSample) continue;
-        if (isDessertFlanLine(line)) continue;
-        const q = line.quantity ?? 0;
-        if (q <= 0) continue;
-        const key = itemLineKey(line);
-        const label = itemLineLabel(line);
-        const prev = mainMap.get(key);
-        mainMap.set(key, { label, qty: (prev?.qty ?? 0) + q });
-      }
+    for (const line of items) {
+      if (line.isSample) continue;
+      if (isDessertFlanLine(line)) continue;
+      const q = line.quantity ?? 0;
+      if (q <= 0) continue;
+      const key = itemLineKey(line);
+      const label = itemLineLabel(line);
+      const prev = mainMap.get(key);
+      mainMap.set(key, { label, qty: (prev?.qty ?? 0) + q });
     }
 
     for (const line of items) {
@@ -209,6 +234,7 @@ export function aggregatePrepForWeek(
       weekStartSun: sun,
       weekEndSat,
       weekendOrderCount,
+      weekOrderCount,
       statusesIncluded: [...ORDER_STATUSES_COUNTING_TOWARD_CAPACITY],
     },
   };

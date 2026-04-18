@@ -63,13 +63,13 @@ export async function sendPrepSummaryEmail(params: {
     `Prep summary (week of Thu ${params.weekThursdayYmd})`,
     `Friday pickup: ${params.fri} · Saturday pickup: ${params.sat}`,
     ``,
-    linesToText("Main menu (Fri/Sat orders)", params.main),
+    linesToText("Main menu (Sun–Sat week)", params.main),
     linesToText("Desserts & flan (week)", params.dessert),
     ``,
     `Edit or print in admin:`,
     adminUrl,
     ``,
-    `Main counts are from Fri/Sat pickups only. Desserts & flan include all pickups Mon–Sun in this week (e.g. Tue–Thu flan slots).`,
+    `Main counts are non-dessert lines for any pickup in this Sun–Sat week. Desserts & flan include the same week (e.g. Tue–Thu flan slots).`,
   ].join("\n");
 
   const html = `<!DOCTYPE html>
@@ -82,7 +82,7 @@ export async function sendPrepSummaryEmail(params: {
       <p style="margin:0 0 8px;font-size:18px;font-weight:700;color:#0038A8;">Quantities to prep</p>
       <p style="margin:0 0 16px;font-size:14px;color:#555;">Week of Thu <strong>${escapeHtml(params.weekThursdayYmd)}</strong><br/>
       Fri <strong>${escapeHtml(params.fri)}</strong> · Sat <strong>${escapeHtml(params.sat)}</strong></p>
-      ${linesToHtml("Main menu (Fri/Sat)", params.main)}
+      ${linesToHtml("Main menu (week)", params.main)}
       ${linesToHtml("Desserts & flan (full week)", params.dessert)}
       <p style="margin:20px 0 0;font-size:13px;color:#555;">Adjust lines anytime in <a href="${escapeHtml(adminUrl)}" style="color:#0038A8;font-weight:600;">Admin → Prep summary</a>.</p>
     </div>

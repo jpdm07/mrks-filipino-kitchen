@@ -18,9 +18,11 @@ export default async function PrepSummaryPage() {
       </h1>
       <p className="text-base text-[var(--text-muted)]">
         Totals from active orders (pending verification, awaiting payment, or
-        confirmed) for the pickup week. Main menu counts are <strong>Fri/Sat</strong>{" "}
-        only; desserts and flan include <strong>the full Sun–Sat week</strong>{" "}
-        (e.g. weekday flan pickups). Save edits before printing or emailing.
+        confirmed) for the Sun–Sat week you select. <strong>Main menu</strong>{" "}
+        includes all non-dessert pickups that week; <strong>desserts &amp; flan</strong>{" "}
+        use the same week (including Tue–Thu flan slots). Choose the week that
+        contains your pickup date if the list looks empty. Save edits before
+        printing or emailing.
       </p>
       <PrepSummaryClient initialWeekThursdayYmd={initialWeek} />
     </div>
