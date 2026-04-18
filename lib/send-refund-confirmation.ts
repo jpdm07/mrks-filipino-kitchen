@@ -7,7 +7,7 @@ import {
 import { getOwnerOrderNotificationEmail } from "@/lib/mail-env-status";
 import { sendMail, type MailSendResult } from "@/lib/mailer";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
-import type { RefundLedgerEntry } from "@/lib/refund-log";
+import { refundSentViaLabel, type RefundLedgerEntry } from "@/lib/refund-log";
 
 function escapeHtml(s: string): string {
   return s
@@ -15,19 +15,6 @@ function escapeHtml(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-}
-
-function sentViaLabel(v: RefundLedgerEntry["sentVia"]): string {
-  switch (v) {
-    case "venmo":
-      return "Venmo";
-    case "zelle":
-      return "Zelle";
-    case "cash":
-      return "Cash";
-    default:
-      return "Other";
-  }
 }
 
 function refundBodyHtml(orderNumber: string, entry: RefundLedgerEntry): string {
@@ -45,7 +32,7 @@ function refundBodyHtml(orderNumber: string, entry: RefundLedgerEntry): string {
     ? `<p class="mt-3"><strong>Note from the kitchen:</strong> ${escapeHtml(entry.customerNote.trim())}</p>`
     : "";
   return `
-    <p>We recorded a refund of <strong>$${entry.refundTotalUsd.toFixed(2)}</strong> sent back via <strong>${sentViaLabel(entry.sentVia)}</strong> for order <strong>#${escapeHtml(orderNumber)}</strong>.</p>
+    <p>We recorded a refund of <strong>$${entry.refundTotalUsd.toFixed(2)}</strong> sent back via <strong>${refundSentViaLabel(entry.sentVia)}</strong> for order <strong>#${escapeHtml(orderNumber)}</strong>.</p>
     <ul class="mt-2 list-disc pl-5 text-sm">${lines || "<li>(utensils / fee adjustment only)</li>"}</ul>
     ${ut}
     <p class="mt-3">Your order&apos;s new balance is <strong>$${entry.newTotalUsd.toFixed(2)}</strong> (was $${entry.priorTotalUsd.toFixed(2)}).</p>
@@ -56,7 +43,7 @@ function refundBodyHtml(orderNumber: string, entry: RefundLedgerEntry): string {
 
 function refundBodyPlain(orderNumber: string, entry: RefundLedgerEntry): string {
   const parts = [
-    `Refund recorded for order #${orderNumber}: $${entry.refundTotalUsd.toFixed(2)} via ${sentViaLabel(entry.sentVia)}.`,
+    `Refund recorded for order #${orderNumber}: $${entry.refundTotalUsd.toFixed(2)} via ${refundSentViaLabel(entry.sentVia)}.`,
     "",
     ...entry.lineChanges.map(
       (c) =>
@@ -134,7 +121,7 @@ export async function sendOwnerRefundConfirmationEmail(params: {
   const inner = `
     <p><strong>Refund recorded</strong> for order <strong>#${escapeHtml(params.order.orderNumber)}</strong></p>
     <p>Customer: ${escapeHtml(params.order.customerName)} · ${escapeHtml(params.order.phone)} · ${escapeHtml(params.order.email)}</p>
-    <p>Refund: <strong>$${params.entry.refundTotalUsd.toFixed(2)}</strong> via ${sentViaLabel(params.entry.sentVia)} · New total <strong>$${params.entry.newTotalUsd.toFixed(2)}</strong></p>
+    <p>Refund: <strong>$${params.entry.refundTotalUsd.toFixed(2)}</strong> via ${refundSentViaLabel(params.entry.sentVia)} · New total <strong>$${params.entry.newTotalUsd.toFixed(2)}</strong></p>
     ${refundBodyHtml(params.order.orderNumber, params.entry)}
   `;
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/></head>
@@ -150,7 +137,7 @@ ${buildEmailBrandBannerHtml({ subtitle: "Owner copy — refund" })}
   ].join("\n");
   return sendMail({
     to,
-    subject: `[Refund] #$${params.order.orderNumber} −$${params.entry.refundTotalUsd.toFixed(2)} (${sentViaLabel(params.entry.sentVia)})`,
+    subject: `[Refund] #$${params.order.orderNumber} −$${params.entry.refundTotalUsd.toFixed(2)} (${refundSentViaLabel(params.entry.sentVia)})`,
     html,
     text,
   });
@@ -162,7 +149,7 @@ export function buildRefundSmsCustomer(
   entry: RefundLedgerEntry
 ): string {
   const first = customerName.split(/\s+/)[0] || customerName;
-  return `Hi ${first}! We recorded a $${entry.refundTotalUsd.toFixed(2)} refund for order #${orderNumber} (sent via ${sentViaLabel(entry.sentVia)}). New balance: $${entry.newTotalUsd.toFixed(2)}. Mr. K's Filipino Kitchen — 979-703-3827`;
+  return `Hi ${first}! We recorded a $${entry.refundTotalUsd.toFixed(2)} refund for order #${orderNumber} (sent via ${refundSentViaLabel(entry.sentVia)}). New balance: $${entry.newTotalUsd.toFixed(2)}. Mr. K's Filipino Kitchen — 979-703-3827`;
 }
 
 export function buildRefundSmsOwner(
@@ -170,5 +157,5 @@ export function buildRefundSmsOwner(
   entry: RefundLedgerEntry,
   customerName: string
 ): string {
-  return `💸 REFUND #$${orderNumber} −$${entry.refundTotalUsd.toFixed(2)} via ${sentViaLabel(entry.sentVia)} · ${customerName} · New total $${entry.newTotalUsd.toFixed(2)}`;
+  return `💸 REFUND #$${orderNumber} −$${entry.refundTotalUsd.toFixed(2)} via ${refundSentViaLabel(entry.sentVia)} · ${customerName} · New total $${entry.newTotalUsd.toFixed(2)}`;
 }

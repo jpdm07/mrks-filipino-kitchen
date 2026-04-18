@@ -1,4 +1,4 @@
-/** Order + payment lifecycle (Zelle / Venmo only — no card processing). */
+/** Order + payment lifecycle (Zelle / Venmo / Cash App — no card processing). */
 
 export const ORDER_STATUS_PENDING_PAYMENT_VERIFICATION =
   "Pending Payment Verification";
@@ -7,7 +7,8 @@ export const ORDER_STATUS_AWAITING_PAYMENT = "Awaiting Payment";
 /** Legacy / admin manual */
 export const ORDER_STATUS_PENDING = "Pending";
 
-export const PAYMENT_METHOD_UNVERIFIED = "Zelle or Venmo (unverified)";
+export const PAYMENT_METHOD_UNVERIFIED =
+  "Zelle, Venmo, or Cash App (unverified)";
 export const PAYMENT_METHOD_VERIFIED_LABEL = "Verified";
 /** Admin-entered walk-in / phone order (not website checkout). */
 export const PAYMENT_METHOD_MANUAL_OFFSITE = "Off-site / manual entry";

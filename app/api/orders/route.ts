@@ -338,7 +338,7 @@ export async function POST(req: NextRequest) {
     }
     ownerSmsLines.push(
       ``,
-      `Customer was told to put order #${orderNumber} in Venmo/Zelle memo when paying (no text required).`,
+      `Customer was told to put order #${orderNumber} in Venmo, Zelle, or Cash App memo when paying (no text required).`,
       `Match order # at pickup, then verify payment and confirm in admin.`
     );
     const ownerSms = ownerSmsLines.join("\n");
@@ -346,7 +346,7 @@ export async function POST(req: NextRequest) {
 
     if (!isDemo) {
       const firstName = customerName.split(/\s+/)[0] || customerName;
-      const payReminder = `Hi ${firstName}! Mr. K's Filipino Kitchen got your order #${orderNumber} ($${total.toFixed(2)}). Pay with Venmo or Zelle and put order #${orderNumber} in the payment memo. We'll text/email when payment is confirmed. Questions? 979-703-3827`;
+      const payReminder = `Hi ${firstName}! Mr. K's Filipino Kitchen got your order #${orderNumber} ($${total.toFixed(2)}). Pay with Venmo, Zelle, or Cash App and put order #${orderNumber} in the payment memo. We'll text/email when payment is confirmed. Questions? 979-703-3827`;
       await sendCustomerSms(phone, payReminder).catch((err) => {
         console.warn("[orders] Payment reminder SMS skipped or failed:", err);
       });

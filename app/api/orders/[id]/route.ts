@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
+import { PAYMENT_INSTRUCTIONS } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
 import type { OrderItemLine } from "@/lib/order-types";
 import { verifyAdminToken, getAdminTokenFromRequest } from "@/lib/admin-auth";
@@ -39,17 +40,19 @@ import {
   sendOwnerRefundConfirmationEmail,
 } from "@/lib/send-refund-confirmation";
 
-function venmoDisplay(): string {
-  return process.env.NEXT_PUBLIC_VENMO_HANDLE ?? "@jpdm07";
-}
-
 /** Dashboard + finances read orders from DB; invalidate after admin mutations. */
 function revalidateAdminOrderViews() {
   revalidatePath("/admin/dashboard");
   revalidatePath("/admin/finances");
 }
 
-const REFUND_SENT_VIA = new Set(["venmo", "zelle", "cash", "other"]);
+const REFUND_SENT_VIA = new Set([
+  "venmo",
+  "zelle",
+  "cashapp",
+  "cash",
+  "other",
+]);
 
 function parseItems(raw: string): OrderItemLine[] {
   try {
@@ -361,7 +364,7 @@ export async function PATCH(
   }
 
   if (body.paymentAction === "not_received") {
-    const msg = `Hi ${updated.customerName}, we haven't received your payment yet for order #${updated.orderNumber}. Total due: $${updated.total.toFixed(2)}. Please send to Zelle: 979-703-3827 or Venmo: ${venmoDisplay()}. Questions? Call or text 979-703-3827.`;
+    const msg = `Hi ${updated.customerName}, we haven't received your payment yet for order #${updated.orderNumber}. Total due: $${updated.total.toFixed(2)}. Pay via Zelle: ${PAYMENT_INSTRUCTIONS.zellePhone}, Venmo: ${PAYMENT_INSTRUCTIONS.venmoHandle}, or Cash App: ${PAYMENT_INSTRUCTIONS.cashAppCashtag}. Put order #${updated.orderNumber} in the memo. Questions? Call or text 979-703-3827.`;
     await sendCustomerSms(updated.phone, msg).catch(() => {});
   }
 

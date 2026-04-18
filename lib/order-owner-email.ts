@@ -109,7 +109,7 @@ export async function sendNewOrderEmailToOwner(params: {
       ? `Printed receipt: yes — include with pickup bag`
       : null,
     ``,
-    `Ask them to put order #${params.orderNumber} in the Venmo or Zelle memo when paying. Match that order number with them at pickup to verify.`,
+    `Ask them to put order #${params.orderNumber} in the Venmo, Zelle, or Cash App memo when paying. Match that order number with them at pickup to verify.`,
     `Admin: ${adminUrl}`,
   ]
     .filter(Boolean)
@@ -136,7 +136,7 @@ export async function sendNewOrderEmailToOwner(params: {
     <p style="margin:20px 0 0;font-size:13px;color:#666;">
       ${params.subscribeUpdates ? "• Opted in to menu updates<br/>" : ""}
       ${params.wantsPrintedReceipt ? "• <strong>Printed receipt</strong> requested with pickup<br/>" : ""}
-      • Ask them to put order #${escapeHtml(params.orderNumber)} in Venmo/Zelle memo when paying; confirm the same order # when they arrive for pickup.
+      • Ask them to put order #${escapeHtml(params.orderNumber)} in Venmo, Zelle, or Cash App memo when paying; confirm the same order # when they arrive for pickup.
     </p>
     <p style="margin:20px 0 0;"><a href="${escapeHtml(adminUrl)}" style="display:inline-block;background:#0038a8;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Open admin</a></p>
     </div>

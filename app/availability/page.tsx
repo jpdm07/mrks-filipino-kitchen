@@ -25,7 +25,7 @@ export default function AvailabilityPage() {
         <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-[var(--text)]">
           <li>📅 Pick an available date below (time at checkout)</li>
           <li>🛒 Place your order on the menu page</li>
-          <li>💚 Send payment via Zelle or Venmo</li>
+          <li>💚 Send payment via Zelle, Venmo, or Cash App</li>
           <li>✅ Mr. K confirms your order and you&apos;re all set!</li>
         </ol>
         <p className="mt-4 text-sm text-[var(--text-muted)]">

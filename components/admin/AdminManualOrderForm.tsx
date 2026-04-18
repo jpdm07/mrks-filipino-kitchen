@@ -150,7 +150,8 @@ export function AdminManualOrderForm() {
       <p className="text-sm leading-relaxed text-[var(--text-muted)]">
         Use this for walk-ins, phone orders, or other sales <strong>not</strong> from
         the website. The order uses the same capacity, pickup slot, and Sheets rules
-        as checkout. Send the customer&apos;s payment yourself (cash, Venmo, etc.),
+        as checkout. Send the customer&apos;s payment yourself (cash, Venmo, Cash
+        App, etc.),
         then check <strong>Mark as paid / confirmed</strong> when appropriate.
       </p>
 

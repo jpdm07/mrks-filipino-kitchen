@@ -301,7 +301,7 @@ export function OrderForm() {
       }
       if (next.payment) {
         parts.push(
-          "Please confirm you will put your order number in the Venmo or Zelle memo when you pay (Mr. K will match it with you at pickup)."
+          "Please confirm you will put your order number in the Venmo, Zelle, or Cash App memo when you pay (Mr. K will match it with you at pickup)."
         );
       }
       if (
@@ -611,7 +611,8 @@ export function OrderForm() {
             />
             <span className="min-w-0 leading-snug">
               My order isn&apos;t final until I pay on the next page. I&apos;ll put my
-              order number in the Venmo or Zelle memo when I pay so Mr. K can match it
+              order number in the Venmo, Zelle, or Cash App memo when I pay so Mr. K
+              can match it
               with me at pickup.
             </span>
           </label>

@@ -111,11 +111,22 @@ export const ORDER_FULFILLMENT = {
   PICKUP_TIMEZONE: "America/Chicago",
 } as const;
 
-/** Zelle / Venmo checkout copy (no card processing). */
+/** Zelle / Venmo / Cash App checkout copy (no card processing). */
 export const PAYMENT_INSTRUCTIONS = {
   zellePhone: "979-703-3827",
   /** Display handle for Venmo (set NEXT_PUBLIC_VENMO_HANDLE in .env.local). */
   venmoHandle: process.env.NEXT_PUBLIC_VENMO_HANDLE ?? "@jpdm07",
+  /**
+   * Cash App cashtag shown on checkout (include $).
+   * Set NEXT_PUBLIC_CASHAPP_CASHTAG in .env.local if it changes.
+   */
+  cashAppCashtag: (() => {
+    const raw = (
+      process.env.NEXT_PUBLIC_CASHAPP_CASHTAG ?? "$MrKsFilipinoKitchen"
+    ).trim();
+    if (!raw) return "$MrKsFilipinoKitchen";
+    return raw.startsWith("$") ? raw : `$${raw.replace(/^@/, "")}`;
+  })(),
 } as const;
 
 export const SUGGESTION_OPTIONS = [

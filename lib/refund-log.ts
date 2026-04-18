@@ -8,7 +8,7 @@ export type RefundLineChange = {
 export type RefundLedgerEntry = {
   id: string;
   at: string;
-  sentVia: "venmo" | "zelle" | "cash" | "other";
+  sentVia: "venmo" | "zelle" | "cashapp" | "cash" | "other";
   refundTotalUsd: number;
   priorTotalUsd: number;
   newTotalUsd: number;
@@ -31,4 +31,21 @@ export function parseRefundLog(raw: string | null | undefined): RefundLedgerEntr
 
 export function stringifyRefundLog(entries: RefundLedgerEntry[]): string {
   return JSON.stringify(entries);
+}
+
+export function refundSentViaLabel(
+  sentVia: RefundLedgerEntry["sentVia"]
+): string {
+  switch (sentVia) {
+    case "venmo":
+      return "Venmo";
+    case "zelle":
+      return "Zelle";
+    case "cashapp":
+      return "Cash App";
+    case "cash":
+      return "Cash";
+    default:
+      return "Other";
+  }
 }

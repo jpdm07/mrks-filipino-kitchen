@@ -3,10 +3,13 @@
 import { useCallback, useState } from "react";
 import { PAYMENT_INSTRUCTIONS, SITE } from "@/lib/config";
 import {
+  CashAppBrandIcon,
   VenmoBrandIcon,
   ZelleBrandIcon,
 } from "@/components/payment/PaymentBrandIcons";
 import {
+  cashAppPayWebUrl,
+  cashAppPaymentClipboardText,
   venmoPayWebUrl,
   zellePaymentClipboardText,
   ZELLE_CUSTOMER_URL,
@@ -66,11 +69,11 @@ export function AcceptedPaymentMethods({
     return (
       <div
         className="flex flex-wrap items-center justify-center gap-4"
+        aria-label="Venmo, Zelle, and Cash App accepted; pay on the next screen after you submit"
         role="group"
-        aria-label="Venmo and Zelle accepted; pay on the next screen after you submit"
       >
         <span className="sr-only">
-          Venmo and Zelle accepted. You will pay on the next screen.
+          Venmo, Zelle, and Cash App accepted. You will pay on the next screen.
         </span>
         <div
           className="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm"
@@ -84,6 +87,12 @@ export function AcceptedPaymentMethods({
         >
           <ZelleBrandIcon size={40} />
         </div>
+        <div
+          className="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm"
+          title="Cash App"
+        >
+          <CashAppBrandIcon size={40} />
+        </div>
       </div>
     );
   }
@@ -96,15 +105,21 @@ export function AcceptedPaymentMethods({
   const zelleE164 =
     zelleDigits.length === 10 ? `+1${zelleDigits}` : `+${zelleDigits}`;
   const venmoHandle = PAYMENT_INSTRUCTIONS.venmoHandle;
+  const cashAppCashtag = PAYMENT_INSTRUCTIONS.cashAppCashtag;
 
-  const canVenmoPrefill =
+  const canPrefillPayment =
     Boolean(orderNumber) &&
     amountDue != null &&
     Number.isFinite(amountDue);
 
   const venmoPayHref =
-    canVenmoPrefill && orderNumber && amountDue != null
+    canPrefillPayment && orderNumber && amountDue != null
       ? venmoPayWebUrl(venmoHandle, amountDue, orderNumber)
+      : "#";
+
+  const cashAppPayHref =
+    canPrefillPayment && amountDue != null
+      ? cashAppPayWebUrl(cashAppCashtag, amountDue)
       : "#";
 
   const amountCopyText =
@@ -121,9 +136,18 @@ export function AcceptedPaymentMethods({
         })
       : null;
 
+  const cashAppAllInOneCopy =
+    orderNumber && amountDue != null && Number.isFinite(amountDue)
+      ? cashAppPaymentClipboardText({
+          amountUsd: amountDue,
+          cashtagDisplay: cashAppCashtag,
+          orderNumber,
+        })
+      : null;
+
   return (
     <div className="space-y-3">
-      {canVenmoPrefill ? (
+      {canPrefillPayment ? (
         <a
           href={venmoPayHref}
           target="_self"
@@ -134,7 +158,7 @@ export function AcceptedPaymentMethods({
         </a>
       ) : null}
 
-      {canVenmoPrefill ? (
+      {canPrefillPayment ? (
         <p
           className="text-center text-sm font-semibold tracking-wide text-[var(--text-muted)]"
           aria-hidden
@@ -176,6 +200,56 @@ export function AcceptedPaymentMethods({
             >
               New to Zelle?
             </a>
+          </div>
+        </div>
+      </div>
+
+      <p
+        className="text-center text-sm font-semibold tracking-wide text-[var(--text-muted)]"
+        aria-hidden
+      >
+        or
+      </p>
+
+      <div className="rounded-xl border border-[var(--border)] bg-white/80 px-3 py-3">
+        <div className="flex items-start gap-2">
+          <CashAppBrandIcon size={28} className="mt-0.5 shrink-0" />
+          <div className="min-w-0 flex-1 text-sm">
+            <p className="font-bold text-[var(--text)]">Cash App</p>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              Send to{" "}
+              <span className="font-semibold text-[var(--text)]">
+                {cashAppCashtag}
+              </span>
+              . Use the buttons to copy details; add your order # in the For field
+              if the app does not prefill it.
+            </p>
+            {canPrefillPayment && amountDue != null ? (
+              <a
+                href={cashAppPayHref}
+                target="_self"
+                className="mt-2 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-[#00C244] px-3 py-2 text-center text-sm font-bold text-white shadow-sm transition hover:brightness-95"
+              >
+                <CashAppBrandIcon size={22} colored={false} className="text-white" />
+                Pay {amountCopyText} in Cash App
+              </a>
+            ) : null}
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {cashAppAllInOneCopy ? (
+                <CopyTextButton
+                  label="Copy all (Cash App)"
+                  copyText={cashAppAllInOneCopy}
+                  className="border-[#00C244]/50 bg-emerald-50"
+                />
+              ) : null}
+              <CopyTextButton label="Cashtag" copyText={cashAppCashtag} />
+              {orderNumber ? (
+                <CopyTextButton label="For / note" copyText={orderNumber} />
+              ) : null}
+              {amountCopyText ? (
+                <CopyTextButton label="Amount" copyText={amountCopyText} />
+              ) : null}
+            </div>
           </div>
         </div>
       </div>

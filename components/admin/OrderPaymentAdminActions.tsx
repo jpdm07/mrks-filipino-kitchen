@@ -56,7 +56,8 @@ export function OrderPaymentAdminActions({
         Payment verification
       </p>
       <p className="mt-1 text-xs text-[var(--text-muted)]">
-        Customer marked payment sent (Zelle/Venmo). Verify before you confirm pickup.
+        Customer marked payment sent (Zelle/Venmo/Cash App). Verify before you
+        confirm pickup.
       </p>
       {err ? (
         <p className="mt-2 text-sm text-red-600">{err}</p>

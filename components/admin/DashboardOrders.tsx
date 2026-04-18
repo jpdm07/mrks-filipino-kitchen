@@ -504,7 +504,7 @@ export function DashboardOrders() {
                     {o.status === ORDER_STATUS_PENDING_PAYMENT_VERIFICATION ? (
                       <span
                         className="shrink-0 rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-black uppercase text-black"
-                        title="Verify Zelle/Venmo before confirming pickup"
+                        title="Verify Zelle/Venmo/Cash App before confirming pickup"
                       >
                         Pay
                       </span>

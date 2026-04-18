@@ -1,4 +1,4 @@
-import { siVenmo, siZelle } from "simple-icons";
+import { siCashapp, siVenmo, siZelle } from "simple-icons";
 
 type IconProps = {
   className?: string;
@@ -53,6 +53,29 @@ export function ZelleBrandIcon({
   );
 }
 
+/** Cash App mark — path from Simple Icons (MIT), for recognition only. */
+export function CashAppBrandIcon({
+  className = "",
+  size = 28,
+  colored = true,
+}: IconProps) {
+  const fill = colored ? `#${siCashapp.hex}` : "currentColor";
+  return (
+    <svg
+      role="img"
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      className={className}
+      aria-hidden
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <title>Cash App</title>
+      <path fill={fill} d={siCashapp.path} />
+    </svg>
+  );
+}
+
 /** Cart: payment marks with labels (checkout has full instructions). */
 export function CartPaymentMethodsStrip() {
   return (
@@ -63,7 +86,7 @@ export function CartPaymentMethodsStrip() {
       <div
         className="flex flex-wrap items-center justify-center gap-4"
         role="group"
-        aria-label="Accepted payment methods: Venmo and Zelle"
+        aria-label="Accepted payment methods: Venmo, Zelle, and Cash App"
       >
         <div className="flex items-center gap-2">
           <span className="inline-flex rounded-lg bg-white p-1.5 shadow-sm ring-1 ring-[var(--border)]">
@@ -76,6 +99,14 @@ export function CartPaymentMethodsStrip() {
             <ZelleBrandIcon size={28} />
           </span>
           <span className="text-sm font-semibold text-[var(--text)]">Zelle</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex rounded-lg bg-white p-1.5 shadow-sm ring-1 ring-[var(--border)]">
+            <CashAppBrandIcon size={28} />
+          </span>
+          <span className="text-sm font-semibold text-[var(--text)]">
+            Cash App
+          </span>
         </div>
       </div>
     </div>

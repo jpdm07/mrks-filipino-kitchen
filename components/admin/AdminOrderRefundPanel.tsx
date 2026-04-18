@@ -3,13 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { OrderItemLine } from "@/lib/order-types";
-import type { RefundLedgerEntry } from "@/lib/refund-log";
+import { refundSentViaLabel, type RefundLedgerEntry } from "@/lib/refund-log";
 import {
   PAYMENT_STATUS_REFUNDED,
   PAYMENT_STATUS_VERIFIED,
 } from "@/lib/order-payment";
 
-type SentVia = "venmo" | "zelle" | "cash" | "other";
+type SentVia = "venmo" | "zelle" | "cashapp" | "cash" | "other";
 
 export function AdminOrderRefundPanel({
   orderNumber,
@@ -119,8 +119,9 @@ export function AdminOrderRefundPanel({
       <h2 className="font-bold">Record a refund</h2>
       <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
         Send money back yourself in{" "}
-        <strong className="text-[var(--text)]">Venmo</strong> or{" "}
-        <strong className="text-[var(--text)]">Zelle</strong> first, then use this
+        <strong className="text-[var(--text)]">Venmo</strong>,{" "}
+        <strong className="text-[var(--text)]">Zelle</strong>, or{" "}
+        <strong className="text-[var(--text)]">Cash App</strong> first, then use this
         form to update the order, log what you returned, and email/SMS confirmations.
         The site does not move money automatically.
       </p>
@@ -207,6 +208,7 @@ export function AdminOrderRefundPanel({
           >
             <option value="venmo">Venmo</option>
             <option value="zelle">Zelle</option>
+            <option value="cashapp">Cash App</option>
             <option value="cash">Cash</option>
             <option value="other">Other</option>
           </select>
@@ -334,7 +336,7 @@ function RefundHistoryList({ entries }: { entries: RefundLedgerEntry[] }) {
           >
             <p className="font-semibold text-[var(--text)]">
               {new Date(e.at).toLocaleString()} — ${e.refundTotalUsd.toFixed(2)} via{" "}
-              {e.sentVia}
+              {refundSentViaLabel(e.sentVia)}
             </p>
             <p>New total after: ${e.newTotalUsd.toFixed(2)}</p>
             {e.lineChanges.length > 0 ? (

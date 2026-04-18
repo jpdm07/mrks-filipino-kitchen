@@ -43,7 +43,7 @@ export async function sendCustomerOrderPlacedEmail(
   const when = formatPickupDisplay(params.pickupDate, params.pickupTime);
   const origin = getPublicSiteOrigin();
   const summaryUrl = `${origin}/order-confirmation/${encodeURIComponent(params.orderNumber)}`;
-  const { zellePhone, venmoHandle } = PAYMENT_INSTRUCTIONS;
+  const { zellePhone, venmoHandle, cashAppCashtag } = PAYMENT_INSTRUCTIONS;
 
   const subj = `We received your order #${params.orderNumber}`;
 
@@ -57,9 +57,10 @@ export async function sendCustomerOrderPlacedEmail(
     "",
     "Your order is not final until we receive payment.",
     "",
-    "Pay with Zelle or Venmo:",
+    "Pay with Zelle, Venmo, or Cash App:",
     `- Zelle: ${zellePhone}`,
     `- Venmo: ${venmoHandle}`,
+    `- Cash App: ${cashAppCashtag}`,
     "",
     `Please put order #${params.orderNumber} in the payment memo when you send.`,
     "Mr. K will match that order number with you at pickup.",
@@ -89,10 +90,11 @@ export async function sendCustomerOrderPlacedEmail(
     <p style="margin:0 0 8px;"><strong>Pickup (requested)</strong><br/>${whenH}</p>
     <p style="margin:0 0 16px;"><strong>Total due</strong> — $${params.total.toFixed(2)}</p>
     <p style="margin:0 0 16px;padding:12px 14px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;font-size:15px;">Your order is <strong>not final</strong> until we receive payment.</p>
-    <p style="margin:0 0 8px;"><strong>Pay with Zelle or Venmo</strong></p>
+    <p style="margin:0 0 8px;"><strong>Pay with Zelle, Venmo, or Cash App</strong></p>
     <ul style="margin:0 0 16px;padding-left:1.25rem;">
       <li>Zelle: <strong>${escapeHtml(zellePhone)}</strong></li>
       <li>Venmo: <strong>${escapeHtml(venmoHandle)}</strong></li>
+      <li>Cash App: <strong>${escapeHtml(cashAppCashtag)}</strong></li>
     </ul>
     <p style="margin:0 0 16px;">Put order <strong>#${num}</strong> in the payment memo when you send. We&apos;ll match that number with you at pickup.</p>
     <p style="margin:0 0 8px;"><a href="${urlH}" style="color:#0d6efd;">View your order summary</a></p>

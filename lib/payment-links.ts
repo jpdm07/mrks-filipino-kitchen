@@ -4,6 +4,9 @@
  *
  * Zelle has no universal “pay this number with memo” URL across banks — use the
  * official site + copy helpers in the UI instead.
+ *
+ * Cash App: `https://cash.app/$Cashtag/amount` opens the app/web with amount;
+ * prefilled note is not reliable — mirror Zelle with a copy block for memo + cashtag.
  */
 
 /** Official Zelle customer page (how it works / find your bank). */
@@ -57,4 +60,32 @@ export function venmoPayWebUrl(
   });
   if (noteSafe) qs.set("note", noteSafe);
   return `${base}?${qs.toString()}`;
+}
+
+/** Cashtag without leading $ (for `https://cash.app/$…/amount` paths). */
+export function normalizeCashAppCashtagPath(handle: string): string {
+  const t = handle.trim().replace(/^\$/, "").replace(/^@/, "");
+  return t || "MrKsFilipinoKitchen";
+}
+
+/**
+ * Opens Cash App with pay amount (customer still confirms; add note from clipboard if needed).
+ */
+export function cashAppPayWebUrl(handle: string, amountUsd: number): string {
+  const u = normalizeCashAppCashtagPath(handle);
+  const amount = (Math.round(amountUsd * 100) / 100).toFixed(2);
+  return `https://cash.app/$${u}/${amount}`;
+}
+
+export function cashAppPaymentClipboardText(opts: {
+  amountUsd: number;
+  cashtagDisplay: string;
+  orderNumber: string;
+}): string {
+  const amt = (Math.round(opts.amountUsd * 100) / 100).toFixed(2);
+  return [
+    `Amount: $${amt}`,
+    `Cash App: ${opts.cashtagDisplay}`,
+    `For / note: ${opts.orderNumber}`,
+  ].join("\n");
 }
