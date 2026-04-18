@@ -204,6 +204,10 @@ export const PickupCalendar = forwardRef<
     return false;
   }, [grid, loading, loadError, todayYmd, openSet, cartMode]);
 
+  /** Entire grid month is before “today” month (pickup TZ) — no need for capacity nudge. */
+  const viewedMonthIsAlreadyPast =
+    year < ty || (year === ty && month < tm);
+
   const cannotGoToPreviousMonth =
     !allowNavigateToPastMonths && year === ty && month === tm;
 
@@ -248,7 +252,8 @@ export const PickupCalendar = forwardRef<
       {fewerDatesForThisCart &&
       !loading &&
       !loadError &&
-      !hasBookableDayInVisibleMonth ? (
+      !hasBookableDayInVisibleMonth &&
+      !viewedMonthIsAlreadyPast ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium leading-snug text-red-800 dark:border-red-900/50 dark:bg-red-950/35 dark:text-red-200">
           <span className="font-bold text-red-900 dark:text-red-100">
             Kindly note:
