@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { computeUtensilChargeUsd, PRICING } from "@/lib/config";
 import { complimentaryUtensilAllowanceFromOrderItems } from "@/lib/utensils-allowance";
 import { generateOrderNumber } from "@/lib/orderNumber";
-import { sendOwnerSms } from "@/lib/twilio";
+import { sendCustomerSms, sendOwnerSms } from "@/lib/twilio";
 import { sendNewOrderEmailToOwner } from "@/lib/order-owner-email";
 import { sendCustomerOrderPlacedEmail } from "@/lib/send-customer-order-placed-email";
 import { syncOrderToSheets } from "@/lib/sheets";
@@ -363,6 +363,14 @@ export async function POST(req: NextRequest) {
     );
     const ownerSms = ownerSmsLines.join("\n");
     const ownerSmsSent = await sendOwnerSms(ownerSms);
+
+    if (!isDemo) {
+      const firstName = customerName.split(/\s+/)[0] || customerName;
+      const payReminder = `Hi ${firstName}! Mr. K's Filipino Kitchen got your order #${orderNumber} ($${total.toFixed(2)}). Pay with Venmo or Zelle and put order #${orderNumber} in the payment memo. We'll text/email when payment is confirmed. Questions? 979-703-3827`;
+      await sendCustomerSms(phone, payReminder).catch((err) => {
+        console.warn("[orders] Payment reminder SMS skipped or failed:", err);
+      });
+    }
 
     const ownerEmailPromise = sendNewOrderEmailToOwner({
       orderNumber,

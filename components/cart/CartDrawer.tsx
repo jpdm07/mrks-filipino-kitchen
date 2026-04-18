@@ -142,6 +142,19 @@ export function CartDrawer() {
               </button>
             </div>
 
+            <div className="border-b border-[var(--border)] bg-[var(--bg-section)] px-4 py-3">
+              <button
+                type="button"
+                onClick={() => {
+                  closeDrawer();
+                  router.push("/menu");
+                }}
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-center text-sm font-semibold text-[var(--primary)] shadow-sm transition hover:bg-[var(--gold-light)]/30"
+              >
+                Continue shopping — browse the menu for more items
+              </button>
+            </div>
+
             <div className="flex-1 overflow-y-auto px-4">
               {cart.lines.length === 0 &&
               cart.samples.lumpiaQty === 0 &&
