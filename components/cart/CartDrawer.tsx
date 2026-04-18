@@ -142,7 +142,7 @@ export function CartDrawer() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4">
+            <div className="flex-1 overflow-y-auto px-4 pb-4">
               {cart.lines.length === 0 &&
               cart.samples.lumpiaQty === 0 &&
               cart.samples.quailQty === 0 &&
@@ -467,6 +467,18 @@ export function CartDrawer() {
               ) : null}
 
               <CartPaymentMethodsStrip />
+
+              <button
+                type="button"
+                onClick={() => {
+                  closeDrawer();
+                  router.push("/menu");
+                }}
+                className="mt-6 flex w-full items-center justify-center gap-2 py-2 text-sm font-semibold text-[var(--primary)] underline underline-offset-2"
+              >
+                <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+                Continue shopping
+              </button>
             </div>
 
             <div className="border-t border-[var(--border)] bg-[var(--bg)] p-4">
@@ -654,17 +666,6 @@ export function CartDrawer() {
                 }}
               >
                 Proceed to Checkout
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  closeDrawer();
-                  router.push("/menu");
-                }}
-                className="mt-3 flex w-full items-center justify-center gap-2 py-2 text-sm font-semibold text-[var(--primary)] underline underline-offset-2"
-              >
-                <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
-                Continue shopping
               </button>
             </div>
           </aside>
