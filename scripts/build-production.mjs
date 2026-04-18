@@ -1,17 +1,19 @@
 /**
  * Vercel/CI: prisma generate + next build. Migrations during the Vercel build are opt-in
  * (`RUN_MIGRATE_ON_VERCEL=1` or `RUN_MIGRATE_ON_BUILD=1`) so a failed migrate does not
- * block deploy. Apply migrations from your machine: `npm run db:migrate` with production DATABASE_URL.
+ * block deploy. Neon: set DIRECT_URL (direct, non-pooled) when DATABASE_URL uses *-pooler*;
+ * migrate runs with DATABASE_URL temporarily set to DIRECT_URL for that step only.
+ * Apply migrations from your machine: `npm run db:migrate` (loads .env.local).
  *
  * Local `npm run build`: does not migrate unless RUN_MIGRATE_ON_BUILD=1.
  */
 import { spawnSync } from "node:child_process";
 import process from "node:process";
 
-function run(label, command, args) {
+function run(label, command, args, extraEnv = {}) {
   const result = spawnSync(command, args, {
     stdio: "inherit",
-    env: process.env,
+    env: { ...process.env, ...extraEnv },
     shell: true,
   });
   if (result.status !== 0) {
@@ -43,8 +45,22 @@ if ((onVercel || forceMigrate) && !skipMigrateDeploy) {
         "  → Or set RUN_MIGRATE_ON_VERCEL=1 in Vercel env to migrate on each production build.\n"
     );
   } else {
+    const direct = process.env.DIRECT_URL?.trim();
+    const looksPooled =
+      /-pooler\./i.test(dbUrl) || /pooler\.neon\.tech/i.test(dbUrl);
+    if (looksPooled && !direct) {
+      console.error(
+        "\n[build-production] DATABASE_URL looks like a Neon pooler (*-pooler*). " +
+          "`prisma migrate deploy` against the pooler often hits P1002 (advisory lock timeout). " +
+          "Add DIRECT_URL in Vercel (Neon dashboard → Connect → copy the direct / non-pooled URL), " +
+          "same in .env.local for `npm run db:migrate`. Migrations run with DATABASE_URL replaced by DIRECT_URL for that step only.\n"
+      );
+      process.exit(1);
+    }
+    const migrateEnv =
+      direct ? { DATABASE_URL: direct } : {};
     console.log("\n========== [build-production] prisma migrate deploy ==========\n");
-    run("prisma migrate deploy", "npx", ["prisma", "migrate", "deploy"]);
+    run("prisma migrate deploy", "npx", ["prisma", "migrate", "deploy"], migrateEnv);
   }
 } else if (skipMigrateDeploy && (onVercel || forceMigrate)) {
   console.log(

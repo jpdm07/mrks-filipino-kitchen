@@ -16,9 +16,22 @@ const localPath = resolve(root, ".env.local");
 if (existsSync(envPath)) config({ path: envPath });
 if (existsSync(localPath)) config({ path: localPath, override: true });
 
+const dbUrl = process.env.DATABASE_URL?.trim() ?? "";
+const direct = process.env.DIRECT_URL?.trim();
+const looksPooled =
+  /-pooler\./i.test(dbUrl) || /pooler\.neon\.tech/i.test(dbUrl);
+if (looksPooled && !direct) {
+  console.error(
+    "[db:migrate] DATABASE_URL looks like a Neon pooler. Set DIRECT_URL to the direct (non-pooled) " +
+      "connection string from Neon → Connect, then run again.\n"
+  );
+  process.exit(1);
+}
+const migrateEnv = direct ? { ...process.env, DATABASE_URL: direct } : process.env;
+
 const result = spawnSync("npx", ["prisma", "migrate", "deploy"], {
   stdio: "inherit",
-  env: process.env,
+  env: migrateEnv,
   shell: true,
   cwd: root,
 });
