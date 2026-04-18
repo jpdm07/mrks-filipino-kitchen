@@ -10,6 +10,39 @@
 import { spawnSync } from "node:child_process";
 import process from "node:process";
 
+/** Blocking sleep without extra deps (used between migrate retries). */
+function sleepSync(ms) {
+  const sab = new SharedArrayBuffer(4);
+  const ia = new Int32Array(sab);
+  Atomics.wait(ia, 0, 0, Math.min(ms, 2147483647));
+}
+
+function runMigrateDeployWithRetry(migrateEnv) {
+  const env = { ...process.env, ...migrateEnv };
+  const runOnce = () =>
+    spawnSync("npx", ["prisma", "migrate", "deploy"], {
+      stdio: "inherit",
+      env,
+      shell: true,
+    });
+
+  const first = runOnce();
+  if (first.status === 0) return;
+
+  console.warn(
+    "\n[build-production] prisma migrate deploy failed (exit " +
+      String(first.status ?? "?") +
+      "). Retrying once after 15s (often clears P1002 / advisory lock contention or short Neon timeouts).\n"
+  );
+  sleepSync(15_000);
+
+  const second = runOnce();
+  if (second.status !== 0) {
+    console.error("\n[build-production] FAILED at step: prisma migrate deploy\n");
+    process.exit(second.status ?? 1);
+  }
+}
+
 function run(label, command, args, extraEnv = {}) {
   const result = spawnSync(command, args, {
     stdio: "inherit",
@@ -72,7 +105,7 @@ if ((onVercel || forceMigrate) && !skipMigrateDeploy) {
     const migrateEnv =
       direct && !directLooksPooled ? { DATABASE_URL: direct } : {};
     console.log("\n========== [build-production] prisma migrate deploy ==========\n");
-    run("prisma migrate deploy", "npx", ["prisma", "migrate", "deploy"], migrateEnv);
+    runMigrateDeployWithRetry(migrateEnv);
   }
 } else if (skipMigrateDeploy && (onVercel || forceMigrate)) {
   console.log(
