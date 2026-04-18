@@ -3,6 +3,7 @@
  * (`RUN_MIGRATE_ON_VERCEL=1` or `RUN_MIGRATE_ON_BUILD=1`) so a failed migrate does not
  * block deploy. Neon: set DIRECT_URL (direct, non-pooled) when DATABASE_URL uses *-pooler*;
  * migrate runs with DATABASE_URL temporarily set to DIRECT_URL for that step only.
+ * On migrate failure, the script retries once after 15s (helps P1002 / lock contention).
  * Apply migrations from your machine: `npm run db:migrate` (loads .env.local).
  *
  * Local `npm run build`: does not migrate unless RUN_MIGRATE_ON_BUILD=1.
