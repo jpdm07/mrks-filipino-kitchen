@@ -49,14 +49,14 @@ export const ADOBO_IMAGE =
   "https://images.unsplash.com/photo-1757715377796-2a368ec7499e?w=900&auto=format&fit=crop&q=80";
 
 /**
- * Home hero + social preview image. Default is a sharp stock photo; override with
- * `NEXT_PUBLIC_HERO_FULLBLEED_IMAGE` in `.env.local` (e.g. `/images/lumpia.jpg`).
+ * Home hero + social preview image. Default is `/images/sinigang.jpg`; override with
+ * `NEXT_PUBLIC_HERO_FULLBLEED_IMAGE` in `.env.local` if needed.
  */
 export const CATALOG_HERO_IMAGE = HERO_FULLBLEED_IMAGE_SRC;
 
 /**
  * Open Graph / Twitter card (resolved with `metadataBase` in `app/layout.tsx`).
- * Override with `NEXT_PUBLIC_OG_IMAGE`; otherwise matches hero (`NEXT_PUBLIC_HERO_FULLBLEED_IMAGE` or default stock).
+ * Override with `NEXT_PUBLIC_OG_IMAGE`; otherwise matches hero.
  */
 export const CATALOG_OG_IMAGE = OPEN_GRAPH_IMAGE_SRC;
 

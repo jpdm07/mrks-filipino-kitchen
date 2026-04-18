@@ -1,17 +1,13 @@
 /**
  * Full-bleed hero, Open Graph image, and culture-page decor.
- * Defaults use ~2400px-wide Unsplash sources so large screens stay sharp.
  *
- * To use your own `public/images/...` files, set env in `.env.local` (see `.env.example`).
- * For local heroes, export JPEG/WebP at least ~1920–2400px wide for best results.
+ * Default hero matches the menu photo at `public/images/sinigang.jpg`.
+ * Override with `NEXT_PUBLIC_HERO_FULLBLEED_IMAGE` (e.g. another `/images/...` path).
+ * For local hero files, JPEG/WebP at least ~1920–2400px wide for best results.
  */
 
-/**
- * Lumpia / spring rolls on a plate (Unsplash — described as lumpia with veg).
- * Hero & OG default. Override with `NEXT_PUBLIC_HERO_FULLBLEED_IMAGE` (e.g. `/images/lumpia.jpg`).
- */
-const SHARP_HERO_STOCK =
-  "https://images.unsplash.com/photo-1695712641388-87c0f9c2d36e?w=2400&q=90&auto=format&fit=crop";
+/** Same folder as other menu card assets (`public/images/`). */
+const DEFAULT_HERO_IMAGE = "/images/sinigang.jpg";
 
 /**
  * Culture FAQ corner — local file (previous default Unsplash URL 404’d).
@@ -20,7 +16,7 @@ const SHARP_HERO_STOCK =
 const DEFAULT_CULTURE_DECOR = "/images/pancit.jpg";
 
 export const HERO_FULLBLEED_IMAGE_SRC =
-  process.env.NEXT_PUBLIC_HERO_FULLBLEED_IMAGE?.trim() || SHARP_HERO_STOCK;
+  process.env.NEXT_PUBLIC_HERO_FULLBLEED_IMAGE?.trim() || DEFAULT_HERO_IMAGE;
 
 /** Facebook / iMessage / etc. link preview; optional override so OG can differ from homepage hero. */
 export const OPEN_GRAPH_IMAGE_SRC =

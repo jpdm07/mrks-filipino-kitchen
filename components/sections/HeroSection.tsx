@@ -11,7 +11,7 @@ export function HeroSection() {
     <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden">
       <Image
         src={CATALOG_HERO_IMAGE}
-        alt="Lumpiang Shanghai–style crispy rolls on a plate — Mr. K's Filipino Kitchen"
+        alt="Sinigang — Mr. K's Filipino Kitchen"
         fill
         priority
         className="object-cover object-center"
