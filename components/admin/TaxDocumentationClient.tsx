@@ -233,7 +233,8 @@ export function TaxDocumentationClient() {
         <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
           Export a <strong>ZIP</strong> or <strong>HTML</strong> packet for your records:{" "}
           <strong>all orders</strong> in the date range (including demo rows—flagged—
-          and non-confirmed statuses), <strong>expenses</strong> from{" "}
+          and non-confirmed statuses), plus <strong>06_confirmed_revenue_tax.csv</strong>{" "}
+          (confirmed sales only — matches the section above), <strong>expenses</strong> from{" "}
           <Link href="/admin/finances" className="font-semibold text-[var(--primary)] underline">
             Finances
           </Link>

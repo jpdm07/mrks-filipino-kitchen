@@ -8,6 +8,7 @@ import {
   expensesToCsv,
   mileageToCsv,
   ordersToCsv,
+  ordersToConfirmedRevenueTaxCsv,
   summaryText,
   supportingToCsv,
 } from "@/lib/tax-export";
@@ -83,6 +84,10 @@ export async function GET(req: NextRequest) {
     zip.file("00_README_AND_SUMMARY.txt", summaryText(summary));
     const bom = "\uFEFF";
     zip.file("01_orders_all.csv", bom + ordersToCsv(orders));
+    zip.file(
+      "06_confirmed_revenue_tax.csv",
+      bom + ordersToConfirmedRevenueTaxCsv(orders)
+    );
     zip.file("02_expenses.csv", bom + expensesToCsv(expenses));
     zip.file("03_mileage_log.csv", bom + mileageToCsv(mileage));
     zip.file("04_supporting_entries.csv", bom + supportingToCsv(supporting));

@@ -1,4 +1,5 @@
 import type { Expense, Order, TaxMileageLog, TaxSupportingEntry } from "@prisma/client";
+import { ORDER_STATUS_CONFIRMED } from "@/lib/order-payment";
 
 export function csvEscape(
   value: string | number | null | undefined
@@ -19,6 +20,77 @@ function orderItemsSummary(itemsJson: string): string {
   } catch {
     return "";
   }
+}
+
+/** Same basis as Finances “income”: confirmed, non-demo website revenue. */
+export function filterConfirmedIncomeOrders(orders: Order[]): Order[] {
+  return orders.filter(
+    (o) => !o.isDemo && o.status === ORDER_STATUS_CONFIRMED
+  );
+}
+
+/**
+ * One row per confirmed order — columns useful for Schedule C / sales records (open in Excel & filter).
+ */
+export function ordersToConfirmedRevenueTaxCsv(orders: Order[]): string {
+  const rows = filterConfirmedIncomeOrders(orders);
+  const header = [
+    "order_number",
+    "date_order_placed_utc",
+    "pickup_date",
+    "pickup_time",
+    "description_line_items_sold",
+    "customer_name",
+    "customer_email",
+    "customer_phone",
+    "subtotal_usd",
+    "sales_tax_collected_usd",
+    "total_usd",
+    "payment_method",
+    "payment_status",
+    "order_status",
+    "order_source",
+    "customer_notes",
+    "custom_inquiry",
+    "admin_notes",
+    "utensil_sets",
+    "utensil_charge_usd",
+    "printed_receipt_requested",
+    "newsletter_opt_in",
+    "has_refund_log",
+  ];
+  const lines = [header.join(",")];
+  for (const o of rows) {
+    const hasRefund = Boolean(o.refundLog?.trim());
+    lines.push(
+      [
+        csvEscape(o.orderNumber),
+        csvEscape(o.createdAt.toISOString()),
+        csvEscape(o.pickupDate),
+        csvEscape(o.pickupTime),
+        csvEscape(orderItemsSummary(o.items)),
+        csvEscape(o.customerName),
+        csvEscape(o.email),
+        csvEscape(o.phone),
+        csvEscape(o.subtotal),
+        csvEscape(o.tax),
+        csvEscape(o.total),
+        csvEscape(o.paymentMethod),
+        csvEscape(o.paymentStatus),
+        csvEscape(o.status),
+        csvEscape(o.manualEntry ? "Manual entry (walk-in / phone)" : "Website order"),
+        csvEscape(o.notes),
+        csvEscape(o.customInquiry),
+        csvEscape(o.adminNotes),
+        csvEscape(o.utensilSets),
+        csvEscape(o.utensilCharge),
+        csvEscape(o.wantsPrintedReceipt ? "yes" : "no"),
+        csvEscape(o.subscribeUpdates ? "yes" : "no"),
+        csvEscape(hasRefund ? "yes" : "no"),
+      ].join(",")
+    );
+  }
+  return lines.join("\r\n");
 }
 
 export function ordersToCsv(orders: Order[]): string {
@@ -215,11 +287,15 @@ export function summaryText(s: TaxExportSummary): string {
     `Date range: ${s.startDate} through ${s.endDate}`,
     `Generated (UTC): ${s.generatedAtIso}`,
     "",
-    "ORDERS (all rows in orders CSV; filters noted below)",
+    "ORDERS (all rows in 01_orders_all.csv; filters noted below)",
     `- Total order rows in export: ${s.orderCount}`,
     `- Demo / test orders (excluded from revenue lines below): ${s.demoOrderCount}`,
     `- Cancelled orders: ${s.cancelledOrderCount}`,
     `- Confirmed orders (matches Finances “income” view): ${s.confirmedOrderCount}`,
+    "",
+    "CONFIRMED REVENUE (06_confirmed_revenue_tax.csv)",
+    "- One row per confirmed, non-demo order — same basis as Finances income + Tax page report.",
+    "- Open in Excel / Google Sheets; filter by date, payment, etc.",
     "",
     "REVENUE (non-demo, not Cancelled — gross order totals)",
     `- Sum of order totals: $${s.grossSalesAllNonDemo.toFixed(2)}`,

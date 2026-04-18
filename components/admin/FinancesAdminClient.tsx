@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const CATEGORIES = [
@@ -47,9 +48,9 @@ function startOfWeek(d: Date) {
 }
 
 export function FinancesAdminClient() {
-  const [preset, setPreset] = useState<"week" | "month" | "last" | "custom">(
-    "month"
-  );
+  const [preset, setPreset] = useState<
+    "week" | "month" | "last" | "lastYear" | "ytd" | "custom"
+  >("month");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [range, setRange] = useState(() => {
@@ -72,6 +73,18 @@ export function FinancesAdminClient() {
       const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
       const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0));
       setRange({ start: ymd(start), end: ymd(end) });
+    } else if (preset === "lastYear") {
+      const y = now.getUTCFullYear() - 1;
+      setRange({
+        start: `${y}-01-01`,
+        end: `${y}-12-31`,
+      });
+    } else if (preset === "ytd") {
+      const y = now.getUTCFullYear();
+      setRange({
+        start: `${y}-01-01`,
+        end: ymd(now),
+      });
     } else if (preset === "custom" && customStart && customEnd) {
       setRange({ start: customStart, end: customEnd });
     }
@@ -239,7 +252,14 @@ export function FinancesAdminClient() {
         <strong className="text-[var(--text)]">
           Demo / test orders are excluded
         </strong>{" "}
-        (mark them on the order page or at checkout when enabled).
+        (mark them on the order page or at checkout when enabled).{" "}
+        <Link
+          href="/admin/tax-documentation#confirmed-revenue-tax"
+          className="font-semibold text-[var(--primary)] underline"
+        >
+          Full tax transaction report &amp; CSV
+        </Link>{" "}
+        (confirmed orders only, matches this revenue).
       </p>
 
       <div className="flex flex-wrap gap-2">
@@ -248,6 +268,8 @@ export function FinancesAdminClient() {
             ["week", "This week"],
             ["month", "This month"],
             ["last", "Last month"],
+            ["lastYear", "Last calendar year"],
+            ["ytd", "This year (YTD)"],
             ["custom", "Custom"],
           ] as const
         ).map(([k, lab]) => (
