@@ -214,20 +214,17 @@ export const PickupCalendar = forwardRef<
       ) : null}
       {fewerDatesForThisCart && !loading && !loadError ? (
         <p className="rounded-lg border border-[var(--border)] bg-[var(--bg-section)] px-3 py-2 text-sm leading-snug text-[var(--text)]">
-          <span className="font-medium">Kindly note:</span> We only show pickup
-          days when your whole order fits what we can take on; a busier week can
-          mean fewer openings in the month you&apos;re viewing. If you don&apos;t
-          see any yellow dates here, use the month arrows (← →) at the top to
-          check <strong>next month and beyond</strong>—another week often opens
-          up, and you can still place your order as soon as you find an open day.
-          Thank you for your patience. Questions? Call or text{" "}
+          <span className="font-medium">Kindly note:</span> We only list days when
+          your whole order fits our capacity—busy weeks can show fewer yellow
+          dates this month. Use the arrows (← →) above to check next month; you
+          can order as soon as you pick an open day.{" "}
           <a
             href="tel:+19797033827"
             className="font-semibold text-[var(--primary)] underline"
           >
             979-703-3827
-          </a>
-          .
+          </a>{" "}
+          if you need help.
         </p>
       ) : null}
       <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-[var(--text-muted)]">
