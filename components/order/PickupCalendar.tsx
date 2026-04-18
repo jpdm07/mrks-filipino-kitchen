@@ -213,14 +213,16 @@ export const PickupCalendar = forwardRef<
         </p>
       ) : null}
       {fewerDatesForThisCart && !loading && !loadError ? (
-        <p className="rounded-lg border border-[var(--border)] bg-[var(--bg-section)] px-3 py-2 text-sm leading-snug text-[var(--text)]">
-          <span className="font-medium">Kindly note:</span> We only list days when
-          your whole order fits our capacity—busy weeks can show fewer yellow
-          dates this month. Use the arrows (← →) above to check next month; you
-          can order as soon as you pick an open day.{" "}
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium leading-snug text-red-800 dark:border-red-900/50 dark:bg-red-950/35 dark:text-red-200">
+          <span className="font-bold text-red-900 dark:text-red-100">
+            Kindly note:
+          </span>{" "}
+          We only list days when your whole order fits our capacity—busy weeks can
+          show fewer yellow dates this month. Use the arrows (← →) above to check
+          next month; you can order as soon as you pick an open day.{" "}
           <a
             href="tel:+19797033827"
-            className="font-semibold text-[var(--primary)] underline"
+            className="font-bold text-red-900 underline decoration-red-700 underline-offset-2 dark:text-red-100 dark:decoration-red-300"
           >
             979-703-3827
           </a>{" "}
