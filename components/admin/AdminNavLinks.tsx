@@ -26,6 +26,7 @@ const LINK_DEFS: {
     count: (b) => b.dashboardPayment,
     badgeLabel: "Orders needing payment attention",
   },
+  { href: "/admin/analytics", label: "Analytics", count: () => 0, badgeLabel: "" },
   {
     href: "/admin/inquiries",
     label: "Messages",
