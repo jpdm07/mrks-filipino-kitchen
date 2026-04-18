@@ -82,7 +82,7 @@ export function OrderForm() {
 
   const items = useMemo(
     () => cart.buildOrderItems(),
-    [cart.lines, cart.samples, cart.samplePrices, cart.extraDipSauceQty]
+    [cart]
   );
 
   const cartFlanOnly = useMemo(() => cartHasOnlyFlanItems(items), [items]);
