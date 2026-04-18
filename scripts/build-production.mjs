@@ -1,12 +1,13 @@
 /**
- * Vercel/CI: prisma generate + next build. Migrations during the Vercel build are opt-in
- * (`RUN_MIGRATE_ON_VERCEL=1` or `RUN_MIGRATE_ON_BUILD=1`) so a failed migrate does not
- * block deploy. Neon: set DIRECT_URL (direct, non-pooled) when DATABASE_URL uses *-pooler*;
- * migrate runs with DATABASE_URL temporarily set to DIRECT_URL for that step only.
- * On migrate failure, the script retries once after 15s (helps P1002 / lock contention).
- * Apply migrations from your machine: `npm run db:migrate` (loads .env.local).
+ * Vercel/CI: prisma generate + next build.
  *
- * Local `npm run build`: does not migrate unless RUN_MIGRATE_ON_BUILD=1.
+ * **Prisma migrate deploy never runs on Vercel** — avoids P1002 advisory lock timeouts on Neon
+ * poolers and overlapping deploys. After you change `prisma/schema.prisma`, run locally:
+ *   npm run db:migrate
+ * with production `DATABASE_URL` + `DIRECT_URL` in `.env.local` (see Neon Connect → Direct).
+ *
+ * Local only: set `RUN_MIGRATE_ON_BUILD=1` to run `prisma migrate deploy` during `npm run build`.
+ * Opt out of migrate on any machine: `VERCEL_SKIP_MIGRATE_DEPLOY=1` or `SKIP_PRISMA_MIGRATE_DEPLOY=1`.
  */
 import { spawnSync } from "node:child_process";
 import process from "node:process";
@@ -58,25 +59,26 @@ function run(label, command, args, extraEnv = {}) {
 
 const onVercel = Boolean(process.env.VERCEL);
 const forceMigrate = process.env.RUN_MIGRATE_ON_BUILD === "1";
-const migrateOnVercel =
-  process.env.RUN_MIGRATE_ON_VERCEL === "1" || process.env.RUN_MIGRATE_ON_BUILD === "1";
 const skipMigrateDeploy =
   process.env.VERCEL_SKIP_MIGRATE_DEPLOY === "1" ||
   process.env.SKIP_PRISMA_MIGRATE_DEPLOY === "1";
 
-if ((onVercel || forceMigrate) && !skipMigrateDeploy) {
+if (skipMigrateDeploy && (onVercel || forceMigrate)) {
+  console.log(
+    "\n[build-production] Skipping prisma migrate deploy (VERCEL_SKIP_MIGRATE_DEPLOY / SKIP_PRISMA_MIGRATE_DEPLOY).\n"
+  );
+} else if (onVercel) {
+  console.log(
+    "\n[build-production] Vercel: skipping prisma migrate deploy (not supported in CI — avoids Neon P1002 / lock issues).\n" +
+      "  → Schema changes: run `npm run db:migrate` locally with production DATABASE_URL + DIRECT_URL in .env.local.\n" +
+      "  → You can remove RUN_MIGRATE_ON_VERCEL from Vercel env (it is ignored).\n"
+  );
+} else if (forceMigrate && !skipMigrateDeploy) {
   const dbUrl = process.env.DATABASE_URL?.trim();
   if (!dbUrl) {
     console.warn(
-      "[build-production] DATABASE_URL is not visible during this build — skipping migrations.\n" +
-        "  → Ensure DATABASE_URL exists in Vercel → Settings → Environment Variables (Production).\n" +
-        "  → Then run: npm run db:migrate (production DATABASE_URL in .env.local)\n"
-    );
-  } else if (onVercel && !migrateOnVercel) {
-    console.log(
-      "\n[build-production] Vercel: skipping prisma migrate deploy by default (keeps deploys green).\n" +
-        "  → Run migrations yourself: npm run db:migrate with production DATABASE_URL\n" +
-        "  → Or set RUN_MIGRATE_ON_VERCEL=1 in Vercel env to migrate on each production build.\n"
+      "[build-production] DATABASE_URL is not set — skipping migrations.\n" +
+        "  → Set DATABASE_URL (and DIRECT_URL if using a Neon pooler) then re-run, or run: npm run db:migrate\n"
     );
   } else {
     const direct = process.env.DIRECT_URL?.trim();
@@ -88,30 +90,23 @@ if ((onVercel || forceMigrate) && !skipMigrateDeploy) {
     if (direct && directLooksPooled) {
       console.error(
         "\n[build-production] DIRECT_URL is set but still looks like a *pooled* Neon host (*-pooler*). " +
-          "Prisma migrate must use the **direct** connection (Neon → Connect → select **Direct**, copy that URL). " +
-          "The pooled URL in DATABASE_URL is fine for the app; only migrations need DIRECT_URL.\n"
+          "Use Neon → Connect → **Direct** URL for DIRECT_URL.\n"
       );
       process.exit(1);
     }
 
     if (looksPooled && !direct) {
       console.error(
-        "\n[build-production] DATABASE_URL looks like a Neon pooler (*-pooler*). " +
-          "`prisma migrate deploy` against the pooler often hits P1002 (advisory lock timeout). " +
-          "Add DIRECT_URL in Vercel (Neon dashboard → Connect → **Direct** / non-pooled URL), " +
-          "same in .env.local for `npm run db:migrate`. Migrations run with DATABASE_URL replaced by DIRECT_URL for that step only.\n"
+        "\n[build-production] DATABASE_URL looks like a Neon pooler. " +
+          "Add DIRECT_URL (direct / non-pooled) for prisma migrate deploy, or run db:migrate with DIRECT_URL in env.\n"
       );
       process.exit(1);
     }
     const migrateEnv =
       direct && !directLooksPooled ? { DATABASE_URL: direct } : {};
-    console.log("\n========== [build-production] prisma migrate deploy ==========\n");
+    console.log("\n========== [build-production] prisma migrate deploy (local RUN_MIGRATE_ON_BUILD=1) ==========\n");
     runMigrateDeployWithRetry(migrateEnv);
   }
-} else if (skipMigrateDeploy && (onVercel || forceMigrate)) {
-  console.log(
-    "\n[build-production] Skipping prisma migrate deploy (VERCEL_SKIP_MIGRATE_DEPLOY=1).\n"
-  );
 }
 
 console.log("\n========== [build-production] prisma generate ==========\n");
