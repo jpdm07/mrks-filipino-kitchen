@@ -377,9 +377,9 @@ export function buildAdminReceiptEmailHtml(order: AdminOrderClientRow): string {
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:Georgia,'Times New Roman',serif;color:#111;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:24px 12px;">
 <tr><td align="center">
-<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
-<tr><td style="padding:0;">
-${buildEmailBrandBannerHtml({ subtitle: "Receipt" })}
+<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #0038A8;border-radius:10px;overflow:hidden;box-shadow:0 2px 14px rgba(0,56,168,0.18);">
+<tr><td style="padding:0;border-bottom:3px solid #FFC200;">
+${buildEmailBrandBannerHtml({ variant: "blue", subtitle: "Receipt" })}
 </td></tr>
 <tr><td style="padding:20px;">
 ${demoBanner}

@@ -116,8 +116,8 @@ export async function sendNewOrderEmailToOwner(params: {
     .join("\n");
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;font-family:system-ui,-apple-system,sans-serif;font-size:15px;color:#1a1a1a;background:#f5f5f5;padding:16px;">
-  <div style="max-width:640px;margin:0 auto;background:#fff;border-radius:12px;padding:0;overflow:hidden;border:1px solid #e5e5e5;">
-    ${buildEmailBrandBannerHtml()}
+  <div style="max-width:640px;margin:0 auto;background:#fff;border-radius:12px;padding:0;overflow:hidden;border:2px solid #FFC200;box-shadow:0 2px 10px rgba(0,56,168,0.12);">
+    ${buildEmailBrandBannerHtml({ variant: "gold", subtitle: "New order" })}
     <div style="padding:24px;">
     <h1 style="margin:0 0 8px;font-size:22px;color:#0038a8;">New order #${escapeHtml(params.orderNumber)}</h1>
     <p style="margin:0 0 20px;color:#666;font-size:14px;">${escapeHtml(params.customerName)} · ${escapeHtml(params.phone)}</p>

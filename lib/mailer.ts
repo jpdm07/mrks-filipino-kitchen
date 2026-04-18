@@ -10,6 +10,14 @@ export type MailSendResult =
   | { ok: true }
   | { ok: false; error: string };
 
+/** Split comma/semicolon-separated addresses for Resend (expects an array). SMTP accepts the original string. */
+function splitMailRecipients(to: string): string[] {
+  return to
+    .split(/[,;]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 /** Unique per send so clients (notably Gmail) are less likely to trim or thread as one blob. */
 function withHtmlUniquenessStamp(html: string): string {
   const id =
@@ -106,9 +114,15 @@ async function sendMailViaResend(
   }
 
   const bcc = opts.bcc?.trim();
+  const toList = splitMailRecipients(opts.to);
+  if (toList.length === 0) {
+    const msg = "Resend: no valid recipients in `to`.";
+    console.warn("[mailer]", msg);
+    return { ok: false, error: msg };
+  }
   const body: Record<string, unknown> = {
     from,
-    to: [opts.to],
+    to: toList,
     subject: opts.subject,
     html: opts.html,
     text: opts.text,

@@ -12,6 +12,17 @@ export function getOwnerOrderNotificationEmail(): string {
   );
 }
 
+/** Contact form notifications; defaults to kitchen Gmail when env unset. Override with OWNER_INQUIRY_EMAIL (comma-separated ok). */
+export function getOwnerInquiryNotificationEmails(): string[] {
+  const raw = process.env.OWNER_INQUIRY_EMAIL?.trim();
+  if (raw) {
+    return raw.split(/[,;]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return ["mrksfilipinokitchen@gmail.com"];
+}
+
 export type MailEnvStatus = {
   usesResend: boolean;
   resendFromSet: boolean;
