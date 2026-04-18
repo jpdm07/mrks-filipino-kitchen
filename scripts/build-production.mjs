@@ -46,19 +46,31 @@ if ((onVercel || forceMigrate) && !skipMigrateDeploy) {
     );
   } else {
     const direct = process.env.DIRECT_URL?.trim();
-    const looksPooled =
-      /-pooler\./i.test(dbUrl) || /pooler\.neon\.tech/i.test(dbUrl);
+    const urlLooksPooled = (u) =>
+      /-pooler\./i.test(u) || /pooler\.neon\.tech/i.test(u);
+    const looksPooled = urlLooksPooled(dbUrl);
+    const directLooksPooled = direct ? urlLooksPooled(direct) : false;
+
+    if (direct && directLooksPooled) {
+      console.error(
+        "\n[build-production] DIRECT_URL is set but still looks like a *pooled* Neon host (*-pooler*). " +
+          "Prisma migrate must use the **direct** connection (Neon → Connect → select **Direct**, copy that URL). " +
+          "The pooled URL in DATABASE_URL is fine for the app; only migrations need DIRECT_URL.\n"
+      );
+      process.exit(1);
+    }
+
     if (looksPooled && !direct) {
       console.error(
         "\n[build-production] DATABASE_URL looks like a Neon pooler (*-pooler*). " +
           "`prisma migrate deploy` against the pooler often hits P1002 (advisory lock timeout). " +
-          "Add DIRECT_URL in Vercel (Neon dashboard → Connect → copy the direct / non-pooled URL), " +
+          "Add DIRECT_URL in Vercel (Neon dashboard → Connect → **Direct** / non-pooled URL), " +
           "same in .env.local for `npm run db:migrate`. Migrations run with DATABASE_URL replaced by DIRECT_URL for that step only.\n"
       );
       process.exit(1);
     }
     const migrateEnv =
-      direct ? { DATABASE_URL: direct } : {};
+      direct && !directLooksPooled ? { DATABASE_URL: direct } : {};
     console.log("\n========== [build-production] prisma migrate deploy ==========\n");
     run("prisma migrate deploy", "npx", ["prisma", "migrate", "deploy"], migrateEnv);
   }
