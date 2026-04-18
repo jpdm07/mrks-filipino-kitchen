@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useAdminDataSync } from "@/lib/use-admin-data-sync";
 import type { TaxMileageLog, TaxSupportingEntry } from "@prisma/client";
 
 function ymdToday() {
@@ -74,6 +75,8 @@ export function TaxDocumentationClient() {
   useEffect(() => {
     void loadLists();
   }, [loadLists]);
+
+  useAdminDataSync(loadLists);
 
   const download = (format: "zip" | "html") => {
     const q = new URLSearchParams({

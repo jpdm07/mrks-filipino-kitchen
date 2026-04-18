@@ -11,7 +11,8 @@ export default async function AnalyticsPage() {
         Sales analytics
       </h1>
       <p className="mt-2 text-base text-[var(--text-muted)]">
-        Insights from <strong>confirmed</strong>, non-demo orders only. Sample lines are excluded.
+        Insights from <strong>confirmed</strong>, non-demo orders only (live DB — refreshes every
+        ~20s while this tab is open). Sample lines are excluded.
       </p>
       <AnalyticsSalesClient />
     </div>

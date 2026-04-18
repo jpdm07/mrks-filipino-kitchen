@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAdminDataSync } from "@/lib/use-admin-data-sync";
 
 function ymd(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -102,30 +103,36 @@ export function AnalyticsSalesClient() {
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent ?? false;
     if (!range.start || !range.end) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     setErr(null);
-    const q = new URLSearchParams({
-      startDate: range.start,
-      endDate: range.end,
-    });
-    const res = await fetch(`/api/admin/analytics/sales?${q}`, {
-      credentials: "include",
-    });
-    setLoading(false);
-    if (!res.ok) {
-      const j = (await res.json().catch(() => ({}))) as { error?: string };
-      setErr(j.error ?? "Could not load analytics.");
-      setData(null);
-      return;
+    try {
+      const q = new URLSearchParams({
+        startDate: range.start,
+        endDate: range.end,
+      });
+      const res = await fetch(`/api/admin/analytics/sales?${q}`, {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        setErr(j.error ?? "Could not load analytics.");
+        setData(null);
+        return;
+      }
+      setData((await res.json()) as AnalyticsPayload);
+    } finally {
+      if (!silent) setLoading(false);
     }
-    setData((await res.json()) as AnalyticsPayload);
   }, [range.start, range.end]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  useAdminDataSync(() => void load({ silent: true }));
 
   const maxQty = useMemo(
     () => Math.max(0, ...(data?.topItems.map((t) => t.quantity) ?? [0])),
@@ -182,10 +189,19 @@ export function AnalyticsSalesClient() {
             value={customEnd}
             onChange={(e) => setCustomEnd(e.target.value)}
           />
+          <p className="w-full text-xs text-[var(--text-muted)]">
+            Refreshes from confirmed orders every ~20s while this tab is open, and when you come
+            back to it.
+          </p>
         </div>
       ) : (
         <p className="text-sm text-[var(--text-muted)]">
           Range: <strong>{range.start}</strong> → <strong>{range.end}</strong>
+          {" · "}
+          <span className="text-xs">
+            Refreshes from confirmed orders every ~20s while this tab is open, and when you
+            come back to it.
+          </span>
         </p>
       )}
 

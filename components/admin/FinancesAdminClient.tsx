@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAdminDataSync } from "@/lib/use-admin-data-sync";
 
 const CATEGORIES = [
   "Groceries — Kroger",
@@ -147,6 +148,8 @@ export function FinancesAdminClient() {
     void load();
   }, [load]);
 
+  useAdminDataSync(load);
+
   const saveManual = async () => {
     const amount = parseFloat(form.amount);
     if (!form.store || !form.description || !Number.isFinite(amount) || amount <= 0) {
@@ -247,8 +250,8 @@ export function FinancesAdminClient() {
   return (
     <div className="mx-auto max-w-4xl space-y-8 py-4">
       <p className="text-sm text-[var(--text-muted)]">
-        Mobile-friendly profit/loss view. Confirmed orders = income; expenses are
-        logged here.{" "}
+        Mobile-friendly profit/loss view. Confirmed orders = income; numbers refresh every ~20s
+        while you keep this page open (and when you return to the tab). Expenses are logged here.{" "}
         <strong className="text-[var(--text)]">
           Demo / test orders are excluded
         </strong>{" "}

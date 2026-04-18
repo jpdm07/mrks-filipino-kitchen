@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAdminDataSync } from "@/lib/use-admin-data-sync";
 
 function ymd(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -72,36 +73,42 @@ export function ConfirmedRevenueTaxClient() {
     [startDate, endDate]
   );
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent ?? false;
     if (!range.start || !range.end) return;
     setErr(null);
-    setLoading(true);
-    const q = new URLSearchParams({
-      startDate: range.start,
-      endDate: range.end,
-    });
-    const res = await fetch(`/api/admin/finances/confirmed-revenue?${q}`, {
-      credentials: "include",
-    });
-    setLoading(false);
-    if (!res.ok) {
-      const j = (await res.json().catch(() => ({}))) as { error?: string };
-      setErr(j.error ?? "Could not load revenue.");
-      setTotals(null);
-      setRows([]);
-      return;
+    if (!silent) setLoading(true);
+    try {
+      const q = new URLSearchParams({
+        startDate: range.start,
+        endDate: range.end,
+      });
+      const res = await fetch(`/api/admin/finances/confirmed-revenue?${q}`, {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        setErr(j.error ?? "Could not load revenue.");
+        setTotals(null);
+        setRows([]);
+        return;
+      }
+      const data = (await res.json()) as {
+        totals: Totals;
+        transactions: TxRow[];
+      };
+      setTotals(data.totals);
+      setRows(data.transactions ?? []);
+    } finally {
+      if (!silent) setLoading(false);
     }
-    const data = (await res.json()) as {
-      totals: Totals;
-      transactions: TxRow[];
-    };
-    setTotals(data.totals);
-    setRows(data.transactions ?? []);
   }, [range.start, range.end]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  useAdminDataSync(() => void load({ silent: true }));
 
   const downloadCsv = () => {
     const q = new URLSearchParams({
@@ -129,7 +136,8 @@ export function ConfirmedRevenueTaxClient() {
         <Link href="/admin/finances" className="font-semibold text-[var(--primary)] underline">
           Finances
         </Link>{" "}
-        income. Updates when you reload or change dates. Use the spreadsheet for filtering,
+        income. Auto-refreshes from confirmed orders every ~20s while this tab is open (and when
+        you return to it). Use the spreadsheet for filtering,
         pivot tables, and your CPA.{" "}
         <strong className="text-[var(--text)]">
           Order date = when the order was placed
