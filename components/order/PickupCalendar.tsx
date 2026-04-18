@@ -208,16 +208,20 @@ export const PickupCalendar = forwardRef<
   const viewedMonthIsAlreadyPast =
     year < ty || (year === ty && month < tm);
 
-  /** Red capacity message (don’t stack with the gold “no dates” box below the grid). */
+  /**
+   * Red capacity nudge: only when the API still returned some open dates in range
+   * but none are bookable in this month (e.g. lead window)—not when `noDatesInRange`,
+   * since the gold box below already covers “nothing available / try another month”.
+   */
   const showKindlyCapacityNote =
     fewerDatesForThisCart &&
+    !noDatesInRange &&
     !loading &&
     !loadError &&
     !hasBookableDayInVisibleMonth &&
     !viewedMonthIsAlreadyPast;
 
-  /** Gold “no dates in this view” explainer — hidden when red Kindly note covers the same situation. */
-  const showNoDatesGoldExplainer = noDatesInRange && !showKindlyCapacityNote;
+  const showNoDatesGoldExplainer = noDatesInRange;
 
   const cannotGoToPreviousMonth =
     !allowNavigateToPastMonths && year === ty && month === tm;
