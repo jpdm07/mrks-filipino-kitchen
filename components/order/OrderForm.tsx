@@ -51,6 +51,7 @@ export function OrderForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const cart = useCart();
+  const { buildOrderItems } = cart;
   const calendarRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
   const paymentRef = useRef<HTMLDivElement>(null);
@@ -80,10 +81,7 @@ export function OrderForm() {
     null
   );
 
-  const items = useMemo(
-    () => cart.buildOrderItems(),
-    [cart]
-  );
+  const items = useMemo(() => buildOrderItems(), [buildOrderItems]);
 
   const cartFlanOnly = useMemo(() => cartHasOnlyFlanItems(items), [items]);
   const cookNeed = useMemo(() => totalCookContribution(items), [items]);
@@ -126,7 +124,7 @@ export function OrderForm() {
     if (!raw || !isWellFormedPickupYMD(raw)) return;
     appliedUrlPickup.current = true;
     const d = raw.trim();
-    const flanOnly = cartHasOnlyFlanItems(items);
+    const flanOnly = cartHasOnlyFlanItems(buildOrderItems());
     if (!isPickupYmdAllowedForOrderCart(d, flanOnly)) {
       setUrlLeadReject(true);
       return;
@@ -139,7 +137,7 @@ export function OrderForm() {
         block: "nearest",
       });
     }, 500);
-  }, [searchParams, items]);
+  }, [searchParams, buildOrderItems]);
 
   useEffect(() => {
     if (!pickupDate) {
