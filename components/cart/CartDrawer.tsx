@@ -474,9 +474,12 @@ export function CartDrawer() {
                   closeDrawer();
                   router.push("/menu");
                 }}
-                className="mt-6 flex w-full items-center justify-center gap-2 py-2 text-sm font-semibold text-[var(--primary)] underline underline-offset-2"
+                className="group mt-6 flex w-full items-center justify-center gap-2 rounded-md py-2.5 text-sm font-semibold text-[var(--primary)] underline underline-offset-2 transition-colors duration-200 hover:bg-[var(--gold-light)]/80 hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/35 focus-visible:ring-offset-2"
               >
-                <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+                <ArrowLeft
+                  className="h-4 w-4 shrink-0 transition-transform duration-200 ease-out group-hover:-translate-x-1"
+                  aria-hidden
+                />
                 Continue shopping
               </button>
             </div>
