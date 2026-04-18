@@ -126,10 +126,7 @@ export function OrderForm() {
     if (!raw || !isWellFormedPickupYMD(raw)) return;
     appliedUrlPickup.current = true;
     const d = raw.trim();
-    const flanOnly = cartHasOnlyFlanItems([
-      ...cartLinesToOrderItems(cart.lines),
-      ...samplesToLines(cart.samples, cart.samplePrices),
-    ]);
+    const flanOnly = cartHasOnlyFlanItems(items);
     if (!isPickupYmdAllowedForOrderCart(d, flanOnly)) {
       setUrlLeadReject(true);
       return;
@@ -142,7 +139,7 @@ export function OrderForm() {
         block: "nearest",
       });
     }, 500);
-  }, [searchParams, cart.lines, cart.samples, cart.samplePrices]);
+  }, [searchParams, items]);
 
   useEffect(() => {
     if (!pickupDate) {

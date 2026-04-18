@@ -60,6 +60,8 @@ export async function POST(req: NextRequest) {
     year?: number;
     month?: number;
     isOpen?: boolean;
+    /** Optional note for bulk setDateRange upserts. */
+    note?: string | null;
     until?: string;
     daysOfWeek?: number[];
     from?: string;
