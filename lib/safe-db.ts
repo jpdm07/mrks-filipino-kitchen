@@ -102,7 +102,7 @@ export function userFacingAdminDatabaseError(err: unknown): string {
   ) {
     return (
       `Database tables are missing (schema not applied${code ? `, ${code}` : ""}). ` +
-      `On your computer, put the production DATABASE_URL in .env.local and run: npx prisma migrate deploy`
+      `On your computer, put the production DATABASE_URL in .env.local and run: npm run db:migrate`
     );
   }
 
@@ -119,7 +119,7 @@ export function userFacingAdminDatabaseError(err: unknown): string {
       `Fix:\n` +
       `1) In Vercel, copy the Production DATABASE_URL (same as Neon pooled URL).\n` +
       `2) On your PC, put it in .env.local as DATABASE_URL=...\n` +
-      `3) From this repo run: npx prisma migrate deploy\n` +
+      `3) From this repo run: npm run db:migrate (loads .env.local so Prisma sees production DATABASE_URL)\n` +
       `4) Redeploy the site (or just refresh the dashboard).\n\n` +
       `If migrate deploy says everything is applied but P2022 persists, the Vercel DATABASE_URL may point at a different Neon branch/database than the one you migrated.`
     );

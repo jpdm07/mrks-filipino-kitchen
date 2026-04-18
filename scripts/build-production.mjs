@@ -34,7 +34,7 @@ if ((onVercel || forceMigrate) && !skipMigrateDeploy) {
     console.warn(
       "[build-production] DATABASE_URL is not visible during this build — skipping migrations.\n" +
         "  → Ensure DATABASE_URL exists in Vercel → Settings → Environment Variables (Production).\n" +
-        "  → Then run: npm run db:migrate (with production URL in .env.local)\n"
+        "  → Then run: npm run db:migrate (production DATABASE_URL in .env.local)\n"
     );
   } else if (onVercel && !migrateOnVercel) {
     console.log(
