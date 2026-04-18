@@ -81,7 +81,7 @@ async function safeManualSoldOutWeekStart(
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2021") {
       console.warn(
-        "[orders] KitchenCapacitySettings table missing — run: npx prisma migrate deploy. Using no manual sold-out override."
+        "[orders] KitchenCapacitySettings table missing — run: npm run db:migrate (production DATABASE_URL in .env.local). Using no manual sold-out override."
       );
       return null;
     }
@@ -211,7 +211,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "We couldn't start your order (database setup). Run: npx prisma migrate deploy. Or call/text 979-703-3827.",
+            "We couldn't start your order (database setup). If you host this site: put Vercel Production DATABASE_URL in .env.local, then run npm run db:migrate. Or call/text 979-703-3827.",
         },
         { status: 503 }
       );
@@ -481,7 +481,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "We couldn't save your order — the database needs migrations applied. On your machine run: npx prisma migrate deploy. Or call/text 979-703-3827 to place your order.",
+            "We couldn't save your order — the database needs migrations applied. If you host this site: put Vercel Production DATABASE_URL in .env.local, then run npm run db:migrate. Or call/text 979-703-3827 to place your order.",
         },
         { status: 503 }
       );
@@ -496,7 +496,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "Something went wrong saving your order. Try again, or call/text 979-703-3827. If you manage the site: confirm DATABASE_URL and run npx prisma migrate deploy.",
+          "Something went wrong saving your order. Try again, or call/text 979-703-3827. If you manage the site: confirm DATABASE_URL and run npm run db:migrate.",
         ...(code ? { prismaCode: code } : {}),
         ...devDetail,
       },

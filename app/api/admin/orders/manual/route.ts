@@ -201,7 +201,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "Could not allocate an order number. Run npx prisma migrate deploy and ensure OrderCounter exists.",
+          "Could not allocate an order number. Run npm run db:migrate (production DATABASE_URL in .env.local) and ensure OrderCounter exists.",
       },
       { status: 503 }
     );
