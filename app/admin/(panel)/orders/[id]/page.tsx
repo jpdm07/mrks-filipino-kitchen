@@ -6,6 +6,8 @@ import type { OrderItemLine } from "@/lib/order-types";
 import { AdminOrderPaymentPanel } from "@/components/admin/AdminOrderPaymentPanel";
 import { AdminOrderDemoDeletePanel } from "@/components/admin/AdminOrderDemoDeletePanel";
 import { AdminOrderReceiptActions } from "@/components/admin/AdminOrderReceiptActions";
+import { AdminOrderRefundPanel } from "@/components/admin/AdminOrderRefundPanel";
+import { parseRefundLog } from "@/lib/refund-log";
 import { toAdminOrderClientRow } from "@/lib/admin-order-client";
 import {
   getSauceCupsFromOrderLine,
@@ -34,6 +36,7 @@ export default async function AdminOrderDetailPage({
   if (!order) notFound();
 
   const items = parseItems(order.items);
+  const refundHistory = parseRefundLog(order.refundLog ?? null);
   const receiptRow = toAdminOrderClientRow(order, "");
 
   return (
@@ -87,6 +90,16 @@ export default async function AdminOrderDetailPage({
       <AdminOrderPaymentPanel
         orderNumber={order.orderNumber}
         status={order.status}
+      />
+      <AdminOrderRefundPanel
+        key={`${order.orderNumber}-${order.total}-${items.map((i) => i.quantity).join("-")}`}
+        orderNumber={order.orderNumber}
+        items={items}
+        wantsUtensils={order.wantsUtensils}
+        utensilSets={order.utensilSets}
+        totalUsd={order.total}
+        paymentStatus={order.paymentStatus}
+        refundHistory={refundHistory}
       />
       <div className="mt-6 rounded border border-[var(--border)] bg-[var(--card)] p-4">
         <h2 className="font-bold">Customer receipt</h2>

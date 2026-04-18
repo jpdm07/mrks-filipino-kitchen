@@ -39,6 +39,8 @@ model Order {
   wantsPrintedReceipt Boolean @default(false)
   // Test / practice: excluded from finances; deletable in admin.
   isDemo             Boolean  @default(false)
+  /// JSON array of refund ledger entries (admin-recorded; funds returned outside the app via Venmo/Zelle/etc.).
+  refundLog          String?
 }
 
 model Availability {

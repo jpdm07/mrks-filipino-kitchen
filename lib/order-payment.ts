@@ -13,6 +13,8 @@ export const PAYMENT_METHOD_VERIFIED_LABEL = "Verified";
 export const PAYMENT_STATUS_PENDING = "Pending";
 export const PAYMENT_STATUS_VERIFIED = "Verified";
 export const PAYMENT_STATUS_NOT_RECEIVED = "Not Received";
+export const PAYMENT_STATUS_PARTIALLY_REFUNDED = "Partially refunded";
+export const PAYMENT_STATUS_REFUNDED = "Refunded";
 
 /** Receipts / admin UI: avoid "Verified · Verified" when both fields match. */
 export function formatPaymentDisplayLine(
@@ -25,5 +27,11 @@ export function formatPaymentDisplayLine(
   if (!m) return s;
   if (!s) return m;
   if (m === s) return m;
+  if (
+    m === PAYMENT_METHOD_VERIFIED_LABEL &&
+    (s === PAYMENT_STATUS_PARTIALLY_REFUNDED || s === PAYMENT_STATUS_REFUNDED)
+  ) {
+    return s;
+  }
   return `${m} · ${s}`;
 }

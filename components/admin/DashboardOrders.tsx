@@ -9,7 +9,11 @@ import {
 } from "@/lib/menu-item-unit-costs";
 import Link from "next/link";
 import type { OrderItemLine } from "@/lib/order-types";
-import type { AdminOrderClientRow } from "@/lib/admin-order-client";
+import type { Order } from "@prisma/client";
+import {
+  toAdminOrderClientRow,
+  type AdminOrderClientRow,
+} from "@/lib/admin-order-client";
 import { OrderPaymentAdminActions } from "./OrderPaymentAdminActions";
 import {
   ORDER_STATUS_PENDING_PAYMENT_VERIFICATION,
@@ -297,16 +301,16 @@ export function DashboardOrders() {
       body: JSON.stringify(patch),
     });
     if (res.ok) {
-      const updated = (await res.json()) as Partial<Row> & { id: string };
+      const updated = (await res.json()) as Order;
       setOrders((prev) =>
         prev.map((x) =>
           x.id === updated.id
-            ? { ...x, ...updated, itemsSummary: x.itemsSummary }
+            ? toAdminOrderClientRow(updated, x.itemsSummary)
             : x
         )
       );
       if (modal && modal.id === updated.id) {
-        setModal({ ...modal, ...updated, items: modal.items });
+        setModal(toAdminOrderClientRow(updated, modal.itemsSummary));
       }
       router.refresh();
       if (options?.successMessage) {
@@ -651,11 +655,13 @@ export function DashboardOrders() {
                 setOrders((prev) =>
                   prev.map((x) =>
                     x.id === updated.id
-                      ? { ...x, ...updated, itemsSummary: x.itemsSummary }
+                      ? toAdminOrderClientRow(updated as Order, x.itemsSummary)
                       : x
                   )
                 );
-                setModal({ ...modal, ...updated });
+                setModal(
+                  toAdminOrderClientRow(updated as Order, modal.itemsSummary)
+                );
                 router.refresh();
                 setModalNotice({
                   type: "success",

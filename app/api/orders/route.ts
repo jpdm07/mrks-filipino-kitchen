@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { computeUtensilChargeUsd, PRICING } from "@/lib/config";
-import { complimentaryUtensilAllowanceFromOrderItems } from "@/lib/utensils-allowance";
+import { computeOrderMonetaryTotals } from "@/lib/order-totals";
 import { generateOrderNumber } from "@/lib/orderNumber";
 import { sendCustomerSms, sendOwnerSms } from "@/lib/twilio";
 import { sendNewOrderEmailToOwner } from "@/lib/order-owner-email";
@@ -96,25 +95,6 @@ async function safeManualSoldOutWeekStart(
     }
     throw e;
   }
-}
-
-function computeTotals(
-  items: OrderItemLine[],
-  wantsUtensils: boolean,
-  utensilSets: number
-) {
-  const itemsSub = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-  let sets = 0;
-  if (wantsUtensils) {
-    const raw = Math.max(0, Math.min(50, Math.floor(Number(utensilSets) || 0)));
-    sets = raw >= 1 ? raw : 1;
-  }
-  const complimentary = complimentaryUtensilAllowanceFromOrderItems(items);
-  const ut = computeUtensilChargeUsd(wantsUtensils, sets, complimentary);
-  const sub = Math.round((itemsSub + ut) * 100) / 100;
-  const tax = Math.round(sub * PRICING.TAX_RATE * 100) / 100;
-  const total = Math.round((sub + tax) * 100) / 100;
-  return { itemsSub, ut, sets, sub, tax, total };
 }
 
 export async function POST(req: NextRequest) {
@@ -217,7 +197,7 @@ export async function POST(req: NextRequest) {
 
     const wantsUtensils = Boolean(body.wantsUtensils);
     const utensilSets = Number(body.utensilSets) || 0;
-    const { ut, sets, sub, tax, total } = computeTotals(
+    const { ut, sets, sub, tax, total } = computeOrderMonetaryTotals(
       items,
       wantsUtensils,
       utensilSets
