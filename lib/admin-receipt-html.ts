@@ -32,22 +32,41 @@ function formatLine(i: OrderItemLine): string {
   return `${i.name}${sz}${cf}${samp} ×${i.quantity} @ $${i.unitPrice.toFixed(2)} = $${line.toFixed(2)}`;
 }
 
+/** Item line left column (HTML receipts / print — total is shown in its own column). */
+function formatItemLeftColumn(i: OrderItemLine): string {
+  const sz = i.size ? ` (${i.size})` : "";
+  const cf =
+    i.cookedOrFrozen === "cooked" || i.cookedOrFrozen === "frozen"
+      ? ` [${i.cookedOrFrozen}]`
+      : "";
+  const samp = i.isSample ? " · sample" : "";
+  return `${i.name}${sz}${cf}${samp} ×${i.quantity} @ $${i.unitPrice.toFixed(2)}`;
+}
+
+function formatItemLineTotal(i: OrderItemLine): string {
+  return `$${(i.unitPrice * i.quantity).toFixed(2)}`;
+}
+
 /**
  * Standalone print document for admin “store receipt” (open in new window + print).
  * Includes dashed cut guides for trimming.
  */
 export function buildAdminReceiptHtml(order: AdminOrderClientRow): string {
   const items = parseItems(order.items);
-  const lines = items.map((i) => formatLine(i));
   const taxLabel = salesTaxPercentLabel();
   const created = new Date(order.createdAt).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
   });
 
-  const itemsBlock = lines.length
-    ? lines.map((l) => `<div class="line">${escapeHtml(l)}</div>`).join("")
-    : `<div class="line">(no line items)</div>`;
+  const itemsBlock = items.length
+    ? items
+        .map(
+          (i) =>
+            `<div class="row line-item"><span class="item-desc">${escapeHtml(formatItemLeftColumn(i))}</span><span class="item-price">${formatItemLineTotal(i)}</span></div>`
+        )
+        .join("")
+    : `<div class="row line-item"><span class="item-desc">(no line items)</span><span class="item-price"></span></div>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -100,11 +119,14 @@ export function buildAdminReceiptHtml(order: AdminOrderClientRow): string {
     color: #444;
     margin: 0 0 10px;
   }
-  .row { display: flex; justify-content: space-between; gap: 8px; margin: 3px 0; font-size: 11px; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 3px 0; font-size: 11px; }
   .row strong { font-weight: 700; }
+  .row.line-item { margin: 5px 0; font-size: 10px; }
+  .item-desc { flex: 1; min-width: 0; text-align: left; word-break: break-word; padding-right: 6px; }
+  .item-price { flex: 0 0 4.75em; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .hr { border: 0; border-top: 1px dashed #ccc; margin: 10px 0; }
-  .lines { margin: 8px 0; white-space: pre-wrap; word-break: break-word; }
-  .line { margin: 4px 0; font-size: 10px; }
+  .lines { margin: 8px 0; }
+  .line-note { margin: 6px 0; font-size: 10px; word-break: break-word; }
   .tot { font-size: 12px; margin-top: 6px; }
   .big { font-size: 14px; font-weight: 800; }
   .footer {
@@ -170,7 +192,7 @@ export function buildAdminReceiptHtml(order: AdminOrderClientRow): string {
       <div class="row"><span>Order status</span><span>${escapeHtml(order.status)}</span></div>
       ${
         order.notes
-          ? `<div class="hr"></div><div class="line"><strong>Notes:</strong> ${escapeHtml(order.notes)}</div>`
+          ? `<div class="hr"></div><div class="line-note"><strong>Notes:</strong> ${escapeHtml(order.notes)}</div>`
           : ""
       }
       <p class="footer">This receipt documents the order total and payment record for your files.<br/>Thank you for supporting Mr. K&apos;s Filipino Kitchen.</p>
@@ -327,18 +349,17 @@ export function downloadAdminReceiptHtmlFile(order: AdminOrderClientRow): void {
  */
 export function buildAdminReceiptEmailHtml(order: AdminOrderClientRow): string {
   const items = parseItems(order.items);
-  const lines = items.map((i) => formatLine(i));
   const taxLabel = salesTaxPercentLabel();
   const created = new Date(order.createdAt).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
   });
 
-  const itemsBlock = lines.length
-    ? lines
+  const itemsBlock = items.length
+    ? items
         .map(
-          (l) =>
-            `<tr><td colspan="2" style="padding:4px 0;font-size:13px;line-height:1.4;color:#111;">${escapeHtml(l)}</td></tr>`
+          (i) =>
+            `<tr><td style="padding:5px 10px 5px 0;font-size:13px;line-height:1.4;color:#111;vertical-align:top;">${escapeHtml(formatItemLeftColumn(i))}</td><td style="padding:5px 0;font-size:13px;font-weight:700;text-align:right;white-space:nowrap;vertical-align:top;font-variant-numeric:tabular-nums;">${formatItemLineTotal(i)}</td></tr>`
         )
         .join("")
     : `<tr><td colspan="2" style="padding:8px 0;font-size:13px;color:#555;">(no line items)</td></tr>`;
