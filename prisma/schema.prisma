@@ -172,3 +172,19 @@ model PricingSettings {
   sampleFlan    Float  @default(3.5)
   samplePancit  Float  @default(6.3)
 }
+
+/// Admin prep checklist overrides for a pickup week (anchored by Thursday YMD, Sun–Sat week).
+model PrepSummaryWeekState {
+  id              String   @id @default(cuid())
+  weekThursdayYmd String   @unique
+  stateJson       String   @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+/// One row per week: automatic prep-summary email already sent (avoids duplicates on cron retry).
+model PrepSummaryEmailLog {
+  id              String   @id @default(cuid())
+  weekThursdayYmd String   @unique
+  sentAt          DateTime @default(now())
+}

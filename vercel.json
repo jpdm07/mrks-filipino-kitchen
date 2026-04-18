@@ -6,6 +6,10 @@
     {
       "path": "/api/cron/sync-google-availability",
       "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/prep-summary-email",
+      "schedule": "30 18 * * *"
     }
   ]
 }

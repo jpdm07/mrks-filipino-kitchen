@@ -85,6 +85,12 @@ const LINK_DEFS: {
     badgeLabel: "",
   },
   {
+    href: "/admin/prep-summary",
+    label: "Prep summary",
+    count: () => 0,
+    badgeLabel: "",
+  },
+  {
     href: "/admin/business-card",
     label: "Business Card",
     count: () => 0,
