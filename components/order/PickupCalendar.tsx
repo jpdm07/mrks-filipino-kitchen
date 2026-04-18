@@ -16,6 +16,7 @@ import {
   ymdFromParts,
 } from "@/lib/pickup-availability-query-range";
 import { useAvailabilityWhitelist } from "@/lib/hooks/useAvailabilityWhitelist";
+import { FLAN_WEEKLY_CAP_RAMEKINS } from "@/lib/menu-cook-capacity";
 
 function firstWeekdayOfMonth(year: number, month1: number) {
   return new Date(Date.UTC(year, month1 - 1, 1)).getUTCDay();
@@ -191,6 +192,10 @@ export const PickupCalendar = forwardRef<
 
   const noDatesInRange = !loading && !loadError && openDates.length === 0;
 
+  /** Whole cart must fit one calendar week’s flan cap — larger carts never get a yellow day. */
+  const showWeeklyFlanCapExplainer =
+    flanRamekinsNeed > FLAN_WEEKLY_CAP_RAMEKINS && !loading && !loadError;
+
   const hasBookableDayInVisibleMonth = useMemo(() => {
     if (loading || loadError) return false;
     for (const cell of grid) {
@@ -211,6 +216,7 @@ export const PickupCalendar = forwardRef<
   // Red Kindly note: some open dates exist for this cart, but none bookable in this
   // month (e.g. lead window). If openDates is empty, the gold box below handles it.
   const showKindlyCapacityNote =
+    !showWeeklyFlanCapExplainer &&
     fewerDatesForThisCart &&
     !loading &&
     !loadError &&
@@ -218,7 +224,7 @@ export const PickupCalendar = forwardRef<
     !hasBookableDayInVisibleMonth &&
     !viewedMonthIsAlreadyPast;
 
-  const showNoDatesGoldExplainer = noDatesInRange;
+  const showNoDatesGoldExplainer = noDatesInRange && !showWeeklyFlanCapExplainer;
 
   const cannotGoToPreviousMonth =
     !allowNavigateToPastMonths && year === ty && month === tm;
@@ -259,6 +265,27 @@ export const PickupCalendar = forwardRef<
       {loadError ? (
         <p className="text-xs font-medium text-[var(--accent)]">
           Could not load availability. Please refresh or try again.
+        </p>
+      ) : null}
+      {showWeeklyFlanCapExplainer ? (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium leading-snug text-red-800 dark:border-red-900/50 dark:bg-red-950/35 dark:text-red-200">
+          This cart needs{" "}
+          <span className="font-bold text-red-900 dark:text-red-100">
+            {flanRamekinsNeed === 1 ? "1 flan" : `${flanRamekinsNeed} flans`}
+          </span>{" "}
+          in one pickup, but our kitchen caps flan at{" "}
+          <span className="font-bold text-red-900 dark:text-red-100">
+            {FLAN_WEEKLY_CAP_RAMEKINS} per calendar week
+          </span>
+          . Online checkout can&apos;t split one order across weeks—reduce the
+          quantity, place separate orders for different weeks, or call{" "}
+          <a
+            href="tel:+19797033827"
+            className="font-bold text-red-900 underline decoration-red-700 underline-offset-2 dark:text-red-100 dark:decoration-red-300"
+          >
+            979-703-3827
+          </a>{" "}
+          and we&apos;ll try to help.
         </p>
       ) : null}
       {showKindlyCapacityNote ? (
