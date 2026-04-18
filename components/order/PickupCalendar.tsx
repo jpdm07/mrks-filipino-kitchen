@@ -274,10 +274,10 @@ export const PickupCalendar = forwardRef<
                   selected
                     ? `!border-[#0038A8] !bg-[#0038A8] !text-white hover:!bg-[#0038A8]${isToday ? " ring-2 ring-red-600 ring-offset-2" : ""}`
                     : isToday
-                      ? "rounded-xl border-2 !border-red-600 bg-red-50 text-red-700 hover:bg-red-100"
+                      ? "rounded-xl border-2 !border-red-600 bg-amber-100 text-amber-950 shadow-sm hover:bg-amber-200"
                       : flanOnly
-                        ? "border-amber-500 bg-amber-100 text-amber-950 ring-1 ring-amber-400/45 hover:bg-amber-200"
-                        : "border-[var(--border)] text-[var(--text)] hover:bg-[#FFC200]",
+                        ? "border-amber-600 bg-amber-200 text-amber-950 shadow-sm ring-1 ring-amber-500/50 hover:bg-amber-300"
+                        : "border-amber-500 bg-amber-100 text-amber-950 shadow-sm ring-1 ring-amber-400/40 hover:bg-amber-200 hover:border-amber-600",
                 ]
                   .filter(Boolean)
                   .join(" ")}
@@ -352,10 +352,11 @@ export const PickupCalendar = forwardRef<
         </p>
       ) : (
         <p className="text-xs text-[var(--text-muted)]">
-          Only <strong>clickable</strong> dates can be chosen. Gray = not open.
-          Amber / <strong>Flan only</strong> = flan pickup that day (Tue–Thu; full
-          menu Fri &amp; Sat). 🔒 = open on our calendar but before the first
-          Friday/Saturday pickup window (Central Time). Hover for details.
+          <strong className="text-amber-900">Yellow</strong> = open dates you can
+          pick (full menu days are a lighter yellow;{" "}
+          <strong className="text-amber-900">Flan only</strong> is a deeper gold).
+          Gray = not open. 🔒 = on our calendar but before the first Fri/Sat
+          pickup window (Central). Hover for details.
         </p>
       )}
     </div>
