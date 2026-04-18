@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminInquiriesHeaderLink } from "@/components/admin/AdminInquiriesHeaderLink";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
   adminAttentionTotal,
@@ -47,12 +48,7 @@ export default async function AdminPanelLayout({
               ) : null}
             </Link>
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <Link
-                href="/admin/inquiries"
-                className="inline-flex min-h-10 items-center rounded-full border-2 border-[var(--primary)] bg-[var(--primary)] px-4 py-2 text-sm font-bold text-white shadow-sm hover:opacity-90"
-              >
-                Contact messages
-              </Link>
+              <AdminInquiriesHeaderLink />
               <AdminLogoutButton />
             </div>
           </div>

@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { AdminNavBadgeCounts } from "@/lib/admin-nav-badges";
+import { isAdminNavItemActive } from "@/components/admin/admin-nav-active";
 
 function NavBadge({ n, label }: { n: number; label: string }) {
   if (n <= 0) return null;
@@ -89,6 +93,7 @@ const LINK_DEFS: {
 ];
 
 export function AdminNavLinks({ badges }: { badges: AdminNavBadgeCounts }) {
+  const pathname = usePathname();
   const items = LINK_DEFS.map((d) => ({
     href: d.href,
     label: d.label,
@@ -101,20 +106,28 @@ export function AdminNavLinks({ badges }: { badges: AdminNavBadgeCounts }) {
       className="mt-3 flex flex-nowrap gap-2 overflow-x-auto border-t border-[var(--border)] pt-3 pb-1 text-sm font-medium [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5"
       aria-label="Admin sections"
     >
-      {items.map((l) => (
-        <Link
-          key={l.href}
-          href={l.href}
-          className={`inline-flex shrink-0 items-center rounded-full px-3 py-2 whitespace-nowrap hover:bg-[var(--gold-light)] ${
-            l.badge > 0
-              ? "ring-2 ring-amber-400/80 shadow-[0_0_0_1px_rgba(251,191,36,0.35)]"
-              : ""
-          }`}
-        >
-          <span>{l.label}</span>
-          <NavBadge n={l.badge} label={l.badgeLabel} />
-        </Link>
-      ))}
+      {items.map((l) => {
+        const active = isAdminNavItemActive(pathname, l.href);
+        const attentionRing =
+          l.badge > 0 && !active
+            ? "ring-2 ring-amber-400/80 shadow-[0_0_0_1px_rgba(251,191,36,0.35)]"
+            : "";
+        return (
+          <Link
+            key={l.href}
+            href={l.href}
+            aria-current={active ? "page" : undefined}
+            className={`inline-flex shrink-0 items-center rounded-full px-3 py-2 whitespace-nowrap transition duration-200 ${
+              active
+                ? "bg-gradient-to-br from-[var(--primary-soft)] to-[var(--primary-dark)] font-semibold text-white shadow-[0_6px_20px_rgba(0,56,168,0.35)] ring-1 ring-white/20"
+                : `hover:bg-[var(--gold-light)] ${attentionRing}`
+            }`}
+          >
+            <span>{l.label}</span>
+            <NavBadge n={l.badge} label={l.badgeLabel} />
+          </Link>
+        );
+      })}
     </nav>
   );
 }
