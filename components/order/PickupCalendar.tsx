@@ -208,16 +208,13 @@ export const PickupCalendar = forwardRef<
   const viewedMonthIsAlreadyPast =
     year < ty || (year === ty && month < tm);
 
-  /**
-   * Red capacity nudge: only when the API still returned some open dates in range
-   * but none are bookable in this month (e.g. lead window)—not when `noDatesInRange`,
-   * since the gold box below already covers “nothing available / try another month”.
-   */
+  // Red Kindly note: some open dates exist for this cart, but none bookable in this
+  // month (e.g. lead window). If openDates is empty, the gold box below handles it.
   const showKindlyCapacityNote =
     fewerDatesForThisCart &&
-    !noDatesInRange &&
     !loading &&
     !loadError &&
+    openDates.length > 0 &&
     !hasBookableDayInVisibleMonth &&
     !viewedMonthIsAlreadyPast;
 
