@@ -54,6 +54,12 @@ const LINK_DEFS: {
     count: (b) => b.recentDishSuggestions,
     badgeLabel: "Dish suggestions in the last 7 days",
   },
+  {
+    href: "/admin/earnings-planner",
+    label: "Earnings planner",
+    count: () => 0,
+    badgeLabel: "",
+  },
   { href: "/admin/finances", label: "Finances", count: () => 0, badgeLabel: "" },
   {
     href: "/admin/tax-documentation",
