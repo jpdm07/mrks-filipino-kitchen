@@ -208,6 +208,17 @@ export const PickupCalendar = forwardRef<
   const viewedMonthIsAlreadyPast =
     year < ty || (year === ty && month < tm);
 
+  /** Red capacity message (don’t stack with the gold “no dates” box below the grid). */
+  const showKindlyCapacityNote =
+    fewerDatesForThisCart &&
+    !loading &&
+    !loadError &&
+    !hasBookableDayInVisibleMonth &&
+    !viewedMonthIsAlreadyPast;
+
+  /** Gold “no dates in this view” explainer — hidden when red Kindly note covers the same situation. */
+  const showNoDatesGoldExplainer = noDatesInRange && !showKindlyCapacityNote;
+
   const cannotGoToPreviousMonth =
     !allowNavigateToPastMonths && year === ty && month === tm;
 
@@ -249,11 +260,7 @@ export const PickupCalendar = forwardRef<
           Could not load availability. Please refresh or try again.
         </p>
       ) : null}
-      {fewerDatesForThisCart &&
-      !loading &&
-      !loadError &&
-      !hasBookableDayInVisibleMonth &&
-      !viewedMonthIsAlreadyPast ? (
+      {showKindlyCapacityNote ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium leading-snug text-red-800 dark:border-red-900/50 dark:bg-red-950/35 dark:text-red-200">
           <span className="font-bold text-red-900 dark:text-red-100">
             Kindly note:
@@ -387,7 +394,7 @@ export const PickupCalendar = forwardRef<
           );
         })}
       </div>
-      {noDatesInRange ? (
+      {showNoDatesGoldExplainer ? (
         <p className="rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-3 py-2 text-sm text-[var(--text)]">
           {(cartMode === "mixed" &&
             (mainCookNeed > 0 || flanRamekinsNeed > 0)) ||
