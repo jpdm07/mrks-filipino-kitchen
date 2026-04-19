@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FooterAwareFixedDecor } from "@/components/about/FooterAwareFixedDecor";
 
 /** Corner photo — `public/images/aboutpic.jpg` (same folder as menu item photos). */
 const ABOUT_PHOTO_SRC = "/images/aboutpic.jpg";
@@ -7,11 +8,11 @@ export default function AboutPage() {
   return (
     <div className="pattern-bg relative">
       {/*
-        Layering: photo z-[15] (above footer z-10, below nav z-50). Section + article use
-        z-[20] on the *outer* elements so the whole block stacks above the photo — inner z-index
-        alone does not beat a fixed sibling. Native <img> avoids next/image fill edge cases.
+        FooterAwareFixedDecor hides the fixed layer while the footer is in view so it never covers
+        footer links. Section + article use z-[20] on the outer block so copy stacks above the photo.
+        Native <img> avoids next/image fill edge cases.
       */}
-      <div className="pointer-events-none fixed bottom-4 right-6 z-[15] h-[min(48vh,380px)] w-[min(94vw,380px)] sm:bottom-6 sm:right-10 sm:h-[min(62vh,620px)] sm:w-[min(720px,55vw)] md:right-14 lg:bottom-8 lg:right-[4.5rem] xl:right-24">
+      <FooterAwareFixedDecor className="pointer-events-none fixed bottom-4 right-6 z-[15] h-[min(48vh,380px)] w-[min(94vw,380px)] sm:bottom-6 sm:right-10 sm:h-[min(62vh,620px)] sm:w-[min(720px,55vw)] md:right-14 lg:bottom-8 lg:right-[4.5rem] xl:right-24">
         <div className="relative h-full w-full bg-[var(--bg-section)]">
           {/* eslint-disable-next-line @next/next/no-img-element -- static public asset; reliable corner rendering */}
           <img
@@ -31,7 +32,7 @@ export default function AboutPage() {
             }}
           />
         </div>
-      </div>
+      </FooterAwareFixedDecor>
 
       {/*
         Grid: text column stays left-weighted; flexible right column reserves space so the fixed

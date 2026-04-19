@@ -32,7 +32,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <CartProvider>
         <Navbar />
         <AnnouncementBanner />
-        <main className="min-h-[50vh] w-full min-w-0">{children}</main>
+        {/*
+          z-0 creates a stacking context so fixed layers inside pages (e.g. About corner art)
+          cannot paint above the site footer; portaled overlays use document.body and are unaffected.
+        */}
+        <main className="relative z-0 min-h-[50vh] w-full min-w-0">{children}</main>
         <Footer />
         <CartDrawer />
       </CartProvider>

@@ -7,7 +7,7 @@ export function Footer() {
   return (
     <footer
       data-site-chrome
-      className="relative z-10 border-t border-[var(--border)] bg-[var(--bg-section)] print:hidden"
+      className="relative z-[45] isolate border-t border-[var(--border)] bg-[var(--bg-section)] print:hidden"
     >
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid gap-10 md:grid-cols-3 md:gap-8">

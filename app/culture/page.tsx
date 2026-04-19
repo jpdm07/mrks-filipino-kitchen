@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { FooterAwareFixedDecor } from "@/components/about/FooterAwareFixedDecor";
 import { FILIPINO_CULTURE_FAQ } from "@/lib/filipino-culture-faq";
 import {
   CULTURE_DECOR_IMAGE_SRC,
@@ -23,11 +24,8 @@ export default function CulturePage() {
   const decorSharp = nextImageSharpnessProps(decorSrc);
   return (
     <div className="pattern-bg relative min-h-[min(100vh,1200px)]">
-      <div
-        className="pointer-events-none fixed bottom-0 left-0 z-[1] h-[min(46vh,360px)] w-[min(92vw,360px)] bg-[var(--bg-section)] sm:h-[min(58vh,560px)] sm:w-[min(640px,50vw)]"
-        aria-hidden
-      >
-        <div className="relative h-full w-full">
+      <FooterAwareFixedDecor className="pointer-events-none fixed bottom-0 left-0 z-[1] h-[min(46vh,360px)] w-[min(92vw,360px)] bg-[var(--bg-section)] sm:h-[min(58vh,560px)] sm:w-[min(640px,50vw)]">
+        <div className="relative h-full w-full" aria-hidden>
           <Image
             src={decorSrc}
             alt=""
@@ -44,7 +42,7 @@ export default function CulturePage() {
             }}
           />
         </div>
-      </div>
+      </FooterAwareFixedDecor>
 
       <div className="relative z-[2] mx-auto max-w-3xl px-4 py-12 sm:py-16">
         <p className="text-center text-sm font-semibold uppercase tracking-[0.14em] text-[var(--primary)]">

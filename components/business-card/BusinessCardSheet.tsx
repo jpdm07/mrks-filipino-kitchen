@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FacebookIcon } from "@/components/ui/FacebookIcon";
 import { Logo } from "@/components/ui/Logo";
 import { QRCodeDisplay } from "@/components/ui/QRCodeDisplay";
@@ -11,6 +11,10 @@ import { businessCardUrlDisplay, hrefWithHttps } from "@/lib/url-display";
 
 /** 8 cards per US Letter sheet: 2 × 4 @ 3.5" × 2" with trim gaps */
 const CARDS_PER_SHEET = 8;
+
+/** Preview / print layout at 96 CSS px per inch — matches physical 3.5" × 2" cards */
+const PREVIEW_CARD_PX_W = 336;
+const PREVIEW_CARD_PX_H = 192;
 
 /** Deep blue + crimson; lighter gold “sun” corner for inkjet print */
 const brandPanelStyle: CSSProperties = {
@@ -29,7 +33,7 @@ function BusinessCardFace({
   siteBaseUrl: string | null;
 }) {
   return (
-    <div className="bc-card box-border aspect-[336/192] w-full max-w-[336px] border-2 border-[var(--primary)] bg-white shadow-[var(--shadow-lg)] print:h-[192px] print:w-[336px] print:max-w-none print:shadow-none">
+    <div className="bc-card box-border h-[192px] w-[336px] max-w-none shrink-0 border-2 border-[var(--primary)] bg-white shadow-[var(--shadow-lg)] print:h-[192px] print:w-[336px] print:max-w-none print:shadow-none">
       <div className="bc-card-inner flex h-full min-h-0 w-full flex-row overflow-hidden">
         <div
           className="flex w-[min(50%,168px)] shrink-0 flex-col items-center justify-center px-3 py-3 print:border-0"
@@ -124,6 +128,20 @@ export function BusinessCardSheet({
   const [qrHref, setQrHref] = useState<string | null>(null);
   const [siteBaseUrl, setSiteBaseUrl] = useState<string | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const previewWrapRef = useRef<HTMLDivElement>(null);
+  const [previewScale, setPreviewScale] = useState(1);
+
+  useLayoutEffect(() => {
+    const el = previewWrapRef.current;
+    if (!el) return;
+
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width ?? PREVIEW_CARD_PX_W;
+      setPreviewScale(Math.min(1, w / PREVIEW_CARD_PX_W));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const base = getPublicSiteOrigin();
@@ -252,8 +270,32 @@ export function BusinessCardSheet({
         id="print-area"
         className="flex flex-col items-center print:block print:text-left"
       >
-        <div className="bc-preview flex w-full max-w-[336px] flex-col items-stretch px-1 sm:px-0">
-          <BusinessCardFace qrHref={qrHref} siteBaseUrl={siteBaseUrl} />
+        <div
+          ref={previewWrapRef}
+          className="bc-preview box-border flex w-full max-w-[3.5in] flex-col items-stretch px-2 sm:px-0"
+        >
+          {/*
+            Fixed 336×192 design scaled to fit narrow viewports so type/QR match printed cards
+            (same proportions as PDF — not “shrunk card + full-size text”).
+          */}
+          <div
+            className="mx-auto overflow-hidden print:hidden"
+            style={{
+              width: PREVIEW_CARD_PX_W * previewScale,
+              height: PREVIEW_CARD_PX_H * previewScale,
+            }}
+          >
+            <div
+              style={{
+                width: PREVIEW_CARD_PX_W,
+                height: PREVIEW_CARD_PX_H,
+                transform: `scale(${previewScale})`,
+                transformOrigin: "top left",
+              }}
+            >
+              <BusinessCardFace qrHref={qrHref} siteBaseUrl={siteBaseUrl} />
+            </div>
+          </div>
         </div>
 
         <div className="bc-print-sheet hidden" aria-hidden>
