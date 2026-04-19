@@ -44,12 +44,8 @@ export const TOCINO_IMAGE = "/images/tocino.jpg";
 /** Caramel flan — add `public/images/flan.jpg`. */
 export const FLAN_IMAGE = "/images/flan.jpg";
 
-/**
- * Chicken adobo hero — plated chicken with rice (Unsplash). Override with
- * `public/images/adobo.jpg` and set this to `/images/adobo.jpg` for your own photo.
- */
-export const ADOBO_IMAGE =
-  "https://images.unsplash.com/photo-1757715377796-2a368ec7499e?w=900&auto=format&fit=crop&q=80";
+/** Chicken adobo — `public/images/chickenadobo.jpeg`. */
+export const ADOBO_IMAGE = "/images/chickenadobo.jpeg";
 
 /**
  * Home hero + social preview image. Default is `/images/sinigang.jpg`; override with
