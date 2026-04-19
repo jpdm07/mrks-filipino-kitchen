@@ -41,6 +41,9 @@ export const QUAIL_EGGS_IMAGE = "/images/quail-eggs.jpg";
 /** Tocino plates — add `public/images/tocino.jpg`. */
 export const TOCINO_IMAGE = "/images/tocino.jpg";
 
+/** Caramel flan — add `public/images/flan.jpg`. */
+export const FLAN_IMAGE = "/images/flan.jpg";
+
 /**
  * Chicken adobo hero — plated chicken with rice (Unsplash). Override with
  * `public/images/adobo.jpg` and set this to `/images/adobo.jpg` for your own photo.
@@ -70,13 +73,12 @@ export const CATALOG_OG_IMAGE_PARADE =
   "https://images.unsplash.com/photo-1609051461156-8257e7852410?w=1200&auto=format&fit=crop";
 
 /**
- * Menu card photos. Lumpia, pancit, quail, and tocino use your files under `public/images/`; flan may use Unsplash.
+ * Menu card photos — files under `public/images/` (see constants above).
  */
 export const CATALOG_PHOTOS = {
   lumpia: LUMPIA_IMAGE,
   pancit: PANCIT_IMAGE,
-  /** J. luis Esquivel: baked flan / crème caramel */
-  flan: "https://images.unsplash.com/photo-1532556660262-1c45d5fae825?w=600&auto=format&fit=crop",
+  flan: FLAN_IMAGE,
   quail: QUAIL_EGGS_IMAGE,
   tocino: TOCINO_IMAGE,
   adobo: ADOBO_IMAGE,
