@@ -46,6 +46,12 @@ const LINK_DEFS: {
     count: () => 0,
     badgeLabel: "",
   },
+  {
+    href: "/admin/print-menu",
+    label: "Print menu",
+    count: () => 0,
+    badgeLabel: "",
+  },
   { href: "/admin/pricing", label: "Pricing", count: () => 0, badgeLabel: "" },
   {
     href: "/admin/subscribers",

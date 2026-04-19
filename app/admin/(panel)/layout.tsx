@@ -25,7 +25,7 @@ export default async function AdminPanelLayout({
     <div className="min-h-screen bg-[var(--bg-section)]">
       <AdminAutoRefresh />
       <AdminDocumentAttentionTitle total={attentionTotal} />
-      <div className="sticky top-0 z-[200] border-b border-[var(--border)] bg-[var(--card)] shadow-sm">
+      <div className="sticky top-0 z-[200] border-b border-[var(--border)] bg-[var(--card)] shadow-sm print:hidden">
         <div className="mx-auto max-w-7xl px-4 py-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Link
