@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 /** Decorative corner photo — same folder as menu item photos (`public/images`). */
-const ABOUT_PHOTO_SRC = "/images/aboutmepic.jpg";
+const ABOUT_PHOTO_SRC = "/images/aboutpic.jpg";
 
 export default function AboutPage() {
   return (
