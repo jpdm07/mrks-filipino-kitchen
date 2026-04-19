@@ -11,7 +11,7 @@ export default function AboutPage() {
         z-[20] on the *outer* elements so the whole block stacks above the photo — inner z-index
         alone does not beat a fixed sibling. Native <img> avoids next/image fill edge cases.
       */}
-      <div className="pointer-events-none fixed bottom-0 right-6 z-[15] h-[min(48vh,380px)] w-[min(94vw,380px)] sm:right-10 sm:h-[min(62vh,620px)] sm:w-[min(720px,55vw)] md:right-14 lg:right-[4.5rem] xl:right-24">
+      <div className="pointer-events-none fixed bottom-4 right-6 z-[15] h-[min(48vh,380px)] w-[min(94vw,380px)] sm:bottom-6 sm:right-10 sm:h-[min(62vh,620px)] sm:w-[min(720px,55vw)] md:right-14 lg:bottom-8 lg:right-[4.5rem] xl:right-24">
         <div className="relative h-full w-full bg-[var(--bg-section)]">
           {/* eslint-disable-next-line @next/next/no-img-element -- static public asset; reliable corner rendering */}
           <img
