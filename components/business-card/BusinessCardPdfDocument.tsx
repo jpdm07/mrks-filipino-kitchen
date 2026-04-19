@@ -10,6 +10,7 @@ import {
   Svg,
   Defs,
   LinearGradient,
+  RadialGradient,
   Stop,
   Rect,
   Path,
@@ -41,6 +42,9 @@ const INNER_W = CARD_W - 2 * CARD_BORDER;
 const INNER_H = CARD_H - 2 * CARD_BORDER;
 const INNER_HALF = INNER_W / 2;
 const GAP = 0.125 * PT;
+
+/** Map screen px from 336px-wide card design → PDF points (3.5" = CARD_W) */
+const PX = (n: number) => (n * CARD_W) / 336;
 
 /** Same geometry as `Logo` size="sm" (light variant) */
 const LOGO_SM = {
@@ -196,51 +200,54 @@ const styles = StyleSheet.create({
     paddingRight: 3,
   },
   brandLine1: {
-    fontSize: 5.2,
+    fontSize: PX(7),
     fontWeight: "bold",
     color: "#e8b923",
     textAlign: "center",
     textTransform: "uppercase",
-    marginTop: 2,
+    marginTop: PX(2),
     letterSpacing: 0.4,
   },
   brandLine2: {
-    fontSize: 5,
+    fontSize: PX(6.5),
     color: "#ffffff",
     textAlign: "center",
-    marginTop: 2,
+    marginTop: PX(2),
   },
   rightCol: {
     flex: 1,
     height: "100%",
-    padding: 6,
+    paddingTop: PX(8),
+    paddingBottom: PX(8),
+    paddingLeft: PX(10),
+    paddingRight: PX(10),
     justifyContent: "space-between",
     backgroundColor: "#ffffff",
   },
   bizName: {
-    fontSize: 10,
+    fontSize: PX(13),
     fontWeight: "bold",
     color: "#0038a8",
   },
   contact: {
-    fontSize: 6,
+    fontSize: PX(8),
     color: "#14121a",
-    marginTop: 2,
+    marginTop: PX(2),
     fontWeight: "bold",
   },
   contactMuted: {
-    fontSize: 5.5,
+    fontSize: PX(7.5),
     color: "#5c5866",
-    marginTop: 1,
+    marginTop: PX(1),
   },
   /** “Website:” label (URL is sibling Text for one-line layout) */
   websiteLine: {
-    fontSize: 5.75,
+    fontSize: PX(7),
     color: "#14121a",
     fontWeight: "bold",
   },
   websiteUrlPart: {
-    fontSize: 5.75,
+    fontSize: PX(7),
     color: "#14121a",
     fontWeight: "normal",
   },
@@ -253,7 +260,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   fbUrlText: {
-    fontSize: 5,
+    fontSize: PX(6),
     color: "#1877F2",
     lineHeight: 1.05,
     flex: 1,
@@ -264,28 +271,31 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     alignItems: "flex-end",
-    marginTop: 4,
-    paddingTop: 4,
+    marginTop: PX(4),
+    paddingTop: PX(6),
     borderTopWidth: 1,
     borderTopColor: "#e5dfd3",
     borderTopStyle: "solid",
   },
   orderLabel: {
-    fontSize: 5,
+    fontSize: PX(6),
     fontWeight: "bold",
     color: "#ce1126",
     textTransform: "uppercase",
-    marginTop: 2,
+    marginTop: PX(2),
     textAlign: "center",
   },
   qrCol: {
-    width: 38,
+    width: PX(52),
     flexShrink: 0,
     alignItems: "center",
   },
 });
 
 function BrandPanel({ gradientId }: { gradientId: string }) {
+  const idLin = `${gradientId}-lin`;
+  const idRed = `${gradientId}-red`;
+  const idGold = `${gradientId}-gold`;
   return (
     <View style={styles.brandWrap}>
       <Svg
@@ -294,22 +304,32 @@ function BrandPanel({ gradientId }: { gradientId: string }) {
         viewBox={`0 0 ${INNER_HALF} ${INNER_H}`}
       >
         <Defs>
-          <LinearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
+          {/*
+            Match `brandPanelStyle` on BusinessCardSheet: linear + two radial overlays
+            (crimson top-right, gold bottom-left).
+          */}
+          <LinearGradient id={idLin} x1="0" y1="1" x2="1" y2="0">
             <Stop offset="0" stopColor="#06153d" />
-            <Stop offset="0.28" stopColor="#0c3488" />
-            <Stop offset="0.52" stopColor="#0038a8" />
-            <Stop offset="0.76" stopColor="#5a1836" />
-            <Stop offset="0.9" stopColor="#7a1428" />
+            <Stop offset="0.26" stopColor="#0c3488" />
+            <Stop offset="0.5" stopColor="#0038a8" />
+            <Stop offset="0.74" stopColor="#5a1836" />
+            <Stop offset="0.88" stopColor="#7a1428" />
             <Stop offset="1" stopColor="#f2e6a8" />
           </LinearGradient>
+          <RadialGradient id={idRed} cx="100%" cy="4%" r="68%">
+            <Stop offset="0" stopColor="#ce1126" stopOpacity={0.55} />
+            <Stop offset="0.54" stopColor="#ce1126" stopOpacity={0} />
+            <Stop offset="1" stopColor="#ce1126" stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id={idGold} cx="2%" cy="96%" r="62%">
+            <Stop offset="0" stopColor="#ffecb4" stopOpacity={0.55} />
+            <Stop offset="0.52" stopColor="#ffecb4" stopOpacity={0} />
+            <Stop offset="1" stopColor="#ffecb4" stopOpacity={0} />
+          </RadialGradient>
         </Defs>
-        <Rect
-          x="0"
-          y="0"
-          width={INNER_HALF}
-          height={INNER_H}
-          fill={`url(#${gradientId})`}
-        />
+        <Rect x="0" y="0" width={INNER_HALF} height={INNER_H} fill={`url(#${idLin})`} />
+        <Rect x="0" y="0" width={INNER_HALF} height={INNER_H} fill={`url(#${idGold})`} />
+        <Rect x="0" y="0" width={INNER_HALF} height={INNER_H} fill={`url(#${idRed})`} />
       </Svg>
       <View style={styles.brandTextWrap}>
         <BrandLogoMarkPdf />
@@ -349,7 +369,7 @@ function SingleCard({
             <Text style={styles.contactMuted}>{SITE.location}</Text>
             <Link src={facebookHref}>
               <View style={styles.fbRow}>
-                <FacebookMarkPdf size={6} />
+                <FacebookMarkPdf size={PX(11)} />
                 <Text style={styles.fbUrlText} wrap={false}>
                   {facebookDisplay}
                 </Text>
@@ -384,7 +404,10 @@ function SingleCard({
           <View style={styles.bottomRow}>
             <View style={styles.qrCol}>
               {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf Image has no alt */}
-              <Image src={qrSrc} style={{ width: 33, height: 33 }} />
+              <Image
+                src={qrSrc}
+                style={{ width: PX(46), height: PX(46) }}
+              />
               <Text style={styles.orderLabel}>Order online</Text>
             </View>
           </View>
