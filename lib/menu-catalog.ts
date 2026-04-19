@@ -238,7 +238,7 @@ export const MENU_CATALOG = [
     id: "seed-6",
     name: "Caramel Flan (Leche Flan)",
     description:
-      "Silky-smooth Filipino egg custard with a rich caramel glaze, slow-steamed to perfection. A beloved Filipino dessert passed down through generations.",
+      "Silky-smooth Filipino egg custard with a rich caramel glaze, slow-steamed to perfection. Each serving comes in a 5 oz ramekin—ready to open and enjoy. A beloved Filipino dessert passed down through generations.",
     category: "Desserts",
     calories: "~280 cal",
     basePrice: FLAN_RETAIL_PER_RAMEKIN_USD,
