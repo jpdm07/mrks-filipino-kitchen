@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { FacebookIcon } from "@/components/ui/FacebookIcon";
 import { Logo } from "@/components/ui/Logo";
 import { QRCodeDisplay } from "@/components/ui/QRCodeDisplay";
@@ -128,26 +128,34 @@ export function BusinessCardSheet({
   const [qrHref, setQrHref] = useState<string | null>(null);
   const [siteBaseUrl, setSiteBaseUrl] = useState<string | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
-  const previewWrapRef = useRef<HTMLDivElement>(null);
   const [previewScale, setPreviewScale] = useState(1);
 
+  /** Screen-only: scale the on-page preview on narrow viewports to match print proportions. PDF + print sheet unchanged (preview is print:hidden). */
   useLayoutEffect(() => {
-    const el = previewWrapRef.current;
-    if (!el) return;
-
     const sync = () => {
-      const w = el.getBoundingClientRect().width;
-      // Cap scale at 1 so we never upscale past the print/PDF reference (336×192).
-      setPreviewScale(Math.min(1, w / PREVIEW_CARD_PX_W));
+      if (typeof window === "undefined") return;
+      const narrow = window.matchMedia("(max-width: 639px)").matches;
+      if (!narrow) {
+        setPreviewScale(1);
+        return;
+      }
+      const horizontalGutterPx = 64;
+      const available = Math.min(
+        PREVIEW_CARD_PX_W,
+        Math.max(0, window.innerWidth - horizontalGutterPx)
+      );
+      setPreviewScale(Math.min(1, available / PREVIEW_CARD_PX_W));
     };
 
     sync();
-    const ro = new ResizeObserver(() => sync());
-    ro.observe(el);
     window.addEventListener("resize", sync);
+    window.addEventListener("orientationchange", sync);
+    const mq = window.matchMedia("(max-width: 639px)");
+    mq.addEventListener("change", sync);
     return () => {
-      ro.disconnect();
       window.removeEventListener("resize", sync);
+      window.removeEventListener("orientationchange", sync);
+      mq.removeEventListener("change", sync);
     };
   }, []);
 
@@ -242,7 +250,7 @@ export function BusinessCardSheet({
         }
       `}</style>
       {showPrintButton ? (
-        <div className="mb-8 flex w-full max-w-md flex-col items-center gap-4 self-center print:hidden">
+        <div className="mb-8 flex max-w-md flex-col items-center gap-4 print:hidden">
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
@@ -276,19 +284,15 @@ export function BusinessCardSheet({
       ) : null}
       <div
         id="print-area"
-        className="flex w-full min-w-0 flex-col items-stretch print:block print:text-left"
+        className="flex w-full min-w-0 flex-col items-center print:block print:text-left"
       >
-        <div
-          ref={previewWrapRef}
-          className="bc-preview box-border flex w-full max-w-[min(21rem,calc(100vw-4rem))] flex-col items-stretch sm:max-w-[21rem]"
-        >
+        <div className="bc-preview mx-auto flex w-full max-w-[336px] flex-col items-center px-1 sm:px-0">
           {/*
-            Fixed 336×192 design scaled when the wrapper is narrower than 336px.
-            Parent layout must be full-width (items-stretch); shrink-wrapped flex columns used to
-            keep this at 336px so scale stayed 1. min(21rem, 100vw-4rem) yields ~311px at 375px VW.
+            On-screen preview only (print:hidden): scale from viewport on sm screens so layout
+            matches PDF; PDF download and browser print use bc-print-sheet, not this block.
           */}
           <div
-            className="mx-auto overflow-hidden print:hidden"
+            className="shrink-0 overflow-hidden print:hidden"
             style={{
               width: PREVIEW_CARD_PX_W * previewScale,
               height: PREVIEW_CARD_PX_H * previewScale,

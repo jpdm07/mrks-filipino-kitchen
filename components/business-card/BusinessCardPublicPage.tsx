@@ -13,8 +13,8 @@ export function BusinessCardPublicPage() {
   }, []);
 
   return (
-    <div className="business-card-public flex w-full flex-col items-stretch">
-      <div className="mb-8 mx-auto max-w-lg space-y-2 text-center text-sm text-[var(--text-muted)] print:hidden">
+    <div className="business-card-public flex flex-col items-center">
+      <div className="mb-8 max-w-lg space-y-2 text-center text-sm text-[var(--text-muted)] print:hidden">
         <p>
           Optimized for <strong className="text-[var(--text)]">US Letter</strong> (8.5&quot; ×
           11&quot;) cardstock: <strong className="text-[var(--text)]">eight</strong> cards per
@@ -40,7 +40,7 @@ export function BusinessCardPublicPage() {
       <BusinessCardSheet />
       <Link
         href="/"
-        className="mt-10 self-center text-sm font-semibold text-[var(--primary)] underline print:hidden"
+        className="mt-10 text-sm font-semibold text-[var(--primary)] underline print:hidden"
       >
         ← Back to site
       </Link>
