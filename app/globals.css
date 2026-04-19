@@ -134,6 +134,11 @@ body[data-page="business-card"] main {
   padding-bottom: 2rem;
 }
 
+/* Let card preview shadow extend past the content box (root body uses overflow-x-clip) */
+body.min-h-screen.overflow-x-clip.antialiased[data-page="business-card"] {
+  overflow-x: visible;
+}
+
 /* Mobile: match desktop paper tone; full-width gradients can read “different” on narrow viewports */
 @media (max-width: 639px) {
   body[data-page="business-card"] {

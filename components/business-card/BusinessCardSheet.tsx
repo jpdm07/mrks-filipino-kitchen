@@ -14,7 +14,6 @@ const CARDS_PER_SHEET = 8;
 
 /** Preview / print layout at 96 CSS px per inch — matches physical 3.5" × 2" cards */
 const PREVIEW_CARD_PX_W = 336;
-const PREVIEW_CARD_PX_H = 192;
 
 /** Deep blue + crimson; lighter gold “sun” corner for inkjet print */
 const brandPanelStyle: CSSProperties = {
@@ -129,17 +128,8 @@ export function BusinessCardSheet({
   const [siteBaseUrl, setSiteBaseUrl] = useState<string | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [previewScale, setPreviewScale] = useState(1);
-  const [supportsCssZoom, setSupportsCssZoom] = useState(false);
 
-  useLayoutEffect(() => {
-    setSupportsCssZoom(
-      typeof CSS !== "undefined" &&
-        typeof CSS.supports === "function" &&
-        CSS.supports("zoom", "0.5")
-    );
-  }, []);
-
-  /** Screen-only: scale the on-page preview on narrow viewports to match print proportions. PDF + print sheet unchanged (preview is print:hidden). */
+  /** Screen-only: scale the on-page preview on narrow viewports. PDF + print sheet unchanged (preview is print:hidden). */
   useLayoutEffect(() => {
     const sync = () => {
       if (typeof window === "undefined") return;
@@ -148,10 +138,11 @@ export function BusinessCardSheet({
         setPreviewScale(1);
         return;
       }
-      const horizontalGutterPx = 64;
+      const vw = window.visualViewport?.width ?? window.innerWidth;
+      const horizontalGutterPx = 40;
       const available = Math.min(
         PREVIEW_CARD_PX_W,
-        Math.max(0, window.innerWidth - horizontalGutterPx)
+        Math.max(0, vw - horizontalGutterPx)
       );
       setPreviewScale(Math.min(1, available / PREVIEW_CARD_PX_W));
     };
@@ -295,42 +286,26 @@ export function BusinessCardSheet({
         id="print-area"
         className="flex w-full min-w-0 flex-col items-center print:block print:text-left"
       >
-        <div className="bc-preview mx-auto flex w-full max-w-[336px] flex-col items-center px-2 sm:px-0">
+        <div className="bc-preview mx-auto w-full max-w-[min(100vw,22rem)] px-3 py-4 sm:max-w-[336px] sm:px-0 sm:py-0">
           {/*
-            On-screen preview only. Use CSS zoom on narrow screens when supported so borders +
-            shadow scale with the card and nothing is clipped (transform + overflow:hidden was
-            cropping edges). Fallback: transform from top center with padding room.
+            Center with text-align + inline-block so transform scale keeps the card centered.
+            No overflow:hidden (shadow was clipped); body overflow-x-clip is overridden on this page.
           */}
-          {supportsCssZoom && previewScale < 1 ? (
+          <div className="print:hidden w-full text-center">
             <div
-              className="print:hidden flex w-full justify-center py-3"
-              style={{ zoom: previewScale }}
+              className="inline-block overflow-visible align-top"
+              style={
+                previewScale < 0.999
+                  ? {
+                      transform: `scale(${previewScale})`,
+                      transformOrigin: "top center",
+                    }
+                  : undefined
+              }
             >
               <BusinessCardFace qrHref={qrHref} siteBaseUrl={siteBaseUrl} />
             </div>
-          ) : (
-            <div
-              className={`print:hidden flex w-full justify-center ${
-                previewScale < 1 ? "px-2 py-3" : ""
-              }`}
-              style={{ overflow: "visible" }}
-            >
-              <div
-                style={
-                  previewScale < 1
-                    ? {
-                        width: PREVIEW_CARD_PX_W,
-                        height: PREVIEW_CARD_PX_H,
-                        transform: `scale(${previewScale})`,
-                        transformOrigin: "top center",
-                      }
-                    : undefined
-                }
-              >
-                <BusinessCardFace qrHref={qrHref} siteBaseUrl={siteBaseUrl} />
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         <div className="bc-print-sheet hidden" aria-hidden>
