@@ -11,7 +11,7 @@ export default function AboutPage() {
         z-[20] on the *outer* elements so the whole block stacks above the photo — inner z-index
         alone does not beat a fixed sibling. Native <img> avoids next/image fill edge cases.
       */}
-      <div className="pointer-events-none fixed bottom-0 right-0 z-[15] h-[min(48vh,380px)] w-[min(94vw,380px)] sm:h-[min(62vh,620px)] sm:w-[min(720px,55vw)]">
+      <div className="pointer-events-none fixed bottom-0 right-0 z-[15] h-[min(34vh,300px)] w-[min(96vw,460px)] sm:h-[min(44vh,500px)] sm:w-[min(820px,60vw)]">
         <div className="relative h-full w-full bg-[var(--bg-section)]">
           {/* eslint-disable-next-line @next/next/no-img-element -- static public asset; reliable corner rendering */}
           <img
@@ -21,13 +21,13 @@ export default function AboutPage() {
             height={620}
             decoding="async"
             fetchPriority="high"
-            className="absolute inset-0 h-full w-full object-contain object-bottom object-right opacity-[0.58]"
+            className="absolute inset-0 h-full w-full object-contain opacity-[0.58] object-[72%_100%]"
             style={{
-              // Feathered edges (mask alpha) so the photo reads embedded in the page, not boxed in.
+              // Wider ellipse + softer top fade: less intrusion upward; anchor stays bottom-right.
               WebkitMaskImage:
-                "radial-gradient(ellipse 135% 115% at 100% 100%, #000 0%, #000 26%, rgba(0,0,0,0.45) 48%, rgba(0,0,0,0.12) 62%, transparent 78%)",
+                "radial-gradient(ellipse 165% 92% at 100% 100%, #000 0%, #000 24%, rgba(0,0,0,0.45) 46%, rgba(0,0,0,0.1) 58%, transparent 76%)",
               maskImage:
-                "radial-gradient(ellipse 135% 115% at 100% 100%, #000 0%, #000 26%, rgba(0,0,0,0.45) 48%, rgba(0,0,0,0.12) 62%, transparent 78%)",
+                "radial-gradient(ellipse 165% 92% at 100% 100%, #000 0%, #000 24%, rgba(0,0,0,0.45) 46%, rgba(0,0,0,0.1) 58%, transparent 76%)",
               WebkitMaskSize: "100% 100%",
               maskSize: "100% 100%",
               WebkitMaskRepeat: "no-repeat",
@@ -38,7 +38,7 @@ export default function AboutPage() {
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(to right, rgb(247, 242, 234) 0%, rgba(247, 242, 234, 0.45) 32%, rgba(247, 242, 234, 0.04) 58%, transparent 82%)",
+                "linear-gradient(to right, rgb(247, 242, 234) 0%, rgba(247, 242, 234, 0.42) 38%, rgba(247, 242, 234, 0.03) 62%, transparent 88%)",
             }}
           />
         </div>
