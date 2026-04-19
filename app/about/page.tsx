@@ -1,12 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
-/**
- * Decorative bg — full jeepney + street read at a glance (object-contain).
- * Colorful jeepney, Philippines (Unsplash).
- */
-const COMMUNITY_BG =
-  "https://images.unsplash.com/photo-1742578754019-d9c352bae2d0?auto=format&fit=crop&w=1400&q=85";
+/** Decorative corner photo — same folder as menu item photos (`public/images`). */
+const ABOUT_PHOTO_SRC = "/images/aboutmepic.jpg";
 
 export default function AboutPage() {
   return (
@@ -17,8 +13,8 @@ export default function AboutPage() {
       >
         <div className="relative h-full w-full">
           <Image
-            src={COMMUNITY_BG}
-            alt=""
+            src={ABOUT_PHOTO_SRC}
+            alt="The cook behind Mr. K's Filipino Kitchen"
             fill
             sizes="(max-width: 640px) 380px, 720px"
             className="object-contain object-bottom object-right opacity-[0.38]"
@@ -30,12 +26,6 @@ export default function AboutPage() {
                 "linear-gradient(to right, rgb(247, 242, 234) 0%, rgba(247, 242, 234, 0.88) 28%, rgba(247, 242, 234, 0.2) 58%, transparent 78%)",
             }}
           />
-          <p
-            className="absolute bottom-3 right-4 z-[3] max-w-[10rem] text-right text-[10px] font-semibold uppercase leading-tight tracking-[0.12em] text-[var(--text-muted)] opacity-[0.85] [text-shadow:0_0_12px_var(--bg-section),0_0_20px_var(--bg-section)]"
-            aria-hidden
-          >
-            Philippine jeepney, city street
-          </p>
         </div>
       </div>
 
