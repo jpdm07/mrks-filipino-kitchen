@@ -1,40 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 
-/** Decorative corner photo — same folder as menu item photos (`public/images`). */
+/** About photo — `public/images` (same folder as menu item photos). */
 const ABOUT_PHOTO_SRC = "/images/aboutpic.jpg";
 
 export default function AboutPage() {
   return (
     <div className="pattern-bg">
-      {/*
-        Stack above site footer (footer is z-10) so this fixed photo stays visible; keep page
-        copy above the image (z-20). Navbar stays z-50.
-      */}
-      <div
-        className="pointer-events-none fixed bottom-0 right-0 z-[15] h-[min(48vh,380px)] w-[min(94vw,380px)] bg-[var(--bg-section)] sm:h-[min(62vh,620px)] sm:w-[min(720px,55vw)]"
-        aria-hidden
-      >
-        <div className="relative h-full w-full">
-          <Image
-            src={ABOUT_PHOTO_SRC}
-            alt="The cook behind Mr. K's Filipino Kitchen"
-            fill
-            sizes="(max-width: 640px) 380px, 720px"
-            className="object-contain object-bottom object-right opacity-[0.52]"
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to right, rgb(247, 242, 234) 0%, rgba(247, 242, 234, 0.72) 22%, rgba(247, 242, 234, 0.12) 55%, transparent 78%)",
-            }}
-          />
-        </div>
-      </div>
-
-      <div className="relative z-20">
-        <section className="relative overflow-hidden py-20">
+      <section className="relative overflow-hidden py-16 md:py-20">
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-20">
             <svg viewBox="0 0 200 200" className="h-64 w-64 text-[var(--gold)]">
               {[...Array(8)].map((_, i) => {
@@ -59,15 +32,32 @@ export default function AboutPage() {
               <circle cx="100" cy="100" r="26" fill="var(--primary)" />
             </svg>
           </div>
-          <div className="relative mx-auto max-w-3xl px-4 text-center">
-            <p className="font-[family-name:var(--font-playfair)] text-2xl italic text-[var(--primary)] md:text-3xl">
-              &ldquo;Good Filipino food isn&apos;t just food. It&apos;s memory, family, and
-              identity — all wrapped into one bite.&rdquo;
-            </p>
+          <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-10 px-4 md:flex-row md:items-start md:gap-12 md:text-left">
+            <div className="min-w-0 flex-1 text-center md:text-left">
+              <p className="font-[family-name:var(--font-playfair)] text-2xl italic text-[var(--primary)] md:text-3xl">
+                &ldquo;Good Filipino food isn&apos;t just food. It&apos;s memory, family, and
+                identity — all wrapped into one bite.&rdquo;
+              </p>
+            </div>
+            <figure className="relative mx-auto w-full max-w-[220px] shrink-0 sm:max-w-[260px] md:mx-0 md:max-w-[min(280px,32vw)]">
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl shadow-[0_20px_50px_rgba(0,40,100,0.12)] ring-1 ring-black/5">
+                <Image
+                  src={ABOUT_PHOTO_SRC}
+                  alt="The cook behind Mr. K's Filipino Kitchen"
+                  fill
+                  sizes="(max-width: 768px) 260px, 280px"
+                  className="object-cover object-center"
+                  priority
+                />
+              </div>
+              <figcaption className="mt-2 text-center text-xs text-[var(--text-muted)] md:text-right">
+                The heart behind the kitchen
+              </figcaption>
+            </figure>
           </div>
-        </section>
+      </section>
 
-        <article className="mx-auto max-w-3xl px-4 py-16">
+      <article className="mx-auto max-w-3xl px-4 py-16">
           <h1 className="font-[family-name:var(--font-playfair)] text-4xl font-bold text-[var(--text)]">
             About Mr. K&apos;s Filipino Kitchen
           </h1>
@@ -142,8 +132,7 @@ export default function AboutPage() {
               View Our Menu
             </Link>
           </div>
-        </article>
-      </div>
+      </article>
     </div>
   );
 }
