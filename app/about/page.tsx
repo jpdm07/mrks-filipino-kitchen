@@ -22,23 +22,12 @@ export default function AboutPage() {
             decoding="async"
             fetchPriority="high"
             className="absolute inset-0 h-full w-full object-contain object-bottom object-right opacity-[0.58]"
-            style={{
-              // Feathered edges (mask alpha) so the photo reads embedded in the page, not boxed in.
-              WebkitMaskImage:
-                "radial-gradient(ellipse 135% 115% at 100% 100%, #000 0%, #000 26%, rgba(0,0,0,0.45) 48%, rgba(0,0,0,0.12) 62%, transparent 78%)",
-              maskImage:
-                "radial-gradient(ellipse 135% 115% at 100% 100%, #000 0%, #000 26%, rgba(0,0,0,0.45) 48%, rgba(0,0,0,0.12) 62%, transparent 78%)",
-              WebkitMaskSize: "100% 100%",
-              maskSize: "100% 100%",
-              WebkitMaskRepeat: "no-repeat",
-              maskRepeat: "no-repeat",
-            }}
           />
           <div
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(to right, rgb(247, 242, 234) 0%, rgba(247, 242, 234, 0.45) 32%, rgba(247, 242, 234, 0.04) 58%, transparent 82%)",
+                "linear-gradient(to right, rgb(247, 242, 234) 0%, rgba(247, 242, 234, 0.72) 24%, rgba(247, 242, 234, 0.08) 52%, transparent 78%)",
             }}
           />
         </div>
