@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { GoogleAnalyticsRouteTracker } from "@/components/analytics/GoogleAnalyticsRouteTracker";
 import { AppShell } from "@/components/layout/AppShell";
 import { CATALOG_OG_IMAGE } from "@/lib/menu-catalog";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
@@ -59,6 +62,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${dmSans.variable}`}>
       <body className="min-h-screen overflow-x-clip antialiased">
+        <GoogleAnalytics />
+        <Suspense fallback={null}>
+          <GoogleAnalyticsRouteTracker />
+        </Suspense>
         <AppShell>{children}</AppShell>
       </body>
     </html>
