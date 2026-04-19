@@ -160,6 +160,12 @@ export function PrintMenuClient() {
 
   useAdminDataSync(() => load({ silent: true }));
 
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("mrk-admin-print-menu");
+    return () => root.classList.remove("mrk-admin-print-menu");
+  }, []);
+
   const entries = useMemo(() => {
     const active = items.filter((i) => i.isActive);
     return buildMenuGridEntries(active);
@@ -216,19 +222,29 @@ export function PrintMenuClient() {
           ) : null}
         </div>
         <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/90 p-4 text-sm text-amber-950">
-          <p className="font-semibold">Double-sided fold (letter)</p>
-          <ul className="mt-2 list-inside list-disc space-y-1">
+          <p className="font-semibold">Printing (letter, two-sided)</p>
+          <p className="mt-2 leading-relaxed">
+            Browsers cannot turn on two-sided printing or pick the flip direction for you — that is
+            controlled by the print dialog and your printer. This page is styled as{" "}
+            <strong>exactly two pages</strong> so when you enable <strong>Print on both sides</strong>, page
+            2 lines up as the back of the same sheet.
+          </p>
+          <ul className="mt-3 list-inside list-disc space-y-1.5">
             <li>
-              Print <strong>2 sheets</strong> on <strong>letter</strong> paper, <strong>double-sided</strong> (flip on
-              short edge).
+              <strong>Paper:</strong> US Letter, <strong>Portrait</strong>.
             </li>
             <li>
-              <strong>Side 1</strong>: cover + contact (folded, these become the outside front and back).
+              <strong>Two-sided:</strong> On — then try <strong>Flip on long edge</strong> first (best match for
+              this layout). If the back prints upside-down relative to the front, switch to{" "}
+              <strong>short edge</strong> once; many drivers remember it for next time.
             </li>
             <li>
-              <strong>Side 2</strong>: menu inside spread — fold in half so the logo cover faces out.
+              <strong>One sheet:</strong> Page 1 = cover + contact (outside); page 2 = menu (inside when
+              folded).
             </li>
-            <li>In the print dialog, choose “Save as PDF” to download instead of printing.</li>
+            <li>
+              <strong>PDF:</strong> Choose “Save as PDF” in the print dialog — same two-page structure.
+            </li>
           </ul>
         </div>
         {error ? (
@@ -239,11 +255,14 @@ export function PrintMenuClient() {
         {loading && !items.length ? <p className="mt-4 text-[var(--text-muted)]">Loading menu…</p> : null}
       </div>
 
-      {/* Printable document */}
-      <div className="print-document mx-auto mt-8 max-w-5xl print:mt-0 print:max-w-none">
-        {/* Sheet 1 — outside: cover | back */}
-        <section className="print-sheet mb-8 overflow-hidden rounded-lg border border-stone-300 bg-white shadow-lg print:mb-0 print:break-after-page print:rounded-none print:shadow-none">
-          <div className="grid min-h-[9.25in] grid-cols-1 md:grid-cols-2 print:min-h-[9.25in] print:grid-cols-2">
+      {/* Printable document — id used for print-only isolation */}
+      <div
+        id="mrk-print-menu-document"
+        className="print-document mx-auto mt-8 max-w-5xl print:mt-0 print:max-w-none"
+      >
+        {/* Page 1 — outside: cover | back */}
+        <section className="print-menu-sheet-1 print-sheet mb-8 overflow-hidden rounded-lg border border-stone-300 bg-white shadow-lg print:mb-0 print:rounded-none print:shadow-none">
+          <div className="grid min-h-[9.25in] grid-cols-1 md:grid-cols-2 print:min-h-0 print:grid-cols-2">
             <div className="flex flex-col items-center justify-center bg-gradient-to-b from-[#071229] via-[#0a1e3d] to-[#0a1628] px-8 py-12 text-center print:px-6 print:py-10">
               <div className="rounded-2xl border border-[#ffc72c]/40 bg-black/20 px-6 py-8 print:px-4 print:py-6">
                 <Logo size="xl" light />
@@ -300,8 +319,8 @@ export function PrintMenuClient() {
           </div>
         </section>
 
-        {/* Sheet 2 — inside menu */}
-        <section className="print-sheet overflow-hidden rounded-lg border border-stone-300 bg-[#fffbf5] shadow-lg print:rounded-none print:shadow-none">
+        {/* Page 2 — inside menu (back of same sheet when duplex) */}
+        <section className="print-menu-sheet-2 print-sheet overflow-hidden rounded-lg border border-stone-300 bg-[#fffbf5] shadow-lg print:rounded-none print:shadow-none">
           <div className="border-b border-[#0038a8]/25 bg-white/80 px-6 py-3 print:px-4 print:py-2">
             <p className="text-center font-[family-name:var(--font-playfair)] text-lg font-bold text-[#0038a8]">
               Menu
@@ -334,17 +353,42 @@ export function PrintMenuClient() {
       </div>
 
       <style jsx global>{`
+        /* Isolate menu so only these two pages print (helps duplex drivers). */
         @media print {
+          html.mrk-admin-print-menu body * {
+            visibility: hidden;
+          }
+          html.mrk-admin-print-menu #mrk-print-menu-document,
+          html.mrk-admin-print-menu #mrk-print-menu-document * {
+            visibility: visible;
+          }
+          html.mrk-admin-print-menu #mrk-print-menu-document {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0 !important;
+            max-width: none !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
           .print-menu-scope .print\\:hidden {
             display: none !important;
           }
-          .print-document {
-            margin: 0 !important;
-            max-width: none !important;
-          }
+
           @page {
             size: letter portrait;
             margin: 0.35in;
+          }
+
+          html.mrk-admin-print-menu .print-menu-sheet-1 {
+            break-after: page;
+            page-break-after: always;
+          }
+          html.mrk-admin-print-menu .print-menu-sheet-2 {
+            break-before: auto;
+            page-break-before: auto;
           }
         }
       `}</style>
