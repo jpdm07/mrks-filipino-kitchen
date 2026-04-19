@@ -135,12 +135,20 @@ export function BusinessCardSheet({
     const el = previewWrapRef.current;
     if (!el) return;
 
-    const ro = new ResizeObserver((entries) => {
-      const w = entries[0]?.contentRect.width ?? PREVIEW_CARD_PX_W;
+    const sync = () => {
+      const w = el.getBoundingClientRect().width;
+      // Cap scale at 1 so we never upscale past the print/PDF reference (336×192).
       setPreviewScale(Math.min(1, w / PREVIEW_CARD_PX_W));
-    });
+    };
+
+    sync();
+    const ro = new ResizeObserver(() => sync());
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", sync);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", sync);
+    };
   }, []);
 
   useEffect(() => {
@@ -234,7 +242,7 @@ export function BusinessCardSheet({
         }
       `}</style>
       {showPrintButton ? (
-        <div className="mb-8 flex max-w-md flex-col items-center gap-4 print:hidden">
+        <div className="mb-8 flex w-full max-w-md flex-col items-center gap-4 self-center print:hidden">
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
@@ -268,15 +276,16 @@ export function BusinessCardSheet({
       ) : null}
       <div
         id="print-area"
-        className="flex flex-col items-center print:block print:text-left"
+        className="flex w-full min-w-0 flex-col items-stretch print:block print:text-left"
       >
         <div
           ref={previewWrapRef}
-          className="bc-preview box-border flex w-full max-w-[3.5in] flex-col items-stretch px-2 sm:px-0"
+          className="bc-preview box-border flex w-full max-w-[min(21rem,calc(100vw-4rem))] flex-col items-stretch sm:max-w-[21rem]"
         >
           {/*
-            Fixed 336×192 design scaled to fit narrow viewports so type/QR match printed cards
-            (same proportions as PDF — not “shrunk card + full-size text”).
+            Fixed 336×192 design scaled when the wrapper is narrower than 336px.
+            Parent layout must be full-width (items-stretch); shrink-wrapped flex columns used to
+            keep this at 336px so scale stayed 1. min(21rem, 100vw-4rem) yields ~311px at 375px VW.
           */}
           <div
             className="mx-auto overflow-hidden print:hidden"
