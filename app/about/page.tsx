@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 /** Corner photo — `public/images/aboutpic.jpg` (same folder as menu item photos). */
@@ -6,32 +5,35 @@ const ABOUT_PHOTO_SRC = "/images/aboutpic.jpg";
 
 export default function AboutPage() {
   return (
-    <div className="pattern-bg">
+    <div className="pattern-bg relative">
       {/*
-        Fixed corner sits under footer (z-10) but above in-flow paint: use z-[25].
-        Navbar is z-50. Do NOT wrap the whole page in z-* — only narrow max-w-3xl columns
-        get z-[30] so text stays readable; the right margin stays clear for the photo.
+        Layering: photo z-[15] (above footer z-10, below nav z-50). Section + article use
+        z-[20] on the *outer* elements so the whole block stacks above the photo — inner z-index
+        alone does not beat a fixed sibling. Native <img> avoids next/image fill edge cases.
       */}
-      <div className="pointer-events-none fixed bottom-0 right-0 z-[25] h-[min(48vh,380px)] w-[min(94vw,380px)] sm:h-[min(62vh,620px)] sm:w-[min(720px,55vw)]">
+      <div className="pointer-events-none fixed bottom-0 right-0 z-[15] h-[min(48vh,380px)] w-[min(94vw,380px)] sm:h-[min(62vh,620px)] sm:w-[min(720px,55vw)]">
         <div className="relative h-full w-full bg-[var(--bg-section)]">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element -- static public asset; reliable corner rendering */}
+          <img
             src={ABOUT_PHOTO_SRC}
             alt="The cook behind Mr. K's Filipino Kitchen"
-            fill
-            sizes="(max-width: 640px) 380px, 720px"
-            className="object-contain object-bottom object-right opacity-[0.5]"
+            width={720}
+            height={620}
+            decoding="async"
+            fetchPriority="high"
+            className="absolute inset-0 h-full w-full object-contain object-bottom object-right opacity-[0.58]"
           />
           <div
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(to right, rgb(247, 242, 234) 0%, rgba(247, 242, 234, 0.78) 24%, rgba(247, 242, 234, 0.1) 52%, transparent 78%)",
+                "linear-gradient(to right, rgb(247, 242, 234) 0%, rgba(247, 242, 234, 0.72) 24%, rgba(247, 242, 234, 0.08) 52%, transparent 78%)",
             }}
           />
         </div>
       </div>
 
-      <section className="relative overflow-hidden py-20">
+      <section className="relative z-[20] overflow-hidden py-20">
         <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-20">
           <svg viewBox="0 0 200 200" className="h-64 w-64 text-[var(--gold)]">
             {[...Array(8)].map((_, i) => {
@@ -56,7 +58,7 @@ export default function AboutPage() {
             <circle cx="100" cy="100" r="26" fill="var(--primary)" />
           </svg>
         </div>
-        <div className="relative z-[30] mx-auto max-w-3xl px-4 text-center">
+        <div className="relative mx-auto max-w-3xl px-4 text-center">
           <p className="font-[family-name:var(--font-playfair)] text-2xl italic text-[var(--primary)] md:text-3xl">
             &ldquo;Good Filipino food isn&apos;t just food. It&apos;s memory, family, and
             identity — all wrapped into one bite.&rdquo;
@@ -64,7 +66,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <article className="relative z-[30] mx-auto max-w-3xl px-4 py-16">
+      <article className="relative z-[20] mx-auto max-w-3xl px-4 py-16">
         <h1 className="font-[family-name:var(--font-playfair)] text-4xl font-bold text-[var(--text)]">
           About Mr. K&apos;s Filipino Kitchen
         </h1>
