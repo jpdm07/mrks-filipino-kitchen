@@ -11,7 +11,7 @@ export default function AboutPage() {
         z-[20] on the *outer* elements so the whole block stacks above the photo — inner z-index
         alone does not beat a fixed sibling. Native <img> avoids next/image fill edge cases.
       */}
-      <div className="pointer-events-none fixed bottom-0 right-0 z-[15] h-[min(48vh,380px)] w-[min(94vw,380px)] sm:h-[min(62vh,620px)] sm:w-[min(720px,55vw)]">
+      <div className="pointer-events-none fixed bottom-0 right-6 z-[15] h-[min(48vh,380px)] w-[min(94vw,380px)] sm:right-10 sm:h-[min(62vh,620px)] sm:w-[min(720px,55vw)] md:right-14 lg:right-[4.5rem] xl:right-24">
         <div className="relative h-full w-full bg-[var(--bg-section)]">
           {/* eslint-disable-next-line @next/next/no-img-element -- static public asset; reliable corner rendering */}
           <img
@@ -37,7 +37,7 @@ export default function AboutPage() {
         Grid: text column stays left-weighted; flexible right column reserves space so the fixed
         photo reads intentional. Paragraph styles unchanged inside the prose column.
       */}
-      <div className="relative z-20 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:grid lg:max-w-[90rem] lg:grid-cols-[minmax(0,42rem)_minmax(2rem,1fr)] lg:gap-x-10 lg:px-10 xl:grid-cols-[minmax(0,44rem)_minmax(3rem,1fr)] xl:gap-x-14">
+      <div className="relative z-20 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:grid lg:max-w-[90rem] lg:grid-cols-[minmax(0,44rem)_minmax(1rem,1fr)] lg:gap-x-6 lg:px-10 xl:grid-cols-[minmax(0,46rem)_minmax(1rem,1fr)] xl:gap-x-8">
         <div className="mx-auto min-w-0 w-full max-w-3xl lg:mx-0 lg:max-w-none lg:col-start-1">
           <section className="relative overflow-hidden py-16 md:py-20">
             <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-20">
