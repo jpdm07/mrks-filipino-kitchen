@@ -70,7 +70,7 @@ export default function AboutPage() {
         <h1 className="font-[family-name:var(--font-playfair)] text-4xl font-bold text-[var(--text)]">
           About Mr. K&apos;s Filipino Kitchen
         </h1>
-        <div className="mt-8 space-y-6 text-[var(--text-muted)]">
+        <div className="mt-8 space-y-6 sm:space-y-7">
           <p className="text-lg leading-relaxed text-[var(--text)]">
             Mr. K&apos;s Filipino Kitchen is a family pickup kitchen rooted in Cypress,
             Texas. The name belongs to someone very special — a little boy named Mr. K,
@@ -83,60 +83,62 @@ export default function AboutPage() {
           <h2 className="font-[family-name:var(--font-playfair)] text-2xl font-bold text-[var(--text)]">
             The Story Behind the Kitchen
           </h2>
-          <div className="prose prose-neutral max-w-none">
-            <p>
-              Filipino food is how she reaches across years and miles when she cannot reach
-              with her hands.
-            </p>
-            <p>
-              She came to Houston in 2008. One move, one decision, and suddenly a world away
-              from nearly everyone who had ever filled her table. The friends who knew her
-              before she knew herself. The family whose laughter she had fallen asleep to her
-              whole life. She was grateful for the new beginning, genuinely grateful, but the
-              city felt wide and quiet in a way she didn&apos;t know how to name. The silence
-              at mealtimes was its own kind of lonely.
-            </p>
-            <p>
-              She searched for Filipino food that tasted like home, again and again, and too
-              often walked away disappointed. What she missed wasn&apos;t only flavor. It was
-              memory. It was the feeling of belonging to a table. The sound of people she loves
-              laughing over shared plates. The simple, deep relief of recognizing yourself in
-              what&apos;s being served.
-            </p>
-            <p>
-              <strong>So she went to the stove and figured it out.</strong> Those years were
-              stubborn and unglamorous, love in the form of practice. She kept going because she
-              needed that closeness to exist inside her house, not just inside a memory she
-              couldn&apos;t touch.
-            </p>
-            <p>
-              Then her son arrived, and everything sharpened into something that can only be
-              described as purpose.
-            </p>
-            <p>
-              Naming this kitchen after him was her way of planting their heritage somewhere
-              he can see it every single day. She wants him to grow up surrounded by their
-              traditions, proud of where he comes from, carrying flavors and stories he can
-              someday pass to his own family. She wants her son to understand in his bones that
-              who they are doesn&apos;t have to fade just because life moved them far from where
-              it began.
-            </p>
-            <p>
-              And she wants her neighbors here in Cypress to taste something honest. Food that
-              shows up at your celebrations and your ordinary Tuesday nights alike. Food that
-              reminds you that culture travels with people and that it is worth keeping alive
-              wherever you land.
-            </p>
-            <p className="text-[var(--text)]">
-              This kitchen is her answer to years of longing. Food that carries their story,
-              made with love, served with the warmth of Filipino hospitality, and sent home
-              with you in the hope that it adds something good to your own four walls, today
-              and in the generations still to come.
-            </p>
-            <p className="font-bold text-[var(--text)]">Mabuhay. 🌟</p>
-          </div>
+          <p className="text-base leading-relaxed text-[var(--text-muted)]">
+            Filipino food is how she reaches across years and miles when she cannot reach
+            with her hands.
+          </p>
+          <p className="text-base leading-relaxed text-[var(--text-muted)]">
+            She came to Houston in 2008. One move, one decision, and suddenly a world away
+            from nearly everyone who had ever filled her table. The friends who knew her
+            before she knew herself. The family whose laughter she had fallen asleep to her
+            whole life. She was grateful for the new beginning, genuinely grateful, but the
+            city felt wide and quiet in a way she didn&apos;t know how to name. The silence
+            at mealtimes was its own kind of lonely.
+          </p>
+          <p className="text-base leading-relaxed text-[var(--text-muted)]">
+            She searched for Filipino food that tasted like home, again and again, and too
+            often walked away disappointed. What she missed wasn&apos;t only flavor. It was
+            memory. It was the feeling of belonging to a table. The sound of people she loves
+            laughing over shared plates. The simple, deep relief of recognizing yourself in
+            what&apos;s being served.
+          </p>
+          <p className="text-base leading-relaxed text-[var(--text-muted)]">
+            <span className="font-semibold text-[var(--text)]">
+              So she went to the stove and figured it out.
+            </span>{" "}
+            Those years were stubborn and unglamorous, love in the form of practice. She kept
+            going because she needed that closeness to exist inside her house, not just inside a
+            memory she couldn&apos;t touch.
+          </p>
+          <p className="text-base leading-relaxed text-[var(--text-muted)]">
+            Then her son arrived, and everything sharpened into something that can only be
+            described as purpose.
+          </p>
+          <p className="text-base leading-relaxed text-[var(--text-muted)]">
+            Naming this kitchen after him was her way of planting their heritage somewhere
+            he can see it every single day. She wants him to grow up surrounded by their
+            traditions, proud of where he comes from, carrying flavors and stories he can
+            someday pass to his own family. She wants her son to understand in his bones that
+            who they are doesn&apos;t have to fade just because life moved them far from where
+            it began.
+          </p>
+          <p className="text-base leading-relaxed text-[var(--text-muted)]">
+            And she wants her neighbors here in Cypress to taste something honest. Food that
+            shows up at your celebrations and your ordinary Tuesday nights alike. Food that
+            reminds you that culture travels with people and that it is worth keeping alive
+            wherever you land.
+          </p>
+          <p className="text-base leading-relaxed text-[var(--text)]">
+            This kitchen is her answer to years of longing. Food that carries their story,
+            made with love, served with the warmth of Filipino hospitality, and sent home
+            with you in the hope that it adds something good to your own four walls, today
+            and in the generations still to come.
+          </p>
+          <p className="text-center font-[family-name:var(--font-playfair)] text-xl font-semibold text-[var(--text)]">
+            Mabuhay. 🌟
+          </p>
         </div>
-        <div className="mt-12 flex justify-center">
+        <div className="mt-14 flex justify-center">
           <Link href="/menu" className="btn btn-primary px-8">
             View Our Menu
           </Link>
