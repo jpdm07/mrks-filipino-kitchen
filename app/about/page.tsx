@@ -7,8 +7,12 @@ const ABOUT_PHOTO_SRC = "/images/aboutpic.jpg";
 export default function AboutPage() {
   return (
     <div className="pattern-bg">
+      {/*
+        Stack above site footer (footer is z-10) so this fixed photo stays visible; keep page
+        copy above the image (z-20). Navbar stays z-50.
+      */}
       <div
-        className="pointer-events-none fixed bottom-0 right-0 z-[1] h-[min(48vh,380px)] w-[min(94vw,380px)] bg-[var(--bg-section)] sm:h-[min(62vh,620px)] sm:w-[min(720px,55vw)]"
+        className="pointer-events-none fixed bottom-0 right-0 z-[15] h-[min(48vh,380px)] w-[min(94vw,380px)] bg-[var(--bg-section)] sm:h-[min(62vh,620px)] sm:w-[min(720px,55vw)]"
         aria-hidden
       >
         <div className="relative h-full w-full">
@@ -17,19 +21,19 @@ export default function AboutPage() {
             alt="The cook behind Mr. K's Filipino Kitchen"
             fill
             sizes="(max-width: 640px) 380px, 720px"
-            className="object-contain object-bottom object-right opacity-[0.38]"
+            className="object-contain object-bottom object-right opacity-[0.52]"
           />
           <div
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(to right, rgb(247, 242, 234) 0%, rgba(247, 242, 234, 0.88) 28%, rgba(247, 242, 234, 0.2) 58%, transparent 78%)",
+                "linear-gradient(to right, rgb(247, 242, 234) 0%, rgba(247, 242, 234, 0.72) 22%, rgba(247, 242, 234, 0.12) 55%, transparent 78%)",
             }}
           />
         </div>
       </div>
 
-      <div className="relative z-[2]">
+      <div className="relative z-20">
         <section className="relative overflow-hidden py-20">
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-20">
             <svg viewBox="0 0 200 200" className="h-64 w-64 text-[var(--gold)]">
