@@ -11,8 +11,8 @@ export default function AboutPage() {
         z-[20] on the *outer* elements so the whole block stacks above the photo — inner z-index
         alone does not beat a fixed sibling. Native <img> avoids next/image fill edge cases.
       */}
-      <div className="pointer-events-none fixed bottom-3 right-3 z-[15] h-[min(44vh,340px)] w-[min(88vw,340px)] sm:bottom-4 sm:right-4 sm:h-[min(56vh,560px)] sm:w-[min(640px,48vw)] md:h-[min(58vh,600px)] md:w-[min(680px,44vw)]">
-        <div className="relative h-full w-full overflow-hidden rounded-tl-2xl bg-[var(--bg-section)] shadow-[0_8px_40px_rgba(0,40,100,0.08)] ring-1 ring-black/[0.04]">
+      <div className="pointer-events-none fixed bottom-0 right-0 z-[15] h-[min(48vh,380px)] w-[min(94vw,380px)] sm:h-[min(62vh,620px)] sm:w-[min(720px,55vw)]">
+        <div className="relative h-full w-full bg-[var(--bg-section)]">
           {/* eslint-disable-next-line @next/next/no-img-element -- static public asset; reliable corner rendering */}
           <img
             src={ABOUT_PHOTO_SRC}
@@ -21,13 +21,13 @@ export default function AboutPage() {
             height={620}
             decoding="async"
             fetchPriority="high"
-            className="absolute inset-0 h-full w-full object-contain object-bottom object-right opacity-[0.58]"
+            className="absolute inset-0 h-full w-full object-contain object-bottom object-right opacity-[0.52]"
           />
           <div
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(to right, rgb(247, 242, 234) 0%, rgba(247, 242, 234, 0.72) 24%, rgba(247, 242, 234, 0.08) 52%, transparent 78%)",
+                "linear-gradient(to right, var(--bg-section) 0%, rgba(247, 242, 234, 0.55) 18%, rgba(247, 242, 234, 0.12) 45%, transparent 72%)",
             }}
           />
         </div>
