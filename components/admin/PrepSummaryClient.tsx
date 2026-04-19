@@ -13,6 +13,7 @@ import {
 import {
   EMPTY_PREP_OVERRIDE_STATE,
   mergePrepWithOverrides,
+  type PrepDayBucket,
   type PrepLine,
   type PrepLineMerged,
   type PrepSummaryComputed,
@@ -401,6 +402,30 @@ export function PrepSummaryClient({
               </div>
             )}
 
+            {payload.computed.byPickupDay.length > 0 ? (
+              <section className="mt-6 rounded-lg border border-[var(--primary)]/30 bg-[var(--primary)]/[0.06] p-4 print:mt-4">
+                <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[var(--primary)]">
+                  By pickup day
+                </h3>
+                <p className="mt-1 text-sm text-[var(--text-muted)]">
+                  <strong className="text-[var(--text)]">Earliest pickup first</strong> — what
+                  to prep for each customer pickup date. Pulled from confirmed orders only;{" "}
+                  <span className="italic">
+                    not changed by quantity overrides or manual lines below.
+                  </span>
+                </p>
+                <div className="mt-4 space-y-5">
+                  {payload.computed.byPickupDay.map((day) => (
+                    <PrepDaySnapshot key={day.pickupYmd} day={day} />
+                  ))}
+                </div>
+              </section>
+            ) : payload.meta.weekOrderCount === 0 ? (
+              <p className="mt-6 text-sm italic text-[var(--text-muted)]">
+                No confirmed orders with a pickup in this Sun–Sat window yet.
+              </p>
+            ) : null}
+
             <div className="print:hidden">
               <section className="mt-6">
                 <h3 className="text-lg font-bold text-[var(--text)]">
@@ -532,6 +557,52 @@ export function PrepSummaryClient({
           }
         }
       `}</style>
+    </div>
+  );
+}
+
+function PrepDaySnapshot({ day }: { day: PrepDayBucket }) {
+  return (
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+      <p className="font-semibold text-[var(--text)]">{day.labelLong}</p>
+      <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+        {day.orderCount} order{day.orderCount === 1 ? "" : "s"} · pickup{" "}
+        <code className="rounded bg-[var(--bg-section)] px-1">{day.pickupYmd}</code>
+      </p>
+      <div className="mt-3 grid gap-4 sm:grid-cols-2">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">
+            Main
+          </p>
+          {day.main.length === 0 ? (
+            <p className="mt-1 text-sm italic text-[var(--text-muted)]">(none)</p>
+          ) : (
+            <ul className="mt-1 list-none space-y-1 text-sm text-[var(--text)]">
+              {day.main.map((l) => (
+                <li key={l.key}>
+                  <span className="font-bold tabular-nums">{l.quantity}×</span> {l.label}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">
+            Desserts &amp; flan
+          </p>
+          {day.dessert.length === 0 ? (
+            <p className="mt-1 text-sm italic text-[var(--text-muted)]">(none)</p>
+          ) : (
+            <ul className="mt-1 list-none space-y-1 text-sm text-[var(--text)]">
+              {day.dessert.map((l) => (
+                <li key={l.key}>
+                  <span className="font-bold tabular-nums">{l.quantity}×</span> {l.label}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

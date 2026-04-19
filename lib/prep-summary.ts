@@ -2,6 +2,7 @@ import { ORDER_STATUSES_COUNTING_TOWARD_CAPACITY } from "@/lib/menu-capacity-cat
 import type { OrderItemLine } from "@/lib/order-types";
 import {
   addCalendarDaysYMD,
+  formatPickupYmdLong,
   getThisWeeksFridaySaturdayAfterThursday,
   isWellFormedPickupYMD,
 } from "@/lib/pickup-lead-time";
@@ -136,9 +137,22 @@ export function parseOrderItemsJson(s: string | null | undefined): OrderItemLine
 
 const STATUS_OK = new Set<string>(ORDER_STATUSES_COUNTING_TOWARD_CAPACITY);
 
+/** One calendar pickup day: quantities from orders with that pickup date only. */
+export type PrepDayBucket = {
+  pickupYmd: string;
+  /** e.g. "Monday, April 21, 2025" */
+  labelLong: string;
+  main: PrepLine[];
+  dessert: PrepLine[];
+  /** Orders with at least one line item on this pickup day. */
+  orderCount: number;
+};
+
 export type PrepSummaryComputed = {
   main: PrepLine[];
   dessert: PrepLine[];
+  /** Soonest pickup first — use to prioritize prep by day. */
+  byPickupDay: PrepDayBucket[];
   meta: {
     weekThursdayYmd: string;
     fri: string;
@@ -183,6 +197,21 @@ export function aggregatePrepForWeek(
 
   const mainMap = new Map<string, { label: string; qty: number }>();
   const dessertMap = new Map<string, { label: string; qty: number }>();
+  type DayAgg = {
+    main: Map<string, { label: string; qty: number }>;
+    dessert: Map<string, { label: string; qty: number }>;
+    orderCount: number;
+  };
+  const dayMap = new Map<string, DayAgg>();
+  function dayBucket(pdNorm: string): DayAgg {
+    let d = dayMap.get(pdNorm);
+    if (!d) {
+      d = { main: new Map(), dessert: new Map(), orderCount: 0 };
+      dayMap.set(pdNorm, d);
+    }
+    return d;
+  }
+
   let weekendOrderCount = 0;
   let weekOrderCount = 0;
 
@@ -201,6 +230,9 @@ export function aggregatePrepForWeek(
     const isWeekendPickup = pdNorm === fri || pdNorm === sat;
     if (isWeekendPickup) weekendOrderCount += 1;
 
+    const day = dayBucket(pdNorm);
+    day.orderCount += 1;
+
     for (const line of items) {
       if (line.isSample) continue;
       if (isDessertFlanLine(line)) continue;
@@ -210,6 +242,8 @@ export function aggregatePrepForWeek(
       const label = itemLineLabel(line);
       const prev = mainMap.get(key);
       mainMap.set(key, { label, qty: (prev?.qty ?? 0) + q });
+      const dPrev = day.main.get(key);
+      day.main.set(key, { label, qty: (dPrev?.qty ?? 0) + q });
     }
 
     for (const line of items) {
@@ -221,12 +255,25 @@ export function aggregatePrepForWeek(
       const label = itemLineLabel(line);
       const prev = dessertMap.get(key);
       dessertMap.set(key, { label, qty: (prev?.qty ?? 0) + q });
+      const dPrev = day.dessert.get(key);
+      day.dessert.set(key, { label, qty: (dPrev?.qty ?? 0) + q });
     }
   }
+
+  const byPickupDay: PrepDayBucket[] = [...dayMap.entries()]
+    .map(([pickupYmd, d]) => ({
+      pickupYmd,
+      labelLong: formatPickupYmdLong(pickupYmd),
+      main: mapToSortedLines(d.main),
+      dessert: mapToSortedLines(d.dessert),
+      orderCount: d.orderCount,
+    }))
+    .sort((a, b) => a.pickupYmd.localeCompare(b.pickupYmd));
 
   return {
     main: mapToSortedLines(mainMap),
     dessert: mapToSortedLines(dessertMap),
+    byPickupDay,
     meta: {
       weekThursdayYmd,
       fri,

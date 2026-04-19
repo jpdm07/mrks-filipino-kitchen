@@ -53,6 +53,7 @@ export async function GET(req: NextRequest) {
       sat: data.meta.sat,
       main: data.merged.main,
       dessert: data.merged.dessert,
+      byPickupDay: data.computed.byPickupDay,
     });
 
     if (!result.ok) {

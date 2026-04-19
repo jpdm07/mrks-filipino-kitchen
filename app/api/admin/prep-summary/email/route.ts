@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
       sat: data.meta.sat,
       main: data.merged.main,
       dessert: data.merged.dessert,
+      byPickupDay: data.computed.byPickupDay,
     });
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: 502 });
