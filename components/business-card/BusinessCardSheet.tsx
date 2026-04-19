@@ -129,6 +129,15 @@ export function BusinessCardSheet({
   const [siteBaseUrl, setSiteBaseUrl] = useState<string | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [previewScale, setPreviewScale] = useState(1);
+  const [supportsCssZoom, setSupportsCssZoom] = useState(false);
+
+  useLayoutEffect(() => {
+    setSupportsCssZoom(
+      typeof CSS !== "undefined" &&
+        typeof CSS.supports === "function" &&
+        CSS.supports("zoom", "0.5")
+    );
+  }, []);
 
   /** Screen-only: scale the on-page preview on narrow viewports to match print proportions. PDF + print sheet unchanged (preview is print:hidden). */
   useLayoutEffect(() => {
@@ -286,29 +295,42 @@ export function BusinessCardSheet({
         id="print-area"
         className="flex w-full min-w-0 flex-col items-center print:block print:text-left"
       >
-        <div className="bc-preview mx-auto flex w-full max-w-[336px] flex-col items-center px-1 sm:px-0">
+        <div className="bc-preview mx-auto flex w-full max-w-[336px] flex-col items-center px-2 sm:px-0">
           {/*
-            On-screen preview only (print:hidden): scale from viewport on sm screens so layout
-            matches PDF; PDF download and browser print use bc-print-sheet, not this block.
+            On-screen preview only. Use CSS zoom on narrow screens when supported so borders +
+            shadow scale with the card and nothing is clipped (transform + overflow:hidden was
+            cropping edges). Fallback: transform from top center with padding room.
           */}
-          <div
-            className="shrink-0 overflow-hidden print:hidden"
-            style={{
-              width: PREVIEW_CARD_PX_W * previewScale,
-              height: PREVIEW_CARD_PX_H * previewScale,
-            }}
-          >
+          {supportsCssZoom && previewScale < 1 ? (
             <div
-              style={{
-                width: PREVIEW_CARD_PX_W,
-                height: PREVIEW_CARD_PX_H,
-                transform: `scale(${previewScale})`,
-                transformOrigin: "top left",
-              }}
+              className="print:hidden flex w-full justify-center py-3"
+              style={{ zoom: previewScale }}
             >
               <BusinessCardFace qrHref={qrHref} siteBaseUrl={siteBaseUrl} />
             </div>
-          </div>
+          ) : (
+            <div
+              className={`print:hidden flex w-full justify-center ${
+                previewScale < 1 ? "px-2 py-3" : ""
+              }`}
+              style={{ overflow: "visible" }}
+            >
+              <div
+                style={
+                  previewScale < 1
+                    ? {
+                        width: PREVIEW_CARD_PX_W,
+                        height: PREVIEW_CARD_PX_H,
+                        transform: `scale(${previewScale})`,
+                        transformOrigin: "top center",
+                      }
+                    : undefined
+                }
+              >
+                <BusinessCardFace qrHref={qrHref} siteBaseUrl={siteBaseUrl} />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="bc-print-sheet hidden" aria-hidden>

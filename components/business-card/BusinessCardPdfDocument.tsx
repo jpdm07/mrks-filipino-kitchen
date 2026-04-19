@@ -194,10 +194,10 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 2,
-    paddingBottom: 2,
-    paddingLeft: 3,
-    paddingRight: 3,
+    paddingTop: PX(8),
+    paddingBottom: PX(8),
+    paddingLeft: PX(12),
+    paddingRight: PX(12),
   },
   brandLine1: {
     fontSize: PX(7),
@@ -308,7 +308,7 @@ function BrandPanel({ gradientId }: { gradientId: string }) {
             Match `brandPanelStyle` on BusinessCardSheet: linear + two radial overlays
             (crimson top-right, gold bottom-left).
           */}
-          <LinearGradient id={idLin} x1="0" y1="1" x2="1" y2="0">
+          <LinearGradient id={idLin} x1="0%" y1="100%" x2="92%" y2="6%">
             <Stop offset="0" stopColor="#06153d" />
             <Stop offset="0.26" stopColor="#0c3488" />
             <Stop offset="0.5" stopColor="#0038a8" />
@@ -316,14 +316,14 @@ function BrandPanel({ gradientId }: { gradientId: string }) {
             <Stop offset="0.88" stopColor="#7a1428" />
             <Stop offset="1" stopColor="#f2e6a8" />
           </LinearGradient>
-          <RadialGradient id={idRed} cx="100%" cy="4%" r="68%">
-            <Stop offset="0" stopColor="#ce1126" stopOpacity={0.55} />
-            <Stop offset="0.54" stopColor="#ce1126" stopOpacity={0} />
+          <RadialGradient id={idRed} cx="100%" cy="4%" r="72%">
+            <Stop offset="0" stopColor="#ce1126" stopOpacity={0.5} />
+            <Stop offset="0.5" stopColor="#ce1126" stopOpacity={0.08} />
             <Stop offset="1" stopColor="#ce1126" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id={idGold} cx="2%" cy="96%" r="62%">
-            <Stop offset="0" stopColor="#ffecb4" stopOpacity={0.55} />
-            <Stop offset="0.52" stopColor="#ffecb4" stopOpacity={0} />
+          <RadialGradient id={idGold} cx="2%" cy="96%" r="68%">
+            <Stop offset="0" stopColor="#ffecb4" stopOpacity={0.5} />
+            <Stop offset="0.48" stopColor="#ffecb4" stopOpacity={0.08} />
             <Stop offset="1" stopColor="#ffecb4" stopOpacity={0} />
           </RadialGradient>
         </Defs>
@@ -457,7 +457,7 @@ export async function buildBusinessCardsPdfBlob(
   siteBaseUrl?: string
 ): Promise<Blob> {
   const qrSrc = await QRCode.toDataURL(qrUrl, {
-    width: 200,
+    width: 280,
     margin: 1,
     color: { dark: "#0038a8", light: "#ffffff" },
   });
