@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
-
-const FLAN_RAMEKIN_CAP = 16;
+import { FLAN_WEEKLY_CAP_RAMEKINS } from "@/lib/menu-cook-capacity";
 
 const MENU_ITEMS = [
   { id: "lumpia-beef-cooked", name: "Lumpia Beef cooked/doz", price: 14.99, cost: 7.47, cookMin: 15 },
@@ -49,7 +48,7 @@ const BALANCED_PRESET: Partial<Record<ItemId, number>> = {
   "lumpia-pork-cooked": 2,
   "pancit-chicken-24": 1,
   "tocino-pork-plate": 1,
-  "flan": 8,
+  "flan": 12,
 };
 
 const LIGHT_PRESET: Partial<Record<ItemId, number>> = {
@@ -57,7 +56,7 @@ const LIGHT_PRESET: Partial<Record<ItemId, number>> = {
   "lumpia-beef-cooked": 1,
   "pancit-chicken-sm": 1,
   "tocino-chicken-plate": 1,
-  "flan": 4,
+  "flan": 6,
 };
 
 function presetCookMinutes(p: Partial<Record<ItemId, number>>) {
@@ -83,7 +82,7 @@ function scalePreset(
     const q = base[it.id];
     if (q == null || q === 0) continue;
     if (it.id === "flan") {
-      out.flan = Math.min(FLAN_RAMEKIN_CAP, Math.max(0, Math.floor(q * scale)));
+      out.flan = Math.min(FLAN_WEEKLY_CAP_RAMEKINS, Math.max(0, Math.floor(q * scale)));
       continue;
     }
     out[it.id] = Math.max(0, Math.floor(q * scale));
@@ -113,7 +112,7 @@ function normalizeWithinCookCap(qty: Record<ItemId, number>, weeklyCap: number):
     if (best && (q[best.id] ?? 0) > 0) q[best.id] = (q[best.id] ?? 0) - 1;
     else break;
   }
-  if ((q.flan ?? 0) > FLAN_RAMEKIN_CAP) q.flan = FLAN_RAMEKIN_CAP;
+  if ((q.flan ?? 0) > FLAN_WEEKLY_CAP_RAMEKINS) q.flan = FLAN_WEEKLY_CAP_RAMEKINS;
   return q;
 }
 
@@ -160,7 +159,7 @@ function maxProfitQuantities(weeklyCap: number): Record<ItemId, number> {
   }
 
   const flanProfit = profitC("flan");
-  q.flan = flanProfit > 0 ? FLAN_RAMEKIN_CAP : 0;
+  q.flan = flanProfit > 0 ? FLAN_WEEKLY_CAP_RAMEKINS : 0;
   return q;
 }
 
@@ -194,7 +193,7 @@ export function EarningsPlannerClient() {
 
     const profit = revenue - foodCost;
     const overCook = cookMinutes > weeklyCookCap;
-    const overFlan = flanCount > FLAN_RAMEKIN_CAP;
+    const overFlan = flanCount > FLAN_WEEKLY_CAP_RAMEKINS;
 
     return {
       revenue,
@@ -211,7 +210,7 @@ export function EarningsPlannerClient() {
     const n = Number.isFinite(raw) ? Math.max(0, Math.floor(raw)) : 0;
     setQuantities((prev) => {
       const next = { ...prev, [id]: n };
-      if (id === "flan" && n > FLAN_RAMEKIN_CAP) next.flan = FLAN_RAMEKIN_CAP;
+      if (id === "flan" && n > FLAN_WEEKLY_CAP_RAMEKINS) next.flan = FLAN_WEEKLY_CAP_RAMEKINS;
       return next;
     });
   }, []);
@@ -359,7 +358,7 @@ export function EarningsPlannerClient() {
           <li className="flex flex-wrap justify-between gap-2">
             <span>🍮 Flan</span>
             <span className="font-semibold tabular-nums">
-              {totals.flanCount} / {FLAN_RAMEKIN_CAP} ramekins
+              {totals.flanCount} / {FLAN_WEEKLY_CAP_RAMEKINS} ramekins
             </span>
           </li>
         </ul>
@@ -371,7 +370,7 @@ export function EarningsPlannerClient() {
         ) : null}
         {totals.overFlan ? (
           <p className="mt-2 text-base font-semibold text-red-600" role="alert">
-            ⚠️ Flan is limited to {FLAN_RAMEKIN_CAP} ramekins per week in this planner.
+            ⚠️ Flan is limited to {FLAN_WEEKLY_CAP_RAMEKINS} ramekins per week in this planner.
           </p>
         ) : null}
       </div>
@@ -448,7 +447,7 @@ export function EarningsPlannerClient() {
         </h2>
         <p className="mt-1 text-sm text-[var(--text-muted)]">
           Uses your current weekly cook cap ({weeklyCookCap} min). Max Profit solves for highest profit
-          at or below that cap (flan fills to {FLAN_RAMEKIN_CAP} when profitable).
+          at or below that cap (flan fills to {FLAN_WEEKLY_CAP_RAMEKINS} when profitable).
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <button
@@ -541,12 +540,12 @@ export function EarningsPlannerClient() {
             body={
               <>
                 <p>
-                  Flan costs you $2.71 to make and sells for $3.50. You make it on Sunday in batches of 8.
+                  Flan costs you $2.71 to make and sells for $3.50. You make it on Sunday in batches of 12.
                   It sits in the fridge for 4–5 days until pickup Mon–Thurs. It uses{" "}
                   <strong>zero</strong> of your Friday cooking minutes.
                 </p>
                 <p className="mt-2">
-                  16 ramekins × $0.79 profit = $12.64 pure profit from 2 batches on a Sunday afternoon.
+                  24 ramekins × $0.79 profit = $18.96 pure profit from 2 batches on a Sunday afternoon.
                   That&apos;s money that costs you no Friday energy at all.
                 </p>
               </>

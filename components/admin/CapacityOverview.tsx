@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { FLAN_WEEKLY_CAP_RAMEKINS } from "@/lib/menu-cook-capacity";
 
 type Week = {
   weekStart: string;
@@ -95,7 +96,8 @@ export function CapacityOverview() {
         Capacity overview
       </h2>
       <p className="mt-1 text-xs text-[var(--text-muted)]">
-        Live from orders (300 min cook / week, 16 flan ramekins / week). Manual
+        Live from orders (300 min cook / week, {FLAN_WEEKLY_CAP_RAMEKINS} flan ramekins / week).
+        Manual
         close only affects the current week.
       </p>
       {err ? (

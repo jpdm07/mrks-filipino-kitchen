@@ -3,7 +3,8 @@
  * Party / pan sizes removed. Internal economics only (never shown at checkout).
  *
  * Findful 40-pack $8.99 → ~$0.225/unit; modeled as $0.23.
- * Labor: 0.75 hr total per 8-ramekin batch × $15/hr → $1.41 per ramekin.
+ * Labor: 0.75 hr total per batch × $15/hr spread over yield (historic 8-ramekin model → $1.41/ramekin).
+ * Weekly sell-through cap in the app is 24 ramekins (2 batches × 12).
  * Cool completely before snapping the clear lid on — lid is not heat-resistant.
  * No dip cup, foil cover, or gallon freezer bag.
  */

@@ -3,7 +3,8 @@
  * Sync with Prisma seed / admin MenuItem.cookMinutes + isFlanItem.
  */
 export const MAIN_COOK_CAP_MINUTES = 300;
-export const FLAN_WEEKLY_CAP_RAMEKINS = 16;
+/** Two batches × 12 ramekins each (sell-through cap per calendar week). */
+export const FLAN_WEEKLY_CAP_RAMEKINS = 24;
 
 /** Statuses that reserve kitchen capacity (excludes Cancelled, demo, etc.). */
 export const ORDER_STATUSES_COUNTING_TOWARD_CAPACITY = [
