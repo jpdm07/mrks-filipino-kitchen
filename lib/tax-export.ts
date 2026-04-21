@@ -378,7 +378,7 @@ h1{color:#0e1d35;}
 h2{margin-top:2rem;border-bottom:2px solid #0e1d35;padding-bottom:4px;}
 table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px;}
 th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;}
-th{background:#f0f4ff;}
+th{background:#f4e8d1;}
 pre{white-space:pre-wrap;background:#f7f7f7;padding:12px;border-radius:8px;font-size:12px;}
 @media print{body{margin:12px;}h2{page-break-after:avoid;}table{page-break-inside:auto;}tr{page-break-inside:avoid;}}
 </style>
