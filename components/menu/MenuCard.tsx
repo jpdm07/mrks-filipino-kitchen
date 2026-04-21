@@ -45,7 +45,7 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
       });
     });
     return () => window.cancelAnimationFrame(id);
-  }, [item.id, lumpia]);
+  }, [item.id, item.sizes, lumpia]);
 
   const selectedSize = useMemo(() => {
     if (lumpia) {
