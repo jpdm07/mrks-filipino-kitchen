@@ -60,15 +60,13 @@ export function Navbar() {
       ) : null}
       <header
         data-site-chrome
-        className={`sticky top-0 z-50 border-b transition-all duration-300 ${
-          scrolled
-            ? "border-[var(--border)] bg-[var(--card)]/92 shadow-[0_8px_30px_rgba(0,40,100,0.08)] backdrop-blur-md"
-            : "border-transparent bg-[var(--card)]/85 backdrop-blur-sm"
+        className={`sticky top-0 z-50 border-b border-[color:var(--gold-muted)]/35 bg-[color:var(--primary)] shadow-[0_10px_36px_rgba(6,15,31,0.42)] transition-all duration-300 ${
+          scrolled ? "shadow-[0_12px_40px_rgba(6,15,31,0.55)]" : ""
         }`}
       >
         <div className="mx-auto flex max-w-6xl min-w-0 items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-4">
           <Link href="/" className="shrink-0" aria-label="Home">
-            <Logo size="sm" />
+            <Logo size="sm" theme="dark" />
           </Link>
 
           <nav className="hidden items-center gap-8 md:flex">
@@ -76,10 +74,10 @@ export function Navbar() {
               <Link
                 key={l.href}
                 href={l.href}
-                className={`nav-link pb-1 text-sm font-semibold ${
+                className={`nav-link nav-link-on-navy pb-1 text-sm font-semibold ${
                   pathname === l.href
-                    ? "nav-link-active text-[var(--primary)]"
-                    : "text-[var(--text)] hover:text-[var(--primary)]"
+                    ? "nav-link-active nav-link-active-on-navy"
+                    : ""
                 }`}
               >
                 {l.label}
@@ -88,30 +86,33 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <FacebookButton size={22} />
+            <FacebookButton
+              size={22}
+              className="border-[color:var(--gold-muted)]/45 bg-[rgba(251,246,236,0.08)] shadow-none hover:border-[color:var(--gold)]"
+            />
             <button
               type="button"
               onClick={() => openDrawer()}
-              className="btn-icon relative h-11 w-11"
+              className="btn-icon relative h-11 w-11 border-[color:var(--gold-muted)]/35 bg-[rgba(251,246,236,0.06)]"
               aria-label="Open cart"
             >
-              <ShoppingCart className="h-5 w-5 text-[var(--primary)]" />
+              <ShoppingCart className="h-5 w-5 text-[color:var(--cream)]" />
               {itemCount > 0 ? (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[11px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[color:var(--gold)] px-1 text-[11px] font-bold text-[color:var(--primary)]">
                   {itemCount > 99 ? "99+" : itemCount}
                 </span>
               ) : null}
             </button>
             <button
               type="button"
-              className="btn-icon h-11 w-11 md:hidden"
+              className="btn-icon h-11 w-11 border-[color:var(--gold-muted)]/35 bg-[rgba(251,246,236,0.06)] md:hidden"
               onClick={() => setMobileOpen((v) => !v)}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
             >
               {mobileOpen ? (
-                <X className="h-6 w-6" />
+                <X className="h-6 w-6 text-[color:var(--cream)]" />
               ) : (
-                <Menu className="h-6 w-6" />
+                <Menu className="h-6 w-6 text-[color:var(--cream)]" />
               )}
             </button>
           </div>
@@ -119,7 +120,7 @@ export function Navbar() {
 
         {mobileOpen ? (
           <nav
-            className="border-t border-[var(--border)] bg-[var(--card)] shadow-[0_12px_40px_rgba(0,40,100,0.12)] md:hidden"
+            className="border-t border-[color:var(--gold-muted)]/30 bg-[color:var(--primary)] shadow-[0_12px_40px_rgba(6,15,31,0.45)] md:hidden"
             aria-label="Mobile navigation"
           >
             <div className="flex max-h-[min(75vh,480px)] flex-col overflow-y-auto px-4 py-4">
@@ -127,7 +128,7 @@ export function Navbar() {
                 <Link
                   key={l.href}
                   href={l.href}
-                  className="min-h-[48px] py-3 text-lg font-semibold text-[var(--text)] active:bg-[var(--bg-section)]"
+                  className="nav-link-on-navy min-h-[48px] py-3 text-lg font-semibold active:bg-[rgba(251,246,236,0.06)]"
                   onClick={() => setMobileOpen(false)}
                 >
                   {l.label}

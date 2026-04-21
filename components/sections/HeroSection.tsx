@@ -22,7 +22,7 @@ export function HeroSection() {
         className="absolute inset-0"
         style={{
           backgroundImage:
-            "radial-gradient(ellipse 90% 70% at 50% 18%, rgba(255,255,255,0.14), transparent 55%), linear-gradient(135deg, rgba(0,32,92,0.88) 0%, rgba(0,56,168,0.72) 38%, rgba(130,24,40,0.55) 100%)",
+            "radial-gradient(ellipse 88% 65% at 50% 16%, rgba(251,246,236,0.12), transparent 52%), linear-gradient(135deg, rgba(6,15,31,0.91) 0%, rgba(14,29,53,0.82) 42%, rgba(26,48,85,0.68) 100%)",
         }}
       />
       <div
@@ -30,10 +30,10 @@ export function HeroSection() {
         aria-hidden
       />
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-24 text-center">
-        <h1 className="font-[family-name:var(--font-playfair)] text-4xl font-bold leading-tight tracking-tight text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)] sm:text-5xl md:text-6xl">
+        <h1 className="font-playfair text-4xl font-black leading-tight tracking-tight text-[color:var(--cream)] drop-shadow-[0_2px_24px_rgba(6,15,31,0.45)] sm:text-5xl md:text-6xl">
           Authentic Filipino Flavors, Made with Love
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-white/95 drop-shadow-[0_1px_12px_rgba(0,0,0,0.25)]">
+        <p className="mx-auto mt-6 max-w-2xl font-cormorant text-lg text-[color:rgba(251,246,236,0.94)] drop-shadow-[0_1px_12px_rgba(6,15,31,0.35)]">
           Home-cooked meals crafted from generations of tradition. Order for
           pickup in Cypress, TX—we&apos;ll confirm your date after you order.
         </p>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FooterAwareFixedDecor } from "@/components/about/FooterAwareFixedDecor";
+import { PhilippineSun } from "@/components/PhilippineSun";
 
 /** Corner photo — `public/images/aboutpic.jpg` (same folder as menu item photos). */
 const ABOUT_PHOTO_SRC = "/images/aboutpic.jpg";
@@ -42,28 +43,7 @@ export default function AboutPage() {
         <div className="mx-auto min-w-0 w-full max-w-3xl lg:mx-0 lg:max-w-none lg:col-start-1">
           <section className="relative overflow-hidden py-16 md:py-20">
             <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-20">
-              <svg viewBox="0 0 200 200" className="h-64 w-64 text-[var(--gold)]">
-                {[...Array(8)].map((_, i) => {
-                  const a = (i / 8) * Math.PI * 2;
-                  const x1 = 100 + Math.cos(a) * 28;
-                  const y1 = 100 + Math.sin(a) * 28;
-                  const x2 = 100 + Math.cos(a) * 90;
-                  const y2 = 100 + Math.sin(a) * 90;
-                  return (
-                    <line
-                      key={i}
-                      x1={x1}
-                      y1={y1}
-                      x2={x2}
-                      y2={y2}
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                    />
-                  );
-                })}
-                <circle cx="100" cy="100" r="26" fill="var(--primary)" />
-              </svg>
+              <PhilippineSun size={256} color="var(--gold)" decorative />
             </div>
             <div className="relative text-center">
               <p className="font-[family-name:var(--font-playfair)] text-2xl italic text-[var(--primary)] md:text-3xl">

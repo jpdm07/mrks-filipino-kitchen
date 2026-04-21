@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { BusinessCardFace } from "@/components/business-card/BusinessCardFace";
-import { getPublicSiteOrigin } from "@/lib/public-site-url";
+import { getBusinessCardQrUrl } from "@/lib/business-card-qr";
 
 /** 8 cards per US Letter sheet: 2 × 4 @ 3.5" × 2" with trim gaps */
 const CARDS_PER_SHEET = 8;
@@ -50,7 +50,7 @@ export function BusinessCardSheet({
   }, []);
 
   useEffect(() => {
-    setQrHref(getPublicSiteOrigin());
+    setQrHref(getBusinessCardQrUrl());
   }, []);
 
   const downloadPdf = useCallback(async () => {
@@ -127,15 +127,17 @@ export function BusinessCardSheet({
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          #print-area .bc-print-sheet .bc-card--composed {
-            border: 2px solid #0038a8 !important;
+          #print-area .bc-print-sheet .bc-card--rebrand {
+            border: none !important;
           }
           #print-area .bc-print-sheet .bc-card--artwork {
             border: none !important;
           }
-          #print-area .bc-print-sheet .bc-card .bc-card-inner {
-            overflow: hidden !important;
-            border-radius: 0 !important;
+          #print-area .bc-print-sheet .bc-print-cut-r {
+            border-right: 1px dashed rgba(90, 90, 90, 0.55) !important;
+          }
+          #print-area .bc-print-sheet .bc-print-cut-b {
+            border-bottom: 1px dashed rgba(90, 90, 90, 0.55) !important;
           }
         }
       `}</style>
@@ -146,7 +148,7 @@ export function BusinessCardSheet({
               type="button"
               onClick={downloadPdf}
               disabled={pdfBusy}
-              className="rounded-lg bg-[var(--gold)] px-6 py-3 font-bold text-[var(--text)] shadow-md transition enabled:hover:brightness-95 disabled:opacity-60"
+              className="rounded-lg bg-[var(--gold)] px-6 py-3 font-bold text-[color:var(--primary)] shadow-md transition enabled:hover:brightness-95 disabled:opacity-60"
             >
               {pdfBusy ? "Building PDF…" : "Download PDF"}
             </button>
@@ -200,7 +202,12 @@ export function BusinessCardSheet({
 
         <div className="bc-print-sheet hidden" aria-hidden>
           {Array.from({ length: CARDS_PER_SHEET }, (_, i) => (
-            <BusinessCardFace key={i} qrHref={qrHref} />
+            <div
+              key={i}
+              className={`bc-print-cell ${i % 2 === 0 ? "bc-print-cut-r" : ""} ${Math.floor(i / 2) < 3 ? "bc-print-cut-b" : ""}`}
+            >
+              <BusinessCardFace qrHref={qrHref} />
+            </div>
           ))}
         </div>
       </div>

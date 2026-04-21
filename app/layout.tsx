@@ -1,5 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, DM_Sans } from "next/font/google";
+import {
+  Cormorant_Garamond,
+  Dancing_Script,
+  Playfair_Display,
+} from "next/font/google";
 import { Suspense } from "react";
 import "./globals.css";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
@@ -14,19 +18,29 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-playfair",
   display: "swap",
+  weight: ["700", "900"],
+  style: ["normal", "italic"],
 });
 
-const dmSans = DM_Sans({
+const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
-  variable: "--font-dm",
+  variable: "--font-cormorant",
   display: "swap",
+  weight: ["500"],
+});
+
+const dancing = Dancing_Script({
+  subsets: ["latin"],
+  variable: "--font-dancing",
+  display: "swap",
+  weight: ["700"],
 });
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#0038a8",
+  themeColor: "#0E1D35",
 };
 
 export const metadata: Metadata = {
@@ -60,8 +74,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${dmSans.variable}`}>
-      <body className="min-h-screen overflow-x-clip antialiased">
+    <html
+      lang="en"
+      className={`${playfair.variable} ${cormorant.variable} ${dancing.variable}`}
+    >
+      <body className="font-cormorant min-h-screen overflow-x-clip antialiased font-medium">
         <GoogleAnalytics />
         <Suspense fallback={null}>
           <GoogleAnalyticsRouteTracker />

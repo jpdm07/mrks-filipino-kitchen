@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 
+const DEFAULT_QR_DARK = "#0038A8";
+const DEFAULT_QR_LIGHT = "#ffffff";
+
 export function QRCodeDisplay({
   size = 120,
   className = "",
@@ -12,12 +15,17 @@ export function QRCodeDisplay({
   resolutionScale = 1,
   /** Full URL to encode; defaults to public site origin (or current origin in the browser). */
   href,
+  /** QR module colors (hex). Defaults match legacy brand blue on white. */
+  qrDark,
+  qrLight,
 }: {
   size?: number;
   className?: string;
   showDownload?: boolean;
   resolutionScale?: number;
   href?: string;
+  qrDark?: string;
+  qrLight?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [url, setUrl] = useState(() => getPublicSiteOrigin());
@@ -37,9 +45,12 @@ export function QRCodeDisplay({
     QRCode.toCanvas(canvas, url, {
       width: px,
       margin: 1,
-      color: { dark: "#0038A8", light: "#ffffff" },
+      color: {
+        dark: qrDark ?? DEFAULT_QR_DARK,
+        light: qrLight ?? DEFAULT_QR_LIGHT,
+      },
     }).catch(() => {});
-  }, [url, size, resolutionScale]);
+  }, [url, size, resolutionScale, qrDark, qrLight]);
 
   const download = () => {
     const canvas = canvasRef.current;

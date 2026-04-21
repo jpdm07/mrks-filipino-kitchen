@@ -3,6 +3,7 @@ import { MenuCategoryNav } from "@/components/menu/MenuCategoryNav";
 import { MenuGrid } from "@/components/menu/MenuGrid";
 import { MenuKitchenCapacityBanner } from "@/components/menu/MenuKitchenCapacityBanner";
 import { SuggestionPoll } from "@/components/sections/SuggestionPoll";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 import {
   itemVisibleForMenuTab,
   parseMenuCategoryFromSearchParam,
@@ -35,21 +36,18 @@ export default async function MenuPage({ searchParams }: MenuPageProps) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-center font-[family-name:var(--font-playfair)] text-3xl font-bold text-[var(--text)] print:hidden sm:text-4xl">
-        Menu
-      </h1>
-      <div className="mx-auto mt-3 max-w-2xl px-1 text-center print:hidden">
-        <p className="text-sm text-[var(--text-muted)] sm:text-base">
-          Home-cooked Filipino favorites, pickup only in Cypress, TX.
-        </p>
-        <p className="mt-2 text-sm sm:text-base">
-          <Link
-            href="/takeout-menu"
-            className="font-semibold text-[var(--primary)] underline-offset-2 hover:underline"
-          >
-            Open printable takeout menu
-          </Link>
-        </p>
+      <SectionHeading
+        title="Menu"
+        subtitle="Home-cooked Filipino favorites, pickup only in Cypress, TX."
+        className="print:hidden"
+      />
+      <div className="mx-auto mt-6 max-w-2xl px-1 text-center print:hidden">
+        <Link
+          href="/takeout-menu"
+          className="font-semibold text-[color:var(--gold-dark)] underline-offset-4 transition hover:text-[color:var(--primary)] hover:underline"
+        >
+          Open printable takeout menu
+        </Link>
       </div>
       <div className="print:hidden">
         <MenuKitchenCapacityBanner />

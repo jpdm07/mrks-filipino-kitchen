@@ -24,6 +24,6 @@ export function absoluteBusinessCardFaceUrl(): string {
 }
 
 /** QR overlay on the 336×192 px card (tune if your proof’s QR slot differs). */
-export const BC_ART_QR_SIZE_PX = 46;
-export const BC_ART_QR_RIGHT_PX = 10;
-export const BC_ART_QR_BOTTOM_PX = 14;
+export const BC_ART_QR_SIZE_PX = 55;
+export const BC_ART_QR_RIGHT_PX = 12;
+export const BC_ART_QR_BOTTOM_PX = 12;

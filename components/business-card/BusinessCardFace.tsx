@@ -59,6 +59,8 @@ function CardFaceArtwork({
             resolutionScale={4}
             showDownload={false}
             href={qrHref}
+            qrDark="#0E1D35"
+            qrLight="#FBF6EC"
             className="gap-0"
           />
         ) : (

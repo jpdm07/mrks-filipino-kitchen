@@ -1,31 +1,33 @@
 import { SITE } from "@/lib/config";
 
-/**
- * Display copy aligned with the approved business-card PDF (tracked typography).
- */
+/** Left stack — FILIPINO KITCHEN (single line of caps in layout). */
+export const BC_FILIPINO_KITCHEN_CARD = "FILIPINO KITCHEN";
 
-/**
- * Right column headline — spaced capitals (matches print proof).
- * Two lines: typical InDesign business card line break after "FILIPINO".
- */
-export const BC_LEGAL_HEADLINE_LINE1 = "M R . K ’ S   F I L I P I N O";
-export const BC_LEGAL_HEADLINE_LINE2 = "K I T C H E N";
+/** Right panel headline (single uppercase line under gold rule). */
+export const BC_RIGHT_HEADLINE = "MR. K'S FILIPINO KITCHEN";
 
-/** Full string (e.g. single-line fallbacks, search). */
-export const BC_LEGAL_HEADLINE_TRACKED = `${BC_LEGAL_HEADLINE_LINE1}   ${BC_LEGAL_HEADLINE_LINE2}`;
+/** Line 1 of left tagline block (Cormorant italic). */
+export const BC_TAGLINE_MAIN = "Authentic Filipino Food";
 
-/** Left panel: second tracked line under “Mr. K’s✦”. */
-export const BC_FILIPINO_KITCHEN_TRACKED = "F I L I P I N O   K I T C H E N";
-
-/** Left panel tagline (print proof says “Food”, not “Kitchen”). */
-export const BC_BRAND_TAGLINE = "Authentic Filipino Food";
+/** Line 2 — location / pickup (Cormorant italic). */
+export const BC_TAGLINE_LOCATION = "Cypress, TX · Pickup only";
 
 /** Facebook row — readable label (not raw URL). */
 export function facebookCardLabel(): string {
   return `Facebook · ${SITE.name}`;
 }
 
-/** QR column — matches print proof. */
-export const BC_ORDER_TRACKED = "O R D E R";
-export const BC_ONLINE_TRACKED = "O N L I N E";
+/** Bottom-left queue labels (tracked uppercase). */
+export const BC_ORDER_TRACKED = "ORDER";
+export const BC_ONLINE_TRACKED = "ONLINE";
 export const BC_SCAN_ARROW = "Scan →";
+
+/** Alias for layouts that expected tracked uppercase block text. */
+export const BC_FILIPINO_KITCHEN_TRACKED = BC_FILIPINO_KITCHEN_CARD;
+
+/** Alias — tagline first line only (second line uses {@link BC_TAGLINE_LOCATION}). */
+export const BC_BRAND_TAGLINE = BC_TAGLINE_MAIN;
+
+/** Alias — right panel headline single line (no second line in new proof). */
+export const BC_LEGAL_HEADLINE_LINE1 = BC_RIGHT_HEADLINE;
+export const BC_LEGAL_HEADLINE_LINE2 = "";

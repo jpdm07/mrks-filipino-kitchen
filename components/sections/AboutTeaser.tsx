@@ -1,36 +1,12 @@
 import Link from "next/link";
+import { PhilippineSun } from "@/components/PhilippineSun";
 
 export function AboutTeaser() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-16">
       <div className="grid items-center gap-10 md:grid-cols-2">
         <div className="flex justify-center">
-          <svg
-            viewBox="0 0 200 200"
-            className="h-48 w-48 text-[var(--gold)] md:h-56 md:w-56"
-            aria-hidden
-          >
-            {[...Array(8)].map((_, i) => {
-              const a = (i / 8) * Math.PI * 2;
-              const x1 = 100 + Math.cos(a) * 30;
-              const y1 = 100 + Math.sin(a) * 30;
-              const x2 = 100 + Math.cos(a) * 85;
-              const y2 = 100 + Math.sin(a) * 85;
-              return (
-                <line
-                  key={i}
-                  x1={x1}
-                  y1={y1}
-                  x2={x2}
-                  y2={y2}
-                  stroke="currentColor"
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                />
-              );
-            })}
-            <circle cx="100" cy="100" r="28" fill="var(--primary)" />
-          </svg>
+          <PhilippineSun size={192} color="var(--gold)" decorative />
         </div>
         <div>
           <h2 className="font-[family-name:var(--font-playfair)] text-3xl font-bold text-[var(--text)]">

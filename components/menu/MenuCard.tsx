@@ -96,18 +96,20 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
         />
         <MenuPhotoComingSoonOverlay />
         {item.soldOut ? (
-          <span className="pointer-events-none absolute left-3 top-3 z-[2] rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-bold text-white">
+          <span className="pointer-events-none absolute left-3 top-3 z-[2] rounded-full bg-[color:var(--primary)] px-3 py-1 text-xs font-bold text-[color:var(--cream)]">
             Sold Out
           </span>
         ) : null}
       </div>
       <div className="flex min-h-0 flex-1 flex-col p-4">
         <div className="flex min-h-0 flex-1 flex-col">
-          <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[var(--text)]">
-            {item.name}
+          <h3 className="font-playfair text-lg font-black italic tracking-wide text-[color:var(--primary)]">
+            {item.name.toUpperCase()}
           </h3>
-          <p className="text-sm text-[var(--text-muted)]">{item.calories}</p>
-          <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
+          <p className="font-cormorant text-sm text-[var(--text-muted)]">
+            {item.calories}
+          </p>
+          <p className="mt-2 font-cormorant text-sm italic leading-relaxed text-[color:var(--text)]">
             {takeoutLineSplit.dipNote
               ? [takeoutLineSplit.lead, takeoutLineSplit.dipNote]
                   .filter(Boolean)
@@ -176,7 +178,7 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
             variant="menu"
           />
 
-          <p className="mt-3 text-xl font-bold text-[var(--primary)]">
+          <p className="mt-3 font-playfair text-xl font-bold text-[color:var(--primary)]">
             ${safeUnitPrice.toFixed(2)}
           </p>
 

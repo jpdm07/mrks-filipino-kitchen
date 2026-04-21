@@ -11,6 +11,7 @@ import { overlayPublicMenuItemFromCatalog } from "@/lib/menu-catalog-merge";
 import { FALLBACK_MENU } from "@/lib/static-menu-fallback";
 import { lumpiaCheapestDozenRetailUsd } from "@/lib/lumpia-cost-model";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
+import { SectionHeading } from "@/components/ui/SectionHeading";
 
 export async function FeaturedItems() {
   const ids = ["seed-1", "seed-4", "seed-6"];
@@ -52,10 +53,8 @@ export async function FeaturedItems() {
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-16">
-      <h2 className="text-center font-[family-name:var(--font-playfair)] text-3xl font-bold text-[var(--text)] md:text-4xl">
-        Our Most Loved Dishes
-      </h2>
-      <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-3 [&>*]:min-h-0 [&>*]:h-full">
+      <SectionHeading title="Our Most Loved Dishes" />
+      <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3 [&>*]:min-h-0 [&>*]:h-full">
         {ordered.map((item) => {
           const price =
             item.variantGroup === "lumpia"
@@ -77,14 +76,14 @@ export async function FeaturedItems() {
                 <MenuPhotoComingSoonOverlay />
               </div>
               <div className="flex min-h-0 flex-1 flex-col p-5">
-                <h3 className="font-[family-name:var(--font-playfair)] text-xl font-bold">
-                  {item.groupCardTitle ?? item.name}
+                <h3 className="font-playfair text-xl font-black italic tracking-wide text-[color:var(--primary)]">
+                  {(item.groupCardTitle ?? item.name).toUpperCase()}
                 </h3>
                 <p className="text-sm text-[var(--text-muted)]">{item.calories}</p>
-                <p className="mt-2 min-h-0 flex-1 text-sm text-[var(--text)]">
+                <p className="mt-2 min-h-0 flex-1 font-cormorant text-sm italic leading-relaxed text-[color:var(--text)]">
                   {item.description}
                 </p>
-                <p className="mt-4 text-lg font-bold text-[var(--primary)]">
+                <p className="mt-4 font-playfair text-lg font-bold text-[color:var(--primary)]">
                   From ${price.toFixed(2)}
                 </p>
                 <Link

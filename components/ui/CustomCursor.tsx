@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { PhilippineSun } from "@/components/PhilippineSun";
 
 const SUN_SIZE = 28;
 const HISTORY_LEN = 48;
@@ -27,29 +28,6 @@ function isInteractiveTarget(el: Element | null): boolean {
     "a[href], button, [role='button'], [role='link'], [role='tab'], input, textarea, select, label, summary, .btn"
   );
   return Boolean(node);
-}
-
-function FlagSun() {
-  return (
-    <svg
-      width={SUN_SIZE}
-      height={SUN_SIZE}
-      viewBox="0 0 28 28"
-      aria-hidden
-    >
-      <g transform="translate(14,14)">
-        {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
-          <path
-            key={deg}
-            transform={`rotate(${deg})`}
-            d="M 0 -13 L 1.35 -4.5 L -1.35 -4.5 Z"
-            fill="#FFC200"
-          />
-        ))}
-        <circle r="5" fill="#E6A800" />
-      </g>
-    </svg>
-  );
 }
 
 function TrailStar({ size, fill }: { size: number; fill: string }) {
@@ -203,7 +181,7 @@ export function CustomCursor() {
         style={{
           zIndex: 8,
           background:
-            "radial-gradient(circle, rgba(0,56,168,0.42) 0%, rgba(0,56,168,0.12) 45%, transparent 72%)",
+            "radial-gradient(circle, rgba(26,48,85,0.42) 0%, rgba(14,29,53,0.12) 45%, transparent 72%)",
           filter: "blur(6px)",
         }}
       />
@@ -239,7 +217,11 @@ export function CustomCursor() {
           transition: "filter 0.18s ease",
         }}
       >
-        <FlagSun />
+        <PhilippineSun
+          size={SUN_SIZE}
+          color="#FFC200"
+          decorative
+        />
       </div>
     </div>
   );

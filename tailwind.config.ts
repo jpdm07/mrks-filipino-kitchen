@@ -8,11 +8,22 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        playfair: ["var(--font-playfair)", "Georgia", "serif"],
+        cormorant: ["var(--font-cormorant)", "Georgia", "serif"],
+        dancing: ["var(--font-dancing)", "cursive"],
+      },
       colors: {
         mrk: {
-          primary: "var(--primary)",
-          accent: "var(--accent)",
+          navy: "var(--primary)",
+          "navy-deep": "var(--primary-deep)",
+          "navy-light": "var(--primary-soft)",
           gold: "var(--gold)",
+          "gold-muted": "var(--gold-muted)",
+          "gold-dark": "var(--gold-dark)",
+          cream: "var(--cream)",
+          "cream-deep": "var(--cream-deep)",
+          body: "var(--text)",
         },
       },
     },

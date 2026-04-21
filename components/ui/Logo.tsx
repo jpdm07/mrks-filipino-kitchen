@@ -1,170 +1,156 @@
-type LogoSize = "sm" | "md" | "lg" | "xl";
+import { PhilippineSun } from "@/components/PhilippineSun";
 
-type Layout = {
-  w: number;
-  h: number;
-  sunCx: number;
-  sunCy: number;
-  sunOuter: number;
-  sunInner: number;
-  titleY: number;
-  titleFs: number;
-  lineY: number;
-  lineHalfW: number;
-  subY: number;
-  subFs: number;
+export type LogoSize = "sm" | "md" | "lg" | "xl";
+export type LogoVariant = "horizontal" | "stacked";
+export type LogoTheme = "light" | "dark";
+
+type SizePreset = {
+  sun: number;
+  mrKsClass: string;
+  fkClass: string;
+  taglineClass: string;
+  dividerWidthClass: string;
 };
 
-const layouts: Record<LogoSize, Layout> = {
+const SIZE_PRESET: Record<LogoSize, SizePreset> = {
   sm: {
-    w: 132,
-    h: 52,
-    sunCx: 66,
-    sunCy: 12,
-    sunOuter: 15,
-    sunInner: 6,
-    titleY: 28,
-    titleFs: 15,
-    lineY: 34,
-    lineHalfW: 40,
-    subY: 46,
-    subFs: 6.5,
+    sun: 38,
+    mrKsClass: "text-[1.65rem] sm:text-[1.75rem]",
+    fkClass: "text-[10px] tracking-[0.22em]",
+    taglineClass: "text-[11px]",
+    dividerWidthClass: "max-w-[88px]",
   },
   md: {
-    w: 172,
-    h: 64,
-    sunCx: 86,
-    sunCy: 14,
-    sunOuter: 18,
-    sunInner: 7,
-    titleY: 34,
-    titleFs: 19,
-    lineY: 41,
-    lineHalfW: 52,
-    subY: 56,
-    subFs: 8,
+    sun: 48,
+    mrKsClass: "text-[2rem] sm:text-[2.35rem]",
+    fkClass: "text-[11px] tracking-[0.24em] sm:text-xs",
+    taglineClass: "text-sm",
+    dividerWidthClass: "max-w-[112px]",
   },
   lg: {
-    w: 228,
-    h: 82,
-    sunCx: 114,
-    sunCy: 18,
-    sunOuter: 22,
-    sunInner: 9,
-    titleY: 44,
-    titleFs: 25,
-    lineY: 52,
-    lineHalfW: 68,
-    subY: 72,
-    subFs: 10,
+    sun: 56,
+    mrKsClass: "text-[2.5rem] sm:text-[2.85rem]",
+    fkClass: "text-xs tracking-[0.26em] sm:text-sm",
+    taglineClass: "text-sm sm:text-base",
+    dividerWidthClass: "max-w-[128px]",
   },
   xl: {
-    w: 288,
-    h: 102,
-    sunCx: 144,
-    sunCy: 22,
-    sunOuter: 28,
-    sunInner: 11,
-    titleY: 56,
-    titleFs: 32,
-    lineY: 66,
-    lineHalfW: 86,
-    subY: 90,
-    subFs: 12,
+    sun: 72,
+    mrKsClass: "text-[3rem] sm:text-[3.5rem] md:text-[3.75rem]",
+    fkClass: "text-sm tracking-[0.28em] sm:text-[15px]",
+    taglineClass: "text-base sm:text-lg",
+    dividerWidthClass: "max-w-[160px]",
   },
 };
+
+function LogoDivider({
+  theme,
+  widthClass,
+}: {
+  theme: LogoTheme;
+  widthClass: string;
+}) {
+  const line = "bg-[color:var(--gold-muted)]";
+  const spark =
+    theme === "dark"
+      ? "text-[color:var(--gold)]"
+      : "text-[color:var(--gold)]";
+  return (
+    <div
+      className={`flex w-full items-center justify-center gap-1.5 ${widthClass}`}
+      aria-hidden
+    >
+      <span className={`h-px flex-1 rounded-full ${line}`} />
+      <span className={`shrink-0 leading-none ${spark}`}>✦</span>
+      <span className={`h-px flex-1 rounded-full ${line}`} />
+    </div>
+  );
+}
 
 export function Logo({
   size = "md",
+  variant = "horizontal",
+  theme = "light",
+  showTagline = false,
+  /** When true, same as `theme="dark"` (wordmark for dark/navy panels). */
   light = false,
 }: {
   size?: LogoSize;
+  variant?: LogoVariant;
+  theme?: LogoTheme;
+  showTagline?: boolean;
   light?: boolean;
 }) {
-  const L = layouts[size];
-  const cx = L.sunCx;
-  const cy = L.sunCy;
-  const rays = 8;
-  const outer = L.sunOuter;
-  const inner = L.sunInner;
-  const rayPath: string[] = [];
-  for (let i = 0; i < rays; i++) {
-    const a1 = ((i - 0.35) / rays) * Math.PI * 2;
-    const a2 = ((i + 0.35) / rays) * Math.PI * 2;
-    const x1 = cx + Math.cos(a1) * inner;
-    const y1 = cy + Math.sin(a1) * inner;
-    const x2 = cx + Math.cos(a2) * inner;
-    const y2 = cy + Math.sin(a2) * inner;
-    const xo = cx + Math.cos((a1 + a2) / 2) * outer;
-    const yo = cy + Math.sin((a1 + a2) / 2) * outer;
-    rayPath.push(
-      `M${x1.toFixed(1)},${y1.toFixed(1)} L${xo.toFixed(1)},${yo.toFixed(1)} L${x2.toFixed(1)},${y2.toFixed(1)} Z`
+  const effectiveTheme: LogoTheme = light ? "dark" : theme;
+  const P = SIZE_PRESET[size];
+
+  const mrKsColor =
+    effectiveTheme === "dark"
+      ? "text-[color:var(--gold)]"
+      : "text-[color:var(--gold)]";
+  const fkColor =
+    effectiveTheme === "dark"
+      ? "text-[color:var(--cream)]"
+      : "text-[color:var(--primary)]";
+  const taglineColor =
+    effectiveTheme === "dark"
+      ? "text-[color:var(--cream-deep)] italic"
+      : "text-[color:var(--text-muted)] italic";
+
+  const sunColor =
+    effectiveTheme === "dark"
+      ? "var(--gold)"
+      : "var(--gold)";
+
+  const lockupText = (
+    <div
+      className={`flex min-w-0 flex-col justify-center gap-1 ${
+        variant === "stacked" ? "items-center text-center" : ""
+      }`}
+    >
+      <span
+        className={`font-[family-name:var(--font-dancing)] font-bold leading-none ${mrKsColor} ${P.mrKsClass}`}
+      >
+        Mr. K&apos;s
+      </span>
+      <LogoDivider theme={effectiveTheme} widthClass={P.dividerWidthClass} />
+      <span
+        className={`font-[family-name:var(--font-playfair)] font-bold uppercase ${fkColor} ${P.fkClass}`}
+      >
+        FILIPINO KITCHEN
+      </span>
+      {showTagline ? (
+        <span
+          className={`font-[family-name:var(--font-cormorant)] font-medium ${taglineColor} ${P.taglineClass}`}
+        >
+          Authentic Filipino Food · Cypress, TX
+        </span>
+      ) : null}
+    </div>
+  );
+
+  const sunEl = (
+    <PhilippineSun
+      size={P.sun}
+      color={sunColor}
+      decorative
+      className="shrink-0"
+    />
+  );
+
+  if (variant === "stacked") {
+    return (
+      <div className="flex flex-col items-center gap-2 text-center">
+        {sunEl}
+        {lockupText}
+      </div>
     );
   }
 
-  const titleFill = light ? "#ffffff" : "var(--primary)";
-  const lineStroke = light ? "#FFC200" : "var(--accent)";
-  const subFill = "var(--gold)";
-
   return (
-    <svg
-      width={L.w}
-      height={L.h}
-      viewBox={`0 0 ${L.w} ${L.h}`}
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-label="Mr. K's Filipino Kitchen"
-    >
-      <g opacity={light ? 0.14 : 0.2}>
-        {rayPath.map((p, i) => (
-          <path
-            key={i}
-            d={p}
-            fill={light ? "#fff1c8" : "var(--gold)"}
-          />
-        ))}
-        <circle
-          cx={cx}
-          cy={cy}
-          r={inner - 0.5}
-          fill={light ? "#ffffff" : "var(--gold-light)"}
-        />
-      </g>
-      <text
-        x={L.sunCx}
-        y={L.titleY}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fill={titleFill}
-        style={{
-          fontFamily: "var(--font-playfair), serif",
-          fontSize: L.titleFs,
-          fontWeight: 700,
-        }}
-      >
-        Mr. K&apos;s
-      </text>
-      <path
-        d={`M${L.sunCx - L.lineHalfW} ${L.lineY} L${L.sunCx + L.lineHalfW} ${L.lineY}`}
-        stroke={lineStroke}
-        strokeWidth={1.35}
-        strokeLinecap="round"
-      />
-      <text
-        x={L.sunCx}
-        y={L.subY}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fill={subFill}
-        style={{
-          fontFamily: "var(--font-dm), system-ui, sans-serif",
-          fontSize: L.subFs,
-          fontWeight: 600,
-          letterSpacing: "0.12em",
-        }}
-      >
-        FILIPINO KITCHEN
-      </text>
-    </svg>
+    <div className="flex min-w-0 items-center gap-3">
+      {sunEl}
+      <div className="min-w-0 flex-1">{lockupText}</div>
+    </div>
   );
 }
