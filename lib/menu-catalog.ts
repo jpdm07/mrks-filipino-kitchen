@@ -267,7 +267,7 @@ export const MENU_CATALOG = [
     id: "seed-13",
     name: "Yema",
     description:
-      "Soft Filipino milk candy — sweet, creamy, and rolled into bite-sized balls. A classic merienda treat and an easy add-on to any order.",
+      "Soft Filipino milk candy — homemade***, sweet, creamy, rolled into bite-sized balls. A classic merienda treat and an easy add-on to any order.",
     category: "Desserts",
     calories: "~85 cal per piece (estimate)",
     basePrice: YEMA_RETAIL_SINGLE_USD,
