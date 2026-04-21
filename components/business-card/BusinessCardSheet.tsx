@@ -2,12 +2,20 @@
 
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import {
+  BC_BRAND_TAGLINE,
+  BC_FILIPINO_KITCHEN_TRACKED,
+  BC_LEGAL_HEADLINE_TRACKED,
+  BC_ONLINE_TRACKED,
+  BC_ORDER_TRACKED,
+  BC_SCAN_ARROW,
+  facebookCardLabel,
+} from "@/components/business-card/business-card-copy";
 import { FacebookIcon } from "@/components/ui/FacebookIcon";
-import { Logo } from "@/components/ui/Logo";
 import { QRCodeDisplay } from "@/components/ui/QRCodeDisplay";
 import { SITE } from "@/lib/config";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
-import { businessCardUrlDisplay, hrefWithHttps } from "@/lib/url-display";
+import { hrefWithHttps } from "@/lib/url-display";
 
 /** 8 cards per US Letter sheet: 2 × 4 @ 3.5" × 2" with trim gaps */
 const CARDS_PER_SHEET = 8;
@@ -26,10 +34,8 @@ const brandPanelStyle: CSSProperties = {
 
 function BusinessCardFace({
   qrHref,
-  siteBaseUrl,
 }: {
   qrHref: string | null;
-  siteBaseUrl: string | null;
 }) {
   return (
     <div className="bc-card box-border h-[192px] w-[336px] max-w-none shrink-0 border-2 border-[var(--primary)] bg-white shadow-[var(--shadow-lg)] print:h-[192px] print:w-[336px] print:max-w-none print:shadow-none">
@@ -38,12 +44,20 @@ function BusinessCardFace({
           className="flex w-[min(50%,168px)] shrink-0 flex-col items-center justify-center px-3 py-3 print:border-0"
           style={brandPanelStyle}
         >
-          <div className="flex flex-col items-center text-center">
-            <Logo size="sm" light />
-            <p className="mt-2 max-w-[140px] font-[family-name:var(--font-playfair)] text-[7px] font-bold uppercase leading-tight tracking-[0.12em] text-[var(--gold)] [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
-              Authentic Filipino Kitchen
+          <div className="flex flex-col items-center text-center px-1">
+            <p className="flex flex-wrap items-baseline justify-center gap-0.5 font-[family-name:var(--font-playfair)] text-[14px] font-bold leading-none text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
+              Mr. K&apos;s
+              <span className="text-[15px] leading-none text-[var(--gold)]" aria-hidden>
+                ✦
+              </span>
             </p>
-            <p className="mt-1 text-[6.5px] font-medium text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
+            <p className="mt-2 max-w-[152px] font-[family-name:var(--font-playfair)] text-[6px] font-bold leading-snug tracking-[0.06em] text-[var(--gold)] [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+              {BC_FILIPINO_KITCHEN_TRACKED}
+            </p>
+            <p className="mt-2 max-w-[148px] font-[family-name:var(--font-playfair)] text-[7px] font-bold leading-tight text-[var(--gold)] [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+              {BC_BRAND_TAGLINE}
+            </p>
+            <p className="mt-2 text-[6.5px] font-medium text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
               Cypress, TX · Pickup only
             </p>
           </div>
@@ -51,8 +65,8 @@ function BusinessCardFace({
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col px-2.5 py-2">
         <div className="min-w-0 flex-1 space-y-0.5 text-[8px] leading-snug text-[var(--text)]">
-          <p className="font-[family-name:var(--font-playfair)] text-[13px] font-bold leading-none text-[var(--primary)]">
-            {SITE.name}
+          <p className="text-center font-[family-name:var(--font-playfair)] text-[9px] font-bold leading-snug text-[var(--primary)]">
+            {BC_LEGAL_HEADLINE_TRACKED}
           </p>
           <a
             href={SITE.phoneTel}
@@ -75,20 +89,10 @@ function BusinessCardFace({
             className="mt-1 flex min-w-0 max-w-full flex-nowrap items-center gap-1"
           >
             <FacebookIcon size={11} className="shrink-0 text-[#1877F2]" />
-            <span className="min-w-0 flex-1 truncate text-[6px] font-semibold leading-none tracking-tight text-[#1877F2]">
-              {businessCardUrlDisplay(SITE.facebookUrl)}
+            <span className="min-w-0 flex-1 text-[6px] font-semibold leading-snug text-[#1877F2]">
+              {facebookCardLabel()}
             </span>
           </a>
-          {siteBaseUrl ? (
-            <p className="mt-1 flex min-w-0 flex-nowrap items-center gap-0.5 text-[7px] leading-none text-[var(--text-muted)]">
-              <span className="shrink-0 font-semibold text-[var(--text)]">
-                Website:
-              </span>
-              <span className="min-w-0 flex-1 truncate font-medium text-[var(--text)]">
-                {businessCardUrlDisplay(siteBaseUrl)}
-              </span>
-            </p>
-          ) : null}
         </div>
 
         <div className="mt-1 flex shrink-0 justify-end border-t border-[var(--border)] pt-1.5">
@@ -108,8 +112,14 @@ function BusinessCardFace({
                 aria-hidden
               />
             )}
-            <p className="mt-0.5 text-center text-[6px] font-bold uppercase leading-tight tracking-wide text-[var(--accent)]">
-              Order online
+            <p className="mt-1 text-center font-[family-name:var(--font-playfair)] text-[5.5px] font-bold leading-tight tracking-[0.12em] text-[var(--accent)]">
+              {BC_ORDER_TRACKED}
+            </p>
+            <p className="mt-0.5 text-center font-[family-name:var(--font-playfair)] text-[5.5px] font-bold leading-tight tracking-[0.12em] text-[var(--accent)]">
+              {BC_ONLINE_TRACKED}
+            </p>
+            <p className="mt-1 text-center text-[6px] font-medium text-[var(--text-muted)]">
+              {BC_SCAN_ARROW}
             </p>
           </div>
         </div>
@@ -303,18 +313,14 @@ export function BusinessCardSheet({
                   : undefined
               }
             >
-              <BusinessCardFace qrHref={qrHref} siteBaseUrl={siteBaseUrl} />
+              <BusinessCardFace qrHref={qrHref} />
             </div>
           </div>
         </div>
 
         <div className="bc-print-sheet hidden" aria-hidden>
           {Array.from({ length: CARDS_PER_SHEET }, (_, i) => (
-            <BusinessCardFace
-              key={i}
-              qrHref={qrHref}
-              siteBaseUrl={siteBaseUrl}
-            />
+            <BusinessCardFace key={i} qrHref={qrHref} />
           ))}
         </div>
       </div>

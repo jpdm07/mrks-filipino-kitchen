@@ -14,24 +14,21 @@ import {
   Stop,
   Rect,
   Path,
-  Circle,
-  Line,
-  G,
   pdf,
   Link,
 } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import { SITE } from "@/lib/config";
-import { businessCardUrlDisplay, hrefWithHttps } from "@/lib/url-display";
-
-const LOGO_WORDMARK_TITLE = "Mr. K\u2019s";
-
-function siteBaseFromQrUrl(qrUrl: string): string {
-  return qrUrl
-    .trim()
-    .replace(/\/?order\/?$/i, "")
-    .replace(/\/+$/, "");
-}
+import { hrefWithHttps } from "@/lib/url-display";
+import {
+  BC_BRAND_TAGLINE,
+  BC_FILIPINO_KITCHEN_TRACKED,
+  BC_LEGAL_HEADLINE_TRACKED,
+  BC_ONLINE_TRACKED,
+  BC_ORDER_TRACKED,
+  BC_SCAN_ARROW,
+  facebookCardLabel,
+} from "@/components/business-card/business-card-copy";
 
 const PT = 72;
 const CARD_W = 3.5 * PT;
@@ -46,44 +43,6 @@ const GAP = 0.125 * PT;
 /** Map screen px from 336px-wide card design → PDF points (3.5" = CARD_W) */
 const PX = (n: number) => (n * CARD_W) / 336;
 
-/** Same geometry as `Logo` size="sm" (light variant) */
-const LOGO_SM = {
-  w: 132,
-  h: 52,
-  sunCx: 66,
-  sunCy: 12,
-  sunOuter: 15,
-  sunInner: 6,
-  titleY: 28,
-  titleFs: 15,
-  lineY: 34,
-  lineHalfW: 40,
-  subY: 46,
-  subFs: 6.5,
-} as const;
-
-function smLogoRayPaths(): string[] {
-  const { sunCx: cx, sunCy: cy, sunOuter: outer, sunInner: inner } = LOGO_SM;
-  const rays = 8;
-  const rayPath: string[] = [];
-  for (let i = 0; i < rays; i++) {
-    const a1 = ((i - 0.35) / rays) * Math.PI * 2;
-    const a2 = ((i + 0.35) / rays) * Math.PI * 2;
-    const x1 = cx + Math.cos(a1) * inner;
-    const y1 = cy + Math.sin(a1) * inner;
-    const x2 = cx + Math.cos(a2) * inner;
-    const y2 = cy + Math.sin(a2) * inner;
-    const xo = cx + Math.cos((a1 + a2) / 2) * outer;
-    const yo = cy + Math.sin((a1 + a2) / 2) * outer;
-    rayPath.push(
-      `M${x1.toFixed(1)},${y1.toFixed(1)} L${xo.toFixed(1)},${yo.toFixed(1)} L${x2.toFixed(1)},${y2.toFixed(1)} Z`
-    );
-  }
-  return rayPath;
-}
-
-const RAY_PATHS = smLogoRayPaths();
-
 /** Facebook “f” mark (matches site `FacebookIcon` path, print scale). */
 function FacebookMarkPdf({ size = 6 }: { size?: number }) {
   return (
@@ -92,60 +51,6 @@ function FacebookMarkPdf({ size = 6 }: { size?: number }) {
         d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
         fill="#1877F2"
       />
-    </Svg>
-  );
-}
-
-/** Renders the sun + wordmark like the site Logo (sm, light). */
-function BrandLogoMarkPdf() {
-  const L = LOGO_SM;
-  return (
-    <Svg width={118} height={46} viewBox={`0 0 ${L.w} ${L.h}`}>
-      <G opacity={0.13}>
-        {RAY_PATHS.map((d, i) => (
-          <Path key={i} d={d} fill="#fff1c8" />
-        ))}
-        <Circle
-          cx={L.sunCx}
-          cy={L.sunCy}
-          r={L.sunInner - 0.5}
-          fill="#ffffff"
-        />
-      </G>
-      <Text
-        x={L.sunCx}
-        y={L.titleY}
-        style={{
-          fontFamily: "Helvetica-Bold",
-          fontSize: L.titleFs,
-          fill: "#ffffff",
-        }}
-        textAnchor="middle"
-      >
-        {LOGO_WORDMARK_TITLE}
-      </Text>
-      <Line
-        x1={L.sunCx - L.lineHalfW}
-        y1={L.lineY}
-        x2={L.sunCx + L.lineHalfW}
-        y2={L.lineY}
-        stroke="#FFC200"
-        strokeWidth={1.35}
-        strokeLinecap="round"
-      />
-      <Text
-        x={L.sunCx}
-        y={L.subY}
-        style={{
-          fontFamily: "Helvetica-Bold",
-          fontSize: L.subFs,
-          fill: "#e8b923",
-          letterSpacing: 1.2,
-        }}
-        textAnchor="middle"
-      >
-        FILIPINO KITCHEN
-      </Text>
     </Svg>
   );
 }
@@ -199,14 +104,40 @@ const styles = StyleSheet.create({
     paddingLeft: PX(12),
     paddingRight: PX(12),
   },
-  brandLine1: {
-    fontSize: PX(7),
+  brandMrKsRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "center",
+    gap: 2,
+  },
+  brandMrKs: {
+    fontSize: PX(13),
+    fontFamily: "Helvetica-Bold",
+    color: "#ffffff",
+  },
+  brandSpark: {
+    fontSize: PX(14),
+    fontFamily: "Helvetica-Bold",
+    color: "#FFC200",
+    marginTop: -PX(3),
+  },
+  brandTrackedFilipino: {
+    fontSize: PX(6),
+    fontFamily: "Helvetica-Bold",
     fontWeight: "bold",
     color: "#e8b923",
     textAlign: "center",
-    textTransform: "uppercase",
-    marginTop: PX(2),
-    letterSpacing: 0.4,
+    marginTop: PX(8),
+    lineHeight: 1.35,
+  },
+  brandFoodTagline: {
+    fontSize: PX(7),
+    fontFamily: "Helvetica-Bold",
+    fontWeight: "bold",
+    color: "#e8b923",
+    textAlign: "center",
+    marginTop: PX(10),
+    lineHeight: 1.25,
   },
   brandLine2: {
     fontSize: PX(6.5),
@@ -224,10 +155,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: "#ffffff",
   },
-  bizName: {
-    fontSize: PX(13),
+  legalHeadline: {
+    fontSize: PX(5),
+    fontFamily: "Helvetica-Bold",
     fontWeight: "bold",
     color: "#0038a8",
+    textAlign: "center",
+    marginBottom: PX(6),
+    lineHeight: 1.35,
   },
   contact: {
     fontSize: PX(8),
@@ -240,17 +175,6 @@ const styles = StyleSheet.create({
     color: "#5c5866",
     marginTop: PX(1),
   },
-  /** “Website:” label (URL is sibling Text for one-line layout) */
-  websiteLine: {
-    fontSize: PX(7),
-    color: "#14121a",
-    fontWeight: "bold",
-  },
-  websiteUrlPart: {
-    fontSize: PX(7),
-    color: "#14121a",
-    fontWeight: "normal",
-  },
   fbRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -259,12 +183,13 @@ const styles = StyleSheet.create({
     gap: 2,
     overflow: "hidden",
   },
-  fbUrlText: {
-    fontSize: PX(6),
+  fbCardLabel: {
+    fontSize: PX(6.25),
     color: "#1877F2",
-    lineHeight: 1.05,
+    lineHeight: 1.08,
     flex: 1,
     minWidth: 0,
+    fontFamily: "Helvetica-Bold",
     fontWeight: "bold",
   },
   bottomRow: {
@@ -277,12 +202,29 @@ const styles = StyleSheet.create({
     borderTopColor: "#e5dfd3",
     borderTopStyle: "solid",
   },
-  orderLabel: {
-    fontSize: PX(6),
+  orderTrackedFirst: {
+    fontSize: PX(5.5),
+    fontFamily: "Helvetica-Bold",
     fontWeight: "bold",
     color: "#ce1126",
-    textTransform: "uppercase",
+    marginTop: PX(4),
+    textAlign: "center",
+    letterSpacing: 0.8,
+  },
+  orderTrackedNext: {
+    fontSize: PX(5.5),
+    fontFamily: "Helvetica-Bold",
+    fontWeight: "bold",
+    color: "#ce1126",
     marginTop: PX(2),
+    textAlign: "center",
+    letterSpacing: 0.8,
+  },
+  scanHint: {
+    fontSize: PX(6),
+    fontFamily: "Helvetica",
+    color: "#5c5866",
+    marginTop: PX(3),
     textAlign: "center",
   },
   qrCol: {
@@ -332,8 +274,12 @@ function BrandPanel({ gradientId }: { gradientId: string }) {
         <Rect x="0" y="0" width={INNER_HALF} height={INNER_H} fill={`url(#${idRed})`} />
       </Svg>
       <View style={styles.brandTextWrap}>
-        <BrandLogoMarkPdf />
-        <Text style={styles.brandLine1}>Authentic Filipino Kitchen</Text>
+        <View style={styles.brandMrKsRow}>
+          <Text style={styles.brandMrKs}>Mr. K&apos;s</Text>
+          <Text style={styles.brandSpark}>✦</Text>
+        </View>
+        <Text style={styles.brandTrackedFilipino}>{BC_FILIPINO_KITCHEN_TRACKED}</Text>
+        <Text style={styles.brandFoodTagline}>{BC_BRAND_TAGLINE}</Text>
         <Text style={styles.brandLine2}>Cypress, TX · Pickup only</Text>
       </View>
     </View>
@@ -342,64 +288,30 @@ function BrandPanel({ gradientId }: { gradientId: string }) {
 
 function SingleCard({
   qrSrc,
-  qrUrl,
-  siteBaseUrl,
   index,
 }: {
   qrSrc: string;
-  qrUrl: string;
-  siteBaseUrl?: string;
   index: number;
 }) {
-  const websiteHref = hrefWithHttps(
-    siteBaseUrl?.trim() || siteBaseFromQrUrl(qrUrl)
-  );
-  const websiteDisplay = businessCardUrlDisplay(websiteHref);
   const facebookHref = hrefWithHttps(SITE.facebookUrl);
-  const facebookDisplay = businessCardUrlDisplay(SITE.facebookUrl);
   return (
     <View style={styles.cardOuter}>
       <View style={styles.cardInner}>
         <BrandPanel gradientId={`bc-grad-${index}`} />
         <View style={styles.rightCol}>
           <View>
-            <Text style={styles.bizName}>{SITE.name}</Text>
+            <Text style={styles.legalHeadline}>{BC_LEGAL_HEADLINE_TRACKED}</Text>
             <Text style={styles.contact}>{SITE.phoneDisplay}</Text>
             <Text style={styles.contactMuted}>{SITE.email}</Text>
             <Text style={styles.contactMuted}>{SITE.location}</Text>
             <Link src={facebookHref}>
               <View style={styles.fbRow}>
                 <FacebookMarkPdf size={PX(11)} />
-                <Text style={styles.fbUrlText} wrap={false}>
-                  {facebookDisplay}
+                <Text style={styles.fbCardLabel} wrap={false}>
+                  {facebookCardLabel()}
                 </Text>
               </View>
             </Link>
-            <View
-              style={{
-                flexDirection: "row",
-                flexWrap: "nowrap",
-                marginTop: 2,
-                gap: 3,
-                alignItems: "center",
-                overflow: "hidden",
-              }}
-            >
-              <Text style={styles.websiteLine} wrap={false}>
-                Website:
-              </Text>
-              <Text
-                style={{
-                  ...styles.websiteUrlPart,
-                  flexGrow: 1,
-                  flexShrink: 1,
-                  minWidth: 0,
-                }}
-                wrap={false}
-              >
-                {websiteDisplay}
-              </Text>
-            </View>
           </View>
           <View style={styles.bottomRow}>
             <View style={styles.qrCol}>
@@ -408,7 +320,9 @@ function SingleCard({
                 src={qrSrc}
                 style={{ width: PX(46), height: PX(46) }}
               />
-              <Text style={styles.orderLabel}>Order online</Text>
+              <Text style={styles.orderTrackedFirst}>{BC_ORDER_TRACKED}</Text>
+              <Text style={styles.orderTrackedNext}>{BC_ONLINE_TRACKED}</Text>
+              <Text style={styles.scanHint}>{BC_SCAN_ARROW}</Text>
             </View>
           </View>
         </View>
@@ -419,25 +333,17 @@ function SingleCard({
 
 export function BusinessCardPdfDocument({
   qrSrc,
-  qrUrl,
-  siteBaseUrl,
 }: {
   qrSrc: string;
-  qrUrl: string;
-  siteBaseUrl?: string;
 }) {
   const rows = [0, 1, 2, 3].map((r) => (
     <View key={r} style={styles.row}>
       <SingleCard
         qrSrc={qrSrc}
-        qrUrl={qrUrl}
-        siteBaseUrl={siteBaseUrl}
         index={r * 2}
       />
       <SingleCard
         qrSrc={qrSrc}
-        qrUrl={qrUrl}
-        siteBaseUrl={siteBaseUrl}
         index={r * 2 + 1}
       />
     </View>
@@ -461,11 +367,5 @@ export async function buildBusinessCardsPdfBlob(
     margin: 1,
     color: { dark: "#0038a8", light: "#ffffff" },
   });
-  return pdf(
-    <BusinessCardPdfDocument
-      qrSrc={qrSrc}
-      qrUrl={qrUrl}
-      siteBaseUrl={siteBaseUrl}
-    />
-  ).toBlob();
+  return pdf(<BusinessCardPdfDocument qrSrc={qrSrc} />).toBlob();
 }
