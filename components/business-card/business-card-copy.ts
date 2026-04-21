@@ -4,9 +4,15 @@ import { SITE } from "@/lib/config";
  * Display copy aligned with the approved business-card PDF (tracked typography).
  */
 
-/** Right column headline — spaced capitals (matches print proof). */
-export const BC_LEGAL_HEADLINE_TRACKED =
-  "M R . K ’ S   F I L I P I N O   K I T C H E N";
+/**
+ * Right column headline — spaced capitals (matches print proof).
+ * Two lines: typical InDesign business card line break after "FILIPINO".
+ */
+export const BC_LEGAL_HEADLINE_LINE1 = "M R . K ’ S   F I L I P I N O";
+export const BC_LEGAL_HEADLINE_LINE2 = "K I T C H E N";
+
+/** Full string (e.g. single-line fallbacks, search). */
+export const BC_LEGAL_HEADLINE_TRACKED = `${BC_LEGAL_HEADLINE_LINE1}   ${BC_LEGAL_HEADLINE_LINE2}`;
 
 /** Left panel: second tracked line under “Mr. K’s✦”. */
 export const BC_FILIPINO_KITCHEN_TRACKED = "F I L I P I N O   K I T C H E N";

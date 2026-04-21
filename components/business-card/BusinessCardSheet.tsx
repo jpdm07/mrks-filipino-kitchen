@@ -5,7 +5,8 @@ import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import {
   BC_BRAND_TAGLINE,
   BC_FILIPINO_KITCHEN_TRACKED,
-  BC_LEGAL_HEADLINE_TRACKED,
+  BC_LEGAL_HEADLINE_LINE1,
+  BC_LEGAL_HEADLINE_LINE2,
   BC_ONLINE_TRACKED,
   BC_ORDER_TRACKED,
   BC_SCAN_ARROW,
@@ -45,32 +46,37 @@ function BusinessCardFace({
           style={brandPanelStyle}
         >
           <div className="flex flex-col items-center text-center px-1">
-            <p className="flex flex-wrap items-baseline justify-center gap-0.5 font-[family-name:var(--font-playfair)] text-[14px] font-bold leading-none text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
+            <p className="flex flex-wrap items-baseline justify-center gap-px font-[family-name:var(--font-playfair)] text-[13px] font-bold leading-none tracking-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
               Mr. K&apos;s
-              <span className="text-[15px] leading-none text-[var(--gold)]" aria-hidden>
+              <span className="translate-y-px text-[14px] leading-none text-[var(--gold)]" aria-hidden>
                 ✦
               </span>
             </p>
-            <p className="mt-2 max-w-[152px] font-[family-name:var(--font-playfair)] text-[6px] font-bold leading-snug tracking-[0.06em] text-[var(--gold)] [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+            <p className="mt-2 max-w-[156px] font-[family-name:var(--font-playfair)] text-[6.5px] font-bold leading-snug tracking-[0.08em] text-[var(--gold)] [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
               {BC_FILIPINO_KITCHEN_TRACKED}
             </p>
-            <p className="mt-2 max-w-[148px] font-[family-name:var(--font-playfair)] text-[7px] font-bold leading-tight text-[var(--gold)] [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+            <p className="mt-2.5 max-w-[154px] font-[family-name:var(--font-playfair)] text-[7px] font-semibold leading-snug text-[var(--gold)] [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
               {BC_BRAND_TAGLINE}
             </p>
-            <p className="mt-2 text-[6.5px] font-medium text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
+            <p className="mt-2.5 text-[6.5px] font-medium leading-tight text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)]">
               Cypress, TX · Pickup only
             </p>
           </div>
         </div>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col px-2.5 py-2">
-        <div className="min-w-0 flex-1 space-y-0.5 text-[8px] leading-snug text-[var(--text)]">
-          <p className="text-center font-[family-name:var(--font-playfair)] text-[9px] font-bold leading-snug text-[var(--primary)]">
-            {BC_LEGAL_HEADLINE_TRACKED}
-          </p>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col items-stretch text-left text-[8px] leading-snug text-[var(--text)]">
+          <div className="min-w-0">
+            <p className="font-[family-name:var(--font-playfair)] text-[8px] font-bold leading-[1.15] text-[var(--primary)]">
+              {BC_LEGAL_HEADLINE_LINE1}
+            </p>
+            <p className="font-[family-name:var(--font-playfair)] text-[8px] font-bold leading-[1.15] text-[var(--primary)]">
+              {BC_LEGAL_HEADLINE_LINE2}
+            </p>
+          </div>
           <a
             href={SITE.phoneTel}
-            className="block font-bold text-[var(--text)] hover:text-[var(--primary)]"
+            className="mt-1 block font-bold text-[var(--text)] hover:text-[var(--primary)]"
           >
             {SITE.phoneDisplay}
           </a>
@@ -86,17 +92,28 @@ function BusinessCardFace({
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Facebook profile"
-            className="mt-1 flex min-w-0 max-w-full flex-nowrap items-center gap-1"
+            className="mt-1 flex min-w-0 max-w-full flex-nowrap items-start gap-1"
           >
-            <FacebookIcon size={11} className="shrink-0 text-[#1877F2]" />
-            <span className="min-w-0 flex-1 text-[6px] font-semibold leading-snug text-[#1877F2]">
+            <FacebookIcon size={11} className="mt-0.5 shrink-0 text-[#1877F2]" />
+            <span className="min-w-0 flex-1 text-[6.5px] font-semibold leading-snug text-[var(--text)]">
               {facebookCardLabel()}
             </span>
           </a>
         </div>
 
-        <div className="mt-1 flex shrink-0 justify-end border-t border-[var(--border)] pt-1.5">
-          <div className="flex w-[52px] flex-col items-center">
+        <div className="mt-auto flex shrink-0 flex-row items-end justify-between gap-2 border-t border-[var(--border)] pt-1.5">
+          <div className="flex min-w-0 flex-1 flex-col items-start justify-end pb-0.5">
+            <p className="font-[family-name:var(--font-playfair)] text-[6px] font-bold leading-none tracking-[0.14em] text-[var(--accent)]">
+              {BC_ORDER_TRACKED}
+            </p>
+            <p className="mt-0.5 font-[family-name:var(--font-playfair)] text-[6px] font-bold leading-none tracking-[0.14em] text-[var(--accent)]">
+              {BC_ONLINE_TRACKED}
+            </p>
+            <p className="mt-1 text-[6.5px] font-medium leading-none text-[var(--text-muted)]">
+              {BC_SCAN_ARROW}
+            </p>
+          </div>
+          <div className="flex w-[52px] shrink-0 flex-col items-center">
             {qrHref ? (
               <QRCodeDisplay
                 size={46}
@@ -112,15 +129,6 @@ function BusinessCardFace({
                 aria-hidden
               />
             )}
-            <p className="mt-1 text-center font-[family-name:var(--font-playfair)] text-[5.5px] font-bold leading-tight tracking-[0.12em] text-[var(--accent)]">
-              {BC_ORDER_TRACKED}
-            </p>
-            <p className="mt-0.5 text-center font-[family-name:var(--font-playfair)] text-[5.5px] font-bold leading-tight tracking-[0.12em] text-[var(--accent)]">
-              {BC_ONLINE_TRACKED}
-            </p>
-            <p className="mt-1 text-center text-[6px] font-medium text-[var(--text-muted)]">
-              {BC_SCAN_ARROW}
-            </p>
           </div>
         </div>
       </div>

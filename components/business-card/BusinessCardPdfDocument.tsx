@@ -23,7 +23,8 @@ import { hrefWithHttps } from "@/lib/url-display";
 import {
   BC_BRAND_TAGLINE,
   BC_FILIPINO_KITCHEN_TRACKED,
-  BC_LEGAL_HEADLINE_TRACKED,
+  BC_LEGAL_HEADLINE_LINE1,
+  BC_LEGAL_HEADLINE_LINE2,
   BC_ONLINE_TRACKED,
   BC_ORDER_TRACKED,
   BC_SCAN_ARROW,
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
     fontSize: PX(6.5),
     color: "#ffffff",
     textAlign: "center",
-    marginTop: PX(2),
+    marginTop: PX(8),
   },
   rightCol: {
     flex: 1,
@@ -155,19 +156,21 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: "#ffffff",
   },
-  legalHeadline: {
-    fontSize: PX(5),
+  legalLine: {
+    fontSize: PX(5.25),
     fontFamily: "Helvetica-Bold",
     fontWeight: "bold",
     color: "#0038a8",
-    textAlign: "center",
-    marginBottom: PX(6),
-    lineHeight: 1.35,
+    textAlign: "left",
+    lineHeight: 1.25,
+  },
+  legalLineGap: {
+    marginTop: PX(2),
   },
   contact: {
     fontSize: PX(8),
     color: "#14121a",
-    marginTop: PX(2),
+    marginTop: PX(6),
     fontWeight: "bold",
   },
   contactMuted: {
@@ -185,8 +188,8 @@ const styles = StyleSheet.create({
   },
   fbCardLabel: {
     fontSize: PX(6.25),
-    color: "#1877F2",
-    lineHeight: 1.08,
+    color: "#14121a",
+    lineHeight: 1.15,
     flex: 1,
     minWidth: 0,
     fontFamily: "Helvetica-Bold",
@@ -194,38 +197,49 @@ const styles = StyleSheet.create({
   },
   bottomRow: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     alignItems: "flex-end",
     marginTop: PX(4),
     paddingTop: PX(6),
     borderTopWidth: 1,
     borderTopColor: "#e5dfd3",
     borderTopStyle: "solid",
+    gap: PX(8),
+  },
+  orderStack: {
+    flexDirection: "column",
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    alignItems: "flex-start",
+    justifyContent: "flex-end",
   },
   orderTrackedFirst: {
-    fontSize: PX(5.5),
+    fontSize: PX(6),
     fontFamily: "Helvetica-Bold",
     fontWeight: "bold",
     color: "#ce1126",
-    marginTop: PX(4),
-    textAlign: "center",
-    letterSpacing: 0.8,
+    textAlign: "left",
+    letterSpacing: 1,
+    lineHeight: 1,
   },
   orderTrackedNext: {
-    fontSize: PX(5.5),
+    fontSize: PX(6),
     fontFamily: "Helvetica-Bold",
     fontWeight: "bold",
     color: "#ce1126",
-    marginTop: PX(2),
-    textAlign: "center",
-    letterSpacing: 0.8,
+    marginTop: PX(3),
+    textAlign: "left",
+    letterSpacing: 1,
+    lineHeight: 1,
   },
   scanHint: {
-    fontSize: PX(6),
+    fontSize: PX(6.5),
     fontFamily: "Helvetica",
     color: "#5c5866",
-    marginTop: PX(3),
-    textAlign: "center",
+    marginTop: PX(6),
+    textAlign: "left",
+    lineHeight: 1,
   },
   qrCol: {
     width: PX(52),
@@ -300,7 +314,10 @@ function SingleCard({
         <BrandPanel gradientId={`bc-grad-${index}`} />
         <View style={styles.rightCol}>
           <View>
-            <Text style={styles.legalHeadline}>{BC_LEGAL_HEADLINE_TRACKED}</Text>
+            <Text style={styles.legalLine}>{BC_LEGAL_HEADLINE_LINE1}</Text>
+            <Text style={[styles.legalLine, styles.legalLineGap]}>
+              {BC_LEGAL_HEADLINE_LINE2}
+            </Text>
             <Text style={styles.contact}>{SITE.phoneDisplay}</Text>
             <Text style={styles.contactMuted}>{SITE.email}</Text>
             <Text style={styles.contactMuted}>{SITE.location}</Text>
@@ -314,15 +331,17 @@ function SingleCard({
             </Link>
           </View>
           <View style={styles.bottomRow}>
+            <View style={styles.orderStack}>
+              <Text style={styles.orderTrackedFirst}>{BC_ORDER_TRACKED}</Text>
+              <Text style={styles.orderTrackedNext}>{BC_ONLINE_TRACKED}</Text>
+              <Text style={styles.scanHint}>{BC_SCAN_ARROW}</Text>
+            </View>
             <View style={styles.qrCol}>
               {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf Image has no alt */}
               <Image
                 src={qrSrc}
                 style={{ width: PX(46), height: PX(46) }}
               />
-              <Text style={styles.orderTrackedFirst}>{BC_ORDER_TRACKED}</Text>
-              <Text style={styles.orderTrackedNext}>{BC_ONLINE_TRACKED}</Text>
-              <Text style={styles.scanHint}>{BC_SCAN_ARROW}</Text>
             </View>
           </View>
         </View>
