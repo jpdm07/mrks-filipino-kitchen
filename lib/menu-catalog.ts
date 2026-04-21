@@ -7,11 +7,16 @@
  * Tocino list prices from `tocino-cost-model.ts` (COGS for Sheets via `menu-item-unit-costs`).
  * Adobo list prices from `adobo-cost-model.ts`.
  * Flan retail is `FLAN_RETAIL_PER_RAMEKIN_USD` in `flan-cost-model.ts` (individual ramekin only).
+ * Yema retail is `YEMA_RETAIL_*` in `yema-cost-model.ts`.
  * Edit here first, then run: npx prisma db seed (or update rows in Admin → Menu Manager / DB).
  */
 
 import { ADOBO_RETAIL_USD } from "./adobo-cost-model";
 import { FLAN_RETAIL_PER_RAMEKIN_USD } from "./flan-cost-model";
+import {
+  YEMA_RETAIL_SINGLE_USD,
+  YEMA_RETAIL_SIX_PACK_USD,
+} from "./yema-cost-model";
 import { LUMPIA_RETAIL_USD } from "./lumpia-cost-model";
 import { TOCINO_RETAIL_USD } from "./tocino-cost-model";
 import {
@@ -44,6 +49,9 @@ export const TOCINO_IMAGE = "/images/tocino.jpg";
 /** Caramel flan — add `public/images/flan.jpg`. */
 export const FLAN_IMAGE = "/images/flan.jpg";
 
+/** Yema candy — `public/images/yema.jpg`. */
+export const YEMA_IMAGE = "/images/yema.jpg";
+
 /** Chicken adobo — `public/images/chickenadobo.jpeg`. */
 export const ADOBO_IMAGE = "/images/chickenadobo.jpeg";
 
@@ -75,6 +83,7 @@ export const CATALOG_PHOTOS = {
   lumpia: LUMPIA_IMAGE,
   pancit: PANCIT_IMAGE,
   flan: FLAN_IMAGE,
+  yema: YEMA_IMAGE,
   quail: QUAIL_EGGS_IMAGE,
   tocino: TOCINO_IMAGE,
   adobo: ADOBO_IMAGE,
@@ -255,6 +264,31 @@ export const MENU_CATALOG = [
     sortOrder: 6,
   },
   {
+    id: "seed-13",
+    name: "Yema",
+    description:
+      "Soft Filipino milk candy — sweet, creamy, and rolled into bite-sized balls. A classic merienda treat and an easy add-on to any order.",
+    category: "Desserts",
+    calories: "~85 cal per piece (estimate)",
+    basePrice: YEMA_RETAIL_SINGLE_USD,
+    sizes: [
+      {
+        key: "single",
+        label: "Per piece",
+        price: YEMA_RETAIL_SINGLE_USD,
+      },
+      {
+        key: "six",
+        label: "6 pieces (bundle)",
+        price: YEMA_RETAIL_SIX_PACK_USD,
+      },
+    ],
+    photoUrl: CATALOG_PHOTOS.yema,
+    hasCooked: false,
+    hasFrozen: false,
+    sortOrder: 7,
+  },
+  {
     id: "seed-7",
     name: "Quail Eggs (10 pcs)",
     description:
@@ -266,7 +300,7 @@ export const MENU_CATALOG = [
     photoUrl: CATALOG_PHOTOS.quail,
     hasCooked: false,
     hasFrozen: false,
-    sortOrder: 7,
+    sortOrder: 8,
   },
   {
     id: "seed-8",
@@ -286,7 +320,7 @@ export const MENU_CATALOG = [
     photoUrl: CATALOG_PHOTOS.tocino,
     hasCooked: true,
     hasFrozen: false,
-    sortOrder: 8,
+    sortOrder: 9,
     variantGroup: "tocino",
     variantShortLabel: "Pork",
     groupCardTitle: "Tocino",
@@ -309,7 +343,7 @@ export const MENU_CATALOG = [
     photoUrl: CATALOG_PHOTOS.tocino,
     hasCooked: true,
     hasFrozen: false,
-    sortOrder: 9,
+    sortOrder: 10,
     variantGroup: "tocino",
     variantShortLabel: "Chicken",
     groupCardTitle: "Tocino",
@@ -332,7 +366,7 @@ export const MENU_CATALOG = [
     photoUrl: CATALOG_PHOTOS.tocino,
     hasCooked: false,
     hasFrozen: true,
-    sortOrder: 10,
+    sortOrder: 11,
     variantGroup: "tocino",
     variantShortLabel: "Pork",
     groupCardTitle: "Tocino",
@@ -355,7 +389,7 @@ export const MENU_CATALOG = [
     photoUrl: CATALOG_PHOTOS.tocino,
     hasCooked: false,
     hasFrozen: true,
-    sortOrder: 11,
+    sortOrder: 12,
     variantGroup: "tocino",
     variantShortLabel: "Chicken",
     groupCardTitle: "Tocino",
@@ -383,7 +417,7 @@ export const MENU_CATALOG = [
     photoUrl: CATALOG_PHOTOS.adobo,
     hasCooked: false,
     hasFrozen: false,
-    sortOrder: 12,
+    sortOrder: 13,
   },
 ] as const;
 

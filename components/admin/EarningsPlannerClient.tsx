@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { FLAN_WEEKLY_CAP_RAMEKINS } from "@/lib/menu-cook-capacity";
+import {
+  YEMA_COGS_PER_PIECE_USD,
+  YEMA_PLANNER_WEEKLY_PIECES_CAP,
+  YEMA_RETAIL_SINGLE_USD,
+} from "@/lib/yema-cost-model";
 
 const MENU_ITEMS = [
   { id: "lumpia-beef-cooked", name: "Lumpia Beef cooked/doz", price: 14.99, cost: 7.47, cookMin: 15 },
@@ -25,6 +30,13 @@ const MENU_ITEMS = [
   { id: "adobo-party", name: "Chicken Adobo Party Tray", price: 55.0, cost: 27.88, cookMin: 75 },
   { id: "quail", name: "Quail Eggs (10 pcs)", price: 7.99, cost: 3.82, cookMin: 20 },
   { id: "flan", name: "Caramel Flan (ramekin)", price: 3.5, cost: 2.71, cookMin: 0 },
+  {
+    id: "yema",
+    name: "Yema (per piece)",
+    price: YEMA_RETAIL_SINGLE_USD,
+    cost: YEMA_COGS_PER_PIECE_USD,
+    cookMin: 0,
+  },
 ] as const;
 
 type ItemId = (typeof MENU_ITEMS)[number]["id"];
@@ -49,6 +61,7 @@ const BALANCED_PRESET: Partial<Record<ItemId, number>> = {
   "pancit-chicken-24": 1,
   "tocino-pork-plate": 1,
   "flan": 12,
+  "yema": 18,
 };
 
 const LIGHT_PRESET: Partial<Record<ItemId, number>> = {
@@ -57,6 +70,7 @@ const LIGHT_PRESET: Partial<Record<ItemId, number>> = {
   "pancit-chicken-sm": 1,
   "tocino-chicken-plate": 1,
   "flan": 6,
+  "yema": 12,
 };
 
 function presetCookMinutes(p: Partial<Record<ItemId, number>>) {
@@ -83,6 +97,13 @@ function scalePreset(
     if (q == null || q === 0) continue;
     if (it.id === "flan") {
       out.flan = Math.min(FLAN_WEEKLY_CAP_RAMEKINS, Math.max(0, Math.floor(q * scale)));
+      continue;
+    }
+    if (it.id === "yema") {
+      out.yema = Math.min(
+        YEMA_PLANNER_WEEKLY_PIECES_CAP,
+        Math.max(0, Math.floor(q * scale))
+      );
       continue;
     }
     out[it.id] = Math.max(0, Math.floor(q * scale));
@@ -113,6 +134,7 @@ function normalizeWithinCookCap(qty: Record<ItemId, number>, weeklyCap: number):
     else break;
   }
   if ((q.flan ?? 0) > FLAN_WEEKLY_CAP_RAMEKINS) q.flan = FLAN_WEEKLY_CAP_RAMEKINS;
+  if ((q.yema ?? 0) > YEMA_PLANNER_WEEKLY_PIECES_CAP) q.yema = YEMA_PLANNER_WEEKLY_PIECES_CAP;
   return q;
 }
 
@@ -160,6 +182,8 @@ function maxProfitQuantities(weeklyCap: number): Record<ItemId, number> {
 
   const flanProfit = profitC("flan");
   q.flan = flanProfit > 0 ? FLAN_WEEKLY_CAP_RAMEKINS : 0;
+  const yemaProfit = profitC("yema");
+  q.yema = yemaProfit > 0 ? YEMA_PLANNER_WEEKLY_PIECES_CAP : 0;
   return q;
 }
 
@@ -181,6 +205,7 @@ export function EarningsPlannerClient() {
     let foodCost = 0;
     let cookMinutes = 0;
     let flanCount = 0;
+    let yemaPieceCount = 0;
 
     for (const it of MENU_ITEMS) {
       const q = quantities[it.id] ?? 0;
@@ -188,12 +213,14 @@ export function EarningsPlannerClient() {
       revenue += q * it.price;
       foodCost += q * it.cost;
       if (it.id === "flan") flanCount += q;
+      else if (it.id === "yema") yemaPieceCount += q;
       else cookMinutes += q * it.cookMin;
     }
 
     const profit = revenue - foodCost;
     const overCook = cookMinutes > weeklyCookCap;
     const overFlan = flanCount > FLAN_WEEKLY_CAP_RAMEKINS;
+    const overYema = yemaPieceCount > YEMA_PLANNER_WEEKLY_PIECES_CAP;
 
     return {
       revenue,
@@ -201,8 +228,10 @@ export function EarningsPlannerClient() {
       profit,
       cookMinutes,
       flanCount,
+      yemaPieceCount,
       overCook,
       overFlan,
+      overYema,
     };
   }, [quantities, weeklyCookCap]);
 
@@ -211,6 +240,8 @@ export function EarningsPlannerClient() {
     setQuantities((prev) => {
       const next = { ...prev, [id]: n };
       if (id === "flan" && n > FLAN_WEEKLY_CAP_RAMEKINS) next.flan = FLAN_WEEKLY_CAP_RAMEKINS;
+      if (id === "yema" && n > YEMA_PLANNER_WEEKLY_PIECES_CAP)
+        next.yema = YEMA_PLANNER_WEEKLY_PIECES_CAP;
       return next;
     });
   }, []);
@@ -361,6 +392,12 @@ export function EarningsPlannerClient() {
               {totals.flanCount} / {FLAN_WEEKLY_CAP_RAMEKINS} ramekins
             </span>
           </li>
+          <li className="flex flex-wrap justify-between gap-2">
+            <span>🍬 Yema (pieces)</span>
+            <span className="font-semibold tabular-nums">
+              {totals.yemaPieceCount} / {YEMA_PLANNER_WEEKLY_PIECES_CAP}
+            </span>
+          </li>
         </ul>
         {totals.overCook ? (
           <p className="mt-3 text-base font-semibold text-red-600" role="alert">
@@ -371,6 +408,12 @@ export function EarningsPlannerClient() {
         {totals.overFlan ? (
           <p className="mt-2 text-base font-semibold text-red-600" role="alert">
             ⚠️ Flan is limited to {FLAN_WEEKLY_CAP_RAMEKINS} ramekins per week in this planner.
+          </p>
+        ) : null}
+        {totals.overYema ? (
+          <p className="mt-2 text-base font-semibold text-red-600" role="alert">
+            ⚠️ Yema is capped at {YEMA_PLANNER_WEEKLY_PIECES_CAP} pieces per week in this planner (
+            {money(YEMA_RETAIL_SINGLE_USD)}/pc menu).
           </p>
         ) : null}
       </div>

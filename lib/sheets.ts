@@ -55,6 +55,15 @@ export function lineToSheetsOrderPayload(
       frozenBag: false,
     };
   }
+  if (/\byema\b/i.test(i.name)) {
+    return {
+      ...base,
+      container: "wrapped candy / bag",
+      dipCup: false,
+      foilCover: false,
+      frozenBag: false,
+    };
+  }
   return base;
 }
 

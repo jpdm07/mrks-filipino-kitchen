@@ -70,6 +70,7 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
     addLine({
       menuItemId: item.id,
       name: item.name,
+      category: item.category,
       photoUrl: item.photoUrl,
       quantity: qty,
       unitPrice: safeUnitPrice,

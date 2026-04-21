@@ -123,6 +123,7 @@ export function isDessertFlanLine(line: OrderItemLine): boolean {
   const cat = (line.category ?? "").toLowerCase();
   if (cat.includes("dessert")) return true;
   if (/flan|leche flan/i.test(line.name)) return true;
+  if (/\byema\b/i.test(line.name)) return true;
   return false;
 }
 

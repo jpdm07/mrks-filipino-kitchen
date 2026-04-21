@@ -5,6 +5,8 @@ export type CartLine = {
   id: string;
   menuItemId: string;
   name: string;
+  /** Menu category (for prep summaries and analytics on saved orders). */
+  category?: string;
   photoUrl: string;
   quantity: number;
   unitPrice: number;
@@ -112,5 +114,6 @@ export function cartLinesToOrderItems(lines: CartLine[]): OrderItemLine[] {
     cookedOrFrozen: l.cookedOrFrozen,
     menuItemId: l.menuItemId,
     isSample: false,
+    ...(l.category?.trim() ? { category: l.category.trim() } : {}),
   }));
 }

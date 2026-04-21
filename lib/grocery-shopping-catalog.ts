@@ -157,14 +157,14 @@ export const GROCERY_CATALOG: GroceryCatalogLine[] = [
   },
   {
     id: "condensed-milk",
-    label: "Sweetened condensed milk (flan)",
+    label: "Sweetened condensed milk (flan, yema)",
     store: "Kroger",
     unit: "2×14 oz",
     anticipatedUsd: 5.0,
   },
   {
     id: "evaporated-milk",
-    label: "Evaporated milk (flan)",
+    label: "Evaporated milk (flan; optional for yema batches)",
     store: "Kroger",
     unit: "12 oz",
     anticipatedUsd: 1.5,

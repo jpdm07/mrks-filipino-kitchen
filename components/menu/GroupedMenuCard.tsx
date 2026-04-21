@@ -232,6 +232,7 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
     addLine({
       menuItemId: variant.id,
       name: variant.name,
+      category: variant.category,
       photoUrl: variant.photoUrl,
       quantity: qty,
       unitPrice: safeUnitPrice,

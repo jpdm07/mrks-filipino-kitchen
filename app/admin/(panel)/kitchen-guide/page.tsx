@@ -9,6 +9,11 @@ const RECIPES = [
     title: "Caramel Flan",
     body: `1 BATCH: 1 can sweetened condensed milk · 1 can evaporated milk · 1 tsp vanilla extract · 3 eggs · 1 cup sugar (caramel syrup) · 1 pinch salt.\n\nCONTAINER: Findful 5oz silver ramekins + clear lids — bake/serve in same ramekin.\n\nMake caramel from the sugar; strain custard twice; divide into ramekins; steam or water bath until set; cool fully — lid only when cold.`,
   },
+  {
+    id: "yema",
+    title: "Yema (milk candy)",
+    body: `Milk-candy balls — cook sweetened condensed milk with egg yolks and a little butter until thick; cool slightly; scoop or roll into balls (optional coat in sugar).\n\nRETAIL: $1.50/pc · $7/6 pc bundle.\n\nPack in small cups or parchment; no dip cup.`,
+  },
   { id: "tocino-mar", title: "Tocino marinade", body: `Batch from 1 lb pork shoulder/belly OR chicken thighs (¼\" slices); ¼ c brown sugar; 3 tbsp soy; 2 tbsp white vinegar; 1 tsp annatto; 4 garlic cloves; ½ tsp salt. Marinate overnight. Plates: pan-fry complete plate with egg, rice, veg, dip. RETAIL FROZEN PACK: portion 12 oz (340g) marinated meat per bag — seal + parchment, gallon or quart freezer bag per your workflow.` },
   { id: "tocino-plate", title: "Tocino plate assembly", body: `5–6 slices + sunny egg + 1 c jasmine rice + 3 cucumber + 3 tomato + garlic crisps + 1 dip cup in 3-comp foam.` },
   { id: "adobo", title: "Chicken adobo (balanced sauce)", body: `2.2 lb drumsticks/thighs mix as needed; ⅓ c soy; ¼ c vinegar; ¾ c water; 1 head garlic; 2 bay; 1 tsp peppercorns; 1–2 tsp sugar; 1–2 tbsp oil. Sear, add liquids, boil, simmer covered 15–20 min, uncover and reduce until glossy. Rest 10–15 min.\n\nPLATE (menu — 1 serving): 1 drumstick + 1 thigh; 1 fried egg; 1 c jasmine rice; adobo sauce; 1 dip; 3-comp foam. PARTY: 9×13 tray, 8–10 srv; include small dips for the group.` },

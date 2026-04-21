@@ -37,6 +37,9 @@ export const COOK_MINUTES_BY_MENU_ITEM: Record<
     bySize: { individual: 0 },
     isFlan: true,
   },
+  "seed-13": {
+    bySize: { single: 0, six: 0 },
+  },
   "seed-7": {
     bySize: { "10pc": 20 },
   },
