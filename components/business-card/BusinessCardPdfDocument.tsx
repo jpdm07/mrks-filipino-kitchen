@@ -30,6 +30,12 @@ import {
   BC_SCAN_ARROW,
   facebookCardLabel,
 } from "@/components/business-card/business-card-copy";
+import {
+  absoluteBusinessCardFaceUrl,
+  BC_ART_QR_BOTTOM_PX,
+  BC_ART_QR_RIGHT_PX,
+  BC_ART_QR_SIZE_PX,
+} from "@/lib/business-card-artwork";
 
 const PT = 72;
 const CARD_W = 3.5 * PT;
@@ -78,6 +84,29 @@ const styles = StyleSheet.create({
     borderColor: "#0038a8",
     borderStyle: "solid",
     borderRadius: 0,
+  },
+  /** Full-bleed exported proof — no vector border */
+  cardArtOuter: {
+    width: CARD_W,
+    height: CARD_H,
+    borderRadius: 0,
+  },
+  cardArtInner: {
+    width: CARD_W,
+    height: CARD_H,
+    position: "relative",
+  },
+  cardArtFill: {
+    width: CARD_W,
+    height: CARD_H,
+    objectFit: "cover",
+  },
+  qrArtOverlay: {
+    position: "absolute",
+    right: PX(BC_ART_QR_RIGHT_PX),
+    bottom: PX(BC_ART_QR_BOTTOM_PX),
+    width: PX(BC_ART_QR_SIZE_PX),
+    height: PX(BC_ART_QR_SIZE_PX),
   },
   cardInner: {
     flex: 1,
@@ -300,6 +329,33 @@ function BrandPanel({ gradientId }: { gradientId: string }) {
   );
 }
 
+function SingleCardArtwork({
+  qrSrc,
+  faceImageSrc,
+}: {
+  qrSrc: string;
+  faceImageSrc: string;
+}) {
+  return (
+    <View style={styles.cardArtOuter}>
+      <View style={styles.cardArtInner}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf Image has no alt */}
+        <Image src={faceImageSrc} style={styles.cardArtFill} />
+        <View style={styles.qrArtOverlay}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf Image has no alt */}
+          <Image
+            src={qrSrc}
+            style={{
+              width: PX(BC_ART_QR_SIZE_PX),
+              height: PX(BC_ART_QR_SIZE_PX),
+            }}
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function SingleCard({
   qrSrc,
   index,
@@ -352,19 +408,31 @@ function SingleCard({
 
 export function BusinessCardPdfDocument({
   qrSrc,
+  faceImageSrc,
 }: {
   qrSrc: string;
+  faceImageSrc?: string | null;
 }) {
+  const useArtwork = Boolean(faceImageSrc);
   const rows = [0, 1, 2, 3].map((r) => (
     <View key={r} style={styles.row}>
-      <SingleCard
-        qrSrc={qrSrc}
-        index={r * 2}
-      />
-      <SingleCard
-        qrSrc={qrSrc}
-        index={r * 2 + 1}
-      />
+      {useArtwork && faceImageSrc
+        ? [
+            <SingleCardArtwork
+              key={`${r}-a`}
+              qrSrc={qrSrc}
+              faceImageSrc={faceImageSrc}
+            />,
+            <SingleCardArtwork
+              key={`${r}-b`}
+              qrSrc={qrSrc}
+              faceImageSrc={faceImageSrc}
+            />,
+          ]
+        : [
+            <SingleCard key={`${r}-a`} qrSrc={qrSrc} index={r * 2} />,
+            <SingleCard key={`${r}-b`} qrSrc={qrSrc} index={r * 2 + 1} />,
+          ]}
     </View>
   ));
 
@@ -377,14 +445,32 @@ export function BusinessCardPdfDocument({
   );
 }
 
-export async function buildBusinessCardsPdfBlob(
-  qrUrl: string,
-  siteBaseUrl?: string
-): Promise<Blob> {
+async function resolveFaceImageUrlForPdf(): Promise<string | null> {
+  const url = absoluteBusinessCardFaceUrl();
+  if (!url) return null;
+  try {
+    const head = await fetch(url, { method: "HEAD", cache: "no-store" });
+    if (head.ok) return url;
+  } catch {
+    /* fall through */
+  }
+  try {
+    const get = await fetch(url, { method: "GET", cache: "no-store" });
+    if (get.ok) return url;
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+export async function buildBusinessCardsPdfBlob(qrUrl: string): Promise<Blob> {
   const qrSrc = await QRCode.toDataURL(qrUrl, {
     width: 280,
     margin: 1,
     color: { dark: "#0038a8", light: "#ffffff" },
   });
-  return pdf(<BusinessCardPdfDocument qrSrc={qrSrc} />).toBlob();
+  const faceImageSrc = await resolveFaceImageUrlForPdf();
+  return pdf(
+    <BusinessCardPdfDocument qrSrc={qrSrc} faceImageSrc={faceImageSrc} />
+  ).toBlob();
 }
