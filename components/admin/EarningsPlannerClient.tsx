@@ -187,7 +187,7 @@ function maxProfitQuantities(weeklyCap: number): Record<ItemId, number> {
   return q;
 }
 
-const PH_BLUE = "#0038A8";
+const ACCENT_HEADER = "var(--primary)";
 const GOLD = "#FFC200";
 
 export function EarningsPlannerClient() {
@@ -275,7 +275,7 @@ export function EarningsPlannerClient() {
       <header className="space-y-2">
         <h1
           className="font-[family-name:var(--font-playfair)] text-3xl font-bold sm:text-4xl"
-          style={{ color: PH_BLUE }}
+          style={{ color: ACCENT_HEADER }}
         >
           Weekly Earnings Planner
         </h1>
@@ -286,9 +286,9 @@ export function EarningsPlannerClient() {
 
       <section
         className="rounded-xl border-2 p-4 sm:p-5"
-        style={{ borderColor: PH_BLUE, background: "var(--card)" }}
+        style={{ borderColor: ACCENT_HEADER, background: "var(--card)" }}
       >
-        <h2 className="text-lg font-bold" style={{ color: PH_BLUE }}>
+        <h2 className="text-lg font-bold" style={{ color: ACCENT_HEADER }}>
           My cooking time this week
         </h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -325,7 +325,7 @@ export function EarningsPlannerClient() {
           Weekly cook cap for this planner = Friday cooking hours × 60 (currently{" "}
           <strong className="text-[var(--text)]">{weeklyCookCap} min</strong>). These only affect the
           planner — your actual calendar availability is set in{" "}
-          <Link href="/admin/availability" className="font-semibold underline" style={{ color: PH_BLUE }}>
+          <Link href="/admin/availability" className="font-semibold underline" style={{ color: ACCENT_HEADER }}>
             Admin &gt; Availability
           </Link>
           .
@@ -340,7 +340,7 @@ export function EarningsPlannerClient() {
           background: "linear-gradient(180deg, rgba(255,194,0,0.14) 0%, var(--card) 100%)",
         }}
       >
-        <p className="text-base font-bold" style={{ color: PH_BLUE }}>
+        <p className="text-base font-bold" style={{ color: ACCENT_HEADER }}>
           This week&apos;s potential earnings
         </p>
         <ul className="mt-3 space-y-2 text-lg">
@@ -378,7 +378,7 @@ export function EarningsPlannerClient() {
             >
               <div
                 className={`h-full rounded-full transition-all ${
-                  totals.overCook ? "bg-red-500" : "bg-[#0038A8]"
+                  totals.overCook ? "bg-red-500" : "bg-[color:var(--primary)]"
                 }`}
                 style={{
                   width: `${weeklyCookCap > 0 ? Math.min(100, (totals.cookMinutes / weeklyCookCap) * 100) : 0}%`,
@@ -419,7 +419,7 @@ export function EarningsPlannerClient() {
       </div>
 
       <section>
-        <h2 className="text-xl font-bold" style={{ color: PH_BLUE }}>
+        <h2 className="text-xl font-bold" style={{ color: ACCENT_HEADER }}>
           Menu quantities
         </h2>
         <p className="mt-1 text-base text-[var(--text-muted)]">
@@ -430,19 +430,19 @@ export function EarningsPlannerClient() {
           <table className="w-full min-w-[640px] border-collapse text-left text-base">
             <thead>
               <tr className="border-b border-[var(--border)] bg-[var(--gold-light)]">
-                <th className="p-3 font-bold" style={{ color: PH_BLUE }}>
+                <th className="p-3 font-bold" style={{ color: ACCENT_HEADER }}>
                   Item
                 </th>
-                <th className="p-3 font-bold" style={{ color: PH_BLUE }}>
+                <th className="p-3 font-bold" style={{ color: ACCENT_HEADER }}>
                   Qty
                 </th>
-                <th className="p-3 font-bold" style={{ color: PH_BLUE }}>
+                <th className="p-3 font-bold" style={{ color: ACCENT_HEADER }}>
                   Cook min
                 </th>
-                <th className="p-3 font-bold" style={{ color: PH_BLUE }}>
+                <th className="p-3 font-bold" style={{ color: ACCENT_HEADER }}>
                   Est. revenue
                 </th>
-                <th className="p-3 font-bold" style={{ color: PH_BLUE }}>
+                <th className="p-3 font-bold" style={{ color: ACCENT_HEADER }}>
                   Est. profit
                 </th>
               </tr>
@@ -485,7 +485,7 @@ export function EarningsPlannerClient() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold" style={{ color: PH_BLUE }}>
+        <h2 className="text-xl font-bold" style={{ color: ACCENT_HEADER }}>
           Best combinations this week
         </h2>
         <p className="mt-1 text-sm text-[var(--text-muted)]">
@@ -497,7 +497,7 @@ export function EarningsPlannerClient() {
             type="button"
             onClick={handleMaxProfit}
             className="min-h-12 rounded-full border-2 px-5 py-2 text-base font-bold text-white shadow-sm hover:opacity-95"
-            style={{ borderColor: PH_BLUE, background: PH_BLUE }}
+            style={{ borderColor: ACCENT_HEADER, background: ACCENT_HEADER }}
           >
             Max Profit
           </button>
@@ -527,7 +527,7 @@ export function EarningsPlannerClient() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold" style={{ color: PH_BLUE }}>
+        <h2 className="text-2xl font-bold" style={{ color: ACCENT_HEADER }}>
           How to earn more without cooking more
         </h2>
         <div className="grid gap-4 md:grid-cols-2">
@@ -738,18 +738,18 @@ function TipCard({
   return (
     <article
       className="flex flex-col overflow-hidden rounded-xl border-2 shadow-sm"
-      style={{ borderColor: PH_BLUE }}
+      style={{ borderColor: ACCENT_HEADER }}
     >
       <div className="px-4 py-3" style={{ background: GOLD }}>
-        <p className="text-xs font-bold uppercase tracking-wide" style={{ color: PH_BLUE }}>
+        <p className="text-xs font-bold uppercase tracking-wide" style={{ color: ACCENT_HEADER }}>
           {header}
         </p>
         <h3 className="mt-1 text-lg font-bold leading-snug text-[#1a1a1a]">{title}</h3>
       </div>
-      <div className="flex flex-1 flex-col gap-3 border-t-2 bg-[var(--card)] p-4 text-base leading-relaxed text-[var(--text)]" style={{ borderColor: PH_BLUE }}>
+      <div className="flex flex-1 flex-col gap-3 border-t-2 bg-[var(--card)] p-4 text-base leading-relaxed text-[var(--text)]" style={{ borderColor: ACCENT_HEADER }}>
         {body}
-        <p className="mt-auto border-l-4 pl-3 text-[var(--text)]" style={{ borderColor: PH_BLUE }}>
-          <span className="font-bold" style={{ color: PH_BLUE }}>
+        <p className="mt-auto border-l-4 pl-3 text-[var(--text)]" style={{ borderColor: ACCENT_HEADER }}>
+          <span className="font-bold" style={{ color: ACCENT_HEADER }}>
             Action:{" "}
           </span>
           {action}

@@ -7,7 +7,7 @@ export default async function AnalyticsPage() {
   await requireAdmin();
   return (
     <div className="mx-auto max-w-6xl pb-12">
-      <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold text-[#0038A8]">
+      <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold text-[color:var(--primary)]">
         Sales analytics
       </h1>
       <p className="mt-2 text-base text-[var(--text-muted)]">

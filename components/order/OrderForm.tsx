@@ -673,7 +673,7 @@ export function OrderForm() {
                       className={[
                         "min-h-[44px] rounded-full border px-4 text-sm font-semibold transition-colors",
                         sel
-                          ? "border-[#0038A8] bg-[#0038A8] text-white"
+                          ? "border-[color:var(--primary)] bg-[color:var(--primary)] text-white"
                           : "border-[var(--border)] bg-[var(--card)] text-[var(--text)] hover:bg-[#FFC200]",
                       ].join(" ")}
                     >

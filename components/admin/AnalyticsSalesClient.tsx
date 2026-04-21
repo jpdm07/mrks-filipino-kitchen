@@ -166,7 +166,7 @@ export function AnalyticsSalesClient() {
             onClick={() => setPreset(k)}
             className={`min-h-[44px] rounded-full px-4 text-sm font-semibold ${
               preset === k
-                ? "bg-[#0038A8] text-white"
+                ? "bg-[color:var(--primary)] text-white"
                 : "border border-[var(--border)] bg-[var(--card)]"
             }`}
           >
@@ -214,7 +214,7 @@ export function AnalyticsSalesClient() {
       ) : data ? (
         <>
           <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
-            <h2 className="text-lg font-bold text-[#0038A8]">At a glance</h2>
+            <h2 className="text-lg font-bold text-[color:var(--primary)]">At a glance</h2>
             <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <dt className="text-xs font-semibold uppercase text-[var(--text-muted)]">
@@ -262,7 +262,7 @@ export function AnalyticsSalesClient() {
           </section>
 
           <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
-            <h2 className="text-lg font-bold text-[#0038A8]">Insights</h2>
+            <h2 className="text-lg font-bold text-[color:var(--primary)]">Insights</h2>
             <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed">
               {data.insights.map((t, i) => (
                 <li key={i}>{t}</li>
@@ -271,7 +271,7 @@ export function AnalyticsSalesClient() {
           </section>
 
           <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
-            <h2 className="text-lg font-bold text-[#0038A8]">Top-selling items (by quantity)</h2>
+            <h2 className="text-lg font-bold text-[color:var(--primary)]">Top-selling items (by quantity)</h2>
             <p className="mt-1 text-xs text-[var(--text-muted)]">
               Grouped by menu line (name + size + cooked/frozen). Sample items excluded.
             </p>
@@ -287,7 +287,7 @@ export function AnalyticsSalesClient() {
                   </div>
                   <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-[var(--border)]">
                     <div
-                      className="h-full rounded-full bg-[#0038A8]"
+                      className="h-full rounded-full bg-[color:var(--primary)]"
                       style={{
                         width: `${maxQty > 0 ? (row.quantity / maxQty) * 100 : 0}%`,
                       }}
@@ -299,7 +299,7 @@ export function AnalyticsSalesClient() {
           </section>
 
           <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
-            <h2 className="text-lg font-bold text-[#0038A8]">When orders are placed (UTC)</h2>
+            <h2 className="text-lg font-bold text-[color:var(--primary)]">When orders are placed (UTC)</h2>
             <p className="mt-1 text-xs text-[var(--text-muted)]">
               Convert to Central Time for local patterns. Peak checkout time helps plan reminders.
             </p>
@@ -338,7 +338,7 @@ export function AnalyticsSalesClient() {
                         style={{ height: 52 }}
                       >
                         <div
-                          className="w-[85%] rounded-sm bg-[#0038A8]"
+                          className="w-[85%] rounded-sm bg-[color:var(--primary)]"
                           style={{
                             height: `${Math.max(2, (n / maxHr) * 100)}%`,
                             minHeight: n > 0 ? 3 : 0,
@@ -354,7 +354,7 @@ export function AnalyticsSalesClient() {
           </section>
 
           <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
-            <h2 className="text-lg font-bold text-[#0038A8]">Month-by-month (top lines)</h2>
+            <h2 className="text-lg font-bold text-[color:var(--primary)]">Month-by-month (top lines)</h2>
             <p className="mt-1 text-xs text-[var(--text-muted)]">
               See which months had the strongest sales for your top products.
             </p>
@@ -362,8 +362,8 @@ export function AnalyticsSalesClient() {
               <table className="min-w-[640px] w-full border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border)] bg-[var(--gold-light)]">
-                    <th className="p-2 font-bold text-[#0038A8]">Month</th>
-                    <th className="p-2 font-bold text-[#0038A8]">Top lines (qty)</th>
+                    <th className="p-2 font-bold text-[color:var(--primary)]">Month</th>
+                    <th className="p-2 font-bold text-[color:var(--primary)]">Top lines (qty)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -393,7 +393,7 @@ export function AnalyticsSalesClient() {
           </section>
 
           <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
-            <h2 className="text-lg font-bold text-[#0038A8]">Seasonality (Jan–Dec)</h2>
+            <h2 className="text-lg font-bold text-[color:var(--primary)]">Seasonality (Jan–Dec)</h2>
             <p className="mt-1 text-xs text-[var(--text-muted)]">
               Totals pooled by <strong>calendar month</strong> across all years in the range — e.g.
               all Januarys together. Helps spot seasonal dips and peaks.
@@ -402,9 +402,9 @@ export function AnalyticsSalesClient() {
               <table className="min-w-[720px] w-full border-collapse text-center text-xs">
                 <thead>
                   <tr className="border-b border-[var(--border)] bg-[var(--gold-light)]">
-                    <th className="p-1 text-left font-bold text-[#0038A8]">Item</th>
+                    <th className="p-1 text-left font-bold text-[color:var(--primary)]">Item</th>
                     {MOY.map((m) => (
-                      <th key={m} className="p-1 font-bold text-[#0038A8]">
+                      <th key={m} className="p-1 font-bold text-[color:var(--primary)]">
                         {m}
                       </th>
                     ))}
@@ -429,7 +429,7 @@ export function AnalyticsSalesClient() {
                             >
                               <div className="mx-auto flex h-10 w-full max-w-[40px] flex-col justify-end rounded bg-[var(--border)]/80">
                                 <div
-                                  className="w-full rounded-sm bg-[#0038A8]"
+                                  className="w-full rounded-sm bg-[color:var(--primary)]"
                                   style={{
                                     height: `${(q / max) * 100}%`,
                                     minHeight: q > 0 ? 3 : 0,
@@ -451,7 +451,7 @@ export function AnalyticsSalesClient() {
           </section>
 
           <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
-            <h2 className="text-lg font-bold text-[#0038A8]">Often bought together</h2>
+            <h2 className="text-lg font-bold text-[color:var(--primary)]">Often bought together</h2>
             <p className="mt-1 text-xs text-[var(--text-muted)]">
               Pairs that appear on the same order. <strong>Support</strong> = share of all orders;
               <strong> P(A|B)</strong> = orders with both ÷ orders with B.
@@ -460,12 +460,12 @@ export function AnalyticsSalesClient() {
               <table className="min-w-[720px] w-full border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-[var(--border)] bg-[var(--gold-light)]">
-                    <th className="p-2 font-bold text-[#0038A8]">Item A</th>
-                    <th className="p-2 font-bold text-[#0038A8]">Item B</th>
-                    <th className="p-2 font-bold text-[#0038A8]">Orders</th>
-                    <th className="p-2 font-bold text-[#0038A8]">Support %</th>
-                    <th className="p-2 font-bold text-[#0038A8]">P(B|A)</th>
-                    <th className="p-2 font-bold text-[#0038A8]">P(A|B)</th>
+                    <th className="p-2 font-bold text-[color:var(--primary)]">Item A</th>
+                    <th className="p-2 font-bold text-[color:var(--primary)]">Item B</th>
+                    <th className="p-2 font-bold text-[color:var(--primary)]">Orders</th>
+                    <th className="p-2 font-bold text-[color:var(--primary)]">Support %</th>
+                    <th className="p-2 font-bold text-[color:var(--primary)]">P(B|A)</th>
+                    <th className="p-2 font-bold text-[color:var(--primary)]">P(A|B)</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -93,7 +93,7 @@ function buildPrintHtml(
   h1 { font-size: 18px; margin: 0 0 4px; }
   .sub { font-size: 11px; color: #444; margin-bottom: 12px; }
   table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 2px solid #0038a8; padding: 4px 6px; }
+  th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 2px solid var(--primary); padding: 4px 6px; }
   .tot { margin-top: 12px; font-size: 13px; font-weight: 700; }
 </style></head><body>
 <h1>Mr. K's — grocery trip</h1>

@@ -26,7 +26,7 @@ export function HowItWorks() {
         {steps.map((s) => (
           <div
             key={s.title}
-            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-6 text-center shadow-[var(--shadow)] transition duration-300 hover:-translate-y-1 hover:border-[rgba(0,56,168,0.18)] hover:shadow-[var(--shadow-lg)]"
+            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-6 text-center shadow-[var(--shadow)] transition duration-300 hover:-translate-y-1 hover:border-[rgba(14,29,53,0.18)] hover:shadow-[var(--shadow-lg)]"
           >
             <span className="text-4xl" aria-hidden>
               {s.emoji}

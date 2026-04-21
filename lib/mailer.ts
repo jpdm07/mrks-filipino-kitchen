@@ -234,7 +234,7 @@ export function newsletterHtml(params: {
       </p>
       ${buildCustomerReplyFooterHtml()}
       <p style="margin-top:40px;font-size:12px;color:#6B6B6B;text-align:center;">
-        <a href="${params.unsubscribeUrl}" style="color:#0038A8;">Unsubscribe</a>
+        <a href="${params.unsubscribeUrl}" style="color:#0e1d35;">Unsubscribe</a>
       </p>
     </td></tr>
   </table>

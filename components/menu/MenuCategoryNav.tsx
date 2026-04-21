@@ -44,7 +44,7 @@ export function MenuCategoryNav({
             id={`menu-cat-${c.replace(/\s+/g, "-").toLowerCase()}`}
             className={`inline-flex min-h-[44px] shrink-0 items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition duration-300 ${
               isActive
-                ? "bg-gradient-to-br from-[var(--primary-soft)] to-[var(--primary-dark)] text-white shadow-[0_6px_20px_rgba(0,56,168,0.35)] ring-1 ring-white/20"
+                ? "bg-gradient-to-br from-[var(--primary-soft)] to-[var(--primary-deep)] text-white shadow-[0_6px_20px_rgba(14,29,53,0.35)] ring-1 ring-white/20"
                 : "bg-[var(--card)] text-[var(--text)] shadow-sm ring-1 ring-[var(--border)] hover:-translate-y-0.5 hover:shadow-md hover:ring-[var(--primary)]/35"
             }`}
           >

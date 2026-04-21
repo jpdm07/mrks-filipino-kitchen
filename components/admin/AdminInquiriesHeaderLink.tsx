@@ -15,8 +15,8 @@ export function AdminInquiriesHeaderLink() {
       aria-current={active ? "page" : undefined}
       className={`inline-flex min-h-10 items-center rounded-full border-2 px-4 py-2 text-sm font-bold shadow-sm transition duration-200 hover:opacity-90 ${
         active
-          ? "border-white bg-white text-[var(--primary)] ring-2 ring-[var(--primary)] ring-offset-2 ring-offset-[var(--card)]"
-          : "border-[var(--primary)] bg-[var(--primary)] text-white"
+          ? "border-[color:var(--gold)] bg-[color:var(--gold)] text-[color:var(--primary)] ring-2 ring-[color:var(--gold-muted)] ring-offset-2 ring-offset-[color:var(--primary)]"
+          : "border-[color:rgba(251,246,236,0.45)] bg-transparent text-[color:var(--cream)] hover:border-[color:var(--gold)] hover:text-[color:var(--gold)]"
       }`}
     >
       Contact messages

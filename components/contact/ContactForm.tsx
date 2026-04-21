@@ -44,7 +44,7 @@ function FormInner() {
       className="mt-8 space-y-4 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow)]"
     >
       {msg ? (
-        <p className="rounded-lg bg-[var(--gold-light)] p-3 text-sm font-semibold text-[var(--primary-dark)]">
+        <p className="rounded-lg bg-[var(--gold-light)] p-3 text-sm font-semibold text-[var(--primary-deep)]">
           {msg}
         </p>
       ) : null}

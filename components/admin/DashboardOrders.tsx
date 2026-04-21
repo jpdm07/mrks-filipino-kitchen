@@ -559,7 +559,7 @@ export function DashboardOrders() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div
-                  className="flex items-center justify-between gap-3 rounded-t-xl border-b border-white/25 bg-[#0038A8] px-4 py-3 text-white"
+                  className="flex items-center justify-between gap-3 rounded-t-xl border-b border-white/25 bg-[color:var(--primary)] px-4 py-3 text-white"
                 >
                   <h2
                     id="order-detail-title"

@@ -230,7 +230,7 @@ export function TaxDocumentationClient() {
   return (
     <div className="mt-6 space-y-10">
       <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-        <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[#0038A8]">
+        <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[color:var(--primary)]">
           What this page does
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-[var(--text)]">
@@ -249,7 +249,7 @@ export function TaxDocumentationClient() {
       </section>
 
       <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-        <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[#0038A8]">
+        <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[color:var(--primary)]">
           Report period &amp; download
         </h2>
         <div className="mt-4 flex flex-wrap items-end gap-4">
@@ -312,7 +312,7 @@ export function TaxDocumentationClient() {
       ) : null}
 
       <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-        <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[#0038A8]">
+        <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[color:var(--primary)]">
           Mileage log
         </h2>
         <p className="mt-2 text-sm text-[var(--text-muted)]">
@@ -442,7 +442,7 @@ export function TaxDocumentationClient() {
       </section>
 
       <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-        <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[#0038A8]">
+        <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[color:var(--primary)]">
           Supporting entries
         </h2>
         <p className="mt-2 text-sm text-[var(--text-muted)]">

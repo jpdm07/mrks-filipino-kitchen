@@ -22,7 +22,7 @@ export function buildCustomerReplyFooterHtml(): string {
   if (!r) return "";
   const e = escapeHtml(r);
   return `<p style="margin-top:20px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:13px;line-height:1.5;color:#555;text-align:center;">
-Please email <a href="mailto:${e}" style="color:#0038A8;">${e}</a> with questions.<br/>
+Please email <a href="mailto:${e}" style="color:#0e1d35;">${e}</a> with questions.<br/>
 <span style="font-size:12px;color:#888;">Do not reply to the automated sender address — it may not be read.</span></p>`;
 }
 

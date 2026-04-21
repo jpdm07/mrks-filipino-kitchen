@@ -25,7 +25,7 @@ export function PrintableMenu({ items }: { items: MenuItemDTO[] }) {
     >
       <PhilippineSun
         size={128}
-        color="rgba(0, 56, 168, 0.38)"
+        color="rgba(14, 29, 53, 0.38)"
         decorative
         className="pointer-events-none absolute -right-2 -top-2 opacity-90 print:right-0 print:top-0 print:origin-top-right print:scale-[0.75]"
       />

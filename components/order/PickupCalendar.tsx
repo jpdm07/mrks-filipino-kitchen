@@ -362,7 +362,7 @@ export const PickupCalendar = forwardRef<
                 className={[
                   "relative flex aspect-square flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border px-0.5 py-0.5 text-sm font-semibold transition-colors",
                   selected
-                    ? `!border-[#0038A8] !bg-[#0038A8] !text-white hover:!bg-[#0038A8]${isToday ? " ring-2 ring-red-600 ring-offset-2" : ""}`
+                    ? `!border-[color:var(--primary)] !bg-[color:var(--primary)] !text-[color:var(--cream)] hover:!bg-[color:var(--primary)]${isToday ? " ring-2 ring-red-600 ring-offset-2" : ""}`
                     : isToday
                       ? "rounded-xl border-2 !border-red-600 bg-amber-100 text-amber-950 shadow-sm hover:bg-amber-200"
                       : flanOnly
@@ -374,7 +374,7 @@ export const PickupCalendar = forwardRef<
               >
                 {isToday ? (
                   <CalendarTodayMark
-                    className={selected ? "!text-white" : ""}
+                    className={selected ? "!text-[color:var(--cream)]" : ""}
                   />
                 ) : null}
                 <span className="text-sm font-semibold leading-none tabular-nums">

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 
-const DEFAULT_QR_DARK = "#0038A8";
+const DEFAULT_QR_DARK = "#0E1D35";
 const DEFAULT_QR_LIGHT = "#ffffff";
 
 export function QRCodeDisplay({

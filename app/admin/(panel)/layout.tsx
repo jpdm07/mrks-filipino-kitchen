@@ -22,15 +22,15 @@ export default async function AdminPanelLayout({
   const attentionTotal = adminAttentionTotal(badges);
 
   return (
-    <div className="min-h-screen bg-[var(--bg-section)]">
+    <div className="min-h-screen bg-[color:var(--cream)]">
       <AdminAutoRefresh />
       <AdminDocumentAttentionTitle total={attentionTotal} />
-      <div className="sticky top-0 z-[200] border-b border-[var(--border)] bg-[var(--card)] shadow-sm print:hidden">
+      <div className="sticky top-0 z-[200] border-b border-[color:var(--gold-muted)]/35 bg-[color:var(--primary)] shadow-[0_10px_32px_rgba(6,15,31,0.28)] print:hidden">
         <div className="mx-auto max-w-7xl px-4 py-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Link
               href="/admin/dashboard"
-              className="inline-flex shrink-0 items-center gap-2 font-bold text-[var(--primary)]"
+              className="inline-flex shrink-0 items-center gap-2 font-bold text-[color:var(--cream)] hover:text-[color:var(--gold)]"
             >
               Mr. K Admin
               {attentionTotal > 0 ? (

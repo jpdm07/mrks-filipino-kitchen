@@ -72,7 +72,7 @@ function doPost(e) {
       ]);
       sheet.getRange(1, 1, 1, 26)
         .setFontWeight("bold")
-        .setBackground("#0038A8")
+        .setBackground("#0E1D35")
         .setFontColor("#FFFFFF");
       sheet.setFrozenRows(1);
     }

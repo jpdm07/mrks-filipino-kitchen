@@ -147,7 +147,7 @@ export function SuggestionPoll() {
                     onClick={() => toggle(r.id)}
                     className={`w-full rounded-[var(--radius-sm)] border px-3 py-2 text-left text-sm shadow-sm transition duration-300 ${
                       selected.has(r.id)
-                        ? "border-[var(--primary)] bg-[var(--gold-light)] shadow-[0_4px_16px_rgba(0,56,168,0.12)]"
+                        ? "border-[var(--primary)] bg-[var(--gold-light)] shadow-[0_4px_16px_rgba(14,29,53,0.12)]"
                         : "border-[var(--border)] bg-[var(--bg)] hover:-translate-y-0.5 hover:border-[var(--primary)]/45 hover:shadow-md"
                     } disabled:opacity-60`}
                   >

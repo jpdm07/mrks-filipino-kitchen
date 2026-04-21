@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-const COLORS = ["#0038a8", "#ce1126", "#ffc72c", "#e8b923", "#ffffff"];
+const COLORS = ["#0e1d35", "#d4a944", "#f4e8d1", "#c99a3e", "#fbf6ec"];
 
 export function OrderConfirmationConfetti() {
   useEffect(() => {

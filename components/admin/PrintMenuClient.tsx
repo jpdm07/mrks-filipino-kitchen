@@ -43,7 +43,7 @@ function PrintMenuColumn({
     blocks.push(
       <div key={entry.kind === "group" ? `g-${entry.groupKey}` : entry.item.id}>
         {showCat ? (
-          <h3 className="mb-3 border-b-2 border-[#0038a8] pb-1 font-[family-name:var(--font-playfair)] text-[11px] font-bold uppercase tracking-[0.2em] text-[#0038a8]">
+          <h3 className="mb-3 border-b-2 border-[color:var(--primary)] pb-1 font-[family-name:var(--font-playfair)] text-[11px] font-bold uppercase tracking-[0.2em] text-[color:var(--primary)]">
             {cat}
           </h3>
         ) : null}
@@ -277,7 +277,7 @@ export function PrintMenuClient() {
               </div>
             </div>
             <div className="flex flex-col justify-center bg-[#fffbf5] px-8 py-10 print:px-6 print:py-8">
-              <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[#0038a8]">
+              <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[color:var(--primary)]">
                 Visit &amp; order
               </h2>
               <ul className="mt-4 space-y-2.5 text-[11px] leading-relaxed text-[#14121a]">
@@ -321,8 +321,8 @@ export function PrintMenuClient() {
 
         {/* Page 2 — inside menu (back of same sheet when duplex) */}
         <section className="print-menu-sheet-2 print-sheet overflow-hidden rounded-lg border border-stone-300 bg-[#fffbf5] shadow-lg print:rounded-none print:shadow-none">
-          <div className="border-b border-[#0038a8]/25 bg-white/80 px-6 py-3 print:px-4 print:py-2">
-            <p className="text-center font-[family-name:var(--font-playfair)] text-lg font-bold text-[#0038a8]">
+          <div className="border-b border-[color:var(--primary)]/25 bg-white/80 px-6 py-3 print:px-4 print:py-2">
+            <p className="text-center font-[family-name:var(--font-playfair)] text-lg font-bold text-[color:var(--primary)]">
               Menu
             </p>
             <p className="text-center text-[9px] uppercase tracking-[0.2em] text-[#5c5866]">

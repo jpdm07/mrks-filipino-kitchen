@@ -237,7 +237,7 @@ export function PublicAvailabilityCalendar() {
                       ? "cursor-pointer border-2 border-[#FFC200] bg-[#FFC200] text-[var(--text)] shadow-[0_0_16px_rgba(255,194,0,0.55)]"
                       : "cursor-pointer border-2 border-[#FFC200] bg-[#FFC200] text-[var(--text)] shadow-[0_0_14px_rgba(255,194,0,0.4)] hover:shadow-[0_0_20px_rgba(255,194,0,0.65)]",
                   selected
-                    ? "ring-2 ring-[#0038A8] ring-offset-2"
+                    ? "ring-2 ring-[color:var(--primary)] ring-offset-2"
                     : isToday
                       ? "ring-2 ring-red-600 ring-offset-2 rounded-xl"
                       : "",
@@ -268,7 +268,7 @@ export function PublicAvailabilityCalendar() {
 
       <div
         className={[
-          "mt-6 overflow-hidden rounded-2xl border-2 border-[#0038A8]/25 bg-white transition-all duration-300",
+          "mt-6 overflow-hidden rounded-2xl border-2 border-[color:var(--primary)]/25 bg-white transition-all duration-300",
           selectedYmd ? "max-h-[800px] opacity-100" : "max-h-0 border-transparent opacity-0",
         ].join(" ")}
         aria-live="polite"
@@ -333,14 +333,14 @@ export function PublicAvailabilityCalendar() {
                     <span className="font-semibold">Note:</span> {kitchenNote}
                   </p>
                 ) : null}
-                <p className="mt-4 rounded-lg border border-[#0038A8]/20 bg-[#eef4ff] px-3 py-2 text-sm text-[var(--text)]">
+                <p className="mt-4 rounded-lg border border-[color:var(--primary)]/20 bg-[color:var(--cream-deep)] px-3 py-2 text-sm text-[var(--text)]">
                   <span className="font-semibold">Pickup times:</span> TBD for
                   now. After you start your order, you&apos;ll pick your time slot
                   from the times Mr. K has opened for this date.
                 </p>
                 <Link
                   href={`/menu?pickupDate=${encodeURIComponent(selectedYmd)}`}
-                  className="mt-6 inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-[#0038A8] px-4 text-center text-base font-bold text-white hover:bg-[#002580] sm:w-auto"
+                  className="mt-6 inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-[color:var(--primary)] px-4 text-center text-base font-bold text-white hover:bg-[color:var(--primary-deep)] sm:w-auto"
                 >
                   Start My Order
                 </Link>

@@ -55,16 +55,16 @@ export function buildEmailBrandBannerHtml(
     : "";
 
   const sub = opts?.subtitle?.trim();
-  const subColor = isGold ? "#1A237E" : "#FFC200";
+  const subColor = isGold ? "#0e1d35" : "#FFC200";
   const subBlock = sub
     ? `<p style="margin:8px 0 0;color:${subColor};font-size:11px;letter-spacing:0.14em;text-transform:uppercase;font-family:system-ui,Segoe UI,sans-serif;font-weight:700;">${escapeHtml(sub)}</p>`
     : "";
 
   const tableBg = isGold
     ? "background:linear-gradient(180deg,#FFE566 0%,#FFC200 52%,#E6AC00 100%);"
-    : "background:#0038A8;";
-  const h1Color = isGold ? "#0038A8" : "#FFFFFF";
-  const line2Color = isGold ? "#0038A8" : "#FFC200";
+    : "background:#0e1d35;";
+  const h1Color = isGold ? "#0e1d35" : "#FFFFFF";
+  const line2Color = isGold ? "#0e1d35" : "#FFC200";
   const line3Color = isGold ? "#1a1a1a" : "#FFE08A";
 
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="${tableBg}padding:22px 18px 20px;border-radius:12px 12px 0 0;">

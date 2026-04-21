@@ -18,7 +18,7 @@ export default function AvailabilityPage() {
         held until you complete an order.
       </p>
 
-      <div className="mt-8 rounded-2xl border border-[#0038A8]/20 bg-[#eef4ff] px-5 py-6 shadow-sm sm:px-8">
+      <div className="mt-8 rounded-2xl border border-[color:var(--primary)]/20 bg-[color:var(--cream-deep)] px-5 py-6 shadow-sm sm:px-8">
         <h2 className="text-lg font-bold text-[var(--text)]">
           How ordering works at Mr. K&apos;s Kitchen
         </h2>

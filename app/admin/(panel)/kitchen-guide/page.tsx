@@ -25,8 +25,8 @@ export default async function KitchenGuidePage() {
   await requireAdmin();
   return (
     <div className="mx-auto max-w-3xl space-y-6 pb-16">
-      <p className="text-sm text-[#0038A8]">Last updated: April 2026</p>
-      <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold text-[#0038A8]">
+      <p className="text-sm text-[color:var(--primary)]">Last updated: April 2026</p>
+      <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold text-[color:var(--primary)]">
         Kitchen & shopping guide
       </h1>
       <p className="text-base text-[var(--text-muted)]">
@@ -41,13 +41,13 @@ export default async function KitchenGuidePage() {
         .
       </p>
       <div className="rounded-lg border-2 border-[#FFC200] bg-[var(--gold-light)] p-4 text-sm">
-        <strong className="text-[#0038A8]">Print shopping list</strong>
+        <strong className="text-[color:var(--primary)]">Print shopping list</strong>
         <p className="mt-1">
           Open your browser print dialog (Ctrl+P) while viewing this section to save as PDF.
         </p>
       </div>
       <section className="print:block">
-        <h2 className="text-xl font-bold text-[#0038A8]">Master shopping list (by store)</h2>
+        <h2 className="text-xl font-bold text-[color:var(--primary)]">Master shopping list (by store)</h2>
         <div className="mt-3 space-y-4 whitespace-pre-line text-sm leading-relaxed text-[var(--text)]">
           <p>
             <strong>KROGER — 9703 Barker Cypress Rd, Cypress TX 77433</strong>
@@ -67,14 +67,14 @@ export default async function KitchenGuidePage() {
           </p>
         </div>
       </section>
-      <h2 className="text-xl font-bold text-[#0038A8]">Recipes</h2>
+      <h2 className="text-xl font-bold text-[color:var(--primary)]">Recipes</h2>
       <div className="space-y-2">
         {RECIPES.map((r) => (
           <details
             key={r.id}
             className="rounded-lg border border-[var(--border)] bg-[var(--card)] p-3 text-sm open:shadow-md"
           >
-            <summary className="cursor-pointer text-base font-bold text-[#0038A8]">
+            <summary className="cursor-pointer text-base font-bold text-[color:var(--primary)]">
               {r.title}
             </summary>
             <pre className="mt-3 whitespace-pre-wrap font-sans text-[var(--text)]">{r.body}</pre>

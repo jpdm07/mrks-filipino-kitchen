@@ -144,11 +144,11 @@ export function buildAdminReceiptHtml(order: AdminOrderClientRow): string {
     font: 600 15px system-ui, sans-serif;
     cursor: pointer;
     border-radius: 8px;
-    border: 2px solid #0038a8;
-    background: #0038a8;
+    border: 2px solid #0e1d35;
+    background: #0e1d35;
     color: #fff;
     touch-action: manipulation;
-    -webkit-tap-highlight-color: rgba(0, 56, 168, 0.15);
+    -webkit-tap-highlight-color: rgba(14, 29, 53, 0.15);
   }
 </style>
 </head>
@@ -377,7 +377,7 @@ export function buildAdminReceiptEmailHtml(order: AdminOrderClientRow): string {
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:Georgia,'Times New Roman',serif;color:#111;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:24px 12px;">
 <tr><td align="center">
-<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #0038A8;border-radius:10px;overflow:hidden;box-shadow:0 2px 14px rgba(0,56,168,0.18);">
+<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #0e1d35;border-radius:10px;overflow:hidden;box-shadow:0 2px 14px rgba(14,29,53,0.18);">
 <tr><td style="padding:0;border-bottom:3px solid #FFC200;">
 ${buildEmailBrandBannerHtml({ variant: "blue", subtitle: "Receipt" })}
 </td></tr>

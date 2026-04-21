@@ -115,7 +115,7 @@ export function AdminNavLinks({ badges }: { badges: AdminNavBadgeCounts }) {
 
   return (
     <nav
-      className="mt-3 flex flex-nowrap gap-2 overflow-x-auto border-t border-[var(--border)] pt-3 pb-1 text-sm font-medium [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5"
+      className="mt-3 flex flex-nowrap gap-2 overflow-x-auto border-t border-[color:rgba(251,246,236,0.15)] pt-3 pb-1 text-sm font-medium [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5"
       aria-label="Admin sections"
     >
       {items.map((l) => {
@@ -131,8 +131,8 @@ export function AdminNavLinks({ badges }: { badges: AdminNavBadgeCounts }) {
             aria-current={active ? "page" : undefined}
             className={`inline-flex shrink-0 items-center rounded-full px-3 py-2 whitespace-nowrap transition duration-200 ${
               active
-                ? "bg-gradient-to-br from-[var(--primary-soft)] to-[var(--primary-dark)] font-semibold text-white shadow-[0_6px_20px_rgba(0,56,168,0.35)] ring-1 ring-white/20"
-                : `hover:bg-[var(--gold-light)] ${attentionRing}`
+                ? "bg-[color:var(--gold)] font-semibold text-[color:var(--primary)] shadow-[0_6px_18px_rgba(212,169,68,0.35)] ring-1 ring-white/25"
+                : `text-[color:rgba(251,246,236,0.88)] hover:bg-white/12 hover:text-[color:var(--gold)] ${attentionRing}`
             }`}
           >
             <span>{l.label}</span>

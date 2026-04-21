@@ -55,7 +55,7 @@ export function NewsletterStrip() {
           </button>
         </form>
         {msg ? (
-          <p className="mt-4 text-sm font-semibold text-[var(--primary-dark)]">
+          <p className="mt-4 text-sm font-semibold text-[var(--primary-deep)]">
             {msg}
           </p>
         ) : null}

@@ -62,23 +62,23 @@ function byDayToHtml(days: PrepDayBucket[]): string {
               )
               .join("");
       return `<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #e5e7eb;">
-<p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#0038A8;">${escapeHtml(d.labelLong)}</p>
+<p style="margin:0 0 8px;font-size:14px;font-weight:700;color:#0e1d35;">${escapeHtml(d.labelLong)}</p>
 <p style="margin:0 0 8px;font-size:12px;color:#666;">${d.orderCount} order(s) · pickup ${escapeHtml(d.pickupYmd)}</p>
-<p style="margin:8px 0 4px;font-size:12px;font-weight:700;color:#0038A8;">Main</p>
+<p style="margin:8px 0 4px;font-size:12px;font-weight:700;color:#0e1d35;">Main</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">${mainRows}</table>
-<p style="margin:12px 0 4px;font-size:12px;font-weight:700;color:#0038A8;">Desserts &amp; flan</p>
+<p style="margin:12px 0 4px;font-size:12px;font-weight:700;color:#0e1d35;">Desserts &amp; flan</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">${dessertRows}</table>
 </div>`;
     })
     .join("");
-  return `<p style="margin:20px 0 8px;font-size:13px;font-weight:700;color:#0038A8;">By pickup day</p>
+  return `<p style="margin:20px 0 8px;font-size:13px;font-weight:700;color:#0e1d35;">By pickup day</p>
 <p style="margin:0 0 12px;font-size:13px;color:#555;">Same order data as the admin; not changed by manual quantity edits below.</p>
 ${blocks}`;
 }
 
 function linesToHtml(title: string, lines: PrepLineMerged[]): string {
   if (lines.length === 0) {
-    return `<p style="margin:16px 0 8px;font-size:13px;font-weight:700;color:#0038A8;">${escapeHtml(title)}</p><p style="margin:0;color:#666;font-size:14px;">(none)</p>`;
+    return `<p style="margin:16px 0 8px;font-size:13px;font-weight:700;color:#0e1d35;">${escapeHtml(title)}</p><p style="margin:0;color:#666;font-size:14px;">(none)</p>`;
   }
   const rows = lines
     .map((l) => {
@@ -91,7 +91,7 @@ function linesToHtml(title: string, lines: PrepLineMerged[]): string {
 </tr>`;
     })
     .join("");
-  return `<p style="margin:16px 0 8px;font-size:13px;font-weight:700;color:#0038A8;">${escapeHtml(title)}</p>
+  return `<p style="margin:16px 0 8px;font-size:13px;font-weight:700;color:#0e1d35;">${escapeHtml(title)}</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">${rows}</table>`;
 }
 
@@ -131,16 +131,16 @@ export async function sendPrepSummaryEmail(params: {
 <html lang="en">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/></head>
 <body style="margin:0;padding:24px 12px;font-family:system-ui,Segoe UI,sans-serif;font-size:16px;line-height:1.5;color:#1a1a1a;background:#fafafa;">
-  <div style="max-width:560px;margin:0 auto;border-radius:12px;overflow:hidden;border:2px solid #0038A8;box-shadow:0 2px 10px rgba(0,56,168,0.12);">
+  <div style="max-width:560px;margin:0 auto;border-radius:12px;overflow:hidden;border:2px solid #0e1d35;box-shadow:0 2px 10px rgba(14,29,53,0.12);">
     ${buildEmailBrandBannerHtml({ variant: "blue", subtitle: "Weekly prep summary" })}
     <div style="background:#fff;padding:24px 28px;">
-      <p style="margin:0 0 8px;font-size:18px;font-weight:700;color:#0038A8;">Quantities to prep</p>
+      <p style="margin:0 0 8px;font-size:18px;font-weight:700;color:#0e1d35;">Quantities to prep</p>
       <p style="margin:0 0 16px;font-size:14px;color:#555;">Week of Thu <strong>${escapeHtml(params.weekThursdayYmd)}</strong><br/>
       Fri <strong>${escapeHtml(params.fri)}</strong> · Sat <strong>${escapeHtml(params.sat)}</strong></p>
       ${params.byPickupDay.length > 0 ? byDayToHtml(params.byPickupDay) : ""}
       ${linesToHtml("Main menu (week totals)", params.main)}
       ${linesToHtml("Desserts & flan (full week totals)", params.dessert)}
-      <p style="margin:20px 0 0;font-size:13px;color:#555;">Adjust lines anytime in <a href="${escapeHtml(adminUrl)}" style="color:#0038A8;font-weight:600;">Admin → Prep summary</a>.</p>
+      <p style="margin:20px 0 0;font-size:13px;color:#555;">Adjust lines anytime in <a href="${escapeHtml(adminUrl)}" style="color:#0e1d35;font-weight:600;">Admin → Prep summary</a>.</p>
     </div>
   </div>
 </body>

@@ -32,7 +32,7 @@ export default function Image() {
             fontSize: 56,
             fontWeight: 700,
             fontFamily: serif,
-            color: "#0038a8",
+            color: "#0e1d35",
             marginBottom: 8,
           }}
         >
@@ -47,7 +47,7 @@ export default function Image() {
             fontSize: 58,
             fontWeight: 700,
             fontFamily: serif,
-            color: "#0038a8",
+            color: "#0e1d35",
             textAlign: "center",
             lineHeight: 1.15,
             maxWidth: 1000,

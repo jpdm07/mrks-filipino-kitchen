@@ -116,20 +116,20 @@ export async function sendNewOrderEmailToOwner(params: {
     .join("\n");
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;font-family:system-ui,-apple-system,sans-serif;font-size:15px;color:#1a1a1a;background:#f5f5f5;padding:16px;">
-  <div style="max-width:640px;margin:0 auto;background:#fff;border-radius:12px;padding:0;overflow:hidden;border:2px solid #FFC200;box-shadow:0 2px 10px rgba(0,56,168,0.12);">
+  <div style="max-width:640px;margin:0 auto;background:#fff;border-radius:12px;padding:0;overflow:hidden;border:2px solid #FFC200;box-shadow:0 2px 10px rgba(14,29,53,0.12);">
     ${buildEmailBrandBannerHtml({ variant: "gold", subtitle: "New order" })}
     <div style="padding:24px;">
-    <h1 style="margin:0 0 8px;font-size:22px;color:#0038a8;">New order #${escapeHtml(params.orderNumber)}</h1>
+    <h1 style="margin:0 0 8px;font-size:22px;color:#0e1d35;">New order #${escapeHtml(params.orderNumber)}</h1>
     <p style="margin:0 0 20px;color:#666;font-size:14px;">${escapeHtml(params.customerName)} · ${escapeHtml(params.phone)}</p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
       <tr><td style="padding:6px 0;color:#666;">Email</td><td style="padding:6px 0;font-weight:600;"><a href="mailto:${encodeURIComponent(params.email)}">${escapeHtml(params.email)}</a></td></tr>
       <tr><td style="padding:6px 0;color:#666;">Pickup</td><td style="padding:6px 0;font-weight:600;">${escapeHtml(params.pickupDate)} at ${escapeHtml(params.pickupTime)}</td></tr>
     </table>
     <table style="width:100%;border-collapse:collapse;font-size:14px;">
-      <thead><tr style="background:#f0f4ff;"><th style="text-align:left;padding:10px;border-bottom:2px solid #0038a8;">Item</th><th style="padding:10px;border-bottom:2px solid #0038a8;">Qty</th><th style="text-align:right;padding:10px;border-bottom:2px solid #0038a8;">Each</th><th style="text-align:right;padding:10px;border-bottom:2px solid #0038a8;">Line</th></tr></thead>
+      <thead><tr style="background:#f4e8d1;"><th style="text-align:left;padding:10px;border-bottom:2px solid #0e1d35;">Item</th><th style="padding:10px;border-bottom:2px solid #0e1d35;">Qty</th><th style="text-align:right;padding:10px;border-bottom:2px solid #0e1d35;">Each</th><th style="text-align:right;padding:10px;border-bottom:2px solid #0e1d35;">Line</th></tr></thead>
       <tbody>${linesRows}</tbody>
     </table>
-    <p style="margin:16px 0 0;text-align:right;font-size:16px;"><strong>Subtotal</strong> $${params.subtotal.toFixed(2)}<br/><span style="color:#666;">Tax</span> $${params.tax.toFixed(2)}<br/><strong style="color:#0038a8;font-size:18px;">Total $${params.total.toFixed(2)}</strong></p>
+    <p style="margin:16px 0 0;text-align:right;font-size:16px;"><strong>Subtotal</strong> $${params.subtotal.toFixed(2)}<br/><span style="color:#666;">Tax</span> $${params.tax.toFixed(2)}<br/><strong style="color:#0e1d35;font-size:18px;">Total $${params.total.toFixed(2)}</strong></p>
     ${params.wantsUtensils && params.utensilSets > 0 ? `<p style="margin:12px 0 0;font-size:14px;">${escapeHtml(formatUtensilsOwnerLine(params.wantsUtensils, params.utensilSets, params.utensilCharge, complimentaryUtensils))}</p>` : ""}
     ${params.notes ? `<p style="margin:16px 0 0;padding:12px;background:#fffbeb;border-radius:8px;border:1px solid #fcd34d;"><strong>Instructions</strong><br/>${escapeHtml(params.notes)}</p>` : ""}
     ${params.customInquiry ? `<p style="margin:12px 0 0;padding:12px;background:#f5f3ff;border-radius:8px;"><strong>Custom dish</strong><br/>${escapeHtml(params.customInquiry)}</p>` : ""}
@@ -138,7 +138,7 @@ export async function sendNewOrderEmailToOwner(params: {
       ${params.wantsPrintedReceipt ? "• <strong>Printed receipt</strong> requested with pickup<br/>" : ""}
       • Ask them to put order #${escapeHtml(params.orderNumber)} in Venmo, Zelle, or Cash App memo when paying; confirm the same order # when they arrive for pickup.
     </p>
-    <p style="margin:20px 0 0;"><a href="${escapeHtml(adminUrl)}" style="display:inline-block;background:#0038a8;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Open admin</a></p>
+    <p style="margin:20px 0 0;"><a href="${escapeHtml(adminUrl)}" style="display:inline-block;background:#0e1d35;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Open admin</a></p>
     </div>
   </div>
 </body></html>`;

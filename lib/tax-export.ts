@@ -374,8 +374,8 @@ export function buildTaxReportHtml(params: {
 <title>Tax documentation ${summary.startDate} – ${summary.endDate}</title>
 <style>
 body{font-family:system-ui,Segoe UI,sans-serif;margin:24px;color:#111;background:#fff;}
-h1{color:#0038A8;}
-h2{margin-top:2rem;border-bottom:2px solid #0038A8;padding-bottom:4px;}
+h1{color:#0e1d35;}
+h2{margin-top:2rem;border-bottom:2px solid #0e1d35;padding-bottom:4px;}
 table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px;}
 th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;}
 th{background:#f0f4ff;}

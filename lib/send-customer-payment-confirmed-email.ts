@@ -69,7 +69,7 @@ export async function sendCustomerPaymentConfirmedEmail(
 <html lang="en">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/></head>
 <body style="margin:0;padding:24px 12px;font-family:system-ui,Segoe UI,sans-serif;font-size:16px;line-height:1.5;color:#1a1a1a;background:#fafafa;">
-  <div style="max-width:520px;margin:0 auto;border-radius:12px;overflow:hidden;border:2px solid #FFC200;box-shadow:0 2px 10px rgba(0,56,168,0.12);">
+  <div style="max-width:520px;margin:0 auto;border-radius:12px;overflow:hidden;border:2px solid #FFC200;box-shadow:0 2px 10px rgba(14,29,53,0.12);">
     ${buildEmailBrandBannerHtml({ variant: "gold", subtitle: "Payment confirmed" })}
     <div style="background:#fff;padding:24px 28px;">
     <p style="margin:0 0 16px;">Hi ${name},</p>

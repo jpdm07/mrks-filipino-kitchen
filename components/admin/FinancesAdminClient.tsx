@@ -282,7 +282,7 @@ export function FinancesAdminClient() {
             onClick={() => setPreset(k)}
             className={`min-h-[44px] rounded-full px-4 text-sm font-semibold ${
               preset === k
-                ? "bg-[#0038A8] text-white"
+                ? "bg-[color:var(--primary)] text-white"
                 : "border border-[var(--border)] bg-[var(--card)]"
             }`}
           >
@@ -309,7 +309,7 @@ export function FinancesAdminClient() {
 
       {summary ? (
         <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-          <h2 className="text-lg font-bold text-[#0038A8]">Summary</h2>
+          <h2 className="text-lg font-bold text-[color:var(--primary)]">Summary</h2>
           {summary.netProfit >= 0 ? (
             <p className="mt-2 rounded-lg bg-[#FFC200]/40 px-3 py-2 text-sm font-medium text-[var(--text)]">
               ✅ You&apos;re in the green! Net profit this period: $
@@ -353,7 +353,7 @@ export function FinancesAdminClient() {
           </dl>
           {catList.length ? (
             <div className="mt-4 border-t border-[var(--border)] pt-3">
-              <p className="font-semibold text-[#0038A8]">Expense breakdown</p>
+              <p className="font-semibold text-[color:var(--primary)]">Expense breakdown</p>
               <ul className="mt-2 space-y-1 text-sm">
                 {catList.map(([k, v]) => (
                   <li key={k} className="flex justify-between gap-2">
@@ -372,7 +372,7 @@ export function FinancesAdminClient() {
       ) : null}
 
       <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-        <h2 className="text-lg font-bold text-[#0038A8]">Add expense</h2>
+        <h2 className="text-lg font-bold text-[color:var(--primary)]">Add expense</h2>
         <div className="mt-3 flex gap-2 border-b border-[var(--border)] pb-2">
           <button
             type="button"
@@ -489,7 +489,7 @@ export function FinancesAdminClient() {
 
       <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-bold text-[#0038A8]">Expense log</h2>
+          <h2 className="text-lg font-bold text-[color:var(--primary)]">Expense log</h2>
           <button
             type="button"
             className="rounded border px-3 py-2 text-sm font-semibold"
@@ -567,7 +567,7 @@ export function FinancesAdminClient() {
       </section>
 
       <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-        <h2 className="text-lg font-bold text-[#0038A8]">Income log</h2>
+        <h2 className="text-lg font-bold text-[color:var(--primary)]">Income log</h2>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
           Confirmed orders only (read-only). Total: $
           {income.reduce((s, o) => s + o.total, 0).toFixed(2)}

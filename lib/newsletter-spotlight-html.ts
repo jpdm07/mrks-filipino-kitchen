@@ -29,7 +29,7 @@ export function buildNewsletterSpotlightHtml(items: MenuItem[]): string {
         : "";
       return `<div style="margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid #e8e8e8;">
 ${img}
-<h2 style="color:#0038A8;margin:16px 0 8px;">${escapeHtml(item.name)}</h2>
+<h2 style="color:#0e1d35;margin:16px 0 8px;">${escapeHtml(item.name)}</h2>
 <p style="margin:0 0 8px;">${escapeHtml(item.description)}</p>
 <p style="font-weight:bold;color:#CE1126;">From ${price}</p>
 ${soldNote}

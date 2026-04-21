@@ -10,7 +10,7 @@ const STAR_LAG = [9, 18, 30];
 const STAR_SIZES = [10, 8, 6];
 const STAR_OPACITY = [0.7, 0.45, 0.2];
 /** Gold (sun), blue stripe, red stripe — Philippine flag echo */
-const STAR_FILLS = ["#FFC200", "#0038A8", "#CE1126"] as const;
+const STAR_FILLS = ["#FFC200", "#1a3055", "#CE1126"] as const;
 const MIST_LAG = [5, 9] as const; // blue under, red on top (slightly further back)
 const MIST_LERP = 0.22;
 const LERP = 0.32;

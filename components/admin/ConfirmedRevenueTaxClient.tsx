@@ -126,9 +126,9 @@ export function ConfirmedRevenueTaxClient() {
   return (
     <section
       id="confirmed-revenue-tax"
-      className="mb-10 rounded-xl border-2 border-[#0038A8] bg-[var(--card)] p-5 shadow-sm"
+      className="mb-10 rounded-xl border-2 border-[color:var(--primary)] bg-[var(--card)] p-5 shadow-sm"
     >
-      <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[#0038A8]">
+      <h2 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[color:var(--primary)]">
         Confirmed revenue (tax &amp; records)
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">
@@ -159,7 +159,7 @@ export function ConfirmedRevenueTaxClient() {
             onClick={() => setPreset(k)}
             className={`min-h-[44px] rounded-full px-4 text-sm font-semibold ${
               preset === k
-                ? "bg-[#0038A8] text-white"
+                ? "bg-[color:var(--primary)] text-white"
                 : "border border-[var(--border)] bg-[var(--gold-light)]"
             }`}
           >
@@ -206,13 +206,13 @@ export function ConfirmedRevenueTaxClient() {
         <div className="mt-4 space-y-4">
           <div className="grid gap-3 rounded-lg bg-[#FFFDF5] p-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#0038A8]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--primary)]">
                 Orders
               </p>
               <p className="text-2xl font-bold tabular-nums">{totals.count}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#0038A8]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--primary)]">
                 Subtotal
               </p>
               <p className="text-2xl font-bold tabular-nums">
@@ -220,7 +220,7 @@ export function ConfirmedRevenueTaxClient() {
               </p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#0038A8]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--primary)]">
                 Sales tax (collected)
               </p>
               <p className="text-2xl font-bold tabular-nums">
@@ -228,7 +228,7 @@ export function ConfirmedRevenueTaxClient() {
               </p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#0038A8]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--primary)]">
                 Total revenue
               </p>
               <p className="text-2xl font-bold tabular-nums text-[#1E7C1E]">
@@ -254,12 +254,12 @@ export function ConfirmedRevenueTaxClient() {
             <table className="min-w-[900px] w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[var(--gold-light)]">
-                  <th className="p-2 font-bold text-[#0038A8]">Order #</th>
-                  <th className="p-2 font-bold text-[#0038A8]">Placed (UTC)</th>
-                  <th className="p-2 font-bold text-[#0038A8]">Pickup</th>
-                  <th className="p-2 font-bold text-[#0038A8]">What / items</th>
-                  <th className="p-2 font-bold text-[#0038A8]">Total</th>
-                  <th className="p-2 font-bold text-[#0038A8]">Payment</th>
+                  <th className="p-2 font-bold text-[color:var(--primary)]">Order #</th>
+                  <th className="p-2 font-bold text-[color:var(--primary)]">Placed (UTC)</th>
+                  <th className="p-2 font-bold text-[color:var(--primary)]">Pickup</th>
+                  <th className="p-2 font-bold text-[color:var(--primary)]">What / items</th>
+                  <th className="p-2 font-bold text-[color:var(--primary)]">Total</th>
+                  <th className="p-2 font-bold text-[color:var(--primary)]">Payment</th>
                 </tr>
               </thead>
               <tbody>
