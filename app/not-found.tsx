@@ -4,7 +4,8 @@ import { Logo } from "@/components/ui/Logo";
 export default function NotFound() {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-16 text-center">
-      <Logo size="lg" />
+      {/* Stacked wordmark so “Mr. K’s” lines up with centered copy (same as order confirmation) */}
+      <Logo size="lg" variant="stacked" className="mx-auto" />
       <svg
         viewBox="0 0 120 120"
         className="mt-8 h-32 w-32 text-[var(--gold)]"
