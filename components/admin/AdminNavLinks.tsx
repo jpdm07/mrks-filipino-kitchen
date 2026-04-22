@@ -52,6 +52,7 @@ const LINK_DEFS: {
     count: () => 0,
     badgeLabel: "",
   },
+  { href: "/admin/recipes", label: "Recipes", count: () => 0, badgeLabel: "" },
   { href: "/admin/pricing", label: "Pricing", count: () => 0, badgeLabel: "" },
   {
     href: "/admin/subscribers",

@@ -74,12 +74,14 @@ export function Logo({
   showTagline = false,
   /** When true, same as `theme="dark"` (wordmark for dark/navy panels). */
   light = false,
+  className = "",
 }: {
   size?: LogoSize;
   variant?: LogoVariant;
   theme?: LogoTheme;
   showTagline?: boolean;
   light?: boolean;
+  className?: string;
 }) {
   const effectiveTheme: LogoTheme = light ? "dark" : theme;
   const P = SIZE_PRESET[size];
@@ -140,7 +142,14 @@ export function Logo({
 
   if (variant === "stacked") {
     return (
-      <div className="flex flex-col items-center gap-2 text-center">
+      <div
+        className={[
+          "flex flex-col items-center gap-2 text-center",
+          className,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         {sunEl}
         {lockupText}
       </div>
@@ -148,7 +157,7 @@ export function Logo({
   }
 
   return (
-    <div className="flex min-w-0 items-center gap-3">
+    <div className={["flex min-w-0 items-center gap-3", className].filter(Boolean).join(" ")}>
       {sunEl}
       <div className="min-w-0 flex-1">{lockupText}</div>
     </div>

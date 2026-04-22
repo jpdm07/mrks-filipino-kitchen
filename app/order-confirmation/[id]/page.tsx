@@ -62,9 +62,8 @@ export default async function OrderConfirmationPage({
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 text-center">
       <OrderConfirmationConfetti />
-      <div className="flex justify-center">
-        <Logo size="xl" />
-      </div>
+      {/* Stacked wordmark: horizontal logo left-aligns “Mr. K’s” beside the sun vs. this centered page */}
+      <Logo size="xl" variant="stacked" className="mx-auto" />
       <AnimatedCheck />
       <h1 className="mt-6 font-[family-name:var(--font-playfair)] text-3xl font-bold text-[var(--text)]">
         Thank you!
@@ -93,8 +92,8 @@ export default async function OrderConfirmationPage({
         </p>
       ) : null}
 
-      <div className="mt-8 rounded-[var(--radius)] border-2 border-[var(--primary)] bg-[var(--primary)]/5 p-5 text-left shadow-[var(--shadow)]">
-        <div className="mb-4 rounded-xl border-2 border-amber-500/80 bg-amber-50 px-4 py-3 text-center shadow-sm">
+      <div className="mt-8 rounded-[var(--radius)] border-2 border-[var(--primary)] bg-[var(--primary)]/5 p-5 text-center shadow-[var(--shadow)]">
+        <div className="mb-4 rounded-xl border-2 border-amber-500/80 bg-amber-50 px-4 py-3 shadow-sm">
           <p className="text-base font-bold text-amber-950">
             Your order isn&apos;t final until we receive payment.
           </p>
@@ -119,12 +118,12 @@ export default async function OrderConfirmationPage({
         </div>
       </div>
 
-      <div className="mt-8 overflow-x-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] text-left shadow-[var(--shadow)]">
-        <table className="w-full min-w-[280px] text-sm">
+      <div className="mt-8 overflow-x-auto rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] text-center shadow-[var(--shadow)] sm:text-left">
+        <table className="w-full min-w-[280px] text-sm sm:text-left">
           <tbody>
             {items.map((i, idx) => (
               <tr key={idx} className="border-b border-[var(--border)]">
-                <td className="max-w-[65vw] break-words px-3 py-2 sm:max-w-none sm:px-4">
+                <td className="max-w-[65vw] break-words px-3 py-2 text-center sm:max-w-none sm:px-4 sm:text-left">
                   {i.name}
                   {i.size ? ` · ${i.size}` : ""}
                   {i.cookedOrFrozen === "frozen" ||
@@ -133,14 +132,14 @@ export default async function OrderConfirmationPage({
                     : ""}
                   {i.isSample ? " · sample" : ""} ×{i.quantity}
                 </td>
-                <td className="whitespace-nowrap px-3 py-2 text-right font-semibold sm:px-4">
+                <td className="whitespace-nowrap px-3 py-2 text-center font-semibold sm:px-4 sm:text-right">
                   ${(i.unitPrice * i.quantity).toFixed(2)}
                 </td>
               </tr>
             ))}
             {showUtensilsBlock ? (
               <tr className="border-b border-[var(--border)]">
-                <td className="max-w-[65vw] px-3 py-2 sm:max-w-none sm:px-4">
+                <td className="max-w-[65vw] px-3 py-2 text-center sm:max-w-none sm:px-4 sm:text-left">
                   <span className="font-medium text-[var(--text)]">Utensils</span>
                   {order.utensilSets > 0
                     ? (() => {
@@ -158,7 +157,7 @@ export default async function OrderConfirmationPage({
                       })()
                     : null}
                 </td>
-                <td className="whitespace-nowrap px-3 py-2 text-right font-semibold align-top sm:px-4">
+                <td className="whitespace-nowrap px-3 py-2 text-center font-semibold align-top sm:px-4 sm:text-right">
                   {order.utensilSets > 0
                     ? `$${order.utensilCharge.toFixed(2)}`
                     : "—"}
@@ -166,20 +165,20 @@ export default async function OrderConfirmationPage({
               </tr>
             ) : null}
             <tr className="border-b border-[var(--border)]">
-              <td className="px-4 py-2">Subtotal</td>
-              <td className="px-4 py-2 text-right">
+              <td className="px-4 py-2 sm:text-left">Subtotal</td>
+              <td className="px-4 py-2 text-center sm:text-right">
                 ${order.subtotal.toFixed(2)}
               </td>
             </tr>
             <tr className="border-b border-[var(--border)]">
-              <td className="px-4 py-2">Tax ({salesTaxPercentLabel()})</td>
-              <td className="px-4 py-2 text-right">
+              <td className="px-4 py-2 sm:text-left">Tax ({salesTaxPercentLabel()})</td>
+              <td className="px-4 py-2 text-center sm:text-right">
                 ${order.tax.toFixed(2)}
               </td>
             </tr>
             <tr>
-              <td className="px-4 py-3 font-bold">Total</td>
-              <td className="px-4 py-3 text-right text-lg font-bold text-[var(--primary)]">
+              <td className="px-4 py-3 font-bold sm:text-left">Total</td>
+              <td className="px-4 py-3 text-center text-lg font-bold text-[var(--primary)] sm:text-right">
                 ${order.total.toFixed(2)}
               </td>
             </tr>
@@ -187,10 +186,10 @@ export default async function OrderConfirmationPage({
         </table>
       </div>
 
-      <SalesTaxDisclosure className="mt-4" />
+      <SalesTaxDisclosure className="mt-4 text-center" />
 
       {order.status === ORDER_STATUS_CONFIRMED ? (
-        <div className="mt-6 rounded-[var(--radius)] bg-[var(--gold-light)] p-4 text-left text-sm text-[var(--text)]">
+        <div className="mt-6 rounded-[var(--radius)] bg-[var(--gold-light)] p-4 text-sm text-[var(--text)]">
           <p>
             Thank you! Your payment is confirmed and your pickup is set. If you
             need anything before pickup, call or text{" "}
@@ -205,7 +204,7 @@ export default async function OrderConfirmationPage({
         </div>
       ) : null}
       {frozenLumpia ? (
-        <div className="mt-4 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-section)] p-4 text-left text-sm">
+        <div className="mt-4 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-section)] p-4 text-sm">
           <p>
             Your frozen lumpia will be packaged in a sealed gallon freezer bag
             with parchment paper separators to prevent sticking.
