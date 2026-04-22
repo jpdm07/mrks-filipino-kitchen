@@ -19,7 +19,7 @@ const RECIPES = [
   {
     id: "adobo",
     title: "Chicken or Pork adobo (balanced, glossy sauce)",
-    body: `Protein: bone-in chicken (drumstick+thigh) OR pork shoulder or butt, cubed (not belly). Soy–vinegar–garlic–bay–peppercorns; reduce sauce until thick and glossy.\n\nSEAR, BRAISE, REDUCE: ⅓ c soy; ¼ c vinegar; water to barely cover; garlic; bay; peppercorns; oil. Cover until fork-tender (chicken ~45 min, pork 60–75 min), then uncover and reduce 8–12 min.\n\nPLATE: jasmine rice, fried egg, meat + sauce (same container format as other plates). PARTY TRAY (8–10, menu $65): scale meat ~3.5 lb raw, 4 c uncooked rice, foil tray + lid; no drumstick-only wording — pork plates use shoulder cubes.`,
+    body: `Protein: bone-in chicken (drumstick+thigh) OR pork shoulder or butt, cubed (not belly). Soy–vinegar–garlic–bay–peppercorns; reduce sauce until thick and glossy.\n\nSEAR, BRAISE, REDUCE: ⅓ c soy; ¼ c vinegar; water to barely cover; garlic; bay; peppercorns; oil. Cover until fork-tender (chicken ~45 min, pork 60–75 min), then uncover and reduce 8–12 min.\n\nPLATE: jasmine rice, fried egg, meat + sauce (same container format as other plates). PARTY TRAY (8–10, menu $55): scale meat ~3.5 lb raw, 4 c uncooked rice, foil tray + lid; no drumstick-only wording — pork plates use shoulder cubes.`,
   },
   { id: "dip", title: "Dipping sauce (20×2oz)", body: `⅓ red onion minced; ⅓ cucumber minced; 3 garlic; 3 tsp soy; ½ c brown sugar; 1 c vinegar; fish sauce & peppercorns to taste. Dissolve sugar, combine, fill cups ¾, refrigerate ≤5 days.` },
   { id: "quail", title: "Quail eggs (10)", body: `Buy quail eggs at HMart Katy AsiaTown. Bread & fry; pack 8×8 + foil + 2 dip cups.` },

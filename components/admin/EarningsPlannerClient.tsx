@@ -43,14 +43,14 @@ const MENU_ITEMS = [
   {
     id: "adobo-chicken-party",
     name: "Adobo (chicken) — party tray (8–10)",
-    price: 65.0,
+    price: 55.0,
     cost: 19.2,
     cookMin: 75,
   },
   {
     id: "adobo-pork-party",
     name: "Adobo (pork) — party tray (8–10)",
-    price: 65.0,
+    price: 55.0,
     cost: 26.7,
     cookMin: 75,
   },

@@ -5,7 +5,7 @@
 
 export const ADOBO_RETAIL_USD = {
   plate: 11.99,
-  party: 65,
+  party: 55,
 } as const;
 
 /**

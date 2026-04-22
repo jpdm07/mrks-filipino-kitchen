@@ -236,8 +236,8 @@ export const RECIPES: Recipe[] = [
         },
         yieldUnits: 9,
         totalCost: 19.2,
-        revenueAt: 65.0,
-        profit: 45.8,
+        revenueAt: 55.0,
+        profit: 35.8,
       },
       {
         multiplier: 1,
@@ -246,8 +246,8 @@ export const RECIPES: Recipe[] = [
         },
         yieldUnits: 9,
         totalCost: 26.7,
-        revenueAt: 65.0,
-        profit: 38.3,
+        revenueAt: 55.0,
+        profit: 28.3,
       },
     ],
     notes:

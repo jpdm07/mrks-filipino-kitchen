@@ -299,7 +299,7 @@ export function RecipeContent({
           scales={r.scaling}
           caption={
             r.id === "adobo"
-              ? "Party tray economics (8–10 servings; list from menu $65.00; chicken vs. pork cost)"
+              ? "Party tray economics (8–10 servings; list from menu $55.00; chicken vs. pork cost)"
               : undefined
           }
           yieldColumnLabel={r.id === "adobo" ? "Servings (est.)" : undefined}
