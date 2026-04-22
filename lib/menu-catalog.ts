@@ -15,7 +15,7 @@ import { ADOBO_RETAIL_USD } from "./adobo-cost-model";
 import { FLAN_RETAIL_PER_RAMEKIN_USD } from "./flan-cost-model";
 import {
   YEMA_RETAIL_SINGLE_USD,
-  YEMA_RETAIL_TEN_PACK_USD,
+  YEMA_RETAIL_TWELVE_PACK_USD,
 } from "./yema-cost-model";
 import { LUMPIA_RETAIL_USD } from "./lumpia-cost-model";
 import { TOCINO_RETAIL_USD } from "./tocino-cost-model";
@@ -278,9 +278,9 @@ export const MENU_CATALOG = [
         price: YEMA_RETAIL_SINGLE_USD,
       },
       {
-        key: "ten",
-        label: "10 pieces (bundle)",
-        price: YEMA_RETAIL_TEN_PACK_USD,
+        key: "twelve",
+        label: "12 pieces (bundle)",
+        price: YEMA_RETAIL_TWELVE_PACK_USD,
       },
     ],
     photoUrl: CATALOG_PHOTOS.yema,

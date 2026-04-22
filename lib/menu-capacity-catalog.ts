@@ -38,8 +38,8 @@ export const COOK_MINUTES_BY_MENU_ITEM: Record<
     isFlan: true,
   },
   "seed-13": {
-    /* `six` = legacy size key from 6-pc bundle (retired) */
-    bySize: { single: 0, ten: 0, six: 0 },
+    /* `ten` / `six` = legacy size keys (retired bundles) */
+    bySize: { single: 0, twelve: 0, ten: 0, six: 0 },
   },
   "seed-7": {
     bySize: { "10pc": 20 },
