@@ -21,6 +21,13 @@ export function cartLineBriefSizeDescription(line: CartLine): string {
     out = out.replace(/\bper\s*10\s*pcs\b/gi, `${q * 10} pcs`);
   }
 
+  if (line.menuItemId === "seed-12" && line.adoboProtein) {
+    const p = line.adoboProtein === "chicken" ? "Chicken" : "Pork";
+    const tier =
+      line.sizeKey === "party" ? "Party Tray (8–10)" : "Plate";
+    return `${p} · ${tier} · ${line.sizeLabel}`;
+  }
+
   const hasCfWord = /\b(Cooked|Frozen)\b/i.test(out);
   const want =
     line.cookedOrFrozen === "cooked"

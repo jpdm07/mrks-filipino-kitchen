@@ -20,7 +20,11 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
   const sizeKeys = item.sizes.map((s) => s.key);
   const defaultKey = sizeKeys[0] ?? "default";
   const [sizeKey, setSizeKey] = useState(defaultKey);
+  const [adoboProtein, setAdoboProtein] = useState<"chicken" | "pork">(
+    "chicken"
+  );
   const [qty, setQty] = useState(1);
+  const isAdobo = item.id === "seed-12";
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -77,6 +81,7 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
       sizeKey: selectedSize.key,
       sizeLabel: selectedSize.label,
       cookedOrFrozen: lumpia ? cookedOrFrozen : undefined,
+      adoboProtein: isAdobo ? adoboProtein : undefined,
     });
     setQty(1);
   };
@@ -143,6 +148,53 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
                   Frozen
                 </label>
               </div>
+            </div>
+          ) : isAdobo ? (
+            <div className="mt-3 space-y-3">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
+                  Chicken or Pork
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  {(["chicken", "pork"] as const).map((p) => (
+                    <label
+                      key={p}
+                      className="flex cursor-pointer items-center gap-2 text-sm"
+                    >
+                      <input
+                        type="radio"
+                        name={`adobo-p-${item.id}`}
+                        checked={adoboProtein === p}
+                        onChange={() => setAdoboProtein(p)}
+                      />
+                      <span className="capitalize">{p}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              {item.sizes.length > 1 ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
+                    Size
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {item.sizes.map((s) => (
+                      <label
+                        key={s.key}
+                        className="flex cursor-pointer items-center gap-2 text-sm"
+                      >
+                        <input
+                          type="radio"
+                          name={`sz-${item.id}`}
+                          checked={sizeKey === s.key}
+                          onChange={() => setSizeKey(s.key)}
+                        />
+                        {s.label} — ${Number(s.price).toFixed(2)}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : item.sizes.length > 1 ? (
             <div className="mt-3 space-y-2">

@@ -26,8 +26,34 @@ const MENU_ITEMS = [
   { id: "tocino-chicken-plate", name: "Tocino Chicken Plate", price: 11.99, cost: 6.65, cookMin: 20 },
   { id: "tocino-pork-frozen", name: "Frozen Tocino Pork", price: 9.99, cost: 9.1, cookMin: 5 },
   { id: "tocino-chicken-frozen", name: "Frozen Tocino Chicken", price: 9.99, cost: 8.6, cookMin: 5 },
-  { id: "adobo-plate", name: "Chicken Adobo Plate", price: 11.99, cost: 3.45, cookMin: 30 },
-  { id: "adobo-party", name: "Chicken Adobo Party Tray", price: 55.0, cost: 27.88, cookMin: 75 },
+  {
+    id: "adobo-chicken-plate",
+    name: "Adobo (chicken) — plate",
+    price: 11.99,
+    cost: 3.1,
+    cookMin: 30,
+  },
+  {
+    id: "adobo-pork-plate",
+    name: "Adobo (pork) — plate",
+    price: 11.99,
+    cost: 3.82,
+    cookMin: 30,
+  },
+  {
+    id: "adobo-chicken-party",
+    name: "Adobo (chicken) — party tray (8–10)",
+    price: 65.0,
+    cost: 19.2,
+    cookMin: 75,
+  },
+  {
+    id: "adobo-pork-party",
+    name: "Adobo (pork) — party tray (8–10)",
+    price: 65.0,
+    cost: 26.7,
+    cookMin: 75,
+  },
   { id: "quail", name: "Quail Eggs (10 pcs)", price: 7.99, cost: 3.82, cookMin: 20 },
   { id: "flan", name: "Caramel Flan (ramekin)", price: 3.5, cost: 2.71, cookMin: 0 },
   {
@@ -55,7 +81,7 @@ function cents(n: number) {
 }
 
 const BALANCED_PRESET: Partial<Record<ItemId, number>> = {
-  "adobo-plate": 4,
+  "adobo-chicken-plate": 4,
   "lumpia-beef-cooked": 2,
   "lumpia-pork-cooked": 2,
   "pancit-chicken-24": 1,
@@ -65,7 +91,7 @@ const BALANCED_PRESET: Partial<Record<ItemId, number>> = {
 };
 
 const LIGHT_PRESET: Partial<Record<ItemId, number>> = {
-  "adobo-plate": 2,
+  "adobo-chicken-plate": 2,
   "lumpia-beef-cooked": 1,
   "pancit-chicken-sm": 1,
   "tocino-chicken-plate": 1,
@@ -538,13 +564,14 @@ export function EarningsPlannerClient() {
               <>
                 <p>
                   Your most profitable items per cook minute are:{" "}
-                  <strong>Chicken Adobo Plate: $2.85 profit per cook minute</strong>;{" "}
-                  <strong>cooked Lumpia (any): $0.50+ profit per cook minute</strong>;{" "}
-                  <strong>Tocino Plates: $0.25+ profit per cook minute</strong>.
+                  <strong>Chicken or Pork Adobo (chicken) — plate: ~$0.30 profit per cook minute</strong>{" "}
+                  at full recipe cost; <strong>pork adobo — plate: ~$0.27</strong>;{" "}
+                  <strong>cooked lumpia (any): $0.50+</strong>;{" "}
+                  <strong>tocino plates: $0.25+</strong> (profit per cook minute, rough).
                 </p>
                 <p className="mt-2">
-                  Your least profitable per cook minute: Pancit Party Trays take 75 minutes for ~$23
-                  profit. That&apos;s the same time as 2–3 adobo plates at $9+ profit each.
+                  Your least profitable per cook minute: large pancit party trays can take 75 minutes for
+                  a thinner margin than several adobo plates in the same window.
                 </p>
                 <p className="mt-2">
                   <strong>Tip:</strong> When your week is filling up, prioritize adobo plates and lumpia

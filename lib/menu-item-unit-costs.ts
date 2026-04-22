@@ -5,7 +5,7 @@
 
 import type { OrderItemLine } from "./order-types";
 import { LUMPIA_DOZEN_COGS_USD } from "./lumpia-cost-model";
-import { adoboUnitCostFromHaystack } from "./adobo-cost-model";
+import { adoboCogsForOrderLine } from "./adobo-cost-model";
 import { tocinoUnitCostFromHaystack } from "./tocino-cost-model";
 import { yemaUnitCogsUsd } from "./yema-cost-model";
 
@@ -81,9 +81,17 @@ export function napkinCostSharePerLine(lineCount: number): number {
 
 /**
  * Unit COGS for one line (customer `name` + optional `size` label), before per-order napkin share.
+ * `adoboProtein` is set on new Adobo lines (`seed-12`) for correct pork vs. chicken COGS.
  */
-export function getUnitCost(name: string, size?: string | null): number {
+export function getUnitCost(
+  name: string,
+  size?: string | null,
+  adoboProtein?: "chicken" | "pork"
+): number {
   const h = `${name} ${size ?? ""}`.toLowerCase();
+
+  const adoboLine = adoboCogsForOrderLine(name, size, adoboProtein);
+  if (adoboLine != null) return adoboLine;
 
   const lumpiaSampleCogs = lumpiaSample4pcCogsFromHaystack(h);
   if (lumpiaSampleCogs != null) return lumpiaSampleCogs;
@@ -117,9 +125,6 @@ export function getUnitCost(name: string, size?: string | null): number {
   const tocinoCogs = tocinoUnitCostFromHaystack(h);
   if (tocinoCogs != null) return tocinoCogs;
 
-  const adoboCogs = adoboUnitCostFromHaystack(h);
-  if (adoboCogs != null) return adoboCogs;
-
   return 0;
 }
 
@@ -146,13 +151,13 @@ export function totalSauceCupsForItems(
 
 /** Legacy helper — base unit cost without napkin share (napkin applied in Sheets payload). */
 export function getOrderLineUnitCostUsd(line: OrderItemLine): number {
-  return getUnitCost(line.name, line.size);
+  return getUnitCost(line.name, line.size, line.adoboProtein);
 }
 
 export function orderLineEstimatedProfitUsd(
   line: OrderItemLine,
   napkinShare: number = 0
 ): number {
-  const uc = getUnitCost(line.name, line.size) + napkinShare;
+  const uc = getUnitCost(line.name, line.size, line.adoboProtein) + napkinShare;
   return Math.round(line.quantity * (line.unitPrice - uc) * 100) / 100;
 }

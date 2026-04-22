@@ -6,6 +6,8 @@ export type OrderItemLine = {
   /** Matches MenuItem sizes[].key — required for kitchen capacity on new orders. */
   sizeKey?: string;
   cookedOrFrozen?: string;
+  /** `seed-12` Adobo — same price for both; required on new orders for COGS. */
+  adoboProtein?: "chicken" | "pork";
   isSample?: boolean;
   category?: string;
   menuItemId?: string;

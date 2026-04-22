@@ -55,7 +55,7 @@ export const FLAN_IMAGE = "/images/flan.jpg";
 /** Yema candy — `public/images/yema.jpg`. */
 export const YEMA_IMAGE = "/images/yema.jpg";
 
-/** Chicken adobo — `public/images/chickenadobo.jpeg`. */
+/** Chicken or Pork Adobo — `public/images/chickenadobo.jpeg`. */
 export const ADOBO_IMAGE = "/images/chickenadobo.jpeg";
 
 /**
@@ -367,21 +367,21 @@ export const MENU_CATALOG = [
   },
   {
     id: "seed-12",
-    name: "Chicken Adobo",
+    name: "Chicken or Pork Adobo",
     description:
-      "Slow-braised bone-in chicken, the national dish. Bone-in chicken slow-braised in Mr. K's soy-vinegar adobo sauce with garlic, bay leaf, and whole peppercorns. We reduce the sauce until it's thick and glossy, so every piece gets that signature savory-tangy coat. Plate comes with jasmine rice, a fried egg, one drumstick and one thigh. Party tray feeds 8–10. Plate (1 drumstick + 1 thigh, rice, egg) · Party Tray (8–10 servings).",
+      "Your choice of bone-in chicken or tender pork shoulder slow-braised in Mr. K's soy-vinegar adobo sauce with garlic, bay leaf, and whole peppercorns. We reduce the sauce until it's thick and glossy, so every piece gets that signature savory-tangy coat. Plate comes with jasmine rice, a fried egg, and meat. Party tray feeds 8–10. Protein: Chicken · Pork (use pork shoulder or butt for braising — not belly).",
     category: "Meals",
     calories: "~520 (plate)",
     basePrice: ADOBO_RETAIL_USD.plate,
     sizes: [
       {
         key: "plate",
-        label: "Plate — 1 serving (rice, egg, 1 drumstick & 1 thigh)",
+        label: "Plate (1 serving) — jasmine rice, egg, and meat",
         price: ADOBO_RETAIL_USD.plate,
       },
       {
         key: "party",
-        label: "Party Tray (8-10 servings)",
+        label: "Party Tray (8–10 servings)",
         price: ADOBO_RETAIL_USD.party,
       },
     ],

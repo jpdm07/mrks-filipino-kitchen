@@ -2,6 +2,7 @@ import type { BatchScale, Ingredient, Recipe, RecipeVariant } from "@/lib/recipe
 import { batchCostForLumpiaVariant, sharedIngredientsCostExcludingVariants } from "@/lib/recipes";
 import {
   type LumpiaMarginRow,
+  adoboMarginDisplayRows,
   flanMarginDisplayRows,
   lumpiaMarginDisplayRows,
 } from "@/lib/recipe-margins";
@@ -58,17 +59,25 @@ function VariantOverrideTable({ v, meatOnly }: { v: RecipeVariant; meatOnly: boo
   return <IngredientTable rows={rows} caption="Override" />;
 }
 
-function ScalesTable({ scales }: { scales: BatchScale[] }) {
+function ScalesTable({
+  scales,
+  caption,
+  yieldColumnLabel = "Yield (ramekins)",
+}: {
+  scales: BatchScale[];
+  caption?: string;
+  yieldColumnLabel?: string;
+}) {
   return (
     <div className="mb-6 overflow-x-auto">
       <table className="w-full border-collapse text-left text-sm">
         <caption className="mb-1 text-left text-sm font-semibold text-[color:var(--primary)] print:text-black">
-          Batch scale (8 ramekins / lb rule)
+          {caption ?? "Batch scale (8 ramekins / lb rule)"}
         </caption>
         <thead>
           <tr className="border-b-2 border-[color:var(--primary)] bg-[color:var(--primary)]/5">
             <th className="py-2 pr-2">×</th>
-            <th className="py-2 pr-2">Yield (ramekins)</th>
+            <th className="py-2 pr-2">{yieldColumnLabel}</th>
             <th className="py-2 pr-2">Total cost</th>
             <th className="py-2 pr-2">Revenue (at list)</th>
             <th className="py-2 pr-2">Profit</th>
@@ -76,8 +85,8 @@ function ScalesTable({ scales }: { scales: BatchScale[] }) {
           </tr>
         </thead>
         <tbody>
-          {scales.map((s) => (
-            <tr key={s.multiplier} className="border-b border-slate-200/90 align-top">
+          {scales.map((s, i) => (
+            <tr key={`${i}-${s.multiplier}-${s.yieldUnits}`} className="border-b border-slate-200/90 align-top">
               <td className="py-1.5 pr-2">{s.multiplier}×</td>
               <td className="py-1.5 pr-2 tabular-nums">{s.yieldUnits}</td>
               <td className="py-1.5 pr-2 tabular-nums">${s.totalCost.toFixed(2)}</td>
@@ -126,6 +135,25 @@ function MarginsLumpia({ r }: { r: Recipe }) {
       </p>
       <ul className="space-y-1 text-sm text-slate-800">
         {all.map((row) => (
+          <li key={row.id} className="pl-0 leading-relaxed print:text-sm">
+            {row.oneLine}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function MarginsAdobo() {
+  const rows = adoboMarginDisplayRows();
+  if (!rows.length) return null;
+  return (
+    <div className="mb-6 rounded-lg border border-amber-200/80 bg-amber-50/40 p-4 print:border print:bg-white">
+      <h3 className="text-sm font-bold uppercase tracking-wide text-[color:var(--primary)] print:text-black">
+        Margins vs. menu (from <code>ADOBO_RETAIL_USD</code> + recipe COGS)
+      </h3>
+      <ul className="mt-2 space-y-1 text-sm text-slate-800">
+        {rows.map((row) => (
           <li key={row.id} className="pl-0 leading-relaxed print:text-sm">
             {row.oneLine}
           </li>
@@ -212,7 +240,7 @@ export function RecipeContent({
         </dl>
       </header>
 
-      {r.id === "lumpia" && r.variants && (
+      {(r.id === "lumpia" || r.id === "adobo") && r.variants && (
         <p className="mb-2 text-sm text-slate-600 print:text-slate-800">
           Base ingredients (shared, no meat) subtotal:{" "}
           <strong className="tabular-nums text-slate-800">${sharedSub.toFixed(2)}</strong>
@@ -246,8 +274,37 @@ export function RecipeContent({
             );
           })
         : null}
+      {r.id === "adobo" && r.variants
+        ? r.variants.map((v) => {
+            const full = batchCostForLumpiaVariant(r, v);
+            return (
+              <div key={v.label} className="mb-6 break-inside-avoid print:mb-4">
+                <h3 className="mb-1 text-base font-semibold text-slate-900 print:text-[14pt]">
+                  {v.label}
+                </h3>
+                <VariantOverrideTable v={v} meatOnly />
+                <p className="text-sm text-slate-800">
+                  <span className="font-semibold">1 plate total (incl. protein + shared):</span>{" "}
+                  <span className="tabular-nums text-lg text-emerald-800 print:text-black print:text-base">
+                    ${full.toFixed(2)}
+                  </span>
+                </p>
+              </div>
+            );
+          })
+        : null}
 
-      {r.scaling?.length ? <ScalesTable scales={r.scaling} /> : null}
+      {r.scaling?.length ? (
+        <ScalesTable
+          scales={r.scaling}
+          caption={
+            r.id === "adobo"
+              ? "Party tray economics (8–10 servings; list from menu $65.00; chicken vs. pork cost)"
+              : undefined
+          }
+          yieldColumnLabel={r.id === "adobo" ? "Servings (est.)" : undefined}
+        />
+      ) : null}
 
       <h2 className="mb-2 mt-6 text-lg font-bold text-[color:var(--primary)] print:text-[18pt] print:text-black">
         Method
@@ -272,9 +329,11 @@ export function RecipeContent({
       {showMargins
         ? r.id === "lumpia" && r.variants
           ? <MarginsLumpia r={r} />
-          : r.id === "leche-flan"
-            ? <MarginsFlan r={r} />
-            : null
+          : r.id === "adobo"
+            ? <MarginsAdobo />
+            : r.id === "leche-flan"
+              ? <MarginsFlan r={r} />
+              : null
         : null}
     </article>
   );

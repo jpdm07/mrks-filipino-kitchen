@@ -33,7 +33,7 @@ export function lineToSheetsOrderPayload(
 ): SheetsOrderLinePayload {
   const size = i.size ?? "";
   const lineTotal = Math.round(i.quantity * i.unitPrice * 100) / 100;
-  const baseUnitCost = getUnitCost(i.name, size);
+  const baseUnitCost = getUnitCost(i.name, size, i.adoboProtein);
   const unitCost = Math.round((baseUnitCost + napkinShare) * 100) / 100;
   const estimatedProfit = orderLineEstimatedProfitUsd(i, napkinShare);
   const base: SheetsOrderLinePayload = {

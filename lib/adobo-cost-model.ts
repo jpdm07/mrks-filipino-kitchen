@@ -1,27 +1,68 @@
 /**
- * Chicken adobo retail + modeled loaded COGS (protein, rice, egg, sauce, packaging, labor slice).
- * Used by `menu-catalog` list prices and `getUnitCost` → Google Sheets `estimatedProfit`.
+ * Chicken or Pork Adobo — retail and recipe-aligned loaded COGS by protein + size.
+ * Used by `menu-catalog` list prices, `getUnitCost` → Google Sheets, and admin recipe margins.
  */
 
 export const ADOBO_RETAIL_USD = {
   plate: 11.99,
-  party: 55,
+  party: 65,
 } as const;
 
-/** Loaded COGS per unit — tuned vs. retail for Sheets margin lines. */
-export const ADOBO_UNIT_COGS_USD = {
-  /** Plate: 1 drumstick + 1 thigh, rice, egg, sauce, 3-comp foam. */
-  plate: 5.85,
-  party: 28.5,
+/**
+ * Per-unit recipe COGS (same retail for both proteins; costs differ by protein).
+ * Party tray: 8–10 servings (recipe economics).
+ */
+export const ADOBO_RECIPE_COGS_USD = {
+  plate: { chicken: 3.1, pork: 3.82 },
+  party: { chicken: 19.2, pork: 26.7 },
 } as const;
+
+/** One-line takeout/print blurb (matches `/takeout-menu` spec). */
+export const ADOBO_PRINT_TAKEOUT_SUBLINE = `from $11.99 — Chicken or Pork · Plate $11.99 · Party Tray (8–10) $${ADOBO_RETAIL_USD.party.toFixed(2)}`;
 
 function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
-/** Match order line `name` + `size` from cart / DB. */
+function adoboCogs(
+  protein: "chicken" | "pork",
+  sizeIsParty: boolean
+): number {
+  const b = sizeIsParty
+    ? ADOBO_RECIPE_COGS_USD.party[protein]
+    : ADOBO_RECIPE_COGS_USD.plate[protein];
+  return round2(b);
+}
+
+/**
+ * `size` should be the order `size` field (e.g. "Pork, Plate" or "Chicken, Party Tray (8–10)").
+ * `adoboProtein` is set on new orders; when missing, infer pork only if the size string
+ * looks like the new format and starts with "Pork", else default to chicken (legacy
+ * "Chicken Adobo" lines).
+ */
+export function adoboCogsForOrderLine(
+  name: string,
+  size: string | null | undefined,
+  adoboProtein?: "chicken" | "pork"
+): number | null {
+  if (!/adobo/i.test(name)) return null;
+  const sz = `${size ?? ""}`.toLowerCase();
+  const sizeIsParty = /\bparty|8[-–]10|8~10|8-10\s*serv/i.test(sz);
+  if (adoboProtein) {
+    return adoboCogs(adoboProtein, sizeIsParty);
+  }
+  if (/^pork\b/i.test(`${size ?? ""}`.trim())) {
+    return adoboCogs("pork", sizeIsParty);
+  }
+  return adoboCogs("chicken", sizeIsParty);
+}
+
+/**
+ * Haystack-only helper (legacy). Defaults to **chicken** COGS; cannot detect pork.
+ * Prefer `adoboCogsForOrderLine` with the real `name` + `size` + `adoboProtein`.
+ */
 export function adoboUnitCostFromHaystack(h: string): number | null {
   if (!h.includes("adobo")) return null;
-  if (h.includes("party")) return round2(ADOBO_UNIT_COGS_USD.party);
-  return round2(ADOBO_UNIT_COGS_USD.plate);
+  const party = h.includes("party");
+  return adoboCogs("chicken", party);
 }

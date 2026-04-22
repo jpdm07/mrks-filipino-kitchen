@@ -13,6 +13,8 @@ export type CartLine = {
   sizeKey: string;
   sizeLabel: string;
   cookedOrFrozen?: "cooked" | "frozen";
+  /** `seed-12` Adobo — same list price for both. */
+  adoboProtein?: "chicken" | "pork";
 };
 
 export type SampleSelection = {
@@ -43,8 +45,12 @@ export function samplesSelectionComplete(s: SampleSelection): boolean {
 export function cartLineKey(
   menuItemId: string,
   sizeKey: string,
-  cookedOrFrozen?: "cooked" | "frozen"
+  cookedOrFrozen?: "cooked" | "frozen",
+  adoboProtein?: "chicken" | "pork"
 ): string {
+  if (adoboProtein) {
+    return `${menuItemId}|${sizeKey}|${cookedOrFrozen ?? ""}|${adoboProtein}`;
+  }
   return `${menuItemId}|${sizeKey}|${cookedOrFrozen ?? ""}`;
 }
 
@@ -104,16 +110,33 @@ export function samplesToLines(
   return out;
 }
 
+function adoboOrderSizeLine(
+  protein: "chicken" | "pork",
+  sizeKey: string
+): string {
+  const p = protein === "chicken" ? "Chicken" : "Pork";
+  if (sizeKey === "party") {
+    return `${p}, Party Tray (8–10)`;
+  }
+  return `${p}, Plate`;
+}
+
 export function cartLinesToOrderItems(lines: CartLine[]): OrderItemLine[] {
-  return lines.map((l) => ({
-    name: l.name,
-    quantity: l.quantity,
-    unitPrice: l.unitPrice,
-    size: l.sizeLabel,
-    sizeKey: l.sizeKey,
-    cookedOrFrozen: l.cookedOrFrozen,
-    menuItemId: l.menuItemId,
-    isSample: false,
-    ...(l.category?.trim() ? { category: l.category.trim() } : {}),
-  }));
+  return lines.map((l) => {
+    const isAdobo = l.menuItemId === "seed-12" && l.adoboProtein;
+    return {
+      name: l.name,
+      quantity: l.quantity,
+      unitPrice: l.unitPrice,
+      size: isAdobo
+        ? adoboOrderSizeLine(l.adoboProtein!, l.sizeKey)
+        : l.sizeLabel,
+      sizeKey: l.sizeKey,
+      cookedOrFrozen: l.cookedOrFrozen,
+      menuItemId: l.menuItemId,
+      isSample: false,
+      ...(isAdobo ? { adoboProtein: l.adoboProtein } : {}),
+      ...(l.category?.trim() ? { category: l.category.trim() } : {}),
+    };
+  });
 }

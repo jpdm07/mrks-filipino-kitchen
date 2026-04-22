@@ -173,6 +173,86 @@ export const RECIPES: Recipe[] = [
     notes:
       "Use ~5 ramekins per pound of custard mix — do not overfill or underfill. Each ramekin should be ~4.5 oz so a 5 oz cup looks full. Underfilled flan looks cheap. Always strain twice — the difference between silky and grainy.",
   },
+  {
+    id: "adobo",
+    menuItemId: "seed-12",
+    title: "Chicken or Pork Adobo",
+    subtitle: "The Filipino national dish — slow-braised in soy-vinegar sauce",
+    yieldDescription: "1 plate serving (scalable)",
+    yieldUnits: 1,
+    activeTimeMinutes: 30,
+    totalTimeMinutes: 75,
+    lastUpdated: "2026-04-22T12:00:00.000Z",
+    ingredients: [
+      { name: "Jasmine rice (uncooked)", amount: "~½ cup", unitCost: 0.25, source: "Kroger / H-Mart" },
+      { name: "Large egg (fried egg for plate)", amount: "1", unitCost: 0.29, source: "Kroger" },
+      { name: "Soy sauce", amount: "~3 tbsp", unitCost: 0.15, source: "Kroger / H-Mart" },
+      { name: "White vinegar (cane or distilled)", amount: "~3 tbsp", unitCost: 0.08, source: "Kroger" },
+      { name: "Garlic, smashed", amount: "3–4 cloves", unitCost: 0.15, source: "Kroger" },
+      { name: "Dried bay leaf", amount: "1 leaf", unitCost: 0.05, source: "pantry" },
+      { name: "Whole black peppercorns", amount: "~½ tsp", unitCost: 0.1, source: "pantry" },
+      { name: "Oil for searing", amount: "1–2 tbsp", unitCost: 0.25, source: "pantry" },
+      { name: "To-go container + lid", amount: "1", unitCost: 0.75, source: "Amazon / Dollar Tree" },
+    ],
+    variants: [
+      {
+        label: "Chicken",
+        totalCostOverride: 3.1,
+        ingredientOverrides: [
+          {
+            name: "Chicken (bone-in)",
+            amount: "1 drumstick + 1 thigh, ~9 oz raw @ ~$1.80/lb avg",
+            unitCost: 1.03,
+            source: "Kroger",
+          },
+        ],
+      },
+      {
+        label: "Pork",
+        totalCostOverride: 3.82,
+        ingredientOverrides: [
+          {
+            name: "Pork shoulder, cubed (not belly)",
+            amount: "7 oz raw @ $3.99/lb → ~5 oz cooked (~30% shrink)",
+            unitCost: 1.75,
+            source: "Kroger",
+          },
+        ],
+      },
+    ],
+    method: [
+      "Sear the meat. Heat 1–2 tbsp oil in a pot over medium-high heat. Pat meat dry, season lightly with salt. Sear all sides until golden brown (~3–4 min per side). Remove and set aside.",
+      "Build the sauce. In the same pot, add garlic and sauté 30 seconds until fragrant. Add soy sauce, vinegar, bay leaf, and peppercorns. Bring to a boil for 1–2 min (this cooks off the raw vinegar taste — important).",
+      "Return meat + braise. Add the seared meat back. Add just enough water to barely cover (about ½ cup per plate). Bring to a simmer, cover, and cook low-and-slow for 45 min (chicken) or 60–75 min (pork) until fork-tender.",
+      "Reduce the sauce. Uncover and turn heat to medium. Simmer until the sauce thickens and coats the meat glossily (~8–12 min). This is the key step — thin sauce = boring adobo; thick glossy sauce = signature Mr. K's.",
+      "Prep the plate. Cook jasmine rice (1 cup rice : 1½ cups water, 15 min simmered). Fry 1 egg sunny-side up.",
+      "Plate up. Scoop rice into to-go container, top with meat and sauce, place fried egg on the rice.",
+    ],
+    scaling: [
+      {
+        multiplier: 1,
+        ingredientAmounts: {
+          "Party tray (chicken)": "3.5 lb raw meat, 4 c uncooked rice, ~1 c soy, ~1 c vinegar, 2 heads garlic, 6–8 bay, 2 tsp peppercorns, ~¼ c oil, foil tray + lid ($3.50)",
+        },
+        yieldUnits: 9,
+        totalCost: 19.2,
+        revenueAt: 65.0,
+        profit: 45.8,
+      },
+      {
+        multiplier: 1,
+        ingredientAmounts: {
+          "Party tray (pork shoulder)": "3.5 lb raw meat, 4 c uncooked rice, ~1 c soy, ~1 c vinegar, 2 heads garlic, 6–8 bay, 2 tsp peppercorns, ~¼ c oil, foil tray + lid ($3.50)",
+        },
+        yieldUnits: 9,
+        totalCost: 26.7,
+        revenueAt: 65.0,
+        profit: 38.3,
+      },
+    ],
+    notes:
+      "Use pork shoulder or butt for adobo — NOT pork belly (too fatty, drowns in oil when braised; also hurts margin). The sauce MUST reduce until glossy and thick — if it stays watery, the adobo tastes weak. Bay leaves + peppercorns go in WHOLE; customers remove when eating (traditional). Portion guide: 7 oz raw pork per plate ≈ 5 oz cooked after ~30% shrinkage during braising.",
+  },
 ];
 
 export function getRecipeById(id: string): Recipe | undefined {

@@ -1,3 +1,7 @@
+import {
+  ADOBO_RECIPE_COGS_USD,
+  ADOBO_RETAIL_USD,
+} from "./adobo-cost-model";
 import { FLAN_RETAIL_PER_RAMEKIN_USD } from "./flan-cost-model";
 import {
   LUMPIA_RETAIL_TIERS_USD,
@@ -158,6 +162,52 @@ export function flanMarginDisplayRows(
   return out;
 }
 
+export type AdoboMarginRow = {
+  id: string;
+  oneLine: string;
+};
+
+/**
+ * Adobo: plate + party, chicken vs. pork. Sell prices from `ADOBO_RETAIL_USD`
+ * (menu catalog / checkout).
+ */
+export function adoboMarginDisplayRows(): AdoboMarginRow[] {
+  const p = ADOBO_RETAIL_USD.plate;
+  const t = ADOBO_RETAIL_USD.party;
+  const c = ADOBO_RECIPE_COGS_USD;
+  const rows: AdoboMarginRow[] = [];
+
+  const add = (
+    id: string,
+    label: string,
+    cost: number,
+    sell: number
+  ) => {
+    const profit = sell - cost;
+    const marginPct = sell > 0 ? (100 * profit) / sell : 0;
+    rows.push({
+      id,
+      oneLine: `${label}: cost $${cost.toFixed(2)}, sell $${sell.toFixed(2)}, profit $${profit.toFixed(2)} (${marginPct.toFixed(0)}% margin)`,
+    });
+  };
+
+  add(
+    "c-plate",
+    "Chicken Adobo — Plate",
+    c.plate.chicken,
+    p
+  );
+  add("p-plate", "Pork Adobo — Plate", c.plate.pork, p);
+  add(
+    "c-party",
+    "Chicken Adobo — Party Tray",
+    c.party.chicken,
+    t
+  );
+  add("p-party", "Pork Adobo — Party Tray", c.party.pork, t);
+  return rows;
+}
+
 export function listRecipeBaseCostLabel(r: Recipe): string {
   if (r.id === "lumpia" && r.variants?.length) {
     const costs = r.variants
@@ -168,6 +218,17 @@ export function listRecipeBaseCostLabel(r: Recipe): string {
       const hi = Math.max(...costs);
       if (lo === hi) return `$${lo.toFixed(2)} (batch)`;
       return `$${lo.toFixed(2)} – $${hi.toFixed(2)} (per batch, by protein)`;
+    }
+  }
+  if (r.id === "adobo" && r.variants?.length) {
+    const costs = r.variants
+      .map((v) => v.totalCostOverride)
+      .filter((x): x is number => x != null);
+    if (costs.length) {
+      const lo = Math.min(...costs);
+      const hi = Math.max(...costs);
+      if (lo === hi) return `$${lo.toFixed(2)} (1 plate)`;
+      return `$${lo.toFixed(2)} – $${hi.toFixed(2)} (1 plate, by protein)`;
     }
   }
   if (r.id === "leche-flan" && r.scaling?.[0]) {

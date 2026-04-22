@@ -5,6 +5,7 @@ import {
   groupItemsForPrintMenu,
   normalizePrintMenuDescription,
 } from "@/lib/printable-menu";
+import { ADOBO_PRINT_TAKEOUT_SUBLINE } from "@/lib/adobo-cost-model";
 import { LUMPIA_PRINT_TAKEOUT_LINES } from "@/lib/lumpia-cost-model";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
@@ -77,16 +78,31 @@ export function PrintableMenu({ items }: { items: MenuItemDTO[] }) {
                   className="print-menu-item border-b border-dotted border-neutral-300 pb-3 last:border-0 last:pb-0 print:pb-2"
                 >
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                    <span className="font-semibold text-neutral-900">
-                      {item.variantGroup === "lumpia" ? "Lumpia" : item.name}
-                      {item.soldOut ? (
-                        <span className="ml-2 text-xs font-normal uppercase tracking-wide text-[color:var(--gold-dark)]">
-                          Ask
+                    {item.id === "seed-12" ? (
+                      <p className="m-0 text-left text-sm leading-snug text-neutral-900 print:text-[10pt]">
+                        <span className="font-semibold">Chicken or Pork Adobo</span>
+                        <span className="font-medium text-neutral-800">
+                          {" "}
+                          — {ADOBO_PRINT_TAKEOUT_SUBLINE}
                         </span>
-                      ) : null}
-                    </span>
+                        {item.soldOut ? (
+                          <span className="ml-2 text-xs font-normal uppercase tracking-wide text-[color:var(--gold-dark)]">
+                            Ask
+                          </span>
+                        ) : null}
+                      </p>
+                    ) : (
+                      <span className="font-semibold text-neutral-900">
+                        {item.variantGroup === "lumpia" ? "Lumpia" : item.name}
+                        {item.soldOut ? (
+                          <span className="ml-2 text-xs font-normal uppercase tracking-wide text-[color:var(--gold-dark)]">
+                            Ask
+                          </span>
+                        ) : null}
+                      </span>
+                    )}
                   </div>
-                  {item.description ? (
+                  {item.id === "seed-12" ? null : item.description ? (
                     (() => {
                       const raw = normalizePrintMenuDescription(
                         item.description
@@ -113,7 +129,7 @@ export function PrintableMenu({ items }: { items: MenuItemDTO[] }) {
                         {LUMPIA_PRINT_TAKEOUT_LINES.beef}
                       </p>
                     </div>
-                  ) : (
+                  ) : item.id === "seed-12" ? null : (
                     <ul className="mt-2 space-y-1 text-sm text-neutral-800 print:text-[10pt]">
                       {item.sizes.map((s) => (
                         <li

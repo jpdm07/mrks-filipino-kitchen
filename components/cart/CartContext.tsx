@@ -285,7 +285,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const id = cartLineKey(
       line.menuItemId,
       line.sizeKey,
-      line.cookedOrFrozen
+      line.cookedOrFrozen,
+      line.adoboProtein
     );
     setLines((prev) => {
       const i = prev.findIndex((p) => p.id === id);

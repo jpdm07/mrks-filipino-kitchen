@@ -16,7 +16,11 @@ const RECIPES = [
   },
   { id: "tocino-mar", title: "Tocino marinade", body: `Batch from 1 lb pork shoulder/belly OR chicken thighs (¼\" slices); ¼ c brown sugar; 3 tbsp soy; 2 tbsp white vinegar; 1 tsp annatto; 4 garlic cloves; ½ tsp salt. Marinate overnight. Plates: pan-fry complete plate with egg, rice, veg, dip. RETAIL FROZEN PACK: portion 12 oz (340g) marinated meat per bag — seal + parchment, gallon or quart freezer bag per your workflow.` },
   { id: "tocino-plate", title: "Tocino plate assembly", body: `5–6 slices + sunny egg + 1 c jasmine rice + 3 cucumber + 3 tomato + garlic crisps + 1 dip cup in 3-comp foam.` },
-  { id: "adobo", title: "Chicken adobo (balanced sauce)", body: `2.2 lb drumsticks/thighs mix as needed; ⅓ c soy; ¼ c vinegar; ¾ c water; 1 head garlic; 2 bay; 1 tsp peppercorns; 1–2 tsp sugar; 1–2 tbsp oil. Sear, add liquids, boil, simmer covered 15–20 min, uncover and reduce until glossy. Rest 10–15 min.\n\nPLATE (menu — 1 serving): 1 drumstick + 1 thigh; 1 fried egg; 1 c jasmine rice; adobo sauce; 1 dip; 3-comp foam. PARTY: 9×13 tray, 8–10 srv; include small dips for the group.` },
+  {
+    id: "adobo",
+    title: "Chicken or Pork adobo (balanced, glossy sauce)",
+    body: `Protein: bone-in chicken (drumstick+thigh) OR pork shoulder or butt, cubed (not belly). Soy–vinegar–garlic–bay–peppercorns; reduce sauce until thick and glossy.\n\nSEAR, BRAISE, REDUCE: ⅓ c soy; ¼ c vinegar; water to barely cover; garlic; bay; peppercorns; oil. Cover until fork-tender (chicken ~45 min, pork 60–75 min), then uncover and reduce 8–12 min.\n\nPLATE: jasmine rice, fried egg, meat + sauce (same container format as other plates). PARTY TRAY (8–10, menu $65): scale meat ~3.5 lb raw, 4 c uncooked rice, foil tray + lid; no drumstick-only wording — pork plates use shoulder cubes.`,
+  },
   { id: "dip", title: "Dipping sauce (20×2oz)", body: `⅓ red onion minced; ⅓ cucumber minced; 3 garlic; 3 tsp soy; ½ c brown sugar; 1 c vinegar; fish sauce & peppercorns to taste. Dissolve sugar, combine, fill cups ¾, refrigerate ≤5 days.` },
   { id: "quail", title: "Quail eggs (10)", body: `Buy quail eggs at HMart Katy AsiaTown. Bread & fry; pack 8×8 + foil + 2 dip cups.` },
 ];
