@@ -47,8 +47,8 @@ export default function AboutPage() {
             </div>
             <div className="relative text-center">
               <p className="font-[family-name:var(--font-playfair)] text-2xl italic text-[var(--primary)] md:text-3xl">
-                &ldquo;Good Filipino food isn&apos;t just food. It&apos;s memory, family, and
-                identity — all wrapped into one bite.&rdquo;
+                &ldquo;Filipino food is how she reaches across years and miles when she cannot
+                reach with her hands.&rdquo;
               </p>
             </div>
           </section>
