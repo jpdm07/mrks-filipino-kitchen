@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
+
+/** 404: visiting any path with no route still serves this page (status 404 is correct). */
+export const metadata: Metadata = {
+  title: "Page not found | Mr. K's Filipino Kitchen",
+  description: "That page does not exist. Head back to the home page or menu.",
+  robots: { index: false, follow: false },
+};
 
 export default function NotFound() {
   return (
