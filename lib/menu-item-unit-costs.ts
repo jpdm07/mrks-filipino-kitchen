@@ -34,27 +34,42 @@ function lumpiaDozenCogsFromHaystack(h: string): number | null {
   if (!h.includes("lumpia")) return null;
   const frozen = h.includes("frozen");
   if (h.includes("beef")) {
-    return round2(
-      frozen
-        ? LUMPIA_DOZEN_COGS_USD.beef.frozen
-        : LUMPIA_DOZEN_COGS_USD.beef.cooked
+    return lumpiaCogsWithTierMultiplier(
+      h,
+      round2(
+        frozen
+          ? LUMPIA_DOZEN_COGS_USD.beef.frozen
+          : LUMPIA_DOZEN_COGS_USD.beef.cooked
+      )
     );
   }
   if (h.includes("pork")) {
-    return round2(
-      frozen
-        ? LUMPIA_DOZEN_COGS_USD.pork.frozen
-        : LUMPIA_DOZEN_COGS_USD.pork.cooked
+    return lumpiaCogsWithTierMultiplier(
+      h,
+      round2(
+        frozen
+          ? LUMPIA_DOZEN_COGS_USD.pork.frozen
+          : LUMPIA_DOZEN_COGS_USD.pork.cooked
+      )
     );
   }
   if (h.includes("turkey")) {
-    return round2(
-      frozen
-        ? LUMPIA_DOZEN_COGS_USD.turkey.frozen
-        : LUMPIA_DOZEN_COGS_USD.turkey.cooked
+    return lumpiaCogsWithTierMultiplier(
+      h,
+      round2(
+        frozen
+          ? LUMPIA_DOZEN_COGS_USD.turkey.frozen
+          : LUMPIA_DOZEN_COGS_USD.turkey.cooked
+      )
     );
   }
   return null;
+}
+
+function lumpiaCogsWithTierMultiplier(h: string, perDozen: number) {
+  if (/(2\s*dozen|24\s*pcs)/i.test(h)) return round2(perDozen * 2);
+  if (/(party|50\s*pcs)/i.test(h)) return round2(perDozen * (50 / 12));
+  return perDozen;
 }
 
 /** One napkin (~$0.03) allocated evenly across order lines for P&L in Sheets. */

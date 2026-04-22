@@ -12,7 +12,7 @@ const RECIPES = [
   {
     id: "yema",
     title: "Yema (milk candy)",
-    body: `Milk-candy balls — cook sweetened condensed milk with egg yolks and a little butter until thick; cool slightly; scoop or roll into balls (optional coat in sugar).\n\nRETAIL: $0.50/pc · $6/12 pc bundle.\n\nPack in small cups or parchment; no dip cup.`,
+    body: `Milk candy — cook sweetened condensed milk with egg yolks and a little butter until thick; cool slightly; portion and roll or shape as you like (optional coat in sugar).\n\nRETAIL: $0.50 per piece or $6 per dozen (12 pcs).\n\nPack in small cups or parchment; no dip cup.`,
   },
   { id: "tocino-mar", title: "Tocino marinade", body: `Batch from 1 lb pork shoulder/belly OR chicken thighs (¼\" slices); ¼ c brown sugar; 3 tbsp soy; 2 tbsp white vinegar; 1 tsp annatto; 4 garlic cloves; ½ tsp salt. Marinate overnight. Plates: pan-fry complete plate with egg, rice, veg, dip. RETAIL FROZEN PACK: portion 12 oz (340g) marinated meat per bag — seal + parchment, gallon or quart freezer bag per your workflow.` },
   { id: "tocino-plate", title: "Tocino plate assembly", body: `5–6 slices + sunny egg + 1 c jasmine rice + 3 cucumber + 3 tomato + garlic crisps + 1 dip cup in 3-comp foam.` },

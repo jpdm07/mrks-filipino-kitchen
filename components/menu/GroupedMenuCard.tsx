@@ -8,12 +8,30 @@ import { useCart } from "@/components/cart/CartContext";
 import { CartQuantityField } from "@/components/cart/CartQuantityField";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
 import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
+import { LUMPIA_MENU_FROM_PRICE_USD } from "@/lib/lumpia-cost-model";
 import { defaultGroupedVariantId } from "@/lib/menu-variant-defaults";
+
+type LumpiaSizeTier = "1dz" | "2dz" | "party";
+
+function lumpiaKeyFrom(
+  co: "cooked" | "frozen",
+  tier: LumpiaSizeTier
+): string {
+  const t = tier === "party" ? "party" : tier;
+  return `${co}-${t}`;
+}
+
+function parseLumpiaKey(sk: string): { co: "cooked" | "frozen"; tier: LumpiaSizeTier } | null {
+  if (sk === "cooked" || sk === "frozen") return { co: sk, tier: "1dz" };
+  const m = /^(cooked|frozen)-(1dz|2dz|party)$/.exec(sk);
+  if (!m) return null;
+  return { co: m[1] as "cooked" | "frozen", tier: m[2] as LumpiaSizeTier };
+}
 
 function shortLabel(v: MenuItemDTO): string {
   const t = v.variantShortLabel?.trim();
   if (t) return t;
-  const m = v.name.match(/:\s*(.+)$/);
+  const m = v.name.match(/(?:[—:]\s*)(.+)$/);
   return (m?.[1] ?? v.name).trim();
 }
 
@@ -162,11 +180,13 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
   const [cookedOrFrozen, setCookedOrFrozen] = useState<"cooked" | "frozen">(
     "cooked"
   );
+  const [lumpiaTier, setLumpiaTier] = useState<LumpiaSizeTier>("1dz");
   const [sizeKey, setSizeKey] = useState(variant?.sizes[0]?.key ?? "default");
   const [qty, setQty] = useState(1);
 
   useEffect(() => {
     if (!variant) return;
+    const isL = variant.variantGroup === "lumpia";
     const win = typeof window !== "undefined" ? window : undefined;
     const params = new URLSearchParams(win?.location.search ?? "");
     const hash = win?.location.hash.replace(/^#/, "") ?? "";
@@ -175,37 +195,55 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
     const defaultKey = variant.sizes[0]?.key ?? "default";
     if (variant.id === hashId) {
       const sk = params.get("sk");
-      if (sk && variant.sizes.some((s) => s.key === sk)) {
+      if (isL && sk) {
+        const p = parseLumpiaKey(sk);
+        if (p && variant.sizes.some((s) => s.key === sk)) {
+          setCookedOrFrozen(p.co);
+          setLumpiaTier(p.tier);
+        }
+      } else if (sk && variant.sizes.some((s) => s.key === sk)) {
         setSizeKey(sk);
       } else {
         setSizeKey(defaultKey);
       }
-      const co = params.get("co");
-      if (
-        variant.hasCooked &&
-        variant.hasFrozen &&
-        (co === "cooked" || co === "frozen")
-      ) {
-        setCookedOrFrozen(co);
-        return;
+      if (!isL) {
+        const co = params.get("co");
+        if (
+          variant.hasCooked &&
+          variant.hasFrozen &&
+          (co === "cooked" || co === "frozen")
+        ) {
+          setCookedOrFrozen(co);
+        }
       }
     } else {
       setSizeKey(defaultKey);
     }
-    if (variant.hasCooked && variant.hasFrozen) {
+    if (!isL && variant.hasCooked && variant.hasFrozen) {
       setCookedOrFrozen("cooked");
     }
   }, [variant]);
 
   const selectedSize = useMemo(() => {
     if (!variant) return undefined;
+    if (cookedFrozenPick && isLumpiaGroup) {
+      const k = lumpiaKeyFrom(cookedOrFrozen, lumpiaTier);
+      return variant.sizes.find((s) => s.key === k) ?? variant.sizes[0];
+    }
     if (cookedFrozenPick) {
       return (
         variant.sizes.find((s) => s.key === cookedOrFrozen) ?? variant.sizes[0]
       );
     }
     return variant.sizes.find((s) => s.key === sizeKey) ?? variant.sizes[0];
-  }, [variant, cookedFrozenPick, cookedOrFrozen, sizeKey]);
+  }, [
+    variant,
+    cookedFrozenPick,
+    isLumpiaGroup,
+    cookedOrFrozen,
+    lumpiaTier,
+    sizeKey,
+  ]);
 
   const title =
     variant?.groupCardTitle?.trim() || variant?.category || "Menu item";
@@ -229,6 +267,11 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
 
   const handleAdd = () => {
     if (disabled || !variant || !selectedSize) return;
+    const coWord =
+      cookedOrFrozen === "cooked" ? "Cooked" : "Frozen";
+    const sizeLabelForCart = isLumpiaGroup
+      ? `${coWord}, ${selectedSize.label}`
+      : selectedSize.label;
     addLine({
       menuItemId: variant.id,
       name: variant.name,
@@ -237,7 +280,7 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
       quantity: qty,
       unitPrice: safeUnitPrice,
       sizeKey: selectedSize.key,
-      sizeLabel: selectedSize.label,
+      sizeLabel: sizeLabelForCart,
       cookedOrFrozen: cookedFrozenPick ? cookedOrFrozen : undefined,
     });
     setQty(1);
@@ -247,16 +290,28 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
 
   const meatCap =
     tocinoMeat === "chicken" ? "Chicken" : "Pork";
+  const cookWord =
+    cookedOrFrozen === "cooked" ? "Cooked" : "Frozen";
+
   const selectionSummary = isTocinoUnified
     ? `${meatCap} · ${selectedSize?.label ?? ""}`.replace(/\s·\s$/, "")
-    : `${shortLabel(variant)} · ${selectedSize?.label ?? ""}`.replace(
-        /\s·\s$/,
+    : isLumpiaGroup
+      ? `${shortLabel(variant)} · ${cookWord} · ${selectedSize?.label ?? ""}`.replace(
+          /\s·\s*$/,
+          ""
+        )
+      : `${shortLabel(variant)} · ${selectedSize?.label ?? ""}`.replace(
+        /\s·\s*$/,
         ""
       );
 
   const servingDetail =
     cookedFrozenPick && isLumpiaGroup
-      ? "12 lumpia (1 dozen) per order at the price shown."
+      ? lumpiaTier === "1dz"
+        ? "12 hand-rolled lumpia per order (1 dozen)"
+        : lumpiaTier === "2dz"
+          ? "24 hand-rolled lumpia per order (2 dozen)"
+          : "50 hand-rolled lumpia per order (party tray)"
       : isTocinoUnified
         ? tocinoStyle === "plate"
           ? "Ready-made plate with egg, rice, cucumber, tomato, and garlic crisps."
@@ -324,6 +379,11 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
             {servingDetail ? (
               <p className="mt-1 text-xs font-medium text-[var(--text-muted)]">
                 {servingDetail}
+              </p>
+            ) : null}
+            {isLumpiaGroup ? (
+              <p className="mt-1 text-sm font-semibold text-[var(--text-muted)]">
+                from ${LUMPIA_MENU_FROM_PRICE_USD.toFixed(2)} · changes with protein &amp; size
               </p>
             ) : null}
             <p className="mt-2 font-playfair text-xl font-bold text-[color:var(--primary)]">
@@ -444,7 +504,13 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
                         name={`protein-${groupKey}`}
                         checked={variantId === v.id}
                         disabled={v.soldOut}
-                        onChange={() => setVariantId(v.id)}
+                        onChange={() => {
+                          setVariantId(v.id);
+                          if (v.variantGroup === "lumpia") {
+                            setLumpiaTier("1dz");
+                            setCookedOrFrozen("cooked");
+                          }
+                        }}
                       />
                       {shortLabel(v)}
                       {v.soldOut ? (
@@ -458,31 +524,62 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
               </div>
 
               {cookedFrozenPick ? (
-                <div className="mt-3 space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
-                    Cooked or frozen
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    <label className="flex cursor-pointer items-center gap-2 text-sm">
-                      <input
-                        type="radio"
-                        name={`cf-${groupKey}`}
-                        checked={cookedOrFrozen === "cooked"}
-                        onChange={() => setCookedOrFrozen("cooked")}
-                      />
-                      Cooked
-                    </label>
-                    <label className="flex cursor-pointer items-center gap-2 text-sm">
-                      <input
-                        type="radio"
-                        name={`cf-${groupKey}`}
-                        checked={cookedOrFrozen === "frozen"}
-                        onChange={() => setCookedOrFrozen("frozen")}
-                      />
-                      Frozen
-                    </label>
+                <>
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
+                      Cooked or frozen
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                      <label className="flex cursor-pointer items-center gap-2 text-sm">
+                        <input
+                          type="radio"
+                          name={`cf-${groupKey}`}
+                          checked={cookedOrFrozen === "cooked"}
+                          onChange={() => setCookedOrFrozen("cooked")}
+                        />
+                        Cooked
+                      </label>
+                      <label className="flex cursor-pointer items-center gap-2 text-sm">
+                        <input
+                          type="radio"
+                          name={`cf-${groupKey}`}
+                          checked={cookedOrFrozen === "frozen"}
+                          onChange={() => setCookedOrFrozen("frozen")}
+                        />
+                        Frozen
+                      </label>
+                    </div>
                   </div>
-                </div>
+                  {isLumpiaGroup ? (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">
+                        Size
+                      </p>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                        {(
+                          [
+                            { tier: "1dz" as const, label: "1 Dozen (12 pcs)" },
+                            { tier: "2dz" as const, label: "2 Dozen (24 pcs)" },
+                            { tier: "party" as const, label: "Party Tray (50 pcs)" },
+                          ] as const
+                        ).map(({ tier, label }) => (
+                          <label
+                            key={tier}
+                            className="flex cursor-pointer items-center gap-2 text-sm"
+                          >
+                            <input
+                              type="radio"
+                              name={`lumpia-size-${groupKey}`}
+                              checked={lumpiaTier === tier}
+                              onChange={() => setLumpiaTier(tier)}
+                            />
+                            {label}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </>
               ) : !cookedFrozenPick && variant.sizes.length > 1 ? (
                 <div className="mt-3 space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)]">

@@ -17,7 +17,10 @@ import {
   YEMA_RETAIL_SINGLE_USD,
   YEMA_RETAIL_TWELVE_PACK_USD,
 } from "./yema-cost-model";
-import { LUMPIA_RETAIL_USD } from "./lumpia-cost-model";
+import {
+  lumpiaCatalogSizesForProtein,
+  LUMPIA_RETAIL_TIERS_USD,
+} from "./lumpia-cost-model";
 import { TOCINO_RETAIL_USD } from "./tocino-cost-model";
 import {
   PANCIT_LIME_COST_USD,
@@ -79,6 +82,10 @@ export const CATALOG_OG_IMAGE_PARADE =
 /**
  * Menu card photos — files under `public/images/` (see constants above).
  */
+/** Shared public copy for all lumpia protein rows (prices differ by size + protein). */
+const LUMPIA_ITEM_DESCRIPTION =
+  "Our hand-rolled lumpia are made fresh to order using full-size wrappers — bigger than the bite-size cocktail versions you'll find at cafes. Each roll is stuffed with seasoned meat and vegetables, then fried until golden and shatter-crisp (or frozen uncooked, so you can fry them fresh at home). Comes with our house dipping sauce. Pork · Turkey · Beef. Cooked or frozen — same price per tier.";
+
 export const CATALOG_PHOTOS = {
   lumpia: LUMPIA_IMAGE,
   pancit: PANCIT_IMAGE,
@@ -95,84 +102,48 @@ export const CATALOG_PHOTOS = {
 export const MENU_CATALOG = [
   {
     id: "seed-1",
-    name: "Lumpia: Beef",
-    description:
-      "Crispy golden rolls filled with seasoned ground beef, onion, garlic, carrots, soy sauce, salt, and pepper—the Filipino party favorite. Each order is one dozen; choose cooked and ready to eat, or frozen to fry whenever you like. 🥡 Comes with a dipping sauce.",
+    name: "Lumpia — Beef",
+    description: LUMPIA_ITEM_DESCRIPTION,
     category: "Sides",
-    calories: "~240 cal/dozen cooked · ~180 cal/dozen frozen",
-    basePrice: LUMPIA_RETAIL_USD.beef.cookedDozen,
-    sizes: [
-      {
-        key: "cooked",
-        label: "Cooked · per dozen",
-        price: LUMPIA_RETAIL_USD.beef.cookedDozen,
-      },
-      {
-        key: "frozen",
-        label: "Frozen · per dozen",
-        price: LUMPIA_RETAIL_USD.beef.frozenDozen,
-      },
-    ],
+    calories: "Varies by size (est. on order)",
+    basePrice: LUMPIA_RETAIL_TIERS_USD.beef.dz1,
+    sizes: [...lumpiaCatalogSizesForProtein("beef")].map((s) => ({ ...s })),
     photoUrl: CATALOG_PHOTOS.lumpia,
     hasCooked: true,
     hasFrozen: true,
-    sortOrder: 1,
+    sortOrder: 3,
     variantGroup: "lumpia",
     variantShortLabel: "Beef",
     groupCardTitle: "Lumpia",
   },
   {
     id: "seed-2",
-    name: "Lumpia: Pork",
-    description:
-      "Traditional pork lumpia Shanghai with a savory blend of ground pork, onion, garlic, carrots, soy sauce, salt, and pepper. One dozen per order, with your pick of cooked or frozen. 🥡 Comes with a dipping sauce.",
+    name: "Lumpia — Pork",
+    description: LUMPIA_ITEM_DESCRIPTION,
     category: "Sides",
-    calories: "~260 cal/dozen cooked · ~190 cal/dozen frozen",
-    basePrice: LUMPIA_RETAIL_USD.pork.cookedDozen,
-    sizes: [
-      {
-        key: "cooked",
-        label: "Cooked · per dozen",
-        price: LUMPIA_RETAIL_USD.pork.cookedDozen,
-      },
-      {
-        key: "frozen",
-        label: "Frozen · per dozen",
-        price: LUMPIA_RETAIL_USD.pork.frozenDozen,
-      },
-    ],
+    calories: "Varies by size (est. on order)",
+    basePrice: LUMPIA_RETAIL_TIERS_USD.pork.dz1,
+    sizes: [...lumpiaCatalogSizesForProtein("pork")].map((s) => ({ ...s })),
     photoUrl: CATALOG_PHOTOS.lumpia,
     hasCooked: true,
     hasFrozen: true,
-    sortOrder: 2,
+    sortOrder: 1,
     variantGroup: "lumpia",
     variantShortLabel: "Pork",
     groupCardTitle: "Lumpia",
   },
   {
     id: "seed-3",
-    name: "Lumpia: Turkey",
-    description:
-      "A lighter twist on the classic: seasoned ground turkey with onion, garlic, and carrots in a delicate spring roll skin—same hearty dozen as our beef and pork. Choose cooked or frozen to match your plans. 🥡 Comes with a dipping sauce.",
+    name: "Lumpia — Turkey",
+    description: LUMPIA_ITEM_DESCRIPTION,
     category: "Sides",
-    calories: "~215 cal/dozen cooked · ~160 cal/dozen frozen",
-    basePrice: LUMPIA_RETAIL_USD.turkey.cookedDozen,
-    sizes: [
-      {
-        key: "cooked",
-        label: "Cooked · per dozen",
-        price: LUMPIA_RETAIL_USD.turkey.cookedDozen,
-      },
-      {
-        key: "frozen",
-        label: "Frozen · per dozen",
-        price: LUMPIA_RETAIL_USD.turkey.frozenDozen,
-      },
-    ],
+    calories: "Varies by size (est. on order)",
+    basePrice: LUMPIA_RETAIL_TIERS_USD.turkey.dz1,
+    sizes: [...lumpiaCatalogSizesForProtein("turkey")].map((s) => ({ ...s })),
     photoUrl: CATALOG_PHOTOS.lumpia,
     hasCooked: true,
     hasFrozen: true,
-    sortOrder: 3,
+    sortOrder: 2,
     variantGroup: "lumpia",
     variantShortLabel: "Turkey",
     groupCardTitle: "Lumpia",
@@ -181,7 +152,7 @@ export const MENU_CATALOG = [
     id: "seed-4",
     name: "Pancit: Chicken",
     description:
-      "Rice vermicelli noodles stir-fried with tender chicken, cabbage, carrots, and a savory soy–fish sauce. A Filipino birthday classic symbolizing long life. Garlic crisps on top; lime on the side. Order 1 serving (single to-go container), 2–4 servings, or a full party tray (8–10).",
+      "The Filipino birthday classic. Rice vermicelli noodles stir-fried with your choice of tender chicken or plump shrimp, cabbage, carrots, and our savory soy–fish sauce base. Traditionally served at birthdays to symbolize long life. Finished with garlic crisps and a wedge of lime on the side. Chicken · Shrimp. Single serving (to-go container) · 2–4 servings · Party tray 8–10 servings (9×13).",
     category: "Meals",
     calories: "~320 cal/serving",
     basePrice: 10.99,
@@ -214,7 +185,7 @@ export const MENU_CATALOG = [
     id: "seed-5",
     name: "Pancit: Shrimp",
     description:
-      "Perfectly seasoned bihon noodles with plump shrimp, cabbage, carrots, and garlic crisps. A seafood lover's favorite. Order 1 serving (single to-go container), 2–4 servings, or a full party tray (8–10).",
+      "The Filipino birthday classic. Rice vermicelli noodles stir-fried with your choice of tender chicken or plump shrimp, cabbage, carrots, and our savory soy–fish sauce base. Traditionally served at birthdays to symbolize long life. Finished with garlic crisps and a wedge of lime on the side. Chicken · Shrimp. Single serving (to-go container) · 2–4 servings · Party tray 8–10 servings (9×13).",
     category: "Meals",
     calories: "~290 cal/serving",
     basePrice: 12.99,
@@ -247,7 +218,7 @@ export const MENU_CATALOG = [
     id: "seed-6",
     name: "Caramel Flan (Leche Flan)",
     description:
-      "Silky-smooth Filipino egg custard with a rich caramel glaze, slow-steamed to perfection. Each serving comes in a 5 oz ramekin—ready to open and enjoy. A beloved Filipino dessert passed down through generations.",
+      "Slow-steamed silky egg custard with caramel glaze. Our leche flan is steamed low and slow until it sets into a silky, spoon-coating custard, crowned with a deep amber caramel. Served in a 5 oz ramekin — peel the lid and dig in. 1 ramekin (5 oz) per order.",
     category: "Desserts",
     calories: "~280 cal",
     basePrice: FLAN_RETAIL_PER_RAMEKIN_USD,
@@ -267,7 +238,7 @@ export const MENU_CATALOG = [
     id: "seed-13",
     name: "Yema",
     description:
-      "Soft Filipino milk candy — homemade***, sweet, creamy, rolled into bite-sized balls. A classic merienda treat and an easy add-on to any order.",
+      "Buttery, slow-cooked Filipino milk candy. Sweet, rich, and creamy — the classic merienda treat. Great as an add-on or a small gift.",
     category: "Desserts",
     calories: "~85 cal per piece (estimate)",
     basePrice: YEMA_RETAIL_SINGLE_USD,
@@ -279,7 +250,7 @@ export const MENU_CATALOG = [
       },
       {
         key: "twelve",
-        label: "12 pieces (bundle)",
+        label: "Per dozen (12 pcs)",
         price: YEMA_RETAIL_TWELVE_PACK_USD,
       },
     ],
@@ -292,7 +263,7 @@ export const MENU_CATALOG = [
     id: "seed-7",
     name: "Quail Eggs (10 pcs)",
     description:
-      "Fresh quail eggs coated in seasoned flour, deep-fried until crisp. 🥡 Comes with a dipping sauce.",
+      "Kwek-kwek — Filipino street-food favorite. Fresh quail eggs hand-battered in seasoned flour and deep-fried crispy — our take on kwek-kwek, the iconic Filipino street snack. Served with dipping sauce. Perfect as an appetizer or add-on. 10 pieces per order.",
     category: "Sides",
     calories: "~165 cal / 10 pcs (breaded)",
     basePrice: 7.99,
@@ -306,7 +277,7 @@ export const MENU_CATALOG = [
     id: "seed-8",
     name: "Tocino — Pork with Egg and Rice",
     description:
-      "Tender, sweet-cured pork marinated overnight in a classic Filipino blend of brown sugar, soy sauce, white vinegar, annatto powder, garlic, and salt, then pan-fried to a beautiful caramelized glaze. Served as a complete plate with fluffy jasmine rice, a sunny-side-up egg, fresh cucumber and tomato slices, and crispy garlic crisps. 🥡 Comes with a dipping sauce.",
+      "Sweet-cured, caramelized pork or chicken. Our tocino is marinated overnight in a classic Filipino cure — brown sugar, soy sauce, white vinegar, annatto, garlic — then pan-fried to a glossy caramelized glaze. The plate comes complete: fluffy jasmine rice, a sunny-side-up egg, fresh cucumber and tomato slices, and a scatter of crispy garlic crisps. Pork · Chicken.",
     category: "Meals",
     calories: "~540",
     basePrice: TOCINO_RETAIL_USD.cookedPlate,
@@ -329,7 +300,7 @@ export const MENU_CATALOG = [
     id: "seed-9",
     name: "Tocino — Chicken with Egg and Rice",
     description:
-      "Sweet-cured chicken marinated in the same beloved Filipino blend, pan-fried to a golden caramelized glaze. Served as a complete plate with fluffy jasmine rice, a sunny-side-up egg, fresh cucumber and tomato slices, and crispy garlic crisps. Lighter than pork, every bit as satisfying. 🥡 Comes with a dipping sauce.",
+      "Sweet-cured, caramelized pork or chicken. Our tocino is marinated overnight in a classic Filipino cure — brown sugar, soy sauce, white vinegar, annatto, garlic — then pan-fried to a glossy caramelized glaze. The plate comes complete: fluffy jasmine rice, a sunny-side-up egg, fresh cucumber and tomato slices, and a scatter of crispy garlic crisps. Pork · Chicken.",
     category: "Meals",
     calories: "~510",
     basePrice: TOCINO_RETAIL_USD.cookedPlate,
@@ -352,7 +323,7 @@ export const MENU_CATALOG = [
     id: "seed-10",
     name: "Frozen Tocino — Pork (Cook at Home)",
     description:
-      "Mr. K's signature sweet pork tocino, marinated overnight and frozen fresh. Thaw, pan-fry, and serve however you like—perfect with sinangag (garlic fried rice) and a fried egg. Pack is 12 oz (340 g) raw marinated meat (thin slices).",
+      "Sweet-cured, caramelized pork or chicken. Marinated overnight in a classic Filipino cure — brown sugar, soy sauce, white vinegar, annatto, garlic — then portioned and frozen. Thaw and pan-fry to a glossy caramelized glaze. 12 oz (340 g) raw marinated meat (thin slices) in a sealed bag — cook at home. Pork · Chicken.",
     category: "Meals",
     calories: "Calories vary when cooked",
     basePrice: TOCINO_RETAIL_USD.frozen12oz,
@@ -375,7 +346,7 @@ export const MENU_CATALOG = [
     id: "seed-11",
     name: "Frozen Tocino — Chicken (Cook at Home)",
     description:
-      "Mr. K's sweet chicken tocino, marinated overnight and frozen fresh. Thaw, pan-fry, and enjoy. Quick, easy, and tastes homemade because it is. Pack is 12 oz (340 g) raw marinated meat (thin slices).",
+      "Sweet-cured, caramelized pork or chicken. Marinated overnight in a classic Filipino cure — brown sugar, soy sauce, white vinegar, annatto, garlic — then portioned and frozen. Thaw and pan-fry to a glossy caramelized glaze. 12 oz (340 g) raw marinated meat (thin slices) in a sealed bag — cook at home. Pork · Chicken.",
     category: "Meals",
     calories: "Calories vary when cooked",
     basePrice: TOCINO_RETAIL_USD.frozen12oz,
@@ -398,7 +369,7 @@ export const MENU_CATALOG = [
     id: "seed-12",
     name: "Chicken Adobo",
     description:
-      "Tender bone-in chicken slow-braised in Mr. K's soy-vinegar adobo sauce with garlic, bay leaf, and peppercorns. The sauce is reduced until thick and glossy, coating every piece with that signature savory-tangy flavor. Plate: jasmine rice, a fried egg, 1 drumstick and 1 thigh. Party tray: scaled for the group. 🥡 Comes with a dipping sauce.",
+      "Slow-braised bone-in chicken, the national dish. Bone-in chicken slow-braised in Mr. K's soy-vinegar adobo sauce with garlic, bay leaf, and whole peppercorns. We reduce the sauce until it's thick and glossy, so every piece gets that signature savory-tangy coat. Plate comes with jasmine rice, a fried egg, one drumstick and one thigh. Party tray feeds 8–10. Plate (1 drumstick + 1 thigh, rice, egg) · Party Tray (8–10 servings).",
     category: "Meals",
     calories: "~520 (plate)",
     basePrice: ADOBO_RETAIL_USD.plate,

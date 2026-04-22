@@ -130,16 +130,19 @@ async function main() {
 
   const lumpiaPork = MENU_CATALOG.find((m) => m.id === "seed-2")!;
   const pancitCh = MENU_CATALOG.find((m) => m.id === "seed-4")!;
-  const lumpiaUnit = lumpiaPork.sizes.find((s) => s.key === "cooked")!.price;
+  const lumpia1dzCooked = lumpiaPork.sizes.find(
+    (s) => s.key === "cooked-1dz"
+  )!;
+  const lumpiaUnit = lumpia1dzCooked.price;
   const pancitPartySize = pancitCh.sizes.find((s) => s.key === "party")!;
   const pancitPartyUnit = pancitPartySize.price;
   const demoItems: OrderItemLine[] = [
     {
-      name: "Lumpia: Pork",
+      name: "Lumpia — Pork",
       quantity: 2,
       unitPrice: lumpiaUnit,
-      size: "Cooked · per dozen",
-      sizeKey: "cooked",
+      size: "Cooked, 1 Dozen (12 pcs)",
+      sizeKey: "cooked-1dz",
       cookedOrFrozen: "cooked",
       menuItemId: "seed-2",
     },

@@ -1,5 +1,5 @@
 /**
- * Yema — Filipino milk candy (soft balls). Internal economics only (never shown at checkout).
+ * Yema — Filipino milk candy. Internal economics only (never shown at checkout).
  * Retail is defined in `MENU_CATALOG`; COGS is a rough batch model for Sheets + earnings planner.
  */
 

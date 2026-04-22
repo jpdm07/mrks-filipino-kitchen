@@ -5,6 +5,7 @@ import {
   groupItemsForPrintMenu,
   normalizePrintMenuDescription,
 } from "@/lib/printable-menu";
+import { LUMPIA_PRINT_TAKEOUT_LINES } from "@/lib/lumpia-cost-model";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
 
@@ -66,14 +67,18 @@ export function PrintableMenu({ items }: { items: MenuItemDTO[] }) {
               {sec.category}
             </h4>
             <ul className="mt-3 space-y-4 print:mt-2 print:space-y-3">
-              {sec.items.map((item) => (
+              {sec.items
+                .filter(
+                  (i) => i.variantGroup !== "lumpia" || i.id === "seed-2"
+                )
+                .map((item) => (
                 <li
                   key={item.id}
                   className="print-menu-item border-b border-dotted border-neutral-300 pb-3 last:border-0 last:pb-0 print:pb-2"
                 >
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                     <span className="font-semibold text-neutral-900">
-                      {item.name}
+                      {item.variantGroup === "lumpia" ? "Lumpia" : item.name}
                       {item.soldOut ? (
                         <span className="ml-2 text-xs font-normal uppercase tracking-wide text-[color:var(--gold-dark)]">
                           Ask
@@ -99,19 +104,30 @@ export function PrintableMenu({ items }: { items: MenuItemDTO[] }) {
                       );
                     })()
                   ) : null}
-                  <ul className="mt-2 space-y-1 text-sm text-neutral-800 print:text-[10pt]">
-                    {item.sizes.map((s) => (
-                      <li
-                        key={s.key}
-                        className="flex justify-between gap-4 border-b border-transparent"
-                      >
-                        <span className="text-neutral-600">{s.label}</span>
-                        <span className="shrink-0 font-semibold tabular-nums text-neutral-900">
-                          {formatPrice(s.price)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                  {item.variantGroup === "lumpia" ? (
+                    <div className="mt-2 space-y-0.5 text-left text-sm text-neutral-800 print:text-[10pt]">
+                      <p className="text-neutral-600">
+                        {LUMPIA_PRINT_TAKEOUT_LINES.porkTurkey}
+                      </p>
+                      <p className="text-neutral-600">
+                        {LUMPIA_PRINT_TAKEOUT_LINES.beef}
+                      </p>
+                    </div>
+                  ) : (
+                    <ul className="mt-2 space-y-1 text-sm text-neutral-800 print:text-[10pt]">
+                      {item.sizes.map((s) => (
+                        <li
+                          key={s.key}
+                          className="flex justify-between gap-4 border-b border-transparent"
+                        >
+                          <span className="text-neutral-600">{s.label}</span>
+                          <span className="shrink-0 font-semibold tabular-nums text-neutral-900">
+                            {formatPrice(s.price)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>

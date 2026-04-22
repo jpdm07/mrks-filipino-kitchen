@@ -9,7 +9,7 @@ import {
 import { safeDb } from "@/lib/safe-db";
 import { overlayPublicMenuItemFromCatalog } from "@/lib/menu-catalog-merge";
 import { FALLBACK_MENU } from "@/lib/static-menu-fallback";
-import { lumpiaCheapestDozenRetailUsd } from "@/lib/lumpia-cost-model";
+import { LUMPIA_MENU_FROM_PRICE_USD } from "@/lib/lumpia-cost-model";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
@@ -58,7 +58,7 @@ export async function FeaturedItems() {
         {ordered.map((item) => {
           const price =
             item.variantGroup === "lumpia"
-              ? lumpiaCheapestDozenRetailUsd()
+              ? LUMPIA_MENU_FROM_PRICE_USD
               : item.sizes[0]?.price ?? item.basePrice;
           return (
             <article

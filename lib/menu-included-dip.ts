@@ -23,5 +23,6 @@ export function ensureMenuDescriptionIncludesDip(
   const t = description.trimEnd();
   if (!t) return MENU_DIP_DISPLAY_LINE;
   if (/\bcomes with a dipping sauce\b/i.test(t)) return description;
+  if (/\bdipping sauce\b/i.test(t)) return description;
   return `${t} ${MENU_DIP_DISPLAY_LINE}`;
 }

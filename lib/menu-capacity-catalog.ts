@@ -19,13 +19,34 @@ export const COOK_MINUTES_BY_MENU_ITEM: Record<
   { bySize: Record<string, number>; isFlan?: boolean }
 > = {
   "seed-1": {
-    bySize: { cooked: 15, frozen: 5 },
+    bySize: {
+      "cooked-1dz": 15,
+      "cooked-2dz": 30,
+      "cooked-party": 65,
+      "frozen-1dz": 5,
+      "frozen-2dz": 10,
+      "frozen-party": 20,
+    },
   },
   "seed-2": {
-    bySize: { cooked: 15, frozen: 5 },
+    bySize: {
+      "cooked-1dz": 15,
+      "cooked-2dz": 30,
+      "cooked-party": 65,
+      "frozen-1dz": 5,
+      "frozen-2dz": 10,
+      "frozen-party": 20,
+    },
   },
   "seed-3": {
-    bySize: { cooked: 15, frozen: 5 },
+    bySize: {
+      "cooked-1dz": 15,
+      "cooked-2dz": 30,
+      "cooked-party": 65,
+      "frozen-1dz": 5,
+      "frozen-2dz": 10,
+      "frozen-party": 20,
+    },
   },
   "seed-4": {
     bySize: { small: 30, twoFour: 45, party: 75 },

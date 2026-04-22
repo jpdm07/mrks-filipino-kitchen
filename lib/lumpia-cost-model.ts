@@ -116,16 +116,60 @@ export const LUMPIA_DOZEN_INGREDIENTS_ONLY_USD = {
 } as const;
 
 /**
- * Menu list prices (per dozen). Beef priced above pork & turkey; pork and turkey share the same dozen.
- * Cooked and frozen use the same list price; frozen still has lower modeled COGS (no fry oil).
+ * Tier list prices (1 dz / 2 dz / party 50) — public menu, cart, print.
+ * Beef is higher than pork & turkey at every tier. Cooked and frozen are the same price.
  */
-export const LUMPIA_RETAIL_USD = {
-  beef: { cookedDozen: 14.99, frozenDozen: 14.99 },
-  pork: { cookedDozen: 12.99, frozenDozen: 12.99 },
-  turkey: { cookedDozen: 12.99, frozenDozen: 12.99 },
+export const LUMPIA_RETAIL_TIERS_USD = {
+  beef: { dz1: 14.99, dz2: 27, party50: 60 },
+  pork: { dz1: 12.99, dz2: 23, party50: 50 },
+  turkey: { dz1: 12.99, dz2: 23, party50: 50 },
 } as const;
 
-/** Lowest per-dozen list price across proteins and cooked/frozen (e.g. homepage “From $X”). */
+export type LumpiaProtein = keyof typeof LUMPIA_RETAIL_TIERS_USD;
+export type LumpiaTier = "1dz" | "2dz" | "party";
+
+/**
+ * Per-dozen fields — derived from 1-dozen tier for margin math, samples, and legacy call sites.
+ * Cooked and frozen list prices match `dz1` (labor/oil are modeled separately in `LUMPIA_DOZEN_COGS_USD`).
+ */
+export const LUMPIA_RETAIL_USD = {
+  beef: {
+    cookedDozen: LUMPIA_RETAIL_TIERS_USD.beef.dz1,
+    frozenDozen: LUMPIA_RETAIL_TIERS_USD.beef.dz1,
+  },
+  pork: {
+    cookedDozen: LUMPIA_RETAIL_TIERS_USD.pork.dz1,
+    frozenDozen: LUMPIA_RETAIL_TIERS_USD.pork.dz1,
+  },
+  turkey: {
+    cookedDozen: LUMPIA_RETAIL_TIERS_USD.turkey.dz1,
+    frozenDozen: LUMPIA_RETAIL_TIERS_USD.turkey.dz1,
+  },
+} as const;
+
+/** “From $X” on menu card / featured (lowest 1-dozen: pork or turkey). */
+export const LUMPIA_MENU_FROM_PRICE_USD = LUMPIA_RETAIL_TIERS_USD.pork.dz1;
+
+/** Print handout: two price lines, grouped as requested (takeout). */
+export const LUMPIA_PRINT_TAKEOUT_LINES = {
+  porkTurkey: "Pork / Turkey: 1 dz $12.99 · 2 dz $23 · 50 pcs $50",
+  beef: "Beef: 1 dz $14.99 · 2 dz $27 · 50 pcs $60",
+} as const;
+
+/** `MENU_CATALOG` sizes: six keys per protein, `cooked-1dz` … `frozen-party`. */
+export function lumpiaCatalogSizesForProtein(p: LumpiaProtein) {
+  const t = LUMPIA_RETAIL_TIERS_USD[p];
+  return [
+    { key: "cooked-1dz", label: "1 Dozen (12 pcs)", price: t.dz1 },
+    { key: "cooked-2dz", label: "2 Dozen (24 pcs)", price: t.dz2 },
+    { key: "cooked-party", label: "Party Tray (50 pcs)", price: t.party50 },
+    { key: "frozen-1dz", label: "1 Dozen (12 pcs)", price: t.dz1 },
+    { key: "frozen-2dz", label: "2 Dozen (24 pcs)", price: t.dz2 },
+    { key: "frozen-party", label: "Party Tray (50 pcs)", price: t.party50 },
+  ] as const;
+}
+
+/** Lowest per-dozen list price across proteins and cooked/frozen (e.g. sample pricing). */
 export function lumpiaCheapestDozenRetailUsd(): number {
   let min = Number.POSITIVE_INFINITY;
   for (const row of Object.values(LUMPIA_RETAIL_USD)) {
