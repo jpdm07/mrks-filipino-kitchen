@@ -1,4 +1,4 @@
-/** Tiny label for calendar cells: flan-only pickup days (visible without clicking). */
+/** Tiny label for calendar cells: dessert-only pickup days (e.g. Tue–Thu) — visible without clicking. */
 export function FlanPickupDayBadge({
   inverted = false,
   className = "",
@@ -9,15 +9,16 @@ export function FlanPickupDayBadge({
   return (
     <span
       className={[
-        "block max-w-full truncate text-center text-[7px] font-bold uppercase leading-tight tracking-tight",
+        "block max-w-full text-center text-[6.5px] font-bold uppercase leading-tight tracking-tight",
         inverted ? "text-white/95" : "text-amber-900",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
-      title="Flan pickup only — full menu Fri & Sat"
+      title="Dessert pickups only — full menu Fri & Sat"
     >
-      Flan only
+      <span className="block leading-none">Dessert</span>
+      <span className="mt-0.5 block leading-none">pickups only</span>
     </span>
   );
 }

@@ -357,7 +357,7 @@ export const PickupCalendar = forwardRef<
                 type="button"
                 title={note || undefined}
                 aria-pressed={selected}
-                aria-label={`${ymd} pickup${flanOnly ? " (flan pickup only)" : ""}`}
+                aria-label={`${ymd} pickup${flanOnly ? " (dessert pickups only)" : ""}`}
                 onClick={() => onChange(ymd)}
                 className={[
                   "relative flex aspect-square flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border px-0.5 py-0.5 text-sm font-semibold transition-colors",
@@ -444,7 +444,8 @@ export const PickupCalendar = forwardRef<
         <p className="text-xs text-[var(--text-muted)]">
           <strong className="text-amber-900">Yellow</strong> = open dates you can
           pick (full menu days are a lighter yellow;{" "}
-          <strong className="text-amber-900">Flan only</strong> is a deeper gold).
+          <strong className="text-amber-900">Dessert pickups only</strong> is a deeper
+          gold).
           Gray = not open. 🔒 = on our calendar but before the first Fri/Sat
           pickup window (Central). Hover for details.
         </p>

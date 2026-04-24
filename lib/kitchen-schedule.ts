@@ -9,13 +9,16 @@ import { isPickupYmdAllowed, ymdUtcWeekday } from "@/lib/pickup-lead-time";
 import { isFlanTueThuPickupYmdBookableAt } from "@/lib/flan-weekday-unlock";
 
 export const FLAN_ONLY_DAY_NOTE =
-  "Flan pickup only — other items available Friday and Saturday";
+  "Dessert pickups only — other items available Friday and Saturday";
 
 export const ALL_ITEMS_DAY_NOTE = "All items available for pickup";
 
-/** True when the kitchen/API note marks this day as flan-only pickup (calendar badge). */
+/** True when the kitchen/API note marks this day as dessert-only pickup (calendar badge). */
 export function isFlanPickupOnlyNote(note: string | null | undefined): boolean {
-  return (note ?? "").trim().includes("Flan pickup only");
+  const n = (note ?? "").trim();
+  return (
+    n.includes("Dessert pickups only") || n.includes("Flan pickup only")
+  );
 }
 
 const ALL_SLOTS = pickupTimeSlotLabels();

@@ -653,11 +653,11 @@ export function AdminAvailabilityPanel() {
       </div>
 
       <div className="rounded-lg border border-amber-200 bg-amber-50/90 p-4 text-sm text-[var(--text)]">
-        <p className="font-bold text-amber-950">Flan pickup habit (this month)</p>
+        <p className="font-bold text-amber-950">Dessert pickups (Tue–Thu) — this month</p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
-          One click opens <strong>Tue–Thu</strong> with the standard flan-only note and{" "}
-          <strong>6:00–8:00 PM</strong> slots (same as checkout). Customers can add flan
-          pickup for that Tue–Thu week until <strong>Saturday 11:59 PM Central</strong>{" "}
+          One click opens <strong>Tue–Thu</strong> with the standard dessert-pickups-only
+          note and <strong>6:00–8:00 PM</strong> slots (same as checkout). Customers can
+          add dessert pickup for that Tue–Thu week until <strong>Saturday 11:59 PM Central</strong>{" "}
           the week before (orders close at <strong>Sunday 12:00 AM Central</strong> right
           after that Saturday). If you don’t see this box after an update, hard-refresh
           the page or confirm the latest deploy on Vercel.
@@ -686,7 +686,7 @@ export function AdminAvailabilityPanel() {
             })
           }
         >
-          Apply flan template to {label}
+          Apply dessert-pickup template to {label}
         </button>
       </div>
 
@@ -792,8 +792,8 @@ export function AdminAvailabilityPanel() {
           <strong>Green</strong> = saved open in the database ·{" "}
           <strong>Sky</strong> = open at checkout from the weekly schedule (often
           Friday evening) even before Google/DB has a row — matches the customer
-          calendar · <strong>Amber</strong> + “Flan only” = flan-pickup note ·{" "}
-          <strong>Gray</strong> = not offered · Double-click toggles the saved
+          calendar · <strong>Amber</strong> + “Dessert pickups only” = dessert-pickup
+          note · <strong>Gray</strong> = not offered · Double-click toggles the saved
           row · Click once to edit note/slots below
         </p>
       </div>
@@ -813,7 +813,7 @@ export function AdminAvailabilityPanel() {
           {days[selected]?.isOpen &&
           isFlanPickupOnlyNote(days[selected]?.note) ? (
             <p className="mt-2 rounded-md border border-amber-500/50 bg-amber-50 px-2 py-1.5 text-xs font-semibold text-amber-950">
-              Flan pickup only — customers see this day highlighted as flan-only on
+              Dessert pickups only — customers see this day highlighted the same way on
               all calendars.
             </p>
           ) : null}

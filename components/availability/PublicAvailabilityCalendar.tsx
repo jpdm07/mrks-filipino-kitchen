@@ -163,7 +163,7 @@ export function PublicAvailabilityCalendar() {
 
         <p className="mt-3 text-xs text-[var(--text-muted)]">
           Only <strong>gold</strong> days are on Mr. K&apos;s pickup calendar;
-          <strong>amber</strong> days are open for <strong>flan pickup only</strong>
+          <strong>amber</strong> days are for <strong>dessert pickups only</strong>{" "}
           (Tue–Thu; full menu Fri &amp; Sat). Gray days are <strong>not</strong> open for
           pickup here. Pickup times are chosen at checkout. 🔒 means before the
           first Friday/Saturday pickup window (Central), or that weekend closed
@@ -222,7 +222,7 @@ export function PublicAvailabilityCalendar() {
                 key={ymd}
                 type="button"
                 title={note || undefined}
-                aria-label={`${ymd}${flanOnly ? " — flan pickup only" : ""}`}
+                aria-label={`${ymd}${flanOnly ? " — dessert pickups only" : ""}`}
                 onClick={() => {
                   if (bookable) setPanel({ ymd, kind: "bookable" });
                   else setPanel({ ymd, kind: "locked" });
@@ -281,7 +281,7 @@ export function PublicAvailabilityCalendar() {
 
             {selectedYmd && isFlanPickupOnlyNote(notes[selectedYmd] ?? "") ? (
               <p className="mt-3 rounded-lg border border-amber-500/45 bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-950">
-                Flan pickup only (Tue–Thu) — full menu Fri &amp; Sat.
+                Dessert pickups only (Tue–Thu) — full menu Fri &amp; Sat.
               </p>
             ) : null}
 
