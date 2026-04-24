@@ -75,9 +75,13 @@ export function kitchenDayKind(ymd: string): KitchenDayKind {
   return "saturday";
 }
 
-/** Fri/Sat use existing lead rules; Tue–Thu flan only when before the weekly Saturday cutoff. */
+/**
+ * Fri/Sat use existing lead rules; Tue–Thu is for dessert-only carts (flan and/or
+ * yema) when before the weekly Saturday cutoff.
+ */
 export function isPickupYmdAllowedForOrderCart(
   ymd: string,
+  /** True for dessert-only cart (flan and/or yema; legacy name `cartFlanOnly`). */
   cartFlanOnly: boolean,
   now = new Date()
 ): boolean {
@@ -92,6 +96,7 @@ export function isPickupYmdAllowedForOrderCart(
 
 export async function getKitchenSlotsForDate(
   dateYmd: string,
+  /** Dessert-only cart (flan and/or yema) — not strictly flan. */
   cartFlanOnly: boolean
 ): Promise<string[]> {
   const kind = kitchenDayKind(dateYmd);

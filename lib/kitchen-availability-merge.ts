@@ -17,10 +17,11 @@ import {
 } from "@/lib/pickup-lead-time";
 
 export type KitchenCalendarOptions = {
+  /** True when the cart is dessert-only (flan and/or yema) — same as legacy `cartMode=flan`. */
   cartFlanOnly: boolean;
   /** When set, Fri/Sat require at least this many main minutes free in the week. */
   mainMinutesNeeded?: number;
-  /** When set, week must have enough flan ramekins left. */
+  /** When set, week must have enough flan ramekins left (ignored for yema-only need). */
   flanRamekinsNeeded?: number;
 };
 
@@ -91,8 +92,10 @@ export async function buildKitchenOpenDatesPayload(
     if (kind === "tue_thu") {
       if (!opts.cartFlanOnly) continue;
       if (!isFlanTueThuPickupYmdBookableAt(ymd, nowClock)) continue;
-      if (snap.flanSoldOut) continue;
-      if (flanNeed > snap.flanRemaining) continue;
+      if (flanNeed > 0) {
+        if (snap.flanSoldOut) continue;
+        if (flanNeed > snap.flanRemaining) continue;
+      }
       openDates.push(ymd);
       notes[ymd] = FLAN_ONLY_DAY_NOTE;
       continue;
@@ -104,8 +107,10 @@ export async function buildKitchenOpenDatesPayload(
       if (kind === "saturday" && !dbOpen.get(ymd)) continue;
 
       if (opts.cartFlanOnly) {
-        if (snap.flanSoldOut) continue;
-        if (flanNeed > snap.flanRemaining) continue;
+        if (flanNeed > 0) {
+          if (snap.flanSoldOut) continue;
+          if (flanNeed > snap.flanRemaining) continue;
+        }
       } else {
         if (snap.mainSoldOut) continue;
         if (mainNeed > snap.mainCookRemaining) continue;

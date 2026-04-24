@@ -6,6 +6,15 @@ export const MAIN_COOK_CAP_MINUTES = 300;
 /** Two batches × 12 ramekins each (sell-through cap per calendar week). */
 export const FLAN_WEEKLY_CAP_RAMEKINS = 24;
 
+/**
+ * Caramel flan and yema follow the same Tue–Thu dessert-pickup schedule (see
+ * `cartHasOnlyDessertPickupItems` in `menu-cook-capacity`).
+ */
+export const DESSERT_PICKUP_ONLY_MENU_ITEM_IDS: ReadonlySet<string> = new Set([
+  "seed-6",
+  "seed-13",
+]);
+
 /** Statuses that reserve kitchen capacity (excludes Cancelled, demo, etc.). */
 export const ORDER_STATUSES_COUNTING_TOWARD_CAPACITY = [
   "Pending Payment Verification",

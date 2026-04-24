@@ -1,6 +1,7 @@
 import type { OrderItemLine } from "@/lib/order-types";
 import {
   COOK_MINUTES_BY_MENU_ITEM,
+  DESSERT_PICKUP_ONLY_MENU_ITEM_IDS,
   FLAN_WEEKLY_CAP_RAMEKINS,
   MAIN_COOK_CAP_MINUTES,
 } from "@/lib/menu-capacity-catalog";
@@ -62,19 +63,44 @@ export function totalCookContribution(lines: OrderItemLine[]): CookContribution 
   );
 }
 
-export function cartHasOnlyFlanItems(lines: OrderItemLine[]): boolean {
+/**
+ * True when the cart is **dessert-pickup only** (Caramel flan and/or Yema) — no savory /
+ * other menu SKUs. Same schedule as the historical “flan only” path (`cartMode=flan`):
+ * Tue–Thu dessert days and standard rules for full-menu days.
+ */
+export function cartHasOnlyDessertPickupItems(
+  lines: OrderItemLine[]
+): boolean {
   if (lines.length === 0) return false;
   return lines.every((line) => {
     if (line.isSample) {
+      const mid = line.menuItemId?.trim();
+      if (mid && DESSERT_PICKUP_ONLY_MENU_ITEM_IDS.has(mid)) return true;
       const n = line.name.toLowerCase();
-      return n.includes("flan") || n.includes("leche");
+      return (
+        n.includes("flan") || n.includes("leche") || n.includes("yema")
+      );
     }
     const mid = line.menuItemId?.trim();
     if (!mid) return false;
-    return COOK_MINUTES_BY_MENU_ITEM[mid]?.isFlan === true;
+    return (
+      DESSERT_PICKUP_ONLY_MENU_ITEM_IDS.has(mid) ||
+      COOK_MINUTES_BY_MENU_ITEM[mid]?.isFlan === true
+    );
   });
 }
 
+/**
+ * @deprecated Use {@link cartHasOnlyDessertPickupItems}. Name kept for callers;
+ * “flan only” now means dessert-only (flan + yema).
+ */
+export const cartHasOnlyFlanItems = cartHasOnlyDessertPickupItems;
+
+export function cartHasAnyNonDessertPickupItem(lines: OrderItemLine[]): boolean {
+  return !cartHasOnlyDessertPickupItems(lines);
+}
+
+/** @deprecated use {@link cartHasAnyNonDessertPickupItem} */
 export function cartHasAnyNonFlanItem(lines: OrderItemLine[]): boolean {
-  return !cartHasOnlyFlanItems(lines);
+  return cartHasAnyNonDessertPickupItem(lines);
 }
