@@ -86,6 +86,12 @@ const LINK_DEFS: {
     badgeLabel: "",
   },
   {
+    href: "/admin/texas-food-compliance",
+    label: "TX food rules",
+    count: () => 0,
+    badgeLabel: "",
+  },
+  {
     href: "/admin/grocery-list",
     label: "Grocery list",
     count: () => 0,
