@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { PrintComplianceButton } from "@/components/admin/TexasFoodCompliancePrintButton";
+import { PRICING, SITE } from "@/lib/config";
 
 export const metadata: Metadata = {
   title: "Texas food & pickup rules (reference) | Admin",
@@ -11,6 +12,9 @@ export const metadata: Metadata = {
 const DSHS_COTTAGE =
   "https://www.dshs.texas.gov/food-establishments/cottage-food";
 const DSHS_FOOD_HANDLERS = "https://www.dshs.texas.gov/food-handlers";
+/** Cypress 77433 is in Harris County; use for local event / PH context. */
+const HCPH_HOME = "https://publichealth.harriscountytx.gov/";
+const COMPTROLLER_TAX = "https://comptroller.texas.gov/taxes/sales/local-sales-tax.php";
 
 /**
  * Owner reference: Texas pickup / cottage context + packaging & prep habits.
@@ -31,11 +35,14 @@ export default async function TexasFoodCompliancePage() {
           Texas pickup &amp; home-kitchen compliance — quick reference
         </h1>
         <p className="text-base text-[var(--text-muted)] print:text-sm print:text-neutral-800">
-          Use this as a reminder to double-check <strong>current</strong> Texas
-          Department of State Health Services (TDSHS) rules, any{" "}
-          <strong>county / city</strong> add-ons, and your own insurance and tax
-          situation. When in doubt, confirm on official sources or with a
-          qualified professional.
+          This page is written for <strong>Mr. K&apos;s</strong> home pickup
+          business at <strong>{SITE.location}</strong> —{" "}
+          <strong className="text-[var(--text)]">Cypress, Harris County, Texas</strong>, ZIP{" "}
+          <strong>77433</strong>. Use it to double-check <strong>current</strong>{" "}
+          Texas Department of State Health Services (TDSHS) rules, any{" "}
+          <strong>Harris County / municipal</strong> requirements that apply to your
+          pickup or events, and your own insurance and tax situation. When in doubt,
+          confirm on official sources or with a qualified professional.
         </p>
         <div className="rounded-lg border-2 border-amber-600/40 bg-amber-50/90 p-4 text-sm text-amber-950 print:border print:bg-white">
           <p className="font-bold">Disclaimer</p>
@@ -57,9 +64,51 @@ export default async function TexasFoodCompliancePage() {
         </div>
         <p className="text-xs text-[var(--text-muted)] print:text-[10pt] print:text-neutral-600">
           Printed: {new Date().toLocaleDateString("en-US", { dateStyle: "long" })} (Central
-          / browser local time)
+          / browser local time) · {SITE.location}
         </p>
       </header>
+
+      <section className="break-inside-avoid rounded-lg border-2 border-[color:var(--primary)]/25 bg-[var(--card)] p-4 print:border-neutral-400 print:shadow-none">
+        <h2 className="text-lg font-bold text-[color:var(--primary)] print:text-black">
+          Your area: Cypress · ZIP 77433 · Harris County
+        </h2>
+        <p className="mt-2 text-sm text-[var(--text)] print:text-[11pt] print:leading-relaxed">
+          {SITE.name} is listed as <strong>{SITE.location}</strong>. That ZIP is served by{" "}
+          <strong>Harris County</strong> for many public services. Addresses in 77433 may
+          fall in <strong>unincorporated Harris County</strong>, the{" "}
+          <strong>City of Houston</strong> (ETJ or limited purpose), or another
+          municipality — <strong>confirm your exact jurisdiction</strong> (taxes, signage,
+          events) for your home address. Cottage food rules are generally{" "}
+          <strong>statewide</strong>; local environmental health is more often involved in{" "}
+          <strong>retail / temp events / some permitted locations</strong>, not routine
+          home-kitchen inspection under the cottage law.
+        </p>
+        <ul className="mt-3 list-inside list-disc space-y-1.5 text-sm text-[var(--text)] print:text-[11pt] print:leading-relaxed">
+          <li>
+            <a
+              href={HCPH_HOME}
+              className="font-semibold text-[color:var(--primary)] underline underline-offset-2 print:text-black"
+            >
+              Harris County Public Health
+            </a>{" "}
+            — for <strong>local</strong> public-health questions, environmental health
+            topics, and any county-specific notices tied to <strong>events, temp food
+            service, or permitted facilities</strong> (confirm what applies to you).
+          </li>
+          <li>
+            <strong>Sales &amp; use tax ({SITE.location}):</strong> the storefront uses{" "}
+            <strong>{(PRICING.TAX_RATE * 100).toFixed(2)}%</strong> combined as a default
+            for Cypress/77433 in code — re-verify on the{" "}
+            <a
+              href={COMPTROLLER_TAX}
+              className="font-semibold text-[color:var(--primary)] underline underline-offset-2 print:text-black"
+            >
+              Texas Comptroller
+            </a>{" "}
+            for your <strong>exact</strong> street address and business type.
+          </li>
+        </ul>
+      </section>
 
       <section className="break-inside-avoid rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 print:border-neutral-300 print:shadow-none">
         <h2 className="text-lg font-bold text-[color:var(--primary)] print:text-black">
@@ -87,8 +136,14 @@ export default async function TexasFoodCompliancePage() {
             production operations and labeling.
           </li>
           <li>
-            <strong>Your county / city</strong> — some jurisdictions add permits,
-            zoning, or event rules beyond state cottage rules.
+            <strong>Local (77433 / Harris County)</strong> — for pickups, farmers
+            markets, or other venues, confirm any <strong>separate</strong> county,
+            city, or venue rules; start from the <strong>Your area: Cypress</strong> section
+            and <a
+              href={HCPH_HOME}
+              className="font-semibold text-[color:var(--primary)] underline underline-offset-2 print:text-black"
+            >HCPH
+            </a> when needed, on top of TDSHS cottage rules.
           </li>
         </ul>
       </section>
