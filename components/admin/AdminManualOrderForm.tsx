@@ -7,6 +7,8 @@ import type { MenuItemDTO } from "@/lib/menu-types";
 import { buildManualOrderMenuOptions } from "@/lib/build-manual-order-menu-options";
 import type { AdminOrderClientRow } from "@/lib/admin-order-client";
 import { openAdminReceiptPrintWindow } from "@/lib/admin-receipt-html";
+import { computeOrderMonetaryTotals } from "@/lib/order-totals";
+import { formatUtensilsCartOneLiner, salesTaxPercentLabel } from "@/lib/config";
 
 const SEL_CUSTOM = "__custom__";
 const SEL_BLANK = "";
@@ -194,6 +196,14 @@ export function AdminManualOrderForm() {
           l.unitPrice >= 0
       );
   }, [lines]);
+
+  const previewTotals = useMemo(() => {
+    if (itemsPayload.length === 0) return null;
+    const setsArg = wantsUtensils
+      ? Math.max(1, Math.floor(Number(utensilSets) || 1))
+      : 0;
+    return computeOrderMonetaryTotals(itemsPayload, wantsUtensils, setsArg);
+  }, [itemsPayload, wantsUtensils, utensilSets]);
 
   async function submit() {
     setErr(null);
@@ -511,6 +521,44 @@ export function AdminManualOrderForm() {
           </label>
         ) : null}
       </div>
+
+      {previewTotals ? (
+        <div className="rounded border border-[var(--border)] bg-[var(--bg-section)] p-4 text-sm">
+          <p className="mb-2 font-semibold text-[var(--text)]">
+            Totals <span className="font-normal text-[var(--text-muted)]">(with tax)</span>
+          </p>
+          <div className="space-y-1 font-variant-numeric tabular-nums">
+            <div className="flex justify-between gap-4">
+              <span className="text-[var(--text-muted)]">Items</span>
+              <span>${previewTotals.itemsSub.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="shrink-0 text-[var(--text-muted)]">Utensils</span>
+              <span className="text-right">
+                {formatUtensilsCartOneLiner(
+                  wantsUtensils,
+                  previewTotals.sets,
+                  previewTotals.ut
+                )}
+              </span>
+            </div>
+            <div className="mt-2 flex justify-between gap-4 border-t border-[var(--border)] pt-2">
+              <span className="text-[var(--text-muted)]">Subtotal (before tax)</span>
+              <span>${previewTotals.sub.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span className="text-[var(--text-muted)]">
+                Sales tax ({salesTaxPercentLabel()})
+              </span>
+              <span>${previewTotals.tax.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between gap-4 border-t border-[var(--border)] pt-2 font-semibold text-[var(--text)]">
+              <span>Total</span>
+              <span>${previewTotals.total.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <label className="block text-sm">
         <span className="font-semibold text-[var(--text)]">Notes (optional)</span>

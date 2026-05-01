@@ -21,6 +21,15 @@ function parseItems(raw: string): OrderItemLine[] {
   }
 }
 
+function safeMoney(n: unknown): number {
+  const x = Number(n);
+  return Number.isFinite(x) ? x : 0;
+}
+
+function sumItemsSubtotal(items: OrderItemLine[]): number {
+  return Math.round(items.reduce((s, i) => s + i.unitPrice * i.quantity, 0) * 100) / 100;
+}
+
 function formatLine(i: OrderItemLine): string {
   const line = i.unitPrice * i.quantity;
   const sz = i.size ? ` (${i.size})` : "";
@@ -53,7 +62,12 @@ function formatItemLineTotal(i: OrderItemLine): string {
  */
 export function buildAdminReceiptHtml(order: AdminOrderClientRow): string {
   const items = parseItems(order.items);
+  const itemsSum = sumItemsSubtotal(items);
   const taxLabel = salesTaxPercentLabel();
+  const subtotalBeforeTax = safeMoney(order.subtotal);
+  const salesTax = safeMoney(order.tax);
+  const grandTotal = safeMoney(order.total);
+  const utCharge = safeMoney(order.utensilCharge);
   const created = new Date(order.createdAt).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -174,14 +188,15 @@ export function buildAdminReceiptHtml(order: AdminOrderClientRow): string {
       <div class="hr"></div>
       <div class="lines">${itemsBlock}</div>
       <div class="hr"></div>
+      <div class="row"><span>Items subtotal</span><span>$${itemsSum.toFixed(2)}</span></div>
       <div class="row"><span>Utensils</span><span>${
         order.utensilSets > 0
-          ? `${order.utensilSets} sets · $${order.utensilCharge.toFixed(2)}`
+          ? `${order.utensilSets} sets · $${utCharge.toFixed(2)}`
           : "None"
       }</span></div>
-      <div class="row"><span>Subtotal</span><span>$${order.subtotal.toFixed(2)}</span></div>
-      <div class="row"><span>Tax (${escapeHtml(taxLabel)})</span><span>$${order.tax.toFixed(2)}</span></div>
-      <div class="row tot big"><span>TOTAL</span><span>$${order.total.toFixed(2)}</span></div>
+      <div class="row"><span>Subtotal (before tax)</span><span>$${subtotalBeforeTax.toFixed(2)}</span></div>
+      <div class="row"><span>Sales tax (${escapeHtml(taxLabel)})</span><span>$${salesTax.toFixed(2)}</span></div>
+      <div class="row tot big"><span>TOTAL</span><span>$${grandTotal.toFixed(2)}</span></div>
       <div class="hr"></div>
       <div class="row"><span>Pickup</span><span>${escapeHtml(order.pickupDate ?? "—")} @ ${escapeHtml(
         order.pickupTime ?? "—"
@@ -349,7 +364,12 @@ export function downloadAdminReceiptHtmlFile(order: AdminOrderClientRow): void {
  */
 export function buildAdminReceiptEmailHtml(order: AdminOrderClientRow): string {
   const items = parseItems(order.items);
+  const itemsSum = sumItemsSubtotal(items);
   const taxLabel = salesTaxPercentLabel();
+  const subtotalBeforeTax = safeMoney(order.subtotal);
+  const salesTax = safeMoney(order.tax);
+  const grandTotal = safeMoney(order.total);
+  const utCharge = safeMoney(order.utensilCharge);
   const created = new Date(order.createdAt).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -397,14 +417,15 @@ ${demoBanner}
 ${itemsBlock}
 </table>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1;font-size:14px;">
+<tr><td style="padding:4px 0;">Items subtotal</td><td style="padding:4px 0;text-align:right;">$${itemsSum.toFixed(2)}</td></tr>
 <tr><td style="padding:4px 0;">Utensils</td><td style="padding:4px 0;text-align:right;">${
     order.utensilSets > 0
-      ? `${order.utensilSets} sets · $${order.utensilCharge.toFixed(2)}`
+      ? `${order.utensilSets} sets · $${utCharge.toFixed(2)}`
       : "None"
   }</td></tr>
-<tr><td style="padding:4px 0;">Subtotal</td><td style="padding:4px 0;text-align:right;">$${order.subtotal.toFixed(2)}</td></tr>
-<tr><td style="padding:4px 0;">Tax (${escapeHtml(taxLabel)})</td><td style="padding:4px 0;text-align:right;">$${order.tax.toFixed(2)}</td></tr>
-<tr><td style="padding:8px 0 4px;font-size:17px;font-weight:800;">TOTAL</td><td style="padding:8px 0 4px;text-align:right;font-size:17px;font-weight:800;">$${order.total.toFixed(2)}</td></tr>
+<tr><td style="padding:4px 0;">Subtotal (before tax)</td><td style="padding:4px 0;text-align:right;">$${subtotalBeforeTax.toFixed(2)}</td></tr>
+<tr><td style="padding:4px 0;">Sales tax (${escapeHtml(taxLabel)})</td><td style="padding:4px 0;text-align:right;">$${salesTax.toFixed(2)}</td></tr>
+<tr><td style="padding:8px 0 4px;font-size:17px;font-weight:800;">TOTAL</td><td style="padding:8px 0 4px;text-align:right;font-size:17px;font-weight:800;">$${grandTotal.toFixed(2)}</td></tr>
 </table>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;padding-top:12px;border-top:1px dashed #cbd5e1;font-size:14px;">
 <tr><td style="padding:4px 0;color:#555;">Pickup</td><td style="padding:4px 0;text-align:right;">${escapeHtml(order.pickupDate ?? "—")} @ ${escapeHtml(order.pickupTime ?? "—")}</td></tr>
@@ -425,7 +446,12 @@ ${itemsBlock}
 export function buildAdminReceiptPlainText(order: AdminOrderClientRow): string {
   const items = parseItems(order.items);
   const lines = items.map((i) => formatLine(i));
+  const itemsSum = sumItemsSubtotal(items);
   const taxLabel = salesTaxPercentLabel();
+  const subtotalBeforeTax = safeMoney(order.subtotal);
+  const salesTax = safeMoney(order.tax);
+  const grandTotal = safeMoney(order.total);
+  const utCharge = safeMoney(order.utensilCharge);
   const created = new Date(order.createdAt).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -446,14 +472,15 @@ export function buildAdminReceiptPlainText(order: AdminOrderClientRow): string {
     "Items:",
     itemBlock,
     "",
+    `Items subtotal: $${itemsSum.toFixed(2)}`,
     `Utensils: ${
       order.utensilSets > 0
-        ? `${order.utensilSets} sets · $${order.utensilCharge.toFixed(2)}`
+        ? `${order.utensilSets} sets · $${utCharge.toFixed(2)}`
         : "None"
     }`,
-    `Subtotal: $${order.subtotal.toFixed(2)}`,
-    `Tax (${taxLabel}): $${order.tax.toFixed(2)}`,
-    `TOTAL: $${order.total.toFixed(2)}`,
+    `Subtotal (before tax): $${subtotalBeforeTax.toFixed(2)}`,
+    `Sales tax (${taxLabel}): $${salesTax.toFixed(2)}`,
+    `TOTAL: $${grandTotal.toFixed(2)}`,
     "",
     `Pickup: ${order.pickupDate ?? "—"} @ ${order.pickupTime ?? "—"}`,
     `Payment: ${formatPaymentDisplayLine(order.paymentMethod, order.paymentStatus)}`,
