@@ -199,17 +199,15 @@ export function OrderForm() {
   const emailOk = isValidEmail(email);
   const phoneOk = hasValidPhoneDigits(phone);
 
-  const timeChoiceOk =
-    !pickupTime.trim() ||
-    (!slotsLoading && slotOptions.includes(pickupTime));
-
-  const pickupOk =
-    Boolean(pickupDate.trim()) &&
-    isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly) &&
-    timeChoiceOk;
-
   const basicsOk =
-    name.trim() && phoneOk && emailOk && pickupOk;
+    name.trim() &&
+    phoneOk &&
+    emailOk &&
+    pickupDate &&
+    pickupTime &&
+    slotOptions.includes(pickupTime) &&
+    isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly) &&
+    !slotsLoading;
 
   const samplesOk = samplesSelectionComplete(cart.samples);
   const canSubmitOrder = basicsOk && samplesOk;
@@ -262,12 +260,11 @@ export function OrderForm() {
       next.pickup = true;
     } else if (!isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly)) {
       next.pickup = true;
-    } else if (
-      pickupTime.trim() &&
-      (slotsLoading ||
-        slotOptions.length === 0 ||
-        !slotOptions.includes(pickupTime))
-    ) {
+    } else if (slotsLoading) {
+      next.time = true;
+    } else if (slotOptions.length === 0) {
+      next.time = true;
+    } else if (!pickupTime || !slotOptions.includes(pickupTime)) {
       next.time = true;
     }
 
@@ -318,12 +315,10 @@ export function OrderForm() {
           );
         } else if (slotOptions.length === 0) {
           parts.push(
-            "No time slots for this date — choose another pickup day, or clear your time choice and submit without a slot."
+            "No time slots for this date — choose another pickup day."
           );
         } else {
-          parts.push(
-            "That pickup time isn’t valid — pick another slot or tap “Skip time” and submit."
-          );
+          parts.push("Please select a pickup time.");
         }
       }
       if (next.samples) {
@@ -656,63 +651,37 @@ export function OrderForm() {
               issues.time ? "ring-2 ring-red-500 ring-offset-2" : "",
             ].join(" ")}
           >
-            <p className="text-sm font-semibold">
-              Pickup time{" "}
-              <span className="font-normal text-[var(--text-muted)]">(optional)</span>
-            </p>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">
-              Pick a window if you already know it. Otherwise submit with date only —
-              Mr.&nbsp;K will confirm your pickup time by text or email.
-            </p>
+            <p className="text-sm font-semibold">Pickup time *</p>
             {slotsLoading ? (
               <p className="mt-2 text-xs text-[var(--text-muted)]">Loading times…</p>
             ) : slotOptions.length === 0 ? (
               <p className="mt-2 text-sm text-[var(--accent)]">
-                No slots this day — choose another date, or submit without a time.
+                No slots this day — choose another date.
               </p>
             ) : (
-              <>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPickupTime("");
-                      setIssues((p) => ({ ...p, time: false }));
-                    }}
-                    className={[
-                      "min-h-[44px] rounded-full border px-4 text-sm font-semibold transition-colors",
-                      !pickupTime.trim()
-                        ? "border-[color:var(--primary)] bg-[color:var(--primary)] text-white"
-                        : "border-[var(--border)] bg-[var(--card)] text-[var(--text)] hover:bg-[#FFC200]",
-                    ].join(" ")}
-                  >
-                    Skip — coordinate later
-                  </button>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {slotOptions.map((t) => {
-                    const sel = pickupTime === t;
-                    return (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => {
-                          setPickupTime(t);
-                          setIssues((p) => ({ ...p, time: false }));
-                        }}
-                        className={[
-                          "min-h-[44px] rounded-full border px-4 text-sm font-semibold transition-colors",
-                          sel
-                            ? "border-[color:var(--primary)] bg-[color:var(--primary)] text-white"
-                            : "border-[var(--border)] bg-[var(--card)] text-[var(--text)] hover:bg-[#FFC200]",
-                        ].join(" ")}
-                      >
-                        {t}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {slotOptions.map((t) => {
+                  const sel = pickupTime === t;
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => {
+                        setPickupTime(t);
+                        setIssues((p) => ({ ...p, time: false }));
+                      }}
+                      className={[
+                        "min-h-[44px] rounded-full border px-4 text-sm font-semibold transition-colors",
+                        sel
+                          ? "border-[color:var(--primary)] bg-[color:var(--primary)] text-white"
+                          : "border-[var(--border)] bg-[var(--card)] text-[var(--text)] hover:bg-[#FFC200]",
+                      ].join(" ")}
+                    >
+                      {t}
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </div>
         ) : null}
@@ -783,8 +752,8 @@ export function OrderForm() {
 
         {!canSubmitOrder ? (
           <p className="text-sm text-[var(--text-muted)]">
-            Fill contact + pickup date, tick the payment line, and fix any sample
-            picks in the cart. Pickup time is optional.
+            Fill contact + pickup, tick the payment line, and fix any sample
+            picks in the cart.
           </p>
         ) : null}
 

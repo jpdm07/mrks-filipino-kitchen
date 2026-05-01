@@ -87,13 +87,7 @@ export default async function OrderConfirmationPage({
               {" "}
               at <strong>{pickupTime}</strong>
             </>
-          ) : (
-            <>
-              {" "}
-              — <strong>time TBD</strong>. Mr.&nbsp;K will confirm your pickup window by
-              text or email.
-            </>
-          )}
+          ) : null}
           .
         </p>
       ) : null}

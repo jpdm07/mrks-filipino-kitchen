@@ -163,11 +163,10 @@ export async function POST(req: NextRequest) {
     }
 
     const pickupDate = (body.pickupDate ?? "").trim();
-    const pickupTimeRaw = (body.pickupTime ?? "").trim();
-    const hasPickupTime = pickupTimeRaw.length > 0;
-    if (!pickupDate) {
+    const pickupTime = (body.pickupTime ?? "").trim();
+    if (!pickupDate || !pickupTime) {
       return NextResponse.json(
-        { error: "Pickup date required" },
+        { error: "Pickup date and time required" },
         { status: 400 }
       );
     }
@@ -185,17 +184,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (hasPickupTime) {
-      const slotList = await getKitchenSlotsForDate(pickupDate, cartFlanOnly);
-      if (!slotList.includes(pickupTimeRaw)) {
-        return NextResponse.json(
-          {
-            error:
-              "That pickup time is not available for the date you chose. Please go back and pick another time.",
-          },
-          { status: 400 }
-        );
-      }
+    const slotList = await getKitchenSlotsForDate(pickupDate, cartFlanOnly);
+    if (!slotList.includes(pickupTime.trim())) {
+      return NextResponse.json(
+        {
+          error:
+            "That pickup time is not available for the date you chose. Please go back and pick another time.",
+        },
+        { status: 400 }
+      );
     }
 
     const wantsUtensils = Boolean(body.wantsUtensils);
@@ -223,13 +220,7 @@ export async function POST(req: NextRequest) {
     const status = ORDER_STATUS_PENDING_PAYMENT_VERIFICATION;
     const paymentMethod = PAYMENT_METHOD_UNVERIFIED;
     const paymentStatus = PAYMENT_STATUS_PENDING;
-    const notePieces = [(body.notes ?? "").trim()];
-    if (!hasPickupTime) {
-      notePieces.push(
-        "[Pickup time not chosen at checkout — coordinate with customer]"
-      );
-    }
-    const baseNotes = notePieces.filter(Boolean).join("\n\n") || null;
+    const baseNotes = (body.notes ?? "").trim() || null;
 
     let order;
     try {
@@ -245,9 +236,7 @@ export async function POST(req: NextRequest) {
           if (!cap.ok) {
             throw new CapacityExceededError();
           }
-          if (hasPickupTime) {
-            await assertPickupSlotFreeInTx(tx, pickupDate, pickupTimeRaw);
-          }
+          await assertPickupSlotFreeInTx(tx, pickupDate, pickupTime);
         }
         const common = {
           orderNumber,
@@ -259,7 +248,7 @@ export async function POST(req: NextRequest) {
           tax,
           total,
           pickupDate,
-          pickupTime: hasPickupTime ? pickupTimeRaw : null,
+          pickupTime,
           wantsUtensils,
           utensilSets: sets,
           utensilCharge: ut,
@@ -342,7 +331,7 @@ export async function POST(req: NextRequest) {
       `${isDemo ? "🧪 DEMO " : ""}🍽️ NEW ORDER #${orderNumber}`,
       `Customer: ${customerName} | ${phone}`,
       `Total: $${total.toFixed(2)}`,
-      `Pickup: ${pickupDate}${hasPickupTime ? ` @ ${pickupTimeRaw}` : " — time TBD"}`,
+      `Pickup: ${pickupDate} @ ${pickupTime}`,
     ];
     if (wantsPrintedReceipt) {
       ownerSmsLines.push(`Printed receipt: yes — pack with pickup`);
@@ -373,8 +362,8 @@ export async function POST(req: NextRequest) {
       tax,
       total,
       pickupDate,
-      pickupTime: hasPickupTime ? pickupTimeRaw : null,
-      notes: baseNotes,
+      pickupTime,
+      notes: (body.notes ?? "").trim() || null,
       wantsUtensils,
       utensilSets: sets,
       utensilCharge: ut,
@@ -390,7 +379,7 @@ export async function POST(req: NextRequest) {
           email,
           orderNumber,
           pickupDate,
-          pickupTime: hasPickupTime ? pickupTimeRaw : null,
+          pickupTime,
           total,
         });
 
@@ -428,8 +417,8 @@ export async function POST(req: NextRequest) {
         tax,
         total,
         pickupDate,
-        pickupTime: hasPickupTime ? pickupTimeRaw : undefined,
-        notes: baseNotes ?? undefined,
+        pickupTime,
+        notes: body.notes,
         customInquiry: body.customInquiry ?? undefined,
         wantsPrintedReceipt,
         status,

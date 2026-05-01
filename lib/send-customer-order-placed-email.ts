@@ -21,8 +21,7 @@ export type CustomerOrderPlacedEmailParams = {
   email: string;
   orderNumber: string;
   pickupDate: string;
-  /** Omit when customer skipped picking a slot at checkout. */
-  pickupTime?: string | null;
+  pickupTime: string;
   total: number;
 };
 

@@ -1,6 +1,6 @@
 import { ORDER_FULFILLMENT } from "@/lib/config";
 
-/** e.g. "Friday, April 17 at 2:30 PM" in pickup timezone; omit `time` when customer skipped a slot. */
+/** e.g. "Friday, April 17 at 2:30 PM" in pickup timezone. Omit `time` when not set (e.g. admin manual order). */
 export function formatPickupDisplay(
   ymd: string,
   time?: string | null
