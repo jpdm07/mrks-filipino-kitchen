@@ -3,18 +3,32 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import type { MenuItemDTO } from "@/lib/menu-types";
+import { buildManualOrderMenuOptions } from "@/lib/build-manual-order-menu-options";
+import type { AdminOrderClientRow } from "@/lib/admin-order-client";
+import { openAdminReceiptPrintWindow } from "@/lib/admin-receipt-html";
+
+const SEL_CUSTOM = "__custom__";
+const SEL_BLANK = "";
 
 type LineDraft = {
   id: string;
+  selectionKey: string;
   name: string;
   quantity: string;
   unitPrice: string;
   size: string;
+  menuItemId?: string;
+  sizeKey?: string;
+  cookedOrFrozen?: string;
+  adoboProtein?: "chicken" | "pork";
+  category?: string;
 };
 
 function newLine(): LineDraft {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    selectionKey: SEL_BLANK,
     name: "",
     quantity: "1",
     unitPrice: "",
@@ -41,6 +55,41 @@ export function AdminManualOrderForm() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
+  const [menuItems, setMenuItems] = useState<MenuItemDTO[]>([]);
+  const [menuLoading, setMenuLoading] = useState(true);
+  const [menuErr, setMenuErr] = useState<string | null>(null);
+  const [receiptOrder, setReceiptOrder] = useState<AdminOrderClientRow | null>(
+    null
+  );
+
+  const menuOptions = useMemo(
+    () => buildManualOrderMenuOptions(menuItems),
+    [menuItems]
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setMenuErr(null);
+      setMenuLoading(true);
+      try {
+        const r = await fetch("/api/menu", { cache: "no-store" });
+        const j = (await r.json()) as { items?: MenuItemDTO[] };
+        if (!r.ok || !Array.isArray(j.items)) {
+          if (!cancelled) setMenuErr("Could not load menu prices.");
+          return;
+        }
+        if (!cancelled) setMenuItems(j.items);
+      } catch {
+        if (!cancelled) setMenuErr("Could not load menu prices.");
+      } finally {
+        if (!cancelled) setMenuLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const cartMode = useMemo(() => {
     const named = lines.map((l) => l.name.trim()).filter(Boolean);
@@ -83,20 +132,73 @@ export function AdminManualOrderForm() {
     void loadSlots(pickupDate, cartMode);
   }, [pickupDate, cartMode, loadSlots]);
 
+  function applyMenuSelection(lineId: string, value: string) {
+    setLines((prev) =>
+      prev.map((x) => {
+        if (x.id !== lineId) return x;
+        if (value === SEL_CUSTOM) {
+          return {
+            ...x,
+            selectionKey: SEL_CUSTOM,
+            menuItemId: undefined,
+            sizeKey: undefined,
+            cookedOrFrozen: undefined,
+            adoboProtein: undefined,
+            category: undefined,
+          };
+        }
+        const opt = menuOptions.find((o) => o.value === value);
+        if (!opt) {
+          return { ...x, selectionKey: SEL_BLANK };
+        }
+        const L = opt.line;
+        return {
+          ...x,
+          selectionKey: value,
+          name: L.name,
+          unitPrice: String(L.unitPrice),
+          size: L.size ?? "",
+          menuItemId: L.menuItemId,
+          sizeKey: L.sizeKey,
+          cookedOrFrozen: L.cookedOrFrozen,
+          adoboProtein: L.adoboProtein,
+          category: L.category,
+        };
+      })
+    );
+  }
+
   const itemsPayload = useMemo(() => {
     return lines
-      .map((l) => ({
-        name: l.name.trim(),
-        quantity: Math.floor(Number(l.quantity) || 0),
-        unitPrice: Number(l.unitPrice),
-        ...(l.size.trim() ? { size: l.size.trim() } : {}),
-      }))
-      .filter((l) => l.name && l.quantity >= 1 && Number.isFinite(l.unitPrice));
+      .filter((l) => l.selectionKey !== SEL_BLANK)
+      .map((l) => {
+        const qty = Math.floor(Number(l.quantity) || 0);
+        const unitPrice = Number(l.unitPrice);
+        return {
+          name: l.name.trim(),
+          quantity: qty,
+          unitPrice,
+          ...(l.size.trim() ? { size: l.size.trim() } : {}),
+          ...(l.menuItemId ? { menuItemId: l.menuItemId } : {}),
+          ...(l.sizeKey ? { sizeKey: l.sizeKey } : {}),
+          ...(l.cookedOrFrozen ? { cookedOrFrozen: l.cookedOrFrozen } : {}),
+          ...(l.adoboProtein ? { adoboProtein: l.adoboProtein } : {}),
+          ...(l.category ? { category: l.category } : {}),
+        };
+      })
+      .filter(
+        (l) =>
+          l.name &&
+          l.quantity >= 1 &&
+          Number.isFinite(l.unitPrice) &&
+          l.unitPrice >= 0
+      );
   }, [lines]);
 
   async function submit() {
     setErr(null);
     setOk(null);
+    setReceiptOrder(null);
     if (!customerName.trim() || !phone.trim() || !email.trim()) {
       setErr("Customer name, phone, and email are required.");
       return;
@@ -105,8 +207,14 @@ export function AdminManualOrderForm() {
       setErr("Choose a pickup date and time.");
       return;
     }
+    if (lines.some((l) => l.selectionKey === SEL_BLANK)) {
+      setErr('Choose a menu item on each line (or "Custom item").');
+      return;
+    }
     if (itemsPayload.length === 0) {
-      setErr("Add at least one line item with name, quantity ≥ 1, and unit price.");
+      setErr(
+        "Add at least one valid line: quantity ≥ 1 and a price (pick from menu or enter custom)."
+      );
       return;
     }
     setBusy(true);
@@ -133,26 +241,46 @@ export function AdminManualOrderForm() {
       const j = (await res.json().catch(() => ({}))) as {
         error?: string;
         orderNumber?: string;
+        orderId?: string;
       };
       if (!res.ok) {
         setErr(j.error ?? "Save failed");
         return;
       }
       setOk(`Saved as order #${j.orderNumber}.`);
+
+      if (j.orderId) {
+        const gr = await fetch(
+          `/api/admin/orders/${encodeURIComponent(j.orderId)}`,
+          { credentials: "include", cache: "no-store" }
+        );
+        const gj = (await gr.json().catch(() => ({}))) as {
+          order?: AdminOrderClientRow;
+        };
+        if (gr.ok && gj.order) setReceiptOrder(gj.order);
+      }
+
       router.refresh();
     } finally {
       setBusy(false);
     }
   }
 
+  function handlePrintReceipt() {
+    if (!receiptOrder) return;
+    openAdminReceiptPrintWindow(receiptOrder);
+  }
+
+  const isMenuLine = (l: LineDraft) =>
+    l.selectionKey !== SEL_BLANK && l.selectionKey !== SEL_CUSTOM;
+
   return (
     <div className="mx-auto max-w-2xl space-y-6 rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
       <p className="text-sm leading-relaxed text-[var(--text-muted)]">
         Use this for walk-ins, phone orders, or other sales <strong>not</strong> from
-        the website. The order uses the same capacity, pickup slot, and Sheets rules
-        as checkout. Send the customer&apos;s payment yourself (cash, Venmo, Cash
-        App, etc.),
-        then check <strong>Mark as paid / confirmed</strong> when appropriate.
+        the website. Pick items from your menu to load prices automatically; use{" "}
+        <strong>Custom item</strong> only when needed. Capacity and pickup slots match
+        checkout.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -189,86 +317,153 @@ export function AdminManualOrderForm() {
       <div>
         <p className="text-sm font-bold text-[var(--text)]">Line items</p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
-          Name and prices as they should appear on the order. Optional size (e.g.
-          dozen, plate).
+          Choose from the menu to fill name and unit price. Adjust quantity per line.
         </p>
+        {menuErr ? (
+          <p className="mt-2 text-sm text-amber-700" role="alert">
+            {menuErr} You can still use custom lines with manual prices.
+          </p>
+        ) : null}
         <ul className="mt-3 space-y-3">
           {lines.map((line) => (
             <li
               key={line.id}
               className="rounded border border-[var(--border)] bg-[var(--bg-section)] p-3"
             >
-              <div className="grid gap-2 sm:grid-cols-12">
-                <label className="sm:col-span-5">
-                  <span className="text-xs font-medium text-[var(--text-muted)]">
-                    Item name
-                  </span>
-                  <input
-                    className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm"
-                    value={line.name}
-                    onChange={(e) =>
-                      setLines((prev) =>
-                        prev.map((x) =>
-                          x.id === line.id ? { ...x, name: e.target.value } : x
+              <label className="block">
+                <span className="text-xs font-medium text-[var(--text-muted)]">
+                  Menu item
+                </span>
+                <select
+                  className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm text-[var(--text)]"
+                  value={line.selectionKey}
+                  disabled={menuLoading}
+                  onChange={(e) => applyMenuSelection(line.id, e.target.value)}
+                >
+                  <option value={SEL_BLANK}>
+                    {menuLoading ? "Loading menu…" : "Choose menu item…"}
+                  </option>
+                  {menuOptions.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                  <option value={SEL_CUSTOM}>Custom item (type name &amp; price)…</option>
+                </select>
+              </label>
+
+              {isMenuLine(line) ? (
+                <div className="mt-3 grid gap-2 sm:grid-cols-12">
+                  <div className="sm:col-span-9 text-sm">
+                    <span className="text-xs font-medium text-[var(--text-muted)]">
+                      Item
+                    </span>
+                    <p className="mt-0.5 font-medium text-[var(--text)]">
+                      {line.name}
+                      {line.size ? (
+                        <span className="font-normal text-[var(--text-muted)]">
+                          {" "}
+                          ({line.size})
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="text-[var(--text-muted)]">
+                      ${Number(line.unitPrice || 0).toFixed(2)} each
+                    </p>
+                  </div>
+                  <label className="sm:col-span-3">
+                    <span className="text-xs font-medium text-[var(--text-muted)]">
+                      Qty
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm"
+                      value={line.quantity}
+                      onChange={(e) =>
+                        setLines((prev) =>
+                          prev.map((x) =>
+                            x.id === line.id ? { ...x, quantity: e.target.value } : x
+                          )
                         )
-                      )
-                    }
-                  />
-                </label>
-                <label className="sm:col-span-2">
-                  <span className="text-xs font-medium text-[var(--text-muted)]">
-                    Qty
-                  </span>
-                  <input
-                    type="number"
-                    min={1}
-                    className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm"
-                    value={line.quantity}
-                    onChange={(e) =>
-                      setLines((prev) =>
-                        prev.map((x) =>
-                          x.id === line.id ? { ...x, quantity: e.target.value } : x
+                      }
+                    />
+                  </label>
+                </div>
+              ) : line.selectionKey === SEL_CUSTOM ? (
+                <div className="mt-3 grid gap-2 sm:grid-cols-12">
+                  <label className="sm:col-span-5">
+                    <span className="text-xs font-medium text-[var(--text-muted)]">
+                      Item name
+                    </span>
+                    <input
+                      className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm"
+                      value={line.name}
+                      onChange={(e) =>
+                        setLines((prev) =>
+                          prev.map((x) =>
+                            x.id === line.id ? { ...x, name: e.target.value } : x
+                          )
                         )
-                      )
-                    }
-                  />
-                </label>
-                <label className="sm:col-span-2">
-                  <span className="text-xs font-medium text-[var(--text-muted)]">
-                    $ each
-                  </span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min={0}
-                    className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm"
-                    value={line.unitPrice}
-                    onChange={(e) =>
-                      setLines((prev) =>
-                        prev.map((x) =>
-                          x.id === line.id ? { ...x, unitPrice: e.target.value } : x
+                      }
+                    />
+                  </label>
+                  <label className="sm:col-span-2">
+                    <span className="text-xs font-medium text-[var(--text-muted)]">
+                      Qty
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm"
+                      value={line.quantity}
+                      onChange={(e) =>
+                        setLines((prev) =>
+                          prev.map((x) =>
+                            x.id === line.id ? { ...x, quantity: e.target.value } : x
+                          )
                         )
-                      )
-                    }
-                  />
-                </label>
-                <label className="sm:col-span-3">
-                  <span className="text-xs font-medium text-[var(--text-muted)]">
-                    Size (optional)
-                  </span>
-                  <input
-                    className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm"
-                    value={line.size}
-                    onChange={(e) =>
-                      setLines((prev) =>
-                        prev.map((x) =>
-                          x.id === line.id ? { ...x, size: e.target.value } : x
+                      }
+                    />
+                  </label>
+                  <label className="sm:col-span-2">
+                    <span className="text-xs font-medium text-[var(--text-muted)]">
+                      $ each
+                    </span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min={0}
+                      className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm"
+                      value={line.unitPrice}
+                      onChange={(e) =>
+                        setLines((prev) =>
+                          prev.map((x) =>
+                            x.id === line.id ? { ...x, unitPrice: e.target.value } : x
+                          )
                         )
-                      )
-                    }
-                  />
-                </label>
-              </div>
+                      }
+                    />
+                  </label>
+                  <label className="sm:col-span-3">
+                    <span className="text-xs font-medium text-[var(--text-muted)]">
+                      Size (optional)
+                    </span>
+                    <input
+                      className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm"
+                      value={line.size}
+                      onChange={(e) =>
+                        setLines((prev) =>
+                          prev.map((x) =>
+                            x.id === line.id ? { ...x, size: e.target.value } : x
+                          )
+                        )
+                      }
+                    />
+                  </label>
+                </div>
+              ) : null}
+
               {lines.length > 1 ? (
                 <button
                   type="button"
@@ -359,18 +554,41 @@ export function AdminManualOrderForm() {
         />
       </label>
 
-      <fieldset className="space-y-2 text-sm">
-        <label className="flex items-center gap-2">
+      <fieldset className="space-y-3 rounded border border-[var(--border)] bg-[var(--bg-section)] p-4 text-sm">
+        <legend className="px-1 font-semibold text-[var(--text)]">Payment status</legend>
+        <label className="flex cursor-pointer items-start gap-2">
           <input
-            type="checkbox"
+            type="radio"
+            name="manual-pay-status"
+            className="mt-1"
             checked={markPaid}
-            onChange={(e) => setMarkPaid(e.target.checked)}
+            onChange={() => setMarkPaid(true)}
           />
           <span>
-            Mark as <strong>paid / confirmed</strong> (pickup calendar event when
-            Google is configured)
+            <strong>Paid / confirmed</strong>
+            <span className="block text-[var(--text-muted)]">
+              Pickup calendar event when Google is configured; treated like verified payment.
+            </span>
           </span>
         </label>
+        <label className="flex cursor-pointer items-start gap-2">
+          <input
+            type="radio"
+            name="manual-pay-status"
+            className="mt-1"
+            checked={!markPaid}
+            onChange={() => setMarkPaid(false)}
+          />
+          <span>
+            <strong>Awaiting payment / pending confirmation</strong>
+            <span className="block text-[var(--text-muted)]">
+              Order is saved but stays pending until you confirm payment later.
+            </span>
+          </span>
+        </label>
+      </fieldset>
+
+      <fieldset className="space-y-2 text-sm">
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -395,12 +613,28 @@ export function AdminManualOrderForm() {
         </p>
       ) : null}
       {ok ? (
-        <p className="text-sm font-medium text-emerald-700" role="status">
-          {ok}{" "}
-          <Link href="/admin/dashboard" className="underline">
-            Dashboard
-          </Link>
-        </p>
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-emerald-700" role="status">
+            {ok}{" "}
+            <Link href="/admin/dashboard" className="underline">
+              Dashboard
+            </Link>
+          </p>
+          {receiptOrder ? (
+            <button
+              type="button"
+              className="btn btn-outline-dark btn-sm"
+              onClick={handlePrintReceipt}
+            >
+              Print receipt
+            </button>
+          ) : (
+            <p className="text-xs text-[var(--text-muted)]">
+              Receipt printing was unavailable for this save; open the order from the dashboard
+              to print.
+            </p>
+          )}
+        </div>
       ) : null}
 
       <button

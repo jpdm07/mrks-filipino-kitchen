@@ -110,7 +110,7 @@ export function samplesToLines(
   return out;
 }
 
-function adoboOrderSizeLine(
+export function adoboOrderSizeLine(
   protein: "chicken" | "pork",
   sizeKey: string
 ): string {

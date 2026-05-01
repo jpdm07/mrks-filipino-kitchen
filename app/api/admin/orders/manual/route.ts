@@ -84,6 +84,9 @@ function normalizeManualItems(raw: unknown): OrderItemLine[] | null {
     if (o.isSample === true) line.isSample = true;
     if (typeof o.category === "string" && o.category.trim())
       line.category = o.category.trim();
+    if (o.adoboProtein === "chicken" || o.adoboProtein === "pork") {
+      line.adoboProtein = o.adoboProtein;
+    }
     out.push(line);
   }
   return out;
