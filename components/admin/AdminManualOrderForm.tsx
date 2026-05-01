@@ -276,7 +276,8 @@ export function AdminManualOrderForm() {
         the website. Pick from the menu to pre-fill fields, or choose{" "}
         <strong>Custom item</strong>; you can always edit name, size, unit price, and
         quantity on any line. Customer and pickup can be left blank (placeholders / TBD on
-        the order); filled pickup uses the same capacity rules as checkout.
+        the order). Pickup date is not limited to customer-facing calendar rules; weekly
+        kitchen capacity still applies when a date is set.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">

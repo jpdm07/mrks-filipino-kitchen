@@ -6,11 +6,6 @@ import { isAdminSession } from "@/lib/admin-auth";
 import { generateOrderNumber } from "@/lib/orderNumber";
 import { computeOrderMonetaryTotals } from "@/lib/order-totals";
 import type { OrderItemLine } from "@/lib/order-types";
-import { cartHasOnlyFlanItems } from "@/lib/menu-cook-capacity";
-import {
-  getKitchenSlotsForDate,
-  isPickupYmdAllowedForOrderCart,
-} from "@/lib/kitchen-schedule";
 import {
   isWellFormedPickupYMD,
   pickupDateRejectedMessage,
@@ -169,7 +164,6 @@ export async function POST(req: NextRequest) {
 
   const isDemo = Boolean(body.isDemo);
   const markPaid = body.markPaid !== false;
-  const cartFlanOnly = cartHasOnlyFlanItems(items);
 
   if (hasPickupDate) {
     if (!isWellFormedPickupYMD(pickupDateRaw)) {
@@ -178,26 +172,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    if (!isPickupYmdAllowedForOrderCart(pickupDateRaw, cartFlanOnly, new Date())) {
-      return NextResponse.json(
-        { error: pickupDateRejectedMessage() },
-        { status: 400 }
-      );
-    }
   }
 
-  if (scheduleComplete) {
-    const slotList = await getKitchenSlotsForDate(pickupDateRaw, cartFlanOnly);
-    if (!slotList.includes(pickupTimeRaw)) {
-      return NextResponse.json(
-        {
-          error:
-            "That pickup time is not valid for the chosen date. Pick a slot from the list for that day.",
-        },
-        { status: 400 }
-      );
-    }
-  }
+  /** Admin overrides public pickup calendar / slot grid — only enforce well-formed YMD + duplicate-slot check below. */
 
   const wantsUtensils = Boolean(body.wantsUtensils);
   const utensilSets = Number(body.utensilSets) || 0;
