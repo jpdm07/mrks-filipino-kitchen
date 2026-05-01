@@ -122,7 +122,7 @@ export function AdminManualOrderForm() {
         return;
       }
       setSlotOptions(j.slots);
-      setPickupTime((t) => (t && j.slots!.includes(t) ? t : j.slots![0]!));
+      setPickupTime((t) => (t && j.slots!.includes(t) ? t : ""));
     } finally {
       setSlotsLoading(false);
     }
@@ -199,18 +199,6 @@ export function AdminManualOrderForm() {
     setErr(null);
     setOk(null);
     setReceiptOrder(null);
-    if (!customerName.trim() || !phone.trim() || !email.trim()) {
-      setErr("Customer name, phone, and email are required.");
-      return;
-    }
-    if (!pickupDate || !pickupTime) {
-      setErr("Choose a pickup date and time.");
-      return;
-    }
-    if (lines.some((l) => l.selectionKey === SEL_BLANK)) {
-      setErr('Choose a menu item on each line (or "Custom item").');
-      return;
-    }
     if (itemsPayload.length === 0) {
       setErr(
         "Add at least one valid line: quantity ≥ 1 and a price (pick from menu or enter custom)."
@@ -277,12 +265,15 @@ export function AdminManualOrderForm() {
         Use this for walk-ins, phone orders, or other sales <strong>not</strong> from
         the website. Pick from the menu to pre-fill fields, or choose{" "}
         <strong>Custom item</strong>; you can always edit name, size, unit price, and
-        quantity on any line. Capacity and pickup slots match checkout.
+        quantity on any line. Customer and pickup can be left blank (placeholders / TBD on
+        the order); filled pickup uses the same capacity rules as checkout.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-sm">
-          <span className="font-semibold text-[var(--text)]">Customer name</span>
+          <span className="font-semibold text-[var(--text)]">
+            Customer name <span className="font-normal text-[var(--text-muted)]">(optional)</span>
+          </span>
           <input
             className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)]"
             value={customerName}
@@ -291,7 +282,9 @@ export function AdminManualOrderForm() {
           />
         </label>
         <label className="block text-sm">
-          <span className="font-semibold text-[var(--text)]">Phone</span>
+          <span className="font-semibold text-[var(--text)]">
+            Phone <span className="font-normal text-[var(--text-muted)]">(optional)</span>
+          </span>
           <input
             className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)]"
             value={phone}
@@ -300,7 +293,9 @@ export function AdminManualOrderForm() {
           />
         </label>
         <label className="block text-sm sm:col-span-2">
-          <span className="font-semibold text-[var(--text)]">Email</span>
+          <span className="font-semibold text-[var(--text)]">
+            Email <span className="font-normal text-[var(--text-muted)]">(optional)</span>
+          </span>
           <input
             type="email"
             className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)]"
@@ -449,7 +444,10 @@ export function AdminManualOrderForm() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-sm">
-          <span className="font-semibold text-[var(--text)]">Pickup date</span>
+          <span className="font-semibold text-[var(--text)]">
+            Pickup date{" "}
+            <span className="font-normal text-[var(--text-muted)]">(optional)</span>
+          </span>
           <input
             type="date"
             className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)]"
@@ -458,23 +456,33 @@ export function AdminManualOrderForm() {
           />
         </label>
         <label className="block text-sm">
-          <span className="font-semibold text-[var(--text)]">Pickup time</span>
+          <span className="font-semibold text-[var(--text)]">
+            Pickup time{" "}
+            <span className="font-normal text-[var(--text-muted)]">(optional)</span>
+          </span>
           <select
             className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)]"
             value={pickupTime}
             onChange={(e) => setPickupTime(e.target.value)}
-            disabled={slotsLoading || slotOptions.length === 0}
+            disabled={slotsLoading || (!pickupDate && slotOptions.length === 0)}
           >
             {slotOptions.length === 0 ? (
               <option value="">
-                {slotsLoading ? "Loading slots…" : "Pick a date with availability first"}
+                {pickupDate
+                  ? slotsLoading
+                    ? "Loading slots…"
+                    : "No slots — leave unset or pick another date"
+                  : "Choose a date first, or leave unset"}
               </option>
             ) : (
-              slotOptions.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))
+              <>
+                <option value="">Not set yet</option>
+                {slotOptions.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </>
             )}
           </select>
         </label>

@@ -44,6 +44,11 @@ class CapacityExceededError extends Error {
   }
 }
 
+/** When admin leaves contact blank, DB + Sheets still need values; clearly labeled placeholders. */
+const MANUAL_PLACEHOLDER_CUSTOMER = "Customer (unspecified)";
+const MANUAL_PLACEHOLDER_PHONE = "0000000000";
+const MANUAL_PLACEHOLDER_EMAIL = "manual-order@placeholder.invalid";
+
 async function safeManualSoldOutWeekStart(
   tx: Prisma.TransactionClient
 ): Promise<string | null> {
@@ -120,15 +125,15 @@ export async function POST(req: NextRequest) {
     notifyOwnerSms?: boolean;
   };
 
-  const customerName = (body.customerName ?? "").trim();
-  const phone = (body.phone ?? "").trim();
-  const email = (body.email ?? "").trim();
+  const customerNameIn = (body.customerName ?? "").trim();
+  const phoneIn = (body.phone ?? "").trim();
+  const emailIn = (body.email ?? "").trim();
   const rawItems = normalizeManualItems(body.items);
-  if (!customerName || !phone || !email || !rawItems) {
+  if (!rawItems) {
     return NextResponse.json(
       {
         error:
-          "Missing customer, phone, email, or items. Each line needs name, quantity (≥1), and unitPrice.",
+          "Add at least one line item with name, quantity (≥1), and unit price.",
       },
       { status: 400 }
     );
@@ -139,53 +144,59 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: dipSanitized.error }, { status: 400 });
   }
   const items = dipSanitized.items;
-  if (!isValidEmail(email)) {
+
+  const customerName = customerNameIn || MANUAL_PLACEHOLDER_CUSTOMER;
+  const phone = phoneIn || MANUAL_PLACEHOLDER_PHONE;
+  const email = emailIn || MANUAL_PLACEHOLDER_EMAIL;
+  if (emailIn && !isValidEmail(emailIn)) {
     return NextResponse.json(
       { error: "Enter a valid email address." },
       { status: 400 }
     );
   }
-  if (!hasValidPhoneDigits(phone)) {
+  if (phoneIn && !hasValidPhoneDigits(phoneIn)) {
     return NextResponse.json(
       { error: "Enter a phone number with at least 10 digits." },
       { status: 400 }
     );
   }
 
-  const pickupDate = (body.pickupDate ?? "").trim();
-  const pickupTime = (body.pickupTime ?? "").trim();
-  if (!pickupDate || !pickupTime) {
-    return NextResponse.json(
-      { error: "Pickup date and time required." },
-      { status: 400 }
-    );
-  }
-  if (!isWellFormedPickupYMD(pickupDate)) {
-    return NextResponse.json(
-      { error: pickupDateRejectedMessage() },
-      { status: 400 }
-    );
-  }
+  const pickupDateRaw = (body.pickupDate ?? "").trim();
+  const pickupTimeRaw = (body.pickupTime ?? "").trim();
+  const hasPickupDate = pickupDateRaw.length > 0;
+  const hasPickupTime = pickupTimeRaw.length > 0;
+  const scheduleComplete = hasPickupDate && hasPickupTime;
 
   const isDemo = Boolean(body.isDemo);
   const markPaid = body.markPaid !== false;
   const cartFlanOnly = cartHasOnlyFlanItems(items);
-  if (!isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly, new Date())) {
-    return NextResponse.json(
-      { error: pickupDateRejectedMessage() },
-      { status: 400 }
-    );
+
+  if (hasPickupDate) {
+    if (!isWellFormedPickupYMD(pickupDateRaw)) {
+      return NextResponse.json(
+        { error: pickupDateRejectedMessage() },
+        { status: 400 }
+      );
+    }
+    if (!isPickupYmdAllowedForOrderCart(pickupDateRaw, cartFlanOnly, new Date())) {
+      return NextResponse.json(
+        { error: pickupDateRejectedMessage() },
+        { status: 400 }
+      );
+    }
   }
 
-  const slotList = await getKitchenSlotsForDate(pickupDate, cartFlanOnly);
-  if (!slotList.includes(pickupTime.trim())) {
-    return NextResponse.json(
-      {
-        error:
-          "That pickup time is not valid for the chosen date. Pick a slot from the list for that day.",
-      },
-      { status: 400 }
-    );
+  if (scheduleComplete) {
+    const slotList = await getKitchenSlotsForDate(pickupDateRaw, cartFlanOnly);
+    if (!slotList.includes(pickupTimeRaw)) {
+      return NextResponse.json(
+        {
+          error:
+            "That pickup time is not valid for the chosen date. Pick a slot from the list for that day.",
+        },
+        { status: 400 }
+      );
+    }
   }
 
   const wantsUtensils = Boolean(body.wantsUtensils);
@@ -210,10 +221,23 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const noteParts = [(body.notes ?? "").trim(), "[Off-site / admin entry]"]
+  const scheduleIncompleteNote = scheduleComplete
+    ? ""
+    : hasPickupDate || hasPickupTime
+      ? "[Pickup incomplete — confirm date & slot when ready]"
+      : "[Pickup date/time not set — add later in admin]";
+
+  const noteParts = [
+    (body.notes ?? "").trim(),
+    scheduleIncompleteNote,
+    "[Off-site / admin entry]",
+  ]
     .filter(Boolean)
     .join("\n\n");
   const baseNotes = noteParts || null;
+
+  const pickupDate = hasPickupDate ? pickupDateRaw : null;
+  const pickupTime = hasPickupTime ? pickupTimeRaw : null;
 
   const status = markPaid
     ? ORDER_STATUS_CONFIRMED
@@ -226,16 +250,18 @@ export async function POST(req: NextRequest) {
   let order;
   try {
     order = await prisma.$transaction(async (tx) => {
-      if (!isDemo) {
+      if (!isDemo && hasPickupDate) {
         const manualSoldOutWeekStart = await safeManualSoldOutWeekStart(tx);
         const cap = await wouldExceedCapacityForPickupWeekWithTx(
           tx,
-          pickupDate,
+          pickupDateRaw,
           items,
           { manualSoldOutWeekStart }
         );
         if (!cap.ok) throw new CapacityExceededError();
-        await assertPickupSlotFreeInTx(tx, pickupDate, pickupTime);
+      }
+      if (!isDemo && scheduleComplete) {
+        await assertPickupSlotFreeInTx(tx, pickupDateRaw, pickupTimeRaw);
       }
 
       return tx.order.create({
@@ -300,8 +326,8 @@ export async function POST(req: NextRequest) {
       subtotal: sub,
       tax,
       total,
-      pickupDate,
-      pickupTime,
+      pickupDate: pickupDate ?? undefined,
+      pickupTime: pickupTime ?? undefined,
       notes: baseNotes ?? undefined,
       customInquiry: undefined,
       wantsPrintedReceipt: false,
@@ -321,7 +347,15 @@ export async function POST(req: NextRequest) {
       `📝 MANUAL ORDER #${orderNumber}`,
       `Customer: ${customerName} | ${phone}`,
       `Total: $${total.toFixed(2)}`,
-      `Pickup: ${pickupDate} @ ${pickupTime}`,
+      `Pickup: ${
+        pickupDate && pickupTime
+          ? `${pickupDate} @ ${pickupTime}`
+          : pickupDate
+            ? `${pickupDate} (time TBD)`
+            : pickupTime
+              ? `(date TBD) @ ${pickupTime}`
+              : "TBD"
+      }`,
       `Source: ${PAYMENT_METHOD_MANUAL_OFFSITE}`,
     ].join("\n");
     await sendOwnerSms(sms);
