@@ -95,6 +95,31 @@ html {
   overflow-x: clip;
 }
 
+/* Homepage hero headline: gentle fade + float down on first paint */
+@keyframes hero-headline-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -1rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.hero-headline-enter {
+  opacity: 0;
+  animation: hero-headline-enter 1.15s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-headline-enter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 body {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
