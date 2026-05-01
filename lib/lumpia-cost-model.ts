@@ -118,11 +118,12 @@ export const LUMPIA_DOZEN_INGREDIENTS_ONLY_USD = {
 /**
  * Tier list prices (1 dz / 2 dz / party 50) — public menu, cart, print.
  * Beef is higher than pork & turkey at every tier. Cooked and frozen are the same price.
+ * Pork & turkey: 2 dozen = 2 × 1-dozen list (no separate “bundle” discount on 24 pcs).
  */
 export const LUMPIA_RETAIL_TIERS_USD = {
   beef: { dz1: 14.99, dz2: 27, party50: 60 },
-  pork: { dz1: 12.99, dz2: 23, party50: 50 },
-  turkey: { dz1: 12.99, dz2: 23, party50: 50 },
+  pork: { dz1: 12.99, dz2: 25.98, party50: 50 },
+  turkey: { dz1: 12.99, dz2: 25.98, party50: 50 },
 } as const;
 
 export type LumpiaProtein = keyof typeof LUMPIA_RETAIL_TIERS_USD;
@@ -152,7 +153,7 @@ export const LUMPIA_MENU_FROM_PRICE_USD = LUMPIA_RETAIL_TIERS_USD.pork.dz1;
 
 /** Print handout: two price lines, grouped as requested (takeout). */
 export const LUMPIA_PRINT_TAKEOUT_LINES = {
-  porkTurkey: "Pork / Turkey: 1 dz $12.99 · 2 dz $23 · 50 pcs $50",
+  porkTurkey: "Pork / Turkey: 1 dz $12.99 · 2 dz $25.98 · 50 pcs $50",
   beef: "Beef: 1 dz $14.99 · 2 dz $27 · 50 pcs $60",
 } as const;
 
