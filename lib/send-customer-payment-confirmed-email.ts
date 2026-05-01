@@ -35,8 +35,7 @@ export async function sendCustomerPaymentConfirmedEmail(
   }
 
   const pd = order.pickupDate ?? "";
-  const pt = order.pickupTime ?? "";
-  const when = formatPickupDisplay(pd, pt);
+  const when = formatPickupDisplay(pd, order.pickupTime);
   const origin = getPublicSiteOrigin();
   const summaryUrl = `${origin}/order-confirmation/${encodeURIComponent(order.orderNumber)}`;
   const subj = `Payment received — order #${order.orderNumber} confirmed`;

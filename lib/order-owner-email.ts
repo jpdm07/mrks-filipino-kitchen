@@ -5,6 +5,7 @@ import type { OrderItemLine } from "@/lib/order-types";
 import { formatUtensilsOwnerLine } from "@/lib/config";
 import { complimentaryUtensilAllowanceFromOrderItems } from "@/lib/utensils-allowance";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
+import { formatPickupDisplay } from "@/lib/format-pickup";
 
 function escapeHtml(s: string): string {
   return s
@@ -48,7 +49,7 @@ export async function sendNewOrderEmailToOwner(params: {
   tax: number;
   total: number;
   pickupDate: string;
-  pickupTime: string;
+  pickupTime?: string | null;
   notes: string | null;
   wantsUtensils: boolean;
   utensilSets: number;
@@ -71,6 +72,7 @@ export async function sendNewOrderEmailToOwner(params: {
 
   const complimentaryUtensils =
     complimentaryUtensilAllowanceFromOrderItems(params.items);
+  const pickupWhen = formatPickupDisplay(params.pickupDate, params.pickupTime);
   const linesText = params.items.map(formatLine).join("\n");
   const linesRows = params.items
     .map(
@@ -85,7 +87,7 @@ export async function sendNewOrderEmailToOwner(params: {
     `Customer: ${params.customerName}`,
     `Phone: ${params.phone}`,
     `Email: ${params.email}`,
-    `Pickup: ${params.pickupDate} at ${params.pickupTime}`,
+    `Pickup: ${pickupWhen}`,
     ``,
     `Items:`,
     linesText,
@@ -123,7 +125,7 @@ export async function sendNewOrderEmailToOwner(params: {
     <p style="margin:0 0 20px;color:#666;font-size:14px;">${escapeHtml(params.customerName)} · ${escapeHtml(params.phone)}</p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
       <tr><td style="padding:6px 0;color:#666;">Email</td><td style="padding:6px 0;font-weight:600;"><a href="mailto:${encodeURIComponent(params.email)}">${escapeHtml(params.email)}</a></td></tr>
-      <tr><td style="padding:6px 0;color:#666;">Pickup</td><td style="padding:6px 0;font-weight:600;">${escapeHtml(params.pickupDate)} at ${escapeHtml(params.pickupTime)}</td></tr>
+      <tr><td style="padding:6px 0;color:#666;">Pickup</td><td style="padding:6px 0;font-weight:600;">${escapeHtml(pickupWhen)}</td></tr>
     </table>
     <table style="width:100%;border-collapse:collapse;font-size:14px;">
       <thead><tr style="background:#f4e8d1;"><th style="text-align:left;padding:10px;border-bottom:2px solid #0e1d35;">Item</th><th style="padding:10px;border-bottom:2px solid #0e1d35;">Qty</th><th style="text-align:right;padding:10px;border-bottom:2px solid #0e1d35;">Each</th><th style="text-align:right;padding:10px;border-bottom:2px solid #0e1d35;">Line</th></tr></thead>
