@@ -31,7 +31,8 @@ export function HeroSection() {
       />
       <div className="relative z-10 mx-auto max-w-4xl px-4 py-24 text-center">
         <h1 className="hero-headline-enter font-playfair text-4xl font-black leading-tight tracking-tight text-[color:var(--cream)] drop-shadow-[0_2px_24px_rgba(6,15,31,0.45)] sm:text-5xl md:text-6xl">
-          Authentic Filipino flavors, made with love
+          <span className="block">Authentic Filipino flavors,</span>
+          <span className="block whitespace-nowrap">made with love</span>
         </h1>
         <p className="mx-auto mt-6 max-w-2xl font-cormorant text-lg text-[color:rgba(251,246,236,0.94)] drop-shadow-[0_1px_12px_rgba(6,15,31,0.35)]">
           Home-cooked meals crafted from generations of tradition. Order for
