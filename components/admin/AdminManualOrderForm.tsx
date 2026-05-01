@@ -271,16 +271,13 @@ export function AdminManualOrderForm() {
     openAdminReceiptPrintWindow(receiptOrder);
   }
 
-  const isMenuLine = (l: LineDraft) =>
-    l.selectionKey !== SEL_BLANK && l.selectionKey !== SEL_CUSTOM;
-
   return (
     <div className="mx-auto max-w-2xl space-y-6 rounded-lg border border-[var(--border)] bg-[var(--card)] p-6">
       <p className="text-sm leading-relaxed text-[var(--text-muted)]">
         Use this for walk-ins, phone orders, or other sales <strong>not</strong> from
-        the website. Pick items from your menu to load prices automatically; use{" "}
-        <strong>Custom item</strong> only when needed. Capacity and pickup slots match
-        checkout.
+        the website. Pick from the menu to pre-fill fields, or choose{" "}
+        <strong>Custom item</strong>; you can always edit name, size, unit price, and
+        quantity on any line. Capacity and pickup slots match checkout.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -317,7 +314,7 @@ export function AdminManualOrderForm() {
       <div>
         <p className="text-sm font-bold text-[var(--text)]">Line items</p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
-          Choose from the menu to fill name and unit price. Adjust quantity per line.
+          Menu picks fill defaults; every field stays editable before you save.
         </p>
         {menuErr ? (
           <p className="mt-2 text-sm text-amber-700" role="alert">
@@ -352,45 +349,7 @@ export function AdminManualOrderForm() {
                 </select>
               </label>
 
-              {isMenuLine(line) ? (
-                <div className="mt-3 grid gap-2 sm:grid-cols-12">
-                  <div className="sm:col-span-9 text-sm">
-                    <span className="text-xs font-medium text-[var(--text-muted)]">
-                      Item
-                    </span>
-                    <p className="mt-0.5 font-medium text-[var(--text)]">
-                      {line.name}
-                      {line.size ? (
-                        <span className="font-normal text-[var(--text-muted)]">
-                          {" "}
-                          ({line.size})
-                        </span>
-                      ) : null}
-                    </p>
-                    <p className="text-[var(--text-muted)]">
-                      ${Number(line.unitPrice || 0).toFixed(2)} each
-                    </p>
-                  </div>
-                  <label className="sm:col-span-3">
-                    <span className="text-xs font-medium text-[var(--text-muted)]">
-                      Qty
-                    </span>
-                    <input
-                      type="number"
-                      min={1}
-                      className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm"
-                      value={line.quantity}
-                      onChange={(e) =>
-                        setLines((prev) =>
-                          prev.map((x) =>
-                            x.id === line.id ? { ...x, quantity: e.target.value } : x
-                          )
-                        )
-                      }
-                    />
-                  </label>
-                </div>
-              ) : line.selectionKey === SEL_CUSTOM ? (
+              {line.selectionKey !== SEL_BLANK ? (
                 <div className="mt-3 grid gap-2 sm:grid-cols-12">
                   <label className="sm:col-span-5">
                     <span className="text-xs font-medium text-[var(--text-muted)]">
@@ -413,8 +372,9 @@ export function AdminManualOrderForm() {
                       Qty
                     </span>
                     <input
-                      type="number"
-                      min={1}
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
                       className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm"
                       value={line.quantity}
                       onChange={(e) =>
@@ -431,9 +391,9 @@ export function AdminManualOrderForm() {
                       $ each
                     </span>
                     <input
-                      type="number"
-                      step="0.01"
-                      min={0}
+                      type="text"
+                      inputMode="decimal"
+                      autoComplete="off"
                       className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-sm"
                       value={line.unitPrice}
                       onChange={(e) =>
