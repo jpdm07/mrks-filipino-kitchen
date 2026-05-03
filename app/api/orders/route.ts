@@ -39,6 +39,7 @@ import {
   isValidEmail,
 } from "@/lib/checkout-contact-validation";
 import { sanitizeExtraDipOrderLines } from "@/lib/extra-dip-sauce";
+import { revalidateAdminOrderDerivedViews } from "@/lib/revalidate-admin-order-views";
 
 class CapacityExceededError extends Error {
   constructor() {
@@ -447,6 +448,8 @@ export async function POST(req: NextRequest) {
         console.warn("[orders] Newsletter subscriber row not saved (order still placed):", subErr);
       }
     }
+
+    revalidateAdminOrderDerivedViews();
 
     return NextResponse.json({
       success: true,

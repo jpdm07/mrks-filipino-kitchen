@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { PAYMENT_INSTRUCTIONS } from "@/lib/config";
@@ -39,12 +38,7 @@ import {
   sendCustomerRefundConfirmationEmail,
   sendOwnerRefundConfirmationEmail,
 } from "@/lib/send-refund-confirmation";
-
-/** Dashboard + finances read orders from DB; invalidate after admin mutations. */
-function revalidateAdminOrderViews() {
-  revalidatePath("/admin/dashboard");
-  revalidatePath("/admin/finances");
-}
+import { revalidateAdminOrderDerivedViews } from "@/lib/revalidate-admin-order-views";
 
 const REFUND_SENT_VIA = new Set([
   "venmo",
@@ -94,6 +88,10 @@ export async function PATCH(
     adminNotes?: string;
     paymentAction?: "verify" | "not_received";
     isDemo?: boolean;
+    /** Actual dollars collected (cash/card); omit or null to clear. */
+    amountReceivedUsd?: number | null;
+    tipAmount?: number;
+    paymentRecordNotes?: string | null;
     refund?: {
       lineDecrements: { index: number; qty: number }[];
       decreaseUtensilSetsBy?: number;
@@ -252,7 +250,7 @@ export async function PATCH(
       void updatePickupEvent(updated.orderNumber, "Cancelled");
     }
 
-    revalidateAdminOrderViews();
+    revalidateAdminOrderDerivedViews();
     return NextResponse.json(updated);
   }
 
@@ -264,6 +262,39 @@ export async function PATCH(
 
   if (body.isDemo !== undefined) {
     data.isDemo = Boolean(body.isDemo);
+  }
+
+  if (body.amountReceivedUsd !== undefined) {
+    if (body.amountReceivedUsd === null) {
+      data.amountReceivedUsd = null;
+    } else {
+      const a = Number(body.amountReceivedUsd);
+      if (!Number.isFinite(a) || a < 0 || a > 1_000_000) {
+        return NextResponse.json(
+          { error: "amountReceivedUsd must be between 0 and 1000000." },
+          { status: 400 }
+        );
+      }
+      data.amountReceivedUsd = a;
+    }
+  }
+
+  if (body.tipAmount !== undefined) {
+    const t = Number(body.tipAmount);
+    if (!Number.isFinite(t) || t < 0 || t > 100_000) {
+      return NextResponse.json(
+        { error: "tipAmount must be between 0 and 100000." },
+        { status: 400 }
+      );
+    }
+    data.tipAmount = t;
+  }
+
+  if (body.paymentRecordNotes !== undefined) {
+    data.paymentRecordNotes =
+      body.paymentRecordNotes === null || body.paymentRecordNotes === ""
+        ? null
+        : String(body.paymentRecordNotes).trim().slice(0, 8000);
   }
 
   if (body.paymentAction === "verify") {
@@ -376,7 +407,7 @@ export async function PATCH(
     void updatePickupEvent(updated.orderNumber, "Cancelled");
   }
 
-  revalidateAdminOrderViews();
+  revalidateAdminOrderDerivedViews();
   return NextResponse.json(updated);
 }
 
@@ -437,6 +468,6 @@ export async function DELETE(
   }
   await prisma.order.delete({ where: { id: order.id } });
   void updatePickupEvent(order.orderNumber, "Cancelled");
-  revalidateAdminOrderViews();
+  revalidateAdminOrderDerivedViews();
   return NextResponse.json({ ok: true });
 }

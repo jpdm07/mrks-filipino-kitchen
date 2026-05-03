@@ -4,6 +4,9 @@ import { isAdminSession } from "@/lib/admin-auth";
 import { ORDER_STATUS_CONFIRMED } from "@/lib/order-payment";
 import { ordersToConfirmedRevenueTaxCsv } from "@/lib/tax-export";
 
+/** Order-backed aggregates; never cache stale JSON/CSV. */
+export const dynamic = "force-dynamic";
+
 function orderItemsSummary(itemsJson: string): string {
   try {
     const arr = JSON.parse(itemsJson) as { name?: string; quantity?: number }[];
@@ -61,6 +64,8 @@ export async function GET(req: NextRequest) {
   const totalSubtotal = Math.round(orders.reduce((s, o) => s + o.subtotal, 0) * 100) / 100;
   const totalTax = Math.round(orders.reduce((s, o) => s + o.tax, 0) * 100) / 100;
   const totalRevenue = Math.round(orders.reduce((s, o) => s + o.total, 0) * 100) / 100;
+  const totalTips =
+    Math.round(orders.reduce((s, o) => s + (o.tipAmount ?? 0), 0) * 100) / 100;
 
   const transactions = orders.map((o) => ({
     orderNumber: o.orderNumber,
@@ -86,6 +91,9 @@ export async function GET(req: NextRequest) {
     printedReceiptRequested: o.wantsPrintedReceipt,
     newsletterOptIn: o.subscribeUpdates,
     hasRefundLog: Boolean(o.refundLog?.trim()),
+    tipAmount: o.tipAmount ?? 0,
+    amountReceivedUsd: o.amountReceivedUsd,
+    paymentRecordNotes: o.paymentRecordNotes,
   }));
 
   return NextResponse.json({
@@ -95,6 +103,7 @@ export async function GET(req: NextRequest) {
       totalSubtotal,
       totalSalesTaxCollected: totalTax,
       totalRevenue,
+      totalTipsRecorded: totalTips,
     },
     transactions,
   });

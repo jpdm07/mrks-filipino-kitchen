@@ -1,8 +1,8 @@
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
 import { updatePickupEvent } from "@/lib/googleCalendar";
+import { revalidateAdminOrderDerivedViews } from "@/lib/revalidate-admin-order-views";
 
 const MAX_BATCH = 500;
 
@@ -55,8 +55,7 @@ export async function POST(req: Request) {
     void updatePickupEvent(o.orderNumber, "Cancelled");
   }
 
-  revalidatePath("/admin/dashboard");
-  revalidatePath("/admin/finances");
+  revalidateAdminOrderDerivedViews();
 
   return NextResponse.json({
     deleted: found.length,

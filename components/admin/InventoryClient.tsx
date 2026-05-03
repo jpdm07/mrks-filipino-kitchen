@@ -40,7 +40,13 @@ export function InventoryClient({
               <td className="px-3 py-2">
                 <div className="flex items-center gap-2">
                   <div className="relative h-10 w-10 overflow-hidden rounded">
-                    <Image src={m.photoUrl} alt="" fill className="object-cover" sizes="40px" />
+                    <Image
+                      src={m.photoUrl}
+                      alt={`${m.name} menu item image`}
+                      fill
+                      className="object-cover"
+                      sizes="40px"
+                    />
                   </div>
                   <span className="font-medium">{m.name}</span>
                 </div>

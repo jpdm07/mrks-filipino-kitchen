@@ -81,6 +81,9 @@ export function Footer() {
             <h3 className="font-playfair text-lg font-bold text-[color:var(--cream)]">
               Contact
             </h3>
+            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-[color:rgba(251,246,236,0.82)]">
+              Mr. K&apos;s Filipino Kitchen · 979-703-3827 · Cypress, TX 77433
+            </p>
             <ul className="mt-3 space-y-2 text-sm">
               <li>
                 <a

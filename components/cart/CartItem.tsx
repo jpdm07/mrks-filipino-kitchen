@@ -46,7 +46,7 @@ export function CartItemRow({
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-[var(--bg-section)]">
           <Image
             src={line.photoUrl}
-            alt=""
+            alt={`${line.name} order item photo`}
             fill
             className="object-cover"
             sizes="64px"

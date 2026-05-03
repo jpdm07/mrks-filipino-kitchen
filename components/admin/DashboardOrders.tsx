@@ -20,7 +20,9 @@ import {
   formatPaymentDisplayLine,
 } from "@/lib/order-payment";
 import { AdminOrderReceiptActions } from "@/components/admin/AdminOrderReceiptActions";
+import { AdminOrderPaymentRecordSection } from "@/components/admin/AdminOrderPaymentRecordSection";
 import { ADMIN_POLL_INTERVAL_MS } from "@/lib/admin-poll-interval";
+import { refreshAdminAfterOrderChange } from "@/lib/admin-orders-changed-event";
 
 type Row = AdminOrderClientRow;
 
@@ -254,7 +256,7 @@ export function DashboardOrders() {
         setOrders([]);
         setSelectedIds(new Set());
         closeModal();
-        router.refresh();
+        refreshAdminAfterOrderChange(router);
         return;
       }
 
@@ -277,7 +279,7 @@ export function DashboardOrders() {
       setOrders((prev) => prev.filter((o) => !idSet.has(o.id)));
       setSelectedIds(new Set());
       if (modal && idSet.has(modal.id)) closeModal();
-      router.refresh();
+      refreshAdminAfterOrderChange(router);
       if (deleted < ids.length) {
         window.alert(
           `Removed ${deleted} order(s). Some rows may have already been deleted.`
@@ -312,7 +314,7 @@ export function DashboardOrders() {
       if (modal && modal.id === updated.id) {
         setModal(toAdminOrderClientRow(updated, modal.itemsSummary));
       }
-      router.refresh();
+      refreshAdminAfterOrderChange(router);
       if (options?.successMessage) {
         setModalNotice({ type: "success", text: options.successMessage });
       }
@@ -350,7 +352,7 @@ export function DashboardOrders() {
     if (res.ok) {
       setOrders((prev) => prev.filter((x) => x.id !== o.id));
       if (modal?.id === o.id) closeModal();
-      router.refresh();
+      refreshAdminAfterOrderChange(router);
     } else {
       window.alert("Could not delete order. Try again or open the full order page.");
     }
@@ -662,10 +664,34 @@ export function DashboardOrders() {
                 setModal(
                   toAdminOrderClientRow(updated as Order, modal.itemsSummary)
                 );
-                router.refresh();
+                refreshAdminAfterOrderChange(router);
                 setModalNotice({
                   type: "success",
                   text: "Payment status saved.",
+                });
+              }}
+            />
+            <AdminOrderPaymentRecordSection
+              orderId={modal.id}
+              orderNumber={modal.orderNumber}
+              orderTotalUsd={modal.total}
+              tipAmount={modal.tipAmount ?? 0}
+              amountReceivedUsd={modal.amountReceivedUsd ?? null}
+              paymentRecordNotes={modal.paymentRecordNotes ?? null}
+              onSaved={(updated) => {
+                setOrders((prev) =>
+                  prev.map((x) =>
+                    x.id === updated.id
+                      ? toAdminOrderClientRow(updated as Order, x.itemsSummary)
+                      : x
+                  )
+                );
+                setModal(
+                  toAdminOrderClientRow(updated as Order, modal.itemsSummary)
+                );
+                setModalNotice({
+                  type: "success",
+                  text: "Payment & tip record saved.",
                 });
               }}
             />

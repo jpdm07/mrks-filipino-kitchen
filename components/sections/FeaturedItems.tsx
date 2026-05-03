@@ -68,7 +68,7 @@ export async function FeaturedItems() {
               <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[var(--bg-section)]">
                 <Image
                   src={item.photoUrl}
-                  alt=""
+                  alt={`${item.name} from Mr. K's Filipino Kitchen in Cypress TX`}
                   fill
                   className="object-cover transition duration-500 group-hover:scale-[1.04]"
                   sizes="(max-width:768px) 100vw, 33vw"

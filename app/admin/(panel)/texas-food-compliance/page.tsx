@@ -32,7 +32,7 @@ export default async function TexasFoodCompliancePage() {
         <h1
           className="font-[family-name:var(--font-playfair)] text-3xl font-bold text-[color:var(--primary)] print:text-2xl print:text-black"
         >
-          Texas pickup &amp; home-kitchen compliance — quick reference
+          Texas pickup &amp; kitchen compliance — quick reference
         </h1>
         <p className="text-base text-[var(--text-muted)] print:text-sm print:text-neutral-800">
           This page is written for <strong>Mr. K&apos;s</strong> home pickup
@@ -150,7 +150,7 @@ export default async function TexasFoodCompliancePage() {
 
       <section className="break-inside-avoid rounded-lg border border-[var(--border)] bg-[var(--card)] p-4 print:border-neutral-300 print:shadow-none">
         <h2 className="text-lg font-bold text-[color:var(--primary)] print:text-black">
-          Labeling (cottage / home production — confirm exact list on TDSHS)
+          Labeling (cottage production — confirm exact list on TDSHS)
         </h2>
         <p className="mt-2 text-sm text-[var(--text)] print:text-[11pt] print:leading-relaxed">
           In general, Texas requires cottage foods sold to consumers to be{" "}
@@ -205,7 +205,7 @@ export default async function TexasFoodCompliancePage() {
             don&apos;t let TCS food sit in the &quot;danger zone&quot; during pickup windows.
           </li>
           <li>
-            <strong>Time &amp; temperature</strong> discipline in the home kitchen
+            <strong>Time &amp; temperature</strong> discipline in your kitchen
             (cooling large batches, reheating, holding) — follow a recognized food
             safety training curriculum (see below).
           </li>

@@ -9,6 +9,7 @@ import type { AdminOrderClientRow } from "@/lib/admin-order-client";
 import { openAdminReceiptPrintWindow } from "@/lib/admin-receipt-html";
 import { computeOrderMonetaryTotals } from "@/lib/order-totals";
 import { formatUtensilsCartOneLiner, salesTaxPercentLabel } from "@/lib/config";
+import { refreshAdminAfterOrderChange } from "@/lib/admin-orders-changed-event";
 
 const SEL_CUSTOM = "__custom__";
 const SEL_BLANK = "";
@@ -258,7 +259,7 @@ export function AdminManualOrderForm() {
         if (gr.ok && gj.order) setReceiptOrder(gj.order);
       }
 
-      router.refresh();
+      refreshAdminAfterOrderChange(router);
     } finally {
       setBusy(false);
     }

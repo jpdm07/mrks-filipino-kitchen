@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 import type { OrderItemLine } from "@/lib/order-types";
 import { AdminOrderPaymentPanel } from "@/components/admin/AdminOrderPaymentPanel";
+import { AdminOrderPaymentRecordSection } from "@/components/admin/AdminOrderPaymentRecordSection";
 import { AdminOrderDemoDeletePanel } from "@/components/admin/AdminOrderDemoDeletePanel";
 import { AdminOrderReceiptActions } from "@/components/admin/AdminOrderReceiptActions";
 import { AdminOrderRefundPanel } from "@/components/admin/AdminOrderRefundPanel";
@@ -95,6 +96,14 @@ export default async function AdminOrderDetailPage({
       <AdminOrderPaymentPanel
         orderNumber={order.orderNumber}
         status={order.status}
+      />
+      <AdminOrderPaymentRecordSection
+        orderId={order.id}
+        orderNumber={order.orderNumber}
+        orderTotalUsd={order.total}
+        tipAmount={order.tipAmount}
+        amountReceivedUsd={order.amountReceivedUsd}
+        paymentRecordNotes={order.paymentRecordNotes}
       />
       <AdminOrderRefundPanel
         key={`${order.orderNumber}-${order.total}-${items.map((i) => i.quantity).join("-")}`}

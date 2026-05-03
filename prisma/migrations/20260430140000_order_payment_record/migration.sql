@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Order" ADD COLUMN "amountReceivedUsd" DOUBLE PRECISION,
+ADD COLUMN "tipAmount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN "paymentRecordNotes" TEXT;

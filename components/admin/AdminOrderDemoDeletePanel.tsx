@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { refreshAdminAfterOrderChange } from "@/lib/admin-orders-changed-event";
 
 type Props = {
   orderNumber: string;
@@ -35,7 +36,7 @@ export function AdminOrderDemoDeletePanel({
         return;
       }
       setIsDemo(next);
-      router.refresh();
+      refreshAdminAfterOrderChange(router);
     } finally {
       setBusy(false);
     }
@@ -60,8 +61,8 @@ export function AdminOrderDemoDeletePanel({
         setErr("Could not delete order.");
         return;
       }
+      refreshAdminAfterOrderChange(router);
       router.push("/admin/dashboard");
-      router.refresh();
     } finally {
       setBusy(false);
     }

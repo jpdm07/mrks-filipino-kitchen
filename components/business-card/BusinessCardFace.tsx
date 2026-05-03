@@ -28,7 +28,7 @@ function CardFaceArtwork({
         // eslint-disable-next-line @next/next/no-img-element -- remote URL may not be in next.config images
         <img
           src={BUSINESS_CARD_FACE_SRC}
-          alt=""
+          alt="Mr. K's Filipino Kitchen logo Cypress TX"
           width={336}
           height={192}
           className="pointer-events-none h-full w-full object-cover object-left"
@@ -36,7 +36,7 @@ function CardFaceArtwork({
       ) : (
         <Image
           src={BUSINESS_CARD_FACE_SRC}
-          alt=""
+          alt="Mr. K's Filipino Kitchen logo Cypress TX"
           width={336}
           height={192}
           className="pointer-events-none h-full w-full object-cover object-left"

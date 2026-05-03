@@ -1,13 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { FLAN_WEEKLY_CAP_RAMEKINS } from "@/lib/menu-cook-capacity";
 import {
   YEMA_COGS_PER_PIECE_USD,
   YEMA_PLANNER_WEEKLY_PIECES_CAP,
   YEMA_RETAIL_SINGLE_USD,
 } from "@/lib/yema-cost-model";
+import { ORDER_FULFILLMENT } from "@/lib/config";
+import { useAdminDataSync } from "@/lib/use-admin-data-sync";
+
+type PlannerActualsPayload = {
+  timezone: string;
+  todayYmd: string;
+  today: { count: number; revenue: number; tips: number };
+  week: {
+    labelStart: string;
+    labelEnd: string;
+    count: number;
+    revenue: number;
+    tips: number;
+  };
+};
 
 const MENU_ITEMS = [
   { id: "lumpia-beef-cooked", name: "Lumpia Beef cooked/doz", price: 14.99, cost: 7.47, cookMin: 15 },
@@ -217,6 +232,37 @@ const ACCENT_HEADER = "var(--primary)";
 const GOLD = "#FFC200";
 
 export function EarningsPlannerClient() {
+  const [actuals, setActuals] = useState<PlannerActualsPayload | null>(null);
+  const [actualsErr, setActualsErr] = useState<string | null>(null);
+
+  const loadActuals = useCallback(async () => {
+    setActualsErr(null);
+    try {
+      const res = await fetch("/api/admin/earnings-planner-actuals", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const j = (await res.json().catch(() => ({}))) as
+        | PlannerActualsPayload
+        | { error?: string };
+      if (!res.ok) {
+        setActualsErr((j as { error?: string }).error ?? "Could not load sales.");
+        setActuals(null);
+        return;
+      }
+      setActuals(j as PlannerActualsPayload);
+    } catch {
+      setActualsErr("Could not load sales.");
+      setActuals(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadActuals();
+  }, [loadActuals]);
+
+  useAdminDataSync(loadActuals);
+
   const [thursdayPrepHrs, setThursdayPrepHrs] = useState(4);
   const [fridayCookHrs, setFridayCookHrs] = useState(6);
   const [quantities, setQuantities] = useState<Record<ItemId, number>>(() =>
@@ -310,6 +356,67 @@ export function EarningsPlannerClient() {
         </p>
       </header>
 
+      <section className="rounded-xl border-2 border-emerald-800/30 bg-emerald-50/50 p-4 sm:p-5 dark:bg-emerald-950/25">
+        <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100">
+          Actual sales (live from your orders)
+        </h2>
+        <p className="mt-1 text-sm leading-relaxed text-[var(--text-muted)]">
+          Based on <strong className="text-[var(--text)]">confirmed</strong>, non-demo orders — same
+          revenue basis as{" "}
+          <Link href="/admin/finances" className="font-semibold text-emerald-800 underline dark:text-emerald-300">
+            Finances
+          </Link>
+          . Dates use{" "}
+          <strong className="text-[var(--text)]">{ORDER_FULFILLMENT.PICKUP_TIMEZONE}</strong>{" "}
+          (order placed time). If you had a sale but see $0 here, the order may still be{" "}
+          <strong className="text-[var(--text)]">Pending Payment Verification</strong> — verify payment
+          on the{" "}
+          <Link href="/admin/dashboard" className="font-semibold text-emerald-800 underline dark:text-emerald-300">
+            dashboard
+          </Link>{" "}
+          first.
+        </p>
+        {actualsErr ? (
+          <p className="mt-3 text-sm font-medium text-red-700">{actualsErr}</p>
+        ) : actuals ? (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-lg border border-emerald-800/20 bg-white/80 p-4 dark:bg-black/20">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
+                Today ({actuals.todayYmd})
+              </p>
+              <p className="mt-2 text-2xl font-bold tabular-nums text-[var(--text)]">
+                {money(actuals.today.revenue)}
+              </p>
+              <p className="mt-1 text-sm text-[var(--text-muted)]">
+                {actuals.today.count} order{actuals.today.count === 1 ? "" : "s"}
+                {actuals.today.tips > 0
+                  ? ` · tips recorded ${money(actuals.today.tips)}`
+                  : ""}
+              </p>
+            </div>
+            <div className="rounded-lg border border-emerald-800/20 bg-white/80 p-4 dark:bg-black/20">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">
+                This week (Mon–Sun)
+              </p>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                {actuals.week.labelStart} → {actuals.week.labelEnd}
+              </p>
+              <p className="mt-2 text-2xl font-bold tabular-nums text-[var(--text)]">
+                {money(actuals.week.revenue)}
+              </p>
+              <p className="mt-1 text-sm text-[var(--text-muted)]">
+                {actuals.week.count} order{actuals.week.count === 1 ? "" : "s"}
+                {actuals.week.tips > 0
+                  ? ` · tips recorded ${money(actuals.week.tips)}`
+                  : ""}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-[var(--text-muted)]">Loading actuals…</p>
+        )}
+      </section>
+
       <section
         className="rounded-xl border-2 p-4 sm:p-5"
         style={{ borderColor: ACCENT_HEADER, background: "var(--card)" }}
@@ -367,7 +474,12 @@ export function EarningsPlannerClient() {
         }}
       >
         <p className="text-base font-bold" style={{ color: ACCENT_HEADER }}>
-          This week&apos;s potential earnings
+          Planner projection (sliders — not your live POS)
+        </p>
+        <p className="mt-2 text-sm text-[var(--text-muted)]">
+          These numbers come only from the quantity sliders below. They do{" "}
+          <strong className="text-[var(--text)]">not</strong> pull today&apos;s real orders — see{" "}
+          <strong className="text-[var(--text)]">Actual sales</strong> above for that.
         </p>
         <ul className="mt-3 space-y-2 text-lg">
           <li className="flex flex-wrap justify-between gap-2">
@@ -706,7 +818,7 @@ export function EarningsPlannerClient() {
                 </p>
                 <p className="mt-2">
                   That story is marketing. Use it everywhere: post setup before an event, behind-the-scenes
-                  rolling lumpia, when you make flan on Sunday, remind people the food is 100% homemade by
+                  rolling lumpia, when you make flan on Sunday, remind people the food is 100% made from scratch by
                   one person.
                 </p>
                 <p className="mt-2">

@@ -43,6 +43,12 @@ model Order {
   refundLog          String?
   /// True when the order was entered in admin (walk-in / phone) rather than website checkout.
   manualEntry        Boolean  @default(false)
+  /// Optional: actual cash/card amount collected (vs order total) for your records.
+  amountReceivedUsd  Float?
+  /// Gratuity you recorded for this order.
+  tipAmount          Float    @default(0)
+  /// Internal notes on payment/tip adjustments (why numbers differ).
+  paymentRecordNotes String?
 }
 
 model Availability {

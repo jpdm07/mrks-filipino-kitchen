@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { refreshAdminAfterOrderChange } from "@/lib/admin-orders-changed-event";
 import { OrderPaymentAdminActions } from "./OrderPaymentAdminActions";
 
 export function AdminOrderPaymentPanel({
@@ -26,7 +27,7 @@ export function AdminOrderPaymentPanel({
         orderNumber={orderNumber}
         status={status}
         onDone={() => {
-          router.refresh();
+          refreshAdminAfterOrderChange(router);
           setSavedHint("Payment status saved.");
         }}
       />

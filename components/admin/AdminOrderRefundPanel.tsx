@@ -8,6 +8,7 @@ import {
   PAYMENT_STATUS_REFUNDED,
   PAYMENT_STATUS_VERIFIED,
 } from "@/lib/order-payment";
+import { refreshAdminAfterOrderChange } from "@/lib/admin-orders-changed-event";
 
 type SentVia = "venmo" | "zelle" | "cashapp" | "cash" | "other";
 
@@ -108,7 +109,7 @@ export function AdminOrderRefundPanel({
       setCustomerNote("");
       setInternalNote("");
       setOkHint("Refund recorded. Customer/owner notifications sent per your checkboxes.");
-      router.refresh();
+      refreshAdminAfterOrderChange(router);
     } finally {
       setBusy(false);
     }

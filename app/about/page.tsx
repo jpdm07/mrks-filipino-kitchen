@@ -18,7 +18,7 @@ export default function AboutPage() {
           {/* eslint-disable-next-line @next/next/no-img-element -- static public asset; reliable corner rendering */}
           <img
             src={ABOUT_PHOTO_SRC}
-            alt="The cook behind Mr. K's Filipino Kitchen"
+            alt="Mr. K's Filipino Kitchen founder in Cypress TX"
             width={720}
             height={620}
             decoding="async"

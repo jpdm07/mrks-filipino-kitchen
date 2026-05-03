@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { ADMIN_POLL_INTERVAL_MS } from "@/lib/admin-poll-interval";
+import { ADMIN_ORDERS_CHANGED_EVENT } from "@/lib/admin-orders-changed-event";
 
 type Options = {
   /** Defaults to {@link ADMIN_POLL_INTERVAL_MS} (same as dashboard orders). */
@@ -14,6 +15,8 @@ type Options = {
  * Keeps admin reports in sync with live DB data (confirmed orders, etc.):
  * - Polls on an interval while the browser tab is visible
  * - Refetches when the user returns to the tab after being away
+ * - Refetches when another tab triggers the admin order-change browser event
+ *   (Finances, Prep, Analytics, Tax documentation / confirmed revenue, etc.)
  *
  * Pass a stable `refetch` (e.g. `useCallback` `load`) so it always hits current filters/range.
  */
@@ -23,6 +26,13 @@ export function useAdminDataSync(
 ): void {
   const ref = useRef(refetch);
   ref.current = refetch;
+
+  useEffect(() => {
+    const onOrdersChanged = () => void ref.current();
+    window.addEventListener(ADMIN_ORDERS_CHANGED_EVENT, onOrdersChanged);
+    return () =>
+      window.removeEventListener(ADMIN_ORDERS_CHANGED_EVENT, onOrdersChanged);
+  }, []);
 
   useEffect(() => {
     if (options?.pause) return;

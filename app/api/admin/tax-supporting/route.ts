@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

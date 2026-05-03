@@ -1,8 +1,8 @@
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
 import { updatePickupEvent } from "@/lib/googleCalendar";
+import { revalidateAdminOrderDerivedViews } from "@/lib/revalidate-admin-order-views";
 
 const CONFIRM = "DELETE ALL ORDERS";
 
@@ -45,8 +45,7 @@ export async function POST(req: Request) {
     void updatePickupEvent(r.orderNumber, "Cancelled");
   }
 
-  revalidatePath("/admin/dashboard");
-  revalidatePath("/admin/finances");
+  revalidateAdminOrderDerivedViews();
 
   return NextResponse.json({ deleted: rows.length });
 }

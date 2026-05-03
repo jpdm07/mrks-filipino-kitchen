@@ -3,8 +3,10 @@
  * Retail is defined in `MENU_CATALOG`; COGS is a rough batch model for Sheets + earnings planner.
  */
 
-export const YEMA_RETAIL_SINGLE_USD = 0.5;
-export const YEMA_RETAIL_TWELVE_PACK_USD = 6;
+export const YEMA_RETAIL_SINGLE_USD = 0.75;
+/** Twelve singles at list price (no separate bundle discount). */
+export const YEMA_RETAIL_TWELVE_PACK_USD =
+  Math.round(12 * YEMA_RETAIL_SINGLE_USD * 100) / 100;
 
 /** Ingredient + wrap ~per finished piece (adjust if your batch math changes). */
 export const YEMA_COGS_PER_PIECE_USD = 0.52;

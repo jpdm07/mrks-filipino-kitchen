@@ -16,9 +16,9 @@ export function AboutTeaser() {
             <strong>Mr. K&apos;s Filipino Kitchen</strong> is our family pickup
             kitchen in Cypress. The name is for our son, Mr. K. His parent runs
             the stove here. She came to Houston in 2008, far from friends and
-            family, and could not find Filipino food that truly felt like home
-            until she put in the years to cook it herself. Our heritage, our
-            neighbors, and the generations ahead are why we share it now.
+            family, and could not find the Filipino food Cypress TX flavor she
+            missed until she put in the years to cook it herself. Our heritage,
+            our neighbors, and the generations ahead are why we share it now.
           </p>
           <Link
             href="/about"

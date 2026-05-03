@@ -58,6 +58,9 @@ export function ordersToConfirmedRevenueTaxCsv(orders: Order[]): string {
     "printed_receipt_requested",
     "newsletter_opt_in",
     "has_refund_log",
+    "tip_usd",
+    "amount_received_usd",
+    "payment_record_notes",
   ];
   const lines = [header.join(",")];
   for (const o of rows) {
@@ -87,6 +90,9 @@ export function ordersToConfirmedRevenueTaxCsv(orders: Order[]): string {
         csvEscape(o.wantsPrintedReceipt ? "yes" : "no"),
         csvEscape(o.subscribeUpdates ? "yes" : "no"),
         csvEscape(hasRefund ? "yes" : "no"),
+        csvEscape(o.tipAmount ?? 0),
+        csvEscape(o.amountReceivedUsd),
+        csvEscape(o.paymentRecordNotes),
       ].join(",")
     );
   }
@@ -109,6 +115,9 @@ export function ordersToCsv(orders: Order[]): string {
     "paymentMethod",
     "paymentStatus",
     "isDemo",
+    "tipAmount",
+    "amountReceivedUsd",
+    "paymentRecordNotes",
     "itemsSummary",
   ];
   const lines = [header.join(",")];
@@ -129,6 +138,9 @@ export function ordersToCsv(orders: Order[]): string {
         csvEscape(o.paymentMethod),
         csvEscape(o.paymentStatus),
         csvEscape(o.isDemo),
+        csvEscape(o.tipAmount ?? 0),
+        csvEscape(o.amountReceivedUsd),
+        csvEscape(o.paymentRecordNotes),
         csvEscape(orderItemsSummary(o.items)),
       ].join(",")
     );
@@ -319,7 +331,7 @@ export function summaryText(s: TaxExportSummary): string {
     "DISCLAIMER",
     "- This export is for your records only. It is not tax or legal advice.",
     "- Consult a qualified tax professional (CPA/EA) for IRS rules, mileage rates,",
-    "  and how to treat sales tax, home kitchen, and Schedule C / Texas filings.",
+    "  and how to treat sales tax, your kitchen operation, and Schedule C / Texas filings.",
     "- Standard mileage rate changes yearly; see IRS Publication 463.",
     "",
   ].join("\r\n");

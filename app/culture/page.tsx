@@ -28,7 +28,7 @@ export default function CulturePage() {
         <div className="relative h-full w-full" aria-hidden>
           <Image
             src={decorSrc}
-            alt=""
+            alt="Filipino cultural food background art in Cypress TX"
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 55vw, 960px"
             className="object-cover object-left object-bottom opacity-[0.36]"

@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://mrks-filipino-kitchen.vercel.app/sitemap.xml

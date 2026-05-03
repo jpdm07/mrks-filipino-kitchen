@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -31,6 +30,7 @@ import {
 import { syncOrderToSheets } from "@/lib/sheets";
 import { createPickupEvent } from "@/lib/googleCalendar";
 import { sendOwnerSms } from "@/lib/twilio";
+import { revalidateAdminOrderDerivedViews } from "@/lib/revalidate-admin-order-views";
 
 class CapacityExceededError extends Error {
   constructor() {
@@ -338,9 +338,7 @@ export async function POST(req: NextRequest) {
     await sendOwnerSms(sms);
   }
 
-  revalidatePath("/admin/dashboard");
-  revalidatePath("/admin/finances");
-  revalidatePath("/admin/orders/manual");
+  revalidateAdminOrderDerivedViews();
 
   return NextResponse.json({
     ok: true,

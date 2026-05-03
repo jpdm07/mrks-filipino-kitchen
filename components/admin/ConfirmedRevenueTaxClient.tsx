@@ -36,6 +36,9 @@ type TxRow = {
   utensilSets: number;
   utensilCharge: number;
   hasRefundLog: boolean;
+  tipAmount: number;
+  amountReceivedUsd: number | null;
+  paymentRecordNotes: string | null;
 };
 
 type Totals = {
@@ -43,6 +46,7 @@ type Totals = {
   totalSubtotal: number;
   totalSalesTaxCollected: number;
   totalRevenue: number;
+  totalTipsRecorded: number;
 };
 
 export function ConfirmedRevenueTaxClient() {
@@ -204,7 +208,7 @@ export function ConfirmedRevenueTaxClient() {
         <p className="mt-4 text-sm text-[var(--text-muted)]">Loading…</p>
       ) : totals ? (
         <div className="mt-4 space-y-4">
-          <div className="grid gap-3 rounded-lg bg-[#FFFDF5] p-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 rounded-lg bg-[#FFFDF5] p-4 sm:grid-cols-2 lg:grid-cols-5">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--primary)]">
                 Orders
@@ -235,6 +239,17 @@ export function ConfirmedRevenueTaxClient() {
                 ${totals.totalRevenue.toFixed(2)}
               </p>
             </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--primary)]">
+                Tips (recorded)
+              </p>
+              <p className="text-2xl font-bold tabular-nums text-[#5c4d00]">
+                ${(totals.totalTipsRecorded ?? 0).toFixed(2)}
+              </p>
+              <p className="mt-1 text-[11px] leading-snug text-[var(--text-muted)]">
+                Sum of tips you entered per order (bookkeeping).
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -251,7 +266,7 @@ export function ConfirmedRevenueTaxClient() {
           </div>
 
           <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
-            <table className="min-w-[900px] w-full border-collapse text-left text-sm">
+            <table className="min-w-[1100px] w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[var(--gold-light)]">
                   <th className="p-2 font-bold text-[color:var(--primary)]">Order #</th>
@@ -259,13 +274,16 @@ export function ConfirmedRevenueTaxClient() {
                   <th className="p-2 font-bold text-[color:var(--primary)]">Pickup</th>
                   <th className="p-2 font-bold text-[color:var(--primary)]">What / items</th>
                   <th className="p-2 font-bold text-[color:var(--primary)]">Total</th>
+                  <th className="p-2 font-bold text-[color:var(--primary)]">Tip</th>
+                  <th className="p-2 font-bold text-[color:var(--primary)]">Taken</th>
+                  <th className="p-2 font-bold text-[color:var(--primary)]">Notes</th>
                   <th className="p-2 font-bold text-[color:var(--primary)]">Payment</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-4 text-[var(--text-muted)]">
+                    <td colSpan={9} className="p-4 text-[var(--text-muted)]">
                       No confirmed orders in this range.
                     </td>
                   </tr>
@@ -293,6 +311,17 @@ export function ConfirmedRevenueTaxClient() {
                         ) : null}
                       </td>
                       <td className="p-2 font-semibold tabular-nums">${r.total.toFixed(2)}</td>
+                      <td className="p-2 tabular-nums text-xs">
+                        {r.tipAmount > 0 ? `$${r.tipAmount.toFixed(2)}` : "—"}
+                      </td>
+                      <td className="p-2 tabular-nums text-xs">
+                        {r.amountReceivedUsd != null
+                          ? `$${r.amountReceivedUsd.toFixed(2)}`
+                          : "—"}
+                      </td>
+                      <td className="p-2 max-w-[140px] truncate text-xs text-[var(--text-muted)]" title={r.paymentRecordNotes ?? ""}>
+                        {r.paymentRecordNotes?.trim() ? r.paymentRecordNotes : "—"}
+                      </td>
                       <td className="p-2 text-xs">
                         {r.paymentMethod ?? "—"}
                         {r.paymentStatus ? ` · ${r.paymentStatus}` : ""}
