@@ -7,16 +7,13 @@
  * Tocino list prices from `tocino-cost-model.ts` (COGS for Sheets via `menu-item-unit-costs`).
  * Adobo list prices from `adobo-cost-model.ts`.
  * Flan retail is `FLAN_RETAIL_PER_RAMEKIN_USD` in `flan-cost-model.ts` (individual ramekin only).
- * Yema retail is `YEMA_RETAIL_*` in `yema-cost-model.ts`.
+ * Yema: **per piece only** in catalog (`YEMA_RETAIL_SINGLE_USD`). No dozen/bulk size row until you add it here + optional bulk constant in `yema-cost-model.ts`.
  * Edit here first, then run: npx prisma db seed (or update rows in Admin → Menu Manager / DB).
  */
 
 import { ADOBO_RETAIL_USD } from "./adobo-cost-model";
 import { FLAN_RETAIL_PER_RAMEKIN_USD } from "./flan-cost-model";
-import {
-  YEMA_RETAIL_SINGLE_USD,
-  YEMA_RETAIL_TWELVE_PACK_USD,
-} from "./yema-cost-model";
+import { YEMA_RETAIL_SINGLE_USD } from "./yema-cost-model";
 import {
   lumpiaCatalogSizesForProtein,
   LUMPIA_RETAIL_TIERS_USD,
@@ -247,11 +244,6 @@ export const MENU_CATALOG = [
         key: "single",
         label: "Per piece",
         price: YEMA_RETAIL_SINGLE_USD,
-      },
-      {
-        key: "twelve",
-        label: "Per dozen (12 pcs)",
-        price: YEMA_RETAIL_TWELVE_PACK_USD,
       },
     ],
     photoUrl: CATALOG_PHOTOS.yema,

@@ -1,10 +1,11 @@
 /**
  * Yema — Filipino milk candy. Internal economics only (never shown at checkout).
- * Retail is defined in `MENU_CATALOG`; COGS is a rough batch model for Sheets + earnings planner.
+ * Public menu lists **per piece** only until you add a bulk/dozen line to `MENU_CATALOG`.
+ * COGS is a rough batch model for Sheets + earnings planner (legacy size labels still supported for old orders).
  */
 
 export const YEMA_RETAIL_SINGLE_USD = 0.75;
-/** Twelve singles at list price (no separate bundle discount). */
+/** Reserved for a future per-dozen / bulk line on the menu (not sold until you set policy). */
 export const YEMA_RETAIL_TWELVE_PACK_USD =
   Math.round(12 * YEMA_RETAIL_SINGLE_USD * 100) / 100;
 

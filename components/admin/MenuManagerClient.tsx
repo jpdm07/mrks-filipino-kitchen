@@ -8,6 +8,10 @@ import {
   FLAN_RETAIL_PER_RAMEKIN_USD,
   FLAN_TRUE_COST_PER_RAMEKIN_USD,
 } from "@/lib/flan-cost-model";
+import {
+  YEMA_COGS_PER_PIECE_USD,
+  YEMA_RETAIL_SINGLE_USD,
+} from "@/lib/yema-cost-model";
 
 const defaultSizes = `[
   { "key": "default", "label": "Standard", "price": 10 }
@@ -203,6 +207,29 @@ export function MenuManagerClient({
                     {FLAN_RETAIL_PER_RAMEKIN_USD.toFixed(2)} · Profit/unit: $
                     {FLAN_PROFIT_PER_RAMEKIN_USD.toFixed(2)} · Margin: ~
                     {FLAN_MARGIN_PCT}%
+                  </span>
+                </div>
+              ) : null}
+              {m.id === "seed-13" ? (
+                <div className="mt-2 rounded border border-amber-800/25 bg-amber-50 p-2 text-xs text-[var(--text)] dark:bg-amber-950/35">
+                  <strong className="text-amber-900 dark:text-amber-100">
+                    Yema — catalog (public menu)
+                  </strong>
+                  <span className="mt-1 block leading-snug">
+                    Only <strong>per piece</strong> is listed until you add a bulk tier in{" "}
+                    <code className="rounded bg-black/10 px-1 dark:bg-white/10">
+                      menu-catalog.ts
+                    </code>{" "}
+                    /{" "}
+                    <code className="rounded bg-black/10 px-1 dark:bg-white/10">
+                      yema-cost-model.ts
+                    </code>
+                    . List price:{" "}
+                    <strong className="tabular-nums">
+                      ${YEMA_RETAIL_SINGLE_USD.toFixed(2)}
+                    </strong>{" "}
+                    · Rough COGS ~$
+                    {YEMA_COGS_PER_PIECE_USD.toFixed(2)}/pc (internal). Run seed after catalog edits.
                   </span>
                 </div>
               ) : null}
