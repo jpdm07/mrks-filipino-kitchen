@@ -75,7 +75,14 @@ function CardFaceArtwork({
   );
 }
 
-export function BusinessCardFace({ qrHref }: { qrHref: string | null }) {
+export function BusinessCardFace({
+  qrHref,
+  onReady,
+}: {
+  qrHref: string | null;
+  /** Fires once the face knows artwork vs composed (after loading skeleton). For PDF capture timing. */
+  onReady?: () => void;
+}) {
   const [resolved, setResolved] = useState(false);
   const [useArtwork, setUseArtwork] = useState(false);
 
@@ -107,6 +114,16 @@ export function BusinessCardFace({ qrHref }: { qrHref: string | null }) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!resolved) return;
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        void document.fonts.ready.then(() => onReady?.());
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [resolved, onReady]);
 
   if (!resolved) {
     return (

@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { BusinessCardFace } from "@/components/business-card/BusinessCardFace";
 import { getBusinessCardQrUrl } from "@/lib/business-card-qr";
 
@@ -18,6 +24,17 @@ export function BusinessCardSheet({
   const [qrHref, setQrHref] = useState<string | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [previewScale, setPreviewScale] = useState(1);
+  /** Hidden clone finished loading — PDF raster matches on-screen card. */
+  const [captureReady, setCaptureReady] = useState(false);
+  const cardCaptureRef = useRef<HTMLDivElement>(null);
+
+  const handleCaptureFaceReady = useCallback(() => {
+    setCaptureReady(true);
+  }, []);
+
+  useEffect(() => {
+    setCaptureReady(false);
+  }, [qrHref]);
 
   /** Screen-only: scale the on-page preview on narrow viewports. PDF + print sheet unchanged (preview is print:hidden). */
   useLayoutEffect(() => {
@@ -54,13 +71,23 @@ export function BusinessCardSheet({
   }, []);
 
   const downloadPdf = useCallback(async () => {
-    if (!qrHref || pdfBusy) return;
+    if (!qrHref || pdfBusy || !captureReady) return;
+    const node = cardCaptureRef.current;
+    if (!node) return;
     setPdfBusy(true);
     try {
+      await document.fonts.ready;
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(node, {
+        pixelRatio: 3,
+        width: 336,
+        height: 192,
+        cacheBust: true,
+      });
       const { buildBusinessCardsPdfBlob } = await import(
         "./BusinessCardPdfDocument"
       );
-      const blob = await buildBusinessCardsPdfBlob(qrHref);
+      const blob = await buildBusinessCardsPdfBlob(dataUrl);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -72,7 +99,7 @@ export function BusinessCardSheet({
     } finally {
       setPdfBusy(false);
     }
-  }, [qrHref, pdfBusy]);
+  }, [qrHref, pdfBusy, captureReady]);
 
   return (
     <>
@@ -147,7 +174,14 @@ export function BusinessCardSheet({
             <button
               type="button"
               onClick={downloadPdf}
-              disabled={pdfBusy}
+              disabled={pdfBusy || !captureReady || !qrHref}
+              title={
+                !qrHref
+                  ? "Loading QR link…"
+                  : !captureReady
+                    ? "Loading card layout…"
+                    : undefined
+              }
               className="rounded-lg bg-[var(--gold)] px-6 py-3 font-bold text-[color:var(--primary)] shadow-md transition enabled:hover:brightness-95 disabled:opacity-60"
             >
               {pdfBusy ? "Building PDF…" : "Download PDF"}
@@ -161,8 +195,8 @@ export function BusinessCardSheet({
             </button>
           </div>
           <p className="text-center text-sm leading-relaxed text-[var(--text-muted)]">
-            <strong className="text-[var(--text)]">Download PDF</strong> builds the file directly
-            (no print dialog) — best if &quot;Save as PDF&quot; doesn&apos;t show up.{" "}
+            <strong className="text-[var(--text)]">Download PDF</strong> matches the preview above
+            (same layout as print) — best if &quot;Save as PDF&quot; doesn&apos;t show up.{" "}
             <strong className="text-[var(--text)]">Print</strong> is for your HP or another physical
             printer.
           </p>
@@ -174,6 +208,23 @@ export function BusinessCardSheet({
           </p>
         </div>
       ) : null}
+      {/* Off-screen 3.5×2&quot; clone for PNG → PDF (matches preview, including fonts & QR). */}
+      <div
+        className="pointer-events-none fixed -left-[99999px] top-0 z-0 print:hidden"
+        aria-hidden
+      >
+        <div
+          ref={cardCaptureRef}
+          className="box-border h-[192px] w-[336px] overflow-hidden"
+        >
+          <BusinessCardFace
+            key={qrHref ?? "no-qr"}
+            qrHref={qrHref}
+            onReady={handleCaptureFaceReady}
+          />
+        </div>
+      </div>
+
       <div
         id="print-area"
         className="flex w-full min-w-0 flex-col items-center print:block print:text-left"
