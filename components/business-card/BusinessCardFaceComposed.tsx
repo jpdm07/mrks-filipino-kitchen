@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { PhilippineSun } from "@/components/PhilippineSun";
 import {
   BC_FILIPINO_KITCHEN_CARD,
@@ -42,9 +43,28 @@ function MiniDivider({ className }: { className?: string }) {
  */
 export function BusinessCardFaceComposed({
   qrHref,
+  onVisualReady,
 }: {
   qrHref: string | null;
+  /** After fonts, layout, and QR canvas paint — for html-to-image / PDF capture timing. */
+  onVisualReady?: () => void;
 }) {
+  useEffect(() => {
+    if (!onVisualReady) return;
+    let cancelled = false;
+    (async () => {
+      await document.fonts.ready;
+      await new Promise<void>((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(r))
+      );
+      await new Promise<void>((r) => setTimeout(r, 48));
+      if (!cancelled) onVisualReady();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [qrHref, onVisualReady]);
+
   return (
     <div className="bc-card bc-card--rebrand relative box-border h-[192px] w-[336px] max-w-none shrink-0 shadow-[var(--shadow-lg)] print:h-[192px] print:w-[336px] print:max-w-none print:shadow-none">
       {/* Outer gold rule — inset 5px from trim */}

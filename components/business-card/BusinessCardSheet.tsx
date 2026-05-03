@@ -16,6 +16,22 @@ const CARDS_PER_SHEET = 8;
 /** Preview / print layout at 96 CSS px per inch — matches physical 3.5" × 2" cards */
 const PREVIEW_CARD_PX_W = 336;
 
+/** Ensure raster capture sees decoded images (next/img replacement + cached loads). */
+async function waitForImagesIn(container: HTMLElement): Promise<void> {
+  const imgs = container.querySelectorAll("img");
+  await Promise.all(
+    [...imgs].map(
+      (img) =>
+        img.complete && img.naturalWidth > 0
+          ? Promise.resolve()
+          : new Promise<void>((resolve) => {
+              img.addEventListener("load", () => resolve(), { once: true });
+              img.addEventListener("error", () => resolve(), { once: true });
+            })
+    )
+  );
+}
+
 export function BusinessCardSheet({
   showPrintButton = true,
 }: {
@@ -77,12 +93,18 @@ export function BusinessCardSheet({
     setPdfBusy(true);
     try {
       await document.fonts.ready;
+      await waitForImagesIn(node);
+      await new Promise<void>((r) => setTimeout(r, 64));
+      await new Promise<void>((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(r))
+      );
       const { toPng } = await import("html-to-image");
       const dataUrl = await toPng(node, {
         pixelRatio: 3,
         width: 336,
         height: 192,
         cacheBust: true,
+        style: { transform: "scale(1)", transformOrigin: "top left" },
       });
       const { buildBusinessCardsPdfBlob } = await import(
         "./BusinessCardPdfDocument"
@@ -91,7 +113,7 @@ export function BusinessCardSheet({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "mrks-business-cards.pdf";
+      a.download = `mrks-business-cards-${Date.now()}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
@@ -208,9 +230,9 @@ export function BusinessCardSheet({
           </p>
         </div>
       ) : null}
-      {/* Off-screen 3.5×2&quot; clone for PNG → PDF (matches preview, including fonts & QR). */}
+      {/* Below the fold so browsers paint the subtree; far off-screen often snapshots blank. */}
       <div
-        className="pointer-events-none fixed -left-[99999px] top-0 z-0 print:hidden"
+        className="pointer-events-none fixed left-0 top-[100vh] z-0 print:hidden"
         aria-hidden
       >
         <div

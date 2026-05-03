@@ -1,7 +1,12 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   absoluteBusinessCardFaceUrl,
   BC_ART_QR_BOTTOM_PX,
@@ -12,38 +17,46 @@ import {
 import { QRCodeDisplay } from "@/components/ui/QRCodeDisplay";
 import { BusinessCardFaceComposed } from "@/components/business-card/BusinessCardFaceComposed";
 
-const artworkIsRemoteHttp =
-  typeof BUSINESS_CARD_FACE_SRC === "string" &&
-  (BUSINESS_CARD_FACE_SRC.startsWith("http://") ||
-    BUSINESS_CARD_FACE_SRC.startsWith("https://"));
-
 function CardFaceArtwork({
   qrHref,
+  onVisualReady,
 }: {
   qrHref: string | null;
+  /** Fires when the face image has painted (incl. cached). For html-to-image / PDF. */
+  onVisualReady?: () => void;
 }) {
+  const doneRef = useRef(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  const fireReady = useCallback(() => {
+    if (!onVisualReady || doneRef.current) return;
+    doneRef.current = true;
+    void document.fonts.ready.then(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => onVisualReady());
+      });
+    });
+  }, [onVisualReady]);
+
+  useLayoutEffect(() => {
+    if (!onVisualReady) return;
+    const el = imgRef.current;
+    if (el?.complete && el.naturalWidth > 0) fireReady();
+  }, [onVisualReady, fireReady]);
+
   return (
     <div className="bc-card bc-card--artwork relative box-border h-[192px] w-[336px] max-w-none shrink-0 overflow-hidden bg-white shadow-[var(--shadow-lg)] print:h-[192px] print:w-[336px] print:max-w-none print:border-0 print:shadow-none">
-      {artworkIsRemoteHttp ? (
-        // eslint-disable-next-line @next/next/no-img-element -- remote URL may not be in next.config images
-        <img
-          src={BUSINESS_CARD_FACE_SRC}
-          alt="Mr. K's Filipino Kitchen logo Cypress TX"
-          width={336}
-          height={192}
-          className="pointer-events-none h-full w-full object-cover object-left"
-        />
-      ) : (
-        <Image
-          src={BUSINESS_CARD_FACE_SRC}
-          alt="Mr. K's Filipino Kitchen logo Cypress TX"
-          width={336}
-          height={192}
-          className="pointer-events-none h-full w-full object-cover object-left"
-          priority
-          quality={100}
-        />
-      )}
+      {/* eslint-disable-next-line @next/next/no-img-element -- canvas PDF capture needs native <img> (not next/image). */}
+      <img
+        ref={imgRef}
+        src={BUSINESS_CARD_FACE_SRC}
+        alt="Mr. K's Filipino Kitchen logo Cypress TX"
+        width={336}
+        height={192}
+        className="pointer-events-none h-full w-full object-cover object-left"
+        onLoad={onVisualReady ? fireReady : undefined}
+        onError={onVisualReady ? fireReady : undefined}
+      />
       <div
         className="absolute flex items-center justify-center"
         style={{
@@ -80,7 +93,7 @@ export function BusinessCardFace({
   onReady,
 }: {
   qrHref: string | null;
-  /** Fires once the face knows artwork vs composed (after loading skeleton). For PDF capture timing. */
+  /** When set (PDF capture clone only), fires after the card bitmap/fonts/QR are safe to rasterize. */
   onReady?: () => void;
 }) {
   const [resolved, setResolved] = useState(false);
@@ -115,16 +128,6 @@ export function BusinessCardFace({
     };
   }, []);
 
-  useEffect(() => {
-    if (!resolved) return;
-    const id = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        void document.fonts.ready.then(() => onReady?.());
-      });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [resolved, onReady]);
-
   if (!resolved) {
     return (
       <div
@@ -135,8 +138,15 @@ export function BusinessCardFace({
   }
 
   if (useArtwork) {
-    return <CardFaceArtwork qrHref={qrHref} />;
+    return (
+      <CardFaceArtwork
+        qrHref={qrHref}
+        onVisualReady={onReady}
+      />
+    );
   }
 
-  return <BusinessCardFaceComposed qrHref={qrHref} />;
+  return (
+    <BusinessCardFaceComposed qrHref={qrHref} onVisualReady={onReady} />
+  );
 }
