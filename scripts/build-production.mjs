@@ -96,25 +96,36 @@ if (
         "\n[build-production] DIRECT_URL is set but still looks like a *pooled* Neon host (*-pooler*). " +
           "Use Neon → Connect → **Direct** URL for DIRECT_URL.\n"
       );
-      process.exit(1);
-    }
-
-    if (looksPooled && !direct) {
+      if (runMigrateOnVercel) {
+        console.warn(
+          "[build-production] Vercel: skipping migrate deploy this build so the site can deploy — fix DIRECT_URL, then redeploy or run npm run db:migrate locally.\n"
+        );
+      } else {
+        process.exit(1);
+      }
+    } else if (looksPooled && !direct) {
       console.error(
         "\n[build-production] DATABASE_URL looks like a Neon pooler. " +
           "Add DIRECT_URL (direct / non-pooled) for prisma migrate deploy, or run db:migrate with DIRECT_URL in env.\n"
       );
-      process.exit(1);
+      if (runMigrateOnVercel) {
+        console.warn(
+          "[build-production] Vercel: skipping migrate deploy this build so the site can deploy — add DIRECT_URL in Vercel env, or run npm run db:migrate locally.\n"
+        );
+      } else {
+        process.exit(1);
+      }
+    } else {
+      const migrateEnv =
+        direct && !directLooksPooled ? { DATABASE_URL: direct } : {};
+      const label = runMigrateOnVercel
+        ? "Vercel VERCEL_RUN_MIGRATE_DEPLOY=1"
+        : "local RUN_MIGRATE_ON_BUILD=1";
+      console.log(
+        `\n========== [build-production] prisma migrate deploy (${label}) ==========\n`
+      );
+      runMigrateDeployWithRetry(migrateEnv);
     }
-    const migrateEnv =
-      direct && !directLooksPooled ? { DATABASE_URL: direct } : {};
-    const label = runMigrateOnVercel
-      ? "Vercel VERCEL_RUN_MIGRATE_DEPLOY=1"
-      : "local RUN_MIGRATE_ON_BUILD=1";
-    console.log(
-      `\n========== [build-production] prisma migrate deploy (${label}) ==========\n`
-    );
-    runMigrateDeployWithRetry(migrateEnv);
   }
 } else if (onVercel) {
   console.log(
