@@ -51,6 +51,19 @@ class CapacityExceededError extends Error {
 const PRINTED_RECEIPT_NOTE =
   "[Printed receipt requested — pack with order]";
 
+/** Customer-facing only — do not mention hosting, DATABASE_URL, or migrations in API JSON. */
+const CUSTOMER_ORDER_TECH_ISSUE_MSG =
+  "We're having a short technical problem saving online orders right now. Please call or text 979-703-3827 and we'll take your order.";
+
+function logOperatorMigrateHint(context: string, err?: unknown): void {
+  console.error(
+    `[orders] ${context} — ${err instanceof Error ? err.message : String(err)}`
+  );
+  console.error(
+    "[orders] Operator: apply migrations to production DB — local: copy Vercel Production DATABASE_URL + DIRECT_URL into .env.local, run npm run db:migrate. Or Vercel: set VERCEL_RUN_MIGRATE_DEPLOY=1 (and DIRECT_URL if DATABASE_URL is Neon pooled), redeploy."
+  );
+}
+
 /** Column Prisma reports for P2022 (shape varies by DB/driver). */
 function prismaP2022ColumnHint(err: unknown): string {
   if (!(err instanceof Prisma.PrismaClientKnownRequestError) || err.code !== "P2022") {
@@ -208,14 +221,8 @@ export async function POST(req: NextRequest) {
     try {
       orderNumber = await generateOrderNumber();
     } catch (counterErr) {
-      console.error("[orders] OrderCounter / generateOrderNumber failed:", counterErr);
-      return NextResponse.json(
-        {
-          error:
-            "We couldn't start your order (database setup). If you host this site: put Vercel Production DATABASE_URL in .env.local, then run npm run db:migrate. Or call/text 979-703-3827.",
-        },
-        { status: 503 }
-      );
+      logOperatorMigrateHint("OrderCounter / generateOrderNumber failed", counterErr);
+      return NextResponse.json({ error: CUSTOMER_ORDER_TECH_ISSUE_MSG }, { status: 503 });
     }
 
     const status = ORDER_STATUS_PENDING_PAYMENT_VERIFICATION;
@@ -481,11 +488,9 @@ export async function POST(req: NextRequest) {
     }
     const code = prismaDiagnosticCode(e);
     if (code === "P2022" || code === "P2021") {
+      logOperatorMigrateHint(`Prisma ${code} (schema not applied on this database)`, e);
       return NextResponse.json(
-        {
-          error:
-            "We couldn't save your order — the database needs migrations applied. If you host this site: put Vercel Production DATABASE_URL in .env.local, then run npm run db:migrate. Or call/text 979-703-3827 to place your order.",
-        },
+        { error: CUSTOMER_ORDER_TECH_ISSUE_MSG },
         { status: 503 }
       );
     }
@@ -499,7 +504,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "Something went wrong saving your order. Try again, or call/text 979-703-3827. If you manage the site: confirm DATABASE_URL and run npm run db:migrate.",
+          "Something went wrong saving your order. Try again, or call/text 979-703-3827.",
         ...(code ? { prismaCode: code } : {}),
         ...devDetail,
       },

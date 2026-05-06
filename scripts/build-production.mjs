@@ -1,13 +1,15 @@
 /**
  * Vercel/CI: prisma generate + next build.
  *
- * **Prisma migrate deploy never runs on Vercel** — avoids P1002 advisory lock timeouts on Neon
- * poolers and overlapping deploys. After you change `prisma/schema.prisma`, run locally:
- *   npm run db:migrate
- * with production `DATABASE_URL` + `DIRECT_URL` in `.env.local` (see Neon Connect → Direct).
+ * By default, **prisma migrate deploy does not run on Vercel** (avoids P1002 advisory lock timeouts on Neon).
  *
- * Local only: set `RUN_MIGRATE_ON_BUILD=1` to run `prisma migrate deploy` during `npm run build`.
- * Opt out of migrate on any machine: `VERCEL_SKIP_MIGRATE_DEPLOY=1` or `SKIP_PRISMA_MIGRATE_DEPLOY=1`.
+ * Apply migrations to production:
+ * - **Recommended once:** set `VERCEL_RUN_MIGRATE_DEPLOY=1` on Vercel (with `DATABASE_URL` + non-pooled `DIRECT_URL`)
+ *   and redeploy so `migrate deploy` runs during build; remove the flag after migrations catch up, or leave it on.
+ * - **Or** locally: put Production `DATABASE_URL` + `DIRECT_URL` in `.env.local`, then `npm run db:migrate`.
+ *
+ * Local: `RUN_MIGRATE_ON_BUILD=1` runs migrate during `npm run build` (same pooler rules).
+ * Opt out anywhere: `VERCEL_SKIP_MIGRATE_DEPLOY=1` or `SKIP_PRISMA_MIGRATE_DEPLOY=1`.
  */
 import { spawnSync } from "node:child_process";
 import process from "node:process";
@@ -58,27 +60,29 @@ function run(label, command, args, extraEnv = {}) {
 }
 
 const onVercel = Boolean(process.env.VERCEL);
-const forceMigrate = process.env.RUN_MIGRATE_ON_BUILD === "1";
 const skipMigrateDeploy =
   process.env.VERCEL_SKIP_MIGRATE_DEPLOY === "1" ||
   process.env.SKIP_PRISMA_MIGRATE_DEPLOY === "1";
+const runMigrateOnLocalBuild =
+  !skipMigrateDeploy && !onVercel && process.env.RUN_MIGRATE_ON_BUILD === "1";
+const runMigrateOnVercel =
+  !skipMigrateDeploy && onVercel && process.env.VERCEL_RUN_MIGRATE_DEPLOY === "1";
+const runMigrate = runMigrateOnLocalBuild || runMigrateOnVercel;
 
-if (skipMigrateDeploy && (onVercel || forceMigrate)) {
+if (
+  skipMigrateDeploy &&
+  (process.env.RUN_MIGRATE_ON_BUILD === "1" ||
+    process.env.VERCEL_RUN_MIGRATE_DEPLOY === "1")
+) {
   console.log(
     "\n[build-production] Skipping prisma migrate deploy (VERCEL_SKIP_MIGRATE_DEPLOY / SKIP_PRISMA_MIGRATE_DEPLOY).\n"
   );
-} else if (onVercel) {
-  console.log(
-    "\n[build-production] Vercel: skipping prisma migrate deploy (not supported in CI — avoids Neon P1002 / lock issues).\n" +
-      "  → Schema changes: run `npm run db:migrate` locally with production DATABASE_URL + DIRECT_URL in .env.local.\n" +
-      "  → You can remove RUN_MIGRATE_ON_VERCEL from Vercel env (it is ignored).\n"
-  );
-} else if (forceMigrate && !skipMigrateDeploy) {
+} else if (runMigrate) {
   const dbUrl = process.env.DATABASE_URL?.trim();
   if (!dbUrl) {
     console.warn(
       "[build-production] DATABASE_URL is not set — skipping migrations.\n" +
-        "  → Set DATABASE_URL (and DIRECT_URL if using a Neon pooler) then re-run, or run: npm run db:migrate\n"
+        "  → Set DATABASE_URL (+ DIRECT_URL if Neon pooler) on Vercel, or run: npm run db:migrate locally.\n"
     );
   } else {
     const direct = process.env.DIRECT_URL?.trim();
@@ -104,9 +108,20 @@ if (skipMigrateDeploy && (onVercel || forceMigrate)) {
     }
     const migrateEnv =
       direct && !directLooksPooled ? { DATABASE_URL: direct } : {};
-    console.log("\n========== [build-production] prisma migrate deploy (local RUN_MIGRATE_ON_BUILD=1) ==========\n");
+    const label = runMigrateOnVercel
+      ? "Vercel VERCEL_RUN_MIGRATE_DEPLOY=1"
+      : "local RUN_MIGRATE_ON_BUILD=1";
+    console.log(
+      `\n========== [build-production] prisma migrate deploy (${label}) ==========\n`
+    );
     runMigrateDeployWithRetry(migrateEnv);
   }
+} else if (onVercel) {
+  console.log(
+    "\n[build-production] Vercel: skipping prisma migrate deploy by default (Neon P1002 / lock safety).\n" +
+      "  → One-time or ongoing: set env VERCEL_RUN_MIGRATE_DEPLOY=1 (and DIRECT_URL if DATABASE_URL is pooled), then redeploy.\n" +
+      "  → Or run `npm run db:migrate` locally with Production DATABASE_URL + DIRECT_URL in .env.local.\n"
+  );
 }
 
 console.log("\n========== [build-production] prisma generate ==========\n");
