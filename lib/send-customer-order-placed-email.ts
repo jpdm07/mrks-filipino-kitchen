@@ -20,8 +20,8 @@ export type CustomerOrderPlacedEmailParams = {
   customerName: string;
   email: string;
   orderNumber: string;
-  pickupDate: string;
-  pickupTime: string;
+  pickupDate?: string | null;
+  pickupTime?: string | null;
   total: number;
 };
 
@@ -40,7 +40,14 @@ export async function sendCustomerOrderPlacedEmail(
     };
   }
 
-  const when = formatPickupDisplay(params.pickupDate, params.pickupTime);
+  const pickupTime =
+    typeof params.pickupTime === "string" ? params.pickupTime.trim() : "";
+  const when =
+    params.pickupDate && typeof params.pickupDate === "string"
+      ? formatPickupDisplay(params.pickupDate, pickupTime || null)
+      : pickupTime
+        ? `Pickup date TBD at ${pickupTime}`
+        : "Pickup date/time TBD";
   const origin = getPublicSiteOrigin();
   const summaryUrl = `${origin}/order-confirmation/${encodeURIComponent(params.orderNumber)}`;
   const { zellePhone, venmoHandle, cashAppCashtag } = PAYMENT_INSTRUCTIONS;

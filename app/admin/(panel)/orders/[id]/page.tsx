@@ -14,6 +14,7 @@ import {
   getSauceCupsFromOrderLine,
   totalSauceCupsForItems,
 } from "@/lib/menu-item-unit-costs";
+import { AdminOrderConfirmationActions } from "@/components/admin/AdminOrderConfirmationActions";
 
 function parseItems(raw: string): OrderItemLine[] {
   try {
@@ -127,6 +128,20 @@ export default async function AdminOrderDetailPage({
           <AdminOrderReceiptActions order={receiptRow} />
         </div>
       </div>
+      {order.manualEntry &&
+      order.email &&
+      order.email !== "manual-order@placeholder.invalid" ? (
+        <div className="mt-6 rounded border border-[var(--border)] bg-[var(--card)] p-4">
+          <h2 className="font-bold">Order confirmation email</h2>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
+            Emails the “order received” confirmation to the customer email on
+            file for this off-site/manual order.
+          </p>
+          <div className="mt-3">
+            <AdminOrderConfirmationActions order={receiptRow} />
+          </div>
+        </div>
+      ) : null}
       <div className="mt-6 rounded border border-[var(--border)] bg-[var(--card)] p-4">
         <h2 className="font-bold">Items</h2>
         <ul className="mt-2 list-disc pl-5 text-sm">
