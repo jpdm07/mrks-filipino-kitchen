@@ -16,7 +16,7 @@ import {
 } from "@/lib/utensils-allowance";
 import { AcceptedPaymentMethods } from "@/components/checkout/AcceptedPaymentMethods";
 import { ORDER_STATUS_CONFIRMED } from "@/lib/order-payment";
-import { formatPickupYmdLong } from "@/lib/pickup-lead-time";
+import { formatCustomerPickupLine } from "@/lib/order-pickup-display";
 import { SalesTaxDisclosure } from "@/components/checkout/SalesTaxDisclosure";
 
 export const dynamic = "force-dynamic";
@@ -56,8 +56,7 @@ export default async function OrderConfirmationPage({
   );
   const frozenLumpia = orderHasFrozenLumpia(items);
 
-  const pickupYmd = order.pickupDate?.trim();
-  const pickupTime = order.pickupTime?.trim();
+  const pickupLine = formatCustomerPickupLine(order);
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 text-center">
@@ -79,16 +78,9 @@ export default async function OrderConfirmationPage({
         Show this # at pickup.
       </p>
 
-      {pickupYmd ? (
+      {pickupLine !== "Pickup TBD" ? (
         <p className="mx-auto mt-6 max-w-lg rounded-lg border border-[var(--border)] bg-[var(--gold-light)] px-4 py-3 text-sm text-[var(--text)]">
-          Pickup: <strong>{formatPickupYmdLong(pickupYmd)}</strong>
-          {pickupTime ? (
-            <>
-              {" "}
-              at <strong>{pickupTime}</strong>
-            </>
-          ) : null}
-          .
+          Pickup: <strong>{pickupLine}</strong>
         </p>
       ) : null}
 

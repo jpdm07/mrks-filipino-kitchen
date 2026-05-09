@@ -52,6 +52,8 @@ export function AdminManualOrderForm() {
   const [wantsUtensils, setWantsUtensils] = useState(false);
   const [utensilSets, setUtensilSets] = useState("1");
   const [notes, setNotes] = useState("");
+  const [useCustomPickup, setUseCustomPickup] = useState(false);
+  const [customPickupText, setCustomPickupText] = useState("");
   const [markPaid, setMarkPaid] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
   const [notifyOwnerSms, setNotifyOwnerSms] = useState(false);
@@ -227,8 +229,10 @@ export function AdminManualOrderForm() {
           phone: phone.trim(),
           email: email.trim(),
           items: itemsPayload,
-          pickupDate,
-          pickupTime,
+          useCustomPickup,
+          customPickupTime: customPickupText.trim(),
+          pickupDate: useCustomPickup ? "" : pickupDate,
+          pickupTime: useCustomPickup ? "" : pickupTime,
           wantsUtensils,
           utensilSets: wantsUtensils ? Math.max(1, Math.floor(Number(utensilSets) || 1)) : 0,
           notes: notes.trim() || undefined,
@@ -454,50 +458,80 @@ export function AdminManualOrderForm() {
         </button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm">
-          <span className="font-semibold text-[var(--text)]">
-            Pickup date{" "}
-            <span className="font-normal text-[var(--text-muted)]">(optional)</span>
-          </span>
+      <div className="rounded border border-[var(--border)] bg-[var(--bg-section)] p-4">
+        <label className="flex cursor-pointer items-start gap-2 text-sm">
           <input
-            type="date"
-            className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)]"
-            value={pickupDate}
-            onChange={(e) => setPickupDate(e.target.value)}
+            type="checkbox"
+            className="mt-1"
+            checked={useCustomPickup}
+            onChange={(e) => setUseCustomPickup(e.target.checked)}
           />
-        </label>
-        <label className="block text-sm">
-          <span className="font-semibold text-[var(--text)]">
-            Pickup time{" "}
-            <span className="font-normal text-[var(--text-muted)]">(optional)</span>
+          <span>
+            <strong>Enter custom date &amp; time</strong>
+            <span className="mt-0.5 block text-[var(--text-muted)]">
+              Type any pickup window verbatim — it prints on the customer receipt exactly as
+              entered. Calendar slots below are ignored while this is on.
+            </span>
           </span>
-          <select
-            className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)]"
-            value={pickupTime}
-            onChange={(e) => setPickupTime(e.target.value)}
-            disabled={slotsLoading || (!pickupDate && slotOptions.length === 0)}
-          >
-            {slotOptions.length === 0 ? (
-              <option value="">
-                {pickupDate
-                  ? slotsLoading
-                    ? "Loading slots…"
-                    : "No slots — leave unset or pick another date"
-                  : "Choose a date first, or leave unset"}
-              </option>
-            ) : (
-              <>
-                <option value="">Not set yet</option>
-                {slotOptions.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </>
-            )}
-          </select>
         </label>
+        {useCustomPickup ? (
+          <label className="mt-3 block text-sm">
+            <span className="font-semibold text-[var(--text)]">Custom pickup</span>
+            <textarea
+              className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-[var(--text)]"
+              rows={2}
+              placeholder='e.g. "Friday, May 9 · 11:45 AM" or any wording you need'
+              value={customPickupText}
+              onChange={(e) => setCustomPickupText(e.target.value)}
+            />
+          </label>
+        ) : (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm">
+              <span className="font-semibold text-[var(--text)]">
+                Pickup date{" "}
+                <span className="font-normal text-[var(--text-muted)]">(optional)</span>
+              </span>
+              <input
+                type="date"
+                className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)]"
+                value={pickupDate}
+                onChange={(e) => setPickupDate(e.target.value)}
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="font-semibold text-[var(--text)]">
+                Pickup time{" "}
+                <span className="font-normal text-[var(--text-muted)]">(optional)</span>
+              </span>
+              <select
+                className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[var(--text)]"
+                value={pickupTime}
+                onChange={(e) => setPickupTime(e.target.value)}
+                disabled={slotsLoading || (!pickupDate && slotOptions.length === 0)}
+              >
+                {slotOptions.length === 0 ? (
+                  <option value="">
+                    {pickupDate
+                      ? slotsLoading
+                        ? "Loading slots…"
+                        : "No slots — leave unset or pick another date"
+                      : "Choose a date first, or leave unset"}
+                  </option>
+                ) : (
+                  <>
+                    <option value="">Not set yet</option>
+                    {slotOptions.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </>
+                )}
+              </select>
+            </label>
+          </div>
+        )}
       </div>
 
       <div className="rounded border border-[var(--border)] bg-[var(--bg-section)] p-4">

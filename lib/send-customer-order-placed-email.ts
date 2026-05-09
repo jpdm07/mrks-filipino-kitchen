@@ -22,6 +22,8 @@ export type CustomerOrderPlacedEmailParams = {
   orderNumber: string;
   pickupDate?: string | null;
   pickupTime?: string | null;
+  /** When set (e.g. manual admin entry), shown verbatim as the pickup line. */
+  customPickupTime?: string | null;
   total: number;
 };
 
@@ -40,10 +42,12 @@ export async function sendCustomerOrderPlacedEmail(
     };
   }
 
+  const custom = params.customPickupTime?.trim();
   const pickupTime =
     typeof params.pickupTime === "string" ? params.pickupTime.trim() : "";
-  const when =
-    params.pickupDate && typeof params.pickupDate === "string"
+  const when = custom
+    ? custom
+    : params.pickupDate && typeof params.pickupDate === "string"
       ? formatPickupDisplay(params.pickupDate, pickupTime || null)
       : pickupTime
         ? `Pickup date TBD at ${pickupTime}`

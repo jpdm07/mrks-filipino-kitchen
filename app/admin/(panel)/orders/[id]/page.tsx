@@ -14,6 +14,7 @@ import {
   getSauceCupsFromOrderLine,
   totalSauceCupsForItems,
 } from "@/lib/menu-item-unit-costs";
+import { formatCustomerPickupLine } from "@/lib/order-pickup-display";
 import { AdminOrderConfirmationActions } from "@/components/admin/AdminOrderConfirmationActions";
 
 function parseItems(raw: string): OrderItemLine[] {
@@ -73,9 +74,7 @@ export default async function AdminOrderDetailPage({
         </div>
         <div className="rounded border border-[var(--border)] bg-[var(--card)] p-4">
           <h2 className="font-bold">Pickup</h2>
-          <p>
-            {order.pickupDate} @ {order.pickupTime}
-          </p>
+          <p>{formatCustomerPickupLine(order)}</p>
           {order.wantsPrintedReceipt ? (
             <p className="mt-2 text-sm font-semibold text-[var(--text)]">
               Printed receipt requested — pack with order

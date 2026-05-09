@@ -257,6 +257,7 @@ export async function POST(req: NextRequest) {
           total,
           pickupDate,
           pickupTime,
+          customPickupTime: null,
           wantsUtensils,
           utensilSets: sets,
           utensilCharge: ut,
@@ -388,6 +389,7 @@ export async function POST(req: NextRequest) {
           orderNumber,
           pickupDate,
           pickupTime,
+          customPickupTime: null,
           total,
         });
 

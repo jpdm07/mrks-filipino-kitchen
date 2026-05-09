@@ -112,6 +112,9 @@ export async function POST(req: NextRequest) {
     items?: unknown;
     pickupDate?: string;
     pickupTime?: string;
+    /** When true, `customPickupTime` is saved verbatim and slot/calendar picks are ignored. */
+    useCustomPickup?: boolean;
+    customPickupTime?: string;
     wantsUtensils?: boolean;
     utensilSets?: number;
     notes?: string | null;
@@ -156,11 +159,32 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const pickupDateRaw = (body.pickupDate ?? "").trim();
-  const pickupTimeRaw = (body.pickupTime ?? "").trim();
+  const useCustomPickup = Boolean(body.useCustomPickup);
+  const customPickupRaw = (body.customPickupTime ?? "").trim();
+
+  let pickupDateRaw = (body.pickupDate ?? "").trim();
+  let pickupTimeRaw = (body.pickupTime ?? "").trim();
+
+  if (useCustomPickup) {
+    if (!customPickupRaw) {
+      return NextResponse.json(
+        {
+          error:
+            "Enter a custom pickup date & time, or switch back to calendar slots.",
+        },
+        { status: 400 }
+      );
+    }
+    pickupDateRaw = "";
+    pickupTimeRaw = "";
+  }
+
   const hasPickupDate = pickupDateRaw.length > 0;
   const hasPickupTime = pickupTimeRaw.length > 0;
-  const scheduleComplete = hasPickupDate && hasPickupTime;
+  const scheduleComplete =
+    !useCustomPickup && hasPickupDate && hasPickupTime;
+
+  const storedCustomPickup = useCustomPickup ? customPickupRaw : null;
 
   const isDemo = Boolean(body.isDemo);
   const markPaid = body.markPaid !== false;
@@ -198,11 +222,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const scheduleIncompleteNote = scheduleComplete
+  const scheduleIncompleteNote = useCustomPickup
     ? ""
-    : hasPickupDate || hasPickupTime
-      ? "[Pickup incomplete — confirm date & slot when ready]"
-      : "[Pickup date/time not set — add later in admin]";
+    : scheduleComplete
+      ? ""
+      : hasPickupDate || hasPickupTime
+        ? "[Pickup incomplete — confirm date & slot when ready]"
+        : "[Pickup date/time not set — add later in admin]";
 
   const noteParts = [
     (body.notes ?? "").trim(),
@@ -213,8 +239,10 @@ export async function POST(req: NextRequest) {
     .join("\n\n");
   const baseNotes = noteParts || null;
 
-  const pickupDate = hasPickupDate ? pickupDateRaw : null;
-  const pickupTime = hasPickupTime ? pickupTimeRaw : null;
+  const pickupDate =
+    useCustomPickup ? null : hasPickupDate ? pickupDateRaw : null;
+  const pickupTime =
+    useCustomPickup ? null : hasPickupTime ? pickupTimeRaw : null;
 
   const status = markPaid
     ? ORDER_STATUS_CONFIRMED
@@ -227,7 +255,7 @@ export async function POST(req: NextRequest) {
   let order;
   try {
     order = await prisma.$transaction(async (tx) => {
-      if (!isDemo && hasPickupDate) {
+      if (!isDemo && !useCustomPickup && hasPickupDate) {
         const manualSoldOutWeekStart = await safeManualSoldOutWeekStart(tx);
         const cap = await wouldExceedCapacityForPickupWeekWithTx(
           tx,
@@ -237,7 +265,7 @@ export async function POST(req: NextRequest) {
         );
         if (!cap.ok) throw new CapacityExceededError();
       }
-      if (!isDemo && scheduleComplete) {
+      if (!isDemo && !useCustomPickup && scheduleComplete) {
         await assertPickupSlotFreeInTx(tx, pickupDateRaw, pickupTimeRaw);
       }
 
@@ -253,6 +281,7 @@ export async function POST(req: NextRequest) {
           total,
           pickupDate,
           pickupTime,
+          customPickupTime: storedCustomPickup,
           wantsUtensils,
           utensilSets: sets,
           utensilCharge: ut,
@@ -304,7 +333,7 @@ export async function POST(req: NextRequest) {
       tax,
       total,
       pickupDate: pickupDate ?? undefined,
-      pickupTime: pickupTime ?? undefined,
+      pickupTime: storedCustomPickup ?? pickupTime ?? undefined,
       notes: baseNotes ?? undefined,
       customInquiry: undefined,
       wantsPrintedReceipt: false,
@@ -325,13 +354,15 @@ export async function POST(req: NextRequest) {
       `Customer: ${customerName} | ${phone}`,
       `Total: $${total.toFixed(2)}`,
       `Pickup: ${
-        pickupDate && pickupTime
-          ? `${pickupDate} @ ${pickupTime}`
-          : pickupDate
-            ? `${pickupDate} (time TBD)`
-            : pickupTime
-              ? `(date TBD) @ ${pickupTime}`
-              : "TBD"
+        storedCustomPickup
+          ? storedCustomPickup
+          : pickupDate && pickupTime
+            ? `${pickupDate} @ ${pickupTime}`
+            : pickupDate
+              ? `${pickupDate} (time TBD)`
+              : pickupTime
+                ? `(date TBD) @ ${pickupTime}`
+                : "TBD"
       }`,
       `Source: ${PAYMENT_METHOD_MANUAL_OFFSITE}`,
     ].join("\n");

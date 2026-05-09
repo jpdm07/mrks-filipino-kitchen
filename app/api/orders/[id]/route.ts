@@ -10,7 +10,7 @@ import { sendCustomerReceiptEmail } from "@/lib/send-customer-receipt-email";
 import { sendOwnerSms, sendCustomerSms } from "@/lib/twilio";
 import { formatItemsForSms, formatSamplesForSms } from "@/lib/order-types";
 import { syncOrderStatusToSheets } from "@/lib/sheets";
-import { formatPickupDisplay } from "@/lib/format-pickup";
+import { formatCustomerPickupLine } from "@/lib/order-pickup-display";
 import { totalSauceCupsForItems } from "@/lib/menu-item-unit-costs";
 import {
   createPickupEvent,
@@ -336,9 +336,8 @@ export async function PATCH(
   }
 
   if (body.paymentAction === "verify") {
-    const pd = updated.pickupDate ?? "";
-    const pt = updated.pickupTime ?? "";
-    const msg = `✅ Hi ${updated.customerName}! Mr. K has confirmed your payment. Your order #${updated.orderNumber} is confirmed for pickup on ${pd} around ${pt}. We'll see you then! Questions? Call or text 979-703-3827.`;
+    const pickupSummary = formatCustomerPickupLine(updated);
+    const msg = `✅ Hi ${updated.customerName}! Mr. K has confirmed your payment. Your order #${updated.orderNumber} is confirmed. Pickup: ${pickupSummary}. We'll see you then! Questions? Call or text 979-703-3827.`;
     await sendCustomerSms(updated.phone, msg).catch(() => {});
 
     const receiptRow = toAdminOrderClientRow(updated, "");
@@ -385,7 +384,7 @@ export async function PATCH(
       `Tax: $${updated.tax.toFixed(2)}`,
       `TOTAL: $${updated.total.toFixed(2)}`,
       "",
-      `📅 Pickup: ${formatPickupDisplay(pd, pt)}`,
+      `📅 Pickup: ${formatCustomerPickupLine(updated)}`,
       `💰 Payment: Verified`,
       "",
       `Notes: ${updated.notes?.trim() || "None"}`,
@@ -433,6 +432,7 @@ export async function POST(
   const items = parseItems(order.items);
   const itemsSms = formatItemsForSms(items);
   const samplesSms = formatSamplesForSms(items);
+  const pickupLine = formatCustomerPickupLine(order);
   const lines = [
     `🍽️ ORDER #${order.orderNumber} (resent)`,
     `Customer: ${order.customerName} | ${order.phone}`,
@@ -442,9 +442,7 @@ export async function POST(
   lines.push(
     `Utensils: ${order.utensilSets > 0 ? `${order.utensilSets} sets ($${order.utensilCharge.toFixed(2)})` : "None"}`,
     `Total: $${order.total.toFixed(2)}`,
-    order.pickupDate && order.pickupTime
-      ? `Pickup pref: ${order.pickupDate} @ ${order.pickupTime}`
-      : "",
+    pickupLine !== "Pickup TBD" ? `Pickup pref: ${pickupLine}` : "",
     order.notes ? `Notes: ${order.notes.slice(0, 200)}` : ""
   );
   const sent = await sendOwnerSms(lines.filter(Boolean).join("\n"));

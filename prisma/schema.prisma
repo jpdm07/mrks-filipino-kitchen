@@ -38,6 +38,8 @@ model Order {
   total            Float
   pickupDate       String?
   pickupTime       String?
+  /// Admin/manual: free-text pickup window shown verbatim when set (overrides date/time slots).
+  customPickupTime String?
   notes            String?
   wantsUtensils    Boolean  @default(false)
   utensilSets      Int      @default(0)

@@ -39,6 +39,7 @@ export async function POST(
     orderNumber: order.orderNumber,
     pickupDate: order.pickupDate ?? null,
     pickupTime: order.pickupTime ?? null,
+    customPickupTime: order.customPickupTime ?? null,
     total: order.total,
   });
 

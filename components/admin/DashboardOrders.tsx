@@ -23,6 +23,7 @@ import { AdminOrderReceiptActions } from "@/components/admin/AdminOrderReceiptAc
 import { AdminOrderPaymentRecordSection } from "@/components/admin/AdminOrderPaymentRecordSection";
 import { ADMIN_POLL_INTERVAL_MS } from "@/lib/admin-poll-interval";
 import { refreshAdminAfterOrderChange } from "@/lib/admin-orders-changed-event";
+import { formatCustomerPickupLine } from "@/lib/order-pickup-display";
 
 type Row = AdminOrderClientRow;
 
@@ -629,7 +630,7 @@ export function DashboardOrders() {
               Utensils: {modal.utensilSets} sets (${modal.utensilCharge.toFixed(2)})
             </p>
             <p className="mt-2 text-sm">
-              Pickup: {modal.pickupDate} @ {modal.pickupTime}
+              Pickup: {formatCustomerPickupLine(modal)}
             </p>
             {modal.paymentStatus || modal.paymentMethod ? (
               <p className="mt-2 text-sm text-[var(--text-muted)]">

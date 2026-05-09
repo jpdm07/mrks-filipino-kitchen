@@ -4,7 +4,7 @@ import {
   buildCustomerReplyFooterHtml,
   buildCustomerReplyFooterPlainText,
 } from "@/lib/mail-reply-routing";
-import { formatPickupDisplay } from "@/lib/format-pickup";
+import { formatCustomerPickupLine } from "@/lib/order-pickup-display";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { sendMail, type MailSendResult } from "@/lib/mailer";
 
@@ -23,7 +23,13 @@ function escapeHtml(s: string): string {
 export async function sendCustomerPaymentConfirmedEmail(
   order: Pick<
     Order,
-    "customerName" | "email" | "orderNumber" | "pickupDate" | "pickupTime" | "total"
+    | "customerName"
+    | "email"
+    | "orderNumber"
+    | "pickupDate"
+    | "pickupTime"
+    | "customPickupTime"
+    | "total"
   >
 ): Promise<MailSendResult> {
   const to = order.email?.trim();
@@ -34,8 +40,7 @@ export async function sendCustomerPaymentConfirmedEmail(
     };
   }
 
-  const pd = order.pickupDate ?? "";
-  const when = formatPickupDisplay(pd, order.pickupTime);
+  const when = formatCustomerPickupLine(order);
   const origin = getPublicSiteOrigin();
   const summaryUrl = `${origin}/order-confirmation/${encodeURIComponent(order.orderNumber)}`;
   const subj = `Payment received — order #${order.orderNumber} confirmed`;
