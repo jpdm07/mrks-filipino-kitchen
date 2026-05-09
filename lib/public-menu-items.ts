@@ -41,7 +41,7 @@ export async function getPublicMenuItems(): Promise<MenuItemDTO[]> {
     });
     const ids = new Set(mapped.map((m) => m.id));
     const merged = [
-      ...mapped,
+      ...mapped.filter((m) => m.isActive),
       ...catalogMenuItemsMissingFromDb(ids).map((m) => ({
         ...m,
         sizes: ensureMenuSizes(m.sizes, m.basePrice),

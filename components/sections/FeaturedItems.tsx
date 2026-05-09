@@ -48,8 +48,9 @@ export async function FeaturedItems() {
           groupServingBlurb: r.groupServingBlurb ?? null,
         });
         return { ...o, sizes: ensureMenuSizes(o.sizes, o.basePrice) };
-      });
-  }, fallbackOrdered);
+      })
+      .filter((item) => item.isActive);
+  }, fallbackOrdered.filter((item) => item.isActive));
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-16">

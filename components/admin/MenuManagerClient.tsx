@@ -43,6 +43,17 @@ export function MenuManagerClient({
     setItems(data.items ?? []);
   };
 
+  const toggleVisibility = async (m: MenuItem) => {
+    const res = await fetch("/api/admin/menu", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: m.id, isActive: !m.isActive }),
+    });
+    if (!res.ok) return;
+    const updated = (await res.json()) as MenuItem;
+    setItems((p) => p.map((x) => (x.id === updated.id ? updated : x)));
+  };
+
   const addItem = async (e: React.FormEvent) => {
     e.preventDefault();
     let sizes: unknown;
@@ -187,15 +198,33 @@ export function MenuManagerClient({
               key={m.id}
               className="rounded border border-[var(--border)] bg-[var(--card)] p-3 text-sm"
             >
-              <div className="flex justify-between gap-2">
-                <strong>{m.name}</strong>
-                <button
-                  type="button"
-                  className="text-[var(--accent)]"
-                  onClick={() => remove(m.id)}
-                >
-                  Delete
-                </button>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <strong>{m.name}</strong>
+                  {!m.isActive ? (
+                    <span className="rounded bg-neutral-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white dark:bg-neutral-500">
+                      Hidden
+                    </span>
+                  ) : null}
+                </div>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-[var(--text-muted)]">
+                    <input
+                      type="checkbox"
+                      className="accent-[var(--primary)]"
+                      checked={m.isActive}
+                      onChange={() => void toggleVisibility(m)}
+                    />
+                    On menu
+                  </label>
+                  <button
+                    type="button"
+                    className="text-[var(--accent)]"
+                    onClick={() => remove(m.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
               <p className="text-xs text-[var(--text-muted)]">{m.category}</p>
               {m.id === "seed-6" ? (
