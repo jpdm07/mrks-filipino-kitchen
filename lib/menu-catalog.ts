@@ -81,7 +81,7 @@ export const CATALOG_OG_IMAGE_PARADE =
  */
 /** Shared public copy for all lumpia protein rows (prices differ by size + protein). */
 const LUMPIA_ITEM_DESCRIPTION =
-  "Our hand-rolled lumpia are made fresh to order using full-size wrappers — bigger than the bite-size cocktail versions you'll find at cafes. Each roll is stuffed with seasoned meat and vegetables, then fried until golden and shatter-crisp (or frozen uncooked, so you can fry them fresh at home). Comes with our house dipping sauce. Pork · Turkey · Beef. Cooked or frozen — same price per tier.";
+  "Our hand-rolled lumpia are made fresh to order using full-size wrappers — bigger than the bite-size cocktail versions you'll find at cafes. Each roll is stuffed with seasoned meat and vegetables, then fried until golden and shatter-crisp (or frozen uncooked, so you can fry them fresh when you're ready). Comes with our house dipping sauce. Pork · Turkey · Beef. Cooked or frozen — same price per tier.";
 
 export const CATALOG_PHOTOS = {
   lumpia: LUMPIA_IMAGE,
@@ -313,9 +313,9 @@ export const MENU_CATALOG = [
   },
   {
     id: "seed-10",
-    name: "Frozen Tocino — Pork (Cook at Home)",
+    name: "Frozen Tocino — Pork (Pan-fry fresh)",
     description:
-      "Sweet-cured, caramelized pork or chicken. Marinated overnight in a classic Filipino cure — brown sugar, soy sauce, white vinegar, annatto, garlic — then portioned and frozen. Thaw and pan-fry to a glossy caramelized glaze. 12 oz (340 g) raw marinated meat (thin slices) in a sealed bag — cook at home. Pork · Chicken.",
+      "Sweet-cured, caramelized pork or chicken. Marinated overnight in a classic Filipino cure — brown sugar, soy sauce, white vinegar, annatto, garlic — then portioned and frozen. Thaw and pan-fry to a glossy caramelized glaze. 12 oz (340 g) raw marinated meat (thin slices) in a sealed bag — pan-fry from frozen. Pork · Chicken.",
     category: "Meals",
     calories: "Calories vary when cooked",
     basePrice: TOCINO_RETAIL_USD.frozen12oz,
@@ -336,9 +336,9 @@ export const MENU_CATALOG = [
   },
   {
     id: "seed-11",
-    name: "Frozen Tocino — Chicken (Cook at Home)",
+    name: "Frozen Tocino — Chicken (Pan-fry fresh)",
     description:
-      "Sweet-cured, caramelized pork or chicken. Marinated overnight in a classic Filipino cure — brown sugar, soy sauce, white vinegar, annatto, garlic — then portioned and frozen. Thaw and pan-fry to a glossy caramelized glaze. 12 oz (340 g) raw marinated meat (thin slices) in a sealed bag — cook at home. Pork · Chicken.",
+      "Sweet-cured, caramelized pork or chicken. Marinated overnight in a classic Filipino cure — brown sugar, soy sauce, white vinegar, annatto, garlic — then portioned and frozen. Thaw and pan-fry to a glossy caramelized glaze. 12 oz (340 g) raw marinated meat (thin slices) in a sealed bag — pan-fry from frozen. Pork · Chicken.",
     category: "Meals",
     calories: "Calories vary when cooked",
     basePrice: TOCINO_RETAIL_USD.frozen12oz,

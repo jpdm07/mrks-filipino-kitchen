@@ -315,7 +315,7 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
       : isTocinoUnified
         ? tocinoStyle === "plate"
           ? "Ready-made plate with egg, rice, cucumber, tomato, and garlic crisps."
-          : "12 oz frozen marinated pack in a sealed bag — cook at home."
+          : "12 oz frozen marinated pack in a sealed bag — pan-fry from frozen."
         : "";
 
   const groupKey = variant.variantGroup ?? "group";
@@ -475,7 +475,7 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
                       disabled={tocinoStyleDisabled("frozen")}
                       onChange={() => setTocinoStyle("frozen")}
                     />
-                    Frozen 12 oz (cook at home)
+                    Frozen 12 oz (pan-fry from frozen)
                     {tocinoStyleDisabled("frozen") ? (
                       <span className="text-[10px] font-bold text-[var(--accent)]">
                         (out)

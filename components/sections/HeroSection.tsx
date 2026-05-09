@@ -35,7 +35,7 @@ export function HeroSection() {
           <span className="block whitespace-nowrap">made with love</span>
         </h1>
         <p className="mx-auto mt-6 max-w-2xl font-cormorant text-lg text-[color:rgba(251,246,236,0.94)] drop-shadow-[0_1px_12px_rgba(6,15,31,0.35)]">
-          Home-cooked meals crafted from generations of tradition. Order for
+          Authentic Filipino meals crafted from generations of tradition. Order for
           pickup in Cypress, TX—we&apos;ll confirm your date after you order.
         </p>
         <div className="mt-10 flex w-full max-w-md flex-col items-stretch justify-center gap-4 sm:mx-auto sm:max-w-none sm:flex-row sm:items-center sm:justify-center">

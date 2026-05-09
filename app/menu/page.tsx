@@ -38,7 +38,7 @@ export default async function MenuPage({ searchParams }: MenuPageProps) {
     <div className="mx-auto max-w-6xl px-4 py-10">
       <SectionHeading
         title="Menu"
-        subtitle="Home-cooked Filipino favorites, pickup only in Cypress, TX."
+        subtitle="Authentic Filipino favorites, pickup only in Cypress, TX."
         className="print:hidden"
       />
       <div className="mx-auto mt-6 max-w-2xl px-1 text-center print:hidden">

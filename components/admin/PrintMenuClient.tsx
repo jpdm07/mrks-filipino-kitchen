@@ -271,7 +271,7 @@ export function PrintMenuClient() {
                 </p>
                 <div className="mx-auto mt-3 h-px w-24 bg-[#ffc72c]/90" />
                 <p className="mt-4 text-[11px] font-medium uppercase tracking-[0.28em] text-[#ffe08a]">
-                  Authentic home cooking
+                  Authentic Filipino cooking
                 </p>
                 <p className="mt-2 text-sm text-white/85">Pickup · {SITE.location}</p>
               </div>
