@@ -10,6 +10,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// Admin kitchen recipes — scalable batch formulas (JSON); never exposed on public menu routes by default.
+model Recipe {
+  id           String   @id @default(cuid())
+  name         String
+  category     String
+  baseServings Int
+  ingredients  Json
+  instructions Json
+  notes        String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model Order {
   id               String   @id @default(cuid())
   orderNumber      String   @unique

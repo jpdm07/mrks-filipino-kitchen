@@ -149,7 +149,7 @@ export const MENU_CATALOG = [
     id: "seed-4",
     name: "Pancit: Chicken",
     description:
-      "The Filipino birthday classic. Rice vermicelli noodles stir-fried with your choice of tender chicken or plump shrimp, cabbage, carrots, and our savory soy–fish sauce base. Traditionally served at birthdays to symbolize long life. Finished with garlic crisps and a wedge of lime on the side. Chicken · Shrimp. Single serving (to-go container) · 2–4 servings · Party tray 8–10 servings (9×13).",
+      "The Filipino birthday classic. Rice vermicelli noodles stir-fried with chicken, cabbage, carrots, and a savory soy–fish sauce — topped with garlic crisps and lime. Traditionally served at birthdays to symbolize long life. Chicken · Shrimp. Single serving (to-go container) · 2–4 servings · Party tray 8–10 servings (9×13).",
     category: "Meals",
     calories: "~320 cal/serving",
     basePrice: 10.99,
@@ -182,7 +182,7 @@ export const MENU_CATALOG = [
     id: "seed-5",
     name: "Pancit: Shrimp",
     description:
-      "The Filipino birthday classic. Rice vermicelli noodles stir-fried with your choice of tender chicken or plump shrimp, cabbage, carrots, and our savory soy–fish sauce base. Traditionally served at birthdays to symbolize long life. Finished with garlic crisps and a wedge of lime on the side. Chicken · Shrimp. Single serving (to-go container) · 2–4 servings · Party tray 8–10 servings (9×13).",
+      "The Filipino birthday classic. Rice vermicelli noodles stir-fried with shrimp, cabbage, carrots, and a savory soy–fish sauce — topped with garlic crisps and lime. Traditionally served at birthdays to symbolize long life. Chicken · Shrimp. Single serving (to-go container) · 2–4 servings · Party tray 8–10 servings (9×13).",
     category: "Meals",
     calories: "~290 cal/serving",
     basePrice: 12.99,

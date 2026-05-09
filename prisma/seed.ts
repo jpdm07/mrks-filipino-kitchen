@@ -16,6 +16,7 @@ import {
   PAYMENT_METHOD_VERIFIED_LABEL,
   PAYMENT_STATUS_VERIFIED,
 } from "../lib/order-payment";
+import { upsertKitchenRecipes } from "../lib/seed-kitchen-recipes";
 
 const prisma = new PrismaClient();
 
@@ -48,6 +49,8 @@ async function main() {
     create: { id: "default", manualSoldOutWeekStart: null },
     update: {},
   });
+
+  await upsertKitchenRecipes(prisma);
 
   for (const m of MENU_CATALOG) {
     const variantGroup = "variantGroup" in m ? m.variantGroup : null;
