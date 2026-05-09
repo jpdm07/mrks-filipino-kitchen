@@ -42,3 +42,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# admin-uploaded menu photos (directory tracked via .gitkeep)
+/public/uploads/menu/*
+!/public/uploads/menu/.gitkeep

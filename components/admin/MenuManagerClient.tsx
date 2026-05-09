@@ -24,6 +24,7 @@ export function MenuManagerClient({
 }) {
   const [items, setItems] = useState(initialItems);
   const [sentItemId, setSentItemId] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -83,6 +84,31 @@ export function MenuManagerClient({
     setItems((p) => p.filter((x) => x.id !== id));
   };
 
+  const uploadMenuPhoto = async (fileList: FileList | null) => {
+    const file = fileList?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/menu-photo", {
+        method: "POST",
+        body: fd,
+      });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok) {
+        throw new Error(data.error ?? "Upload failed");
+      }
+      if (data.url) {
+        setForm((p) => ({ ...p, photoUrl: data.url }));
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   return (
     <div className="mt-8 grid gap-10 lg:grid-cols-2">
       <form
@@ -105,12 +131,16 @@ export function MenuManagerClient({
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
-        <input
-          placeholder="Category (Meals, Sides, or Desserts)"
-          className="w-full rounded border px-2 py-2"
+        <label className="block text-sm font-semibold">Category</label>
+        <select
+          className="w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-2"
           value={form.category}
           onChange={(e) => setForm({ ...form, category: e.target.value })}
-        />
+        >
+          <option value="Meals">Meals</option>
+          <option value="Sides">Sides</option>
+          <option value="Desserts">Desserts</option>
+        </select>
         <input
           placeholder="Calories label"
           className="w-full rounded border px-2 py-2"
@@ -126,8 +156,23 @@ export function MenuManagerClient({
             setForm({ ...form, basePrice: parseFloat(e.target.value) || 0 })
           }
         />
+        <label className="block text-sm font-semibold">Photo</label>
         <input
-          placeholder="Photo URL"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          disabled={uploadingPhoto}
+          className="w-full text-sm file:mr-3 file:rounded file:border file:bg-[var(--bg-section)] file:px-2 file:py-1"
+          onChange={(e) => {
+            void uploadMenuPhoto(e.target.files).finally(() => {
+              e.target.value = "";
+            });
+          }}
+        />
+        <p className="text-xs text-[var(--text-muted)]">
+          {uploadingPhoto ? "Uploading…" : "JPG, PNG, or WebP — max 5MB. Saved under /uploads/menu."}
+        </p>
+        <input
+          placeholder="Or paste image URL (optional)"
           className="w-full rounded border px-2 py-2"
           value={form.photoUrl}
           onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
@@ -161,7 +206,7 @@ export function MenuManagerClient({
             checked={form.isActive}
             onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
           />
-          Active
+          Visible on website
         </label>
         <button
           type="submit"
