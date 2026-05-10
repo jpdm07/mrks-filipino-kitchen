@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export type AvailabilityWhitelistPayload = {
   openDates: string[];
@@ -20,12 +20,30 @@ export function useAvailabilityWhitelist(
     cartMode?: "flan" | "mixed" | "all";
     mainNeed?: number;
     flanNeed?: number;
+    /** Cart menu SKUs — narrows dates to inventory same-day pickup slots. */
+    menuItemIds?: string[];
   }
 ) {
   const pollMsOnError = options?.pollMsOnError ?? 30000;
   const cartMode = options?.cartMode ?? "mixed";
   const mainNeed = options?.mainNeed ?? 0;
   const flanNeed = options?.flanNeed ?? 0;
+  const menuItemIdsKey = [
+    ...new Set(
+      (options?.menuItemIds ?? []).map((s) => s.trim()).filter(Boolean)
+    ),
+  ]
+    .sort()
+    .join("\0");
+  const menuItemIds = useMemo(
+    () =>
+      [
+        ...new Set(
+          (options?.menuItemIds ?? []).map((s) => s.trim()).filter(Boolean)
+        ),
+      ].sort(),
+    [menuItemIdsKey]
+  );
   const [openDates, setOpenDates] = useState<string[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -51,10 +69,17 @@ export function useAvailabilityWhitelist(
 
   const fetchOnce = useCallback(async () => {
     try {
-      const r = await fetch(
-        `/api/availability?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&cartMode=${encodeURIComponent(cartMode)}&mainNeed=${encodeURIComponent(String(mainNeed))}&flanNeed=${encodeURIComponent(String(flanNeed))}`,
-        { cache: "no-store" }
-      );
+      const qs = new URLSearchParams({
+        from,
+        to,
+        cartMode,
+        mainNeed: String(mainNeed),
+        flanNeed: String(flanNeed),
+      });
+      for (const id of menuItemIds) qs.append("menuItemIds", id);
+      const r = await fetch(`/api/availability?${qs.toString()}`, {
+        cache: "no-store",
+      });
       if (!r.ok) {
         setOpenDates([]);
         setNotes({});
@@ -73,7 +98,7 @@ export function useAvailabilityWhitelist(
       setLoadError(true);
       setLoading(false);
     }
-  }, [from, to, applyPayload, cartMode, mainNeed, flanNeed]);
+  }, [from, to, applyPayload, cartMode, mainNeed, flanNeed, menuItemIds]);
 
   useEffect(() => {
     setLoading(true);
@@ -85,8 +110,17 @@ export function useAvailabilityWhitelist(
 
     void fetchOnce();
 
-    const qs = `?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&cartMode=${encodeURIComponent(cartMode)}&mainNeed=${encodeURIComponent(String(mainNeed))}&flanNeed=${encodeURIComponent(String(flanNeed))}`;
-    const source = new EventSource(`/api/availability/stream${qs}`);
+    const qs = new URLSearchParams({
+      from,
+      to,
+      cartMode,
+      mainNeed: String(mainNeed),
+      flanNeed: String(flanNeed),
+    });
+    for (const id of menuItemIds) qs.append("menuItemIds", id);
+    const source = new EventSource(
+      `/api/availability/stream?${qs.toString()}`
+    );
 
     source.onmessage = (event) => {
       try {
@@ -116,7 +150,17 @@ export function useAvailabilityWhitelist(
         pollRef.current = null;
       }
     };
-  }, [from, to, applyPayload, fetchOnce, pollMsOnError, cartMode, mainNeed, flanNeed]);
+  }, [
+    from,
+    to,
+    applyPayload,
+    fetchOnce,
+    pollMsOnError,
+    cartMode,
+    mainNeed,
+    flanNeed,
+    menuItemIds,
+  ]);
 
   useEffect(() => {
     const onVisible = () => {

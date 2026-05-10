@@ -9,6 +9,7 @@ import {
   addCalendarDaysYMD,
   getTodayInPickupTimezoneYMD,
 } from "@/lib/pickup-lead-time";
+import { parseMenuItemIdsFromSearchParams } from "@/lib/availability-menu-item-ids";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,7 @@ export async function GET(req: NextRequest) {
     cartParam === "flan" ? "flan" : cartParam === "all" ? "all" : "mixed";
   const mainNeed = Number(searchParams.get("mainNeed") || "0");
   const flanNeed = Number(searchParams.get("flanNeed") || "0");
+  const cartMenuItemIds = parseMenuItemIdsFromSearchParams(searchParams);
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -59,6 +61,9 @@ export async function GET(req: NextRequest) {
                   cartFlanOnly: cartMode === "flan",
                   mainMinutesNeeded: mainN,
                   flanRamekinsNeeded: flanN,
+                  ...(cartMenuItemIds.length
+                    ? { cartMenuItemIds }
+                    : {}),
                 });
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify(payload)}\n\n`)

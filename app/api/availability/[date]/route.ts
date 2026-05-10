@@ -7,6 +7,7 @@ import {
 } from "@/lib/kitchen-schedule";
 import { kickGoogleAvailabilityBackgroundSync } from "@/lib/google-availability-stale-sync";
 import { isDatabaseUnavailableError } from "@/lib/safe-db";
+import { parseMenuItemIdsFromSearchParams } from "@/lib/availability-menu-item-ids";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export async function GET(
   const mainNeed = Number(searchParams.get("mainNeed") || "0");
   const flanNeed = Number(searchParams.get("flanNeed") || "0");
   const cartFlanOnly = cartMode === "flan";
+  const cartMenuItemIds = parseMenuItemIdsFromSearchParams(searchParams);
 
   try {
     kickGoogleAvailabilityBackgroundSync();
@@ -44,6 +46,7 @@ export async function GET(
         cartFlanOnly,
         mainMinutesNeeded: Number.isFinite(mainNeed) ? mainNeed : 0,
         flanRamekinsNeeded: Number.isFinite(flanNeed) ? flanNeed : 0,
+        ...(cartMenuItemIds.length ? { cartMenuItemIds } : {}),
       }
     );
 
@@ -60,7 +63,11 @@ export async function GET(
       );
     }
 
-    const slots = await getKitchenSlotsForDate(date, cartFlanOnly);
+    const slots = await getKitchenSlotsForDate(
+      date,
+      cartFlanOnly,
+      cartMenuItemIds.length ? cartMenuItemIds : undefined
+    );
     const note =
       notes[date]?.trim() ||
       (cartFlanOnly ? FLAN_ONLY_DAY_NOTE : ALL_ITEMS_DAY_NOTE);

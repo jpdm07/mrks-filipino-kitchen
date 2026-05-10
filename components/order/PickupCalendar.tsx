@@ -59,6 +59,8 @@ export const PickupCalendar = forwardRef<
     cartMode?: "flan" | "mixed";
     mainCookNeed?: number;
     flanRamekinsNeed?: number;
+    /** Cart menu SKUs — narrows calendar to inventory same-day pickup slots. */
+    cartMenuItemIds?: string[];
   }
 >(function PickupCalendar(
   {
@@ -69,6 +71,7 @@ export const PickupCalendar = forwardRef<
     cartMode = "mixed",
     mainCookNeed = 0,
     flanRamekinsNeed = 0,
+    cartMenuItemIds,
   },
   ref
 ) {
@@ -110,6 +113,7 @@ export const PickupCalendar = forwardRef<
       cartMode,
       mainNeed: mainCookNeed,
       flanNeed: flanRamekinsNeed,
+      ...(cartMenuItemIds?.length ? { menuItemIds: cartMenuItemIds } : {}),
     }
   );
 
@@ -128,8 +132,19 @@ export const PickupCalendar = forwardRef<
     }
 
     let cancelled = false;
-    const qs = (main: number, flan: number) =>
-      `from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&cartMode=${encodeURIComponent(cartMode)}&mainNeed=${encodeURIComponent(String(main))}&flanNeed=${encodeURIComponent(String(flan))}`;
+    const qs = (main: number, flan: number) => {
+      const p = new URLSearchParams({
+        from,
+        to,
+        cartMode,
+        mainNeed: String(main),
+        flanNeed: String(flan),
+      });
+      for (const id of cartMenuItemIds ?? []) {
+        p.append("menuItemIds", id);
+      }
+      return p.toString();
+    };
 
     Promise.all([
       fetch(`/api/availability?${qs(0, 0)}`, { cache: "no-store" }),
@@ -163,7 +178,7 @@ export const PickupCalendar = forwardRef<
     return () => {
       cancelled = true;
     };
-  }, [from, to, cartMode, mainCookNeed, flanRamekinsNeed]);
+  }, [from, to, cartMode, mainCookNeed, flanRamekinsNeed, cartMenuItemIds]);
 
   useEffect(() => {
     if (loading || loadError) return;

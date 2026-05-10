@@ -85,6 +85,10 @@ export function OrderForm() {
 
   const cartFlanOnly = useMemo(() => cartHasOnlyFlanItems(items), [items]);
   const cookNeed = useMemo(() => totalCookContribution(items), [items]);
+  const checkoutMenuItemIds = useMemo(
+    () => [...new Set(cart.lines.map((l) => l.menuItemId))].sort(),
+    [cart.lines]
+  );
 
   const [capacityWeeks, setCapacityWeeks] = useState<
     Array<{
@@ -153,6 +157,9 @@ export function OrderForm() {
       mainNeed: String(cookNeed.mainMinutes),
       flanNeed: String(cookNeed.flanRamekins),
     });
+    for (const id of checkoutMenuItemIds) {
+      qs.append("menuItemIds", id);
+    }
     fetch(
       `/api/availability/${encodeURIComponent(pickupDate)}?${qs.toString()}`
     )
@@ -194,7 +201,13 @@ export function OrderForm() {
     return () => {
       cancelled = true;
     };
-  }, [pickupDate, cartFlanOnly, cookNeed.mainMinutes, cookNeed.flanRamekins]);
+  }, [
+    pickupDate,
+    cartFlanOnly,
+    cookNeed.mainMinutes,
+    cookNeed.flanRamekins,
+    checkoutMenuItemIds,
+  ]);
 
   const emailOk = isValidEmail(email);
   const phoneOk = hasValidPhoneDigits(phone);
@@ -639,6 +652,7 @@ export function OrderForm() {
               cartMode={cartFlanOnly ? "flan" : "mixed"}
               mainCookNeed={cookNeed.mainMinutes}
               flanRamekinsNeed={cookNeed.flanRamekins}
+              cartMenuItemIds={checkoutMenuItemIds}
             />
           </div>
         </div>

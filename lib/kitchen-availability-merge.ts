@@ -15,6 +15,7 @@ import {
   getTodayInPickupTimezoneYMD,
   isPickupYmdAllowed,
 } from "@/lib/pickup-lead-time";
+import { filterOpenDatesByInventoryCart } from "@/lib/inventory-cart-pickup-sync";
 
 export type KitchenCalendarOptions = {
   /** True when the cart is dessert-only (flan and/or yema) — same as legacy `cartMode=flan`. */
@@ -23,6 +24,8 @@ export type KitchenCalendarOptions = {
   mainMinutesNeeded?: number;
   /** When set, week must have enough flan ramekins left (ignored for yema-only need). */
   flanRamekinsNeeded?: number;
+  /** Checkout: menu item IDs in cart — narrows open dates to inventory same-day slot windows. */
+  cartMenuItemIds?: string[];
 };
 
 async function snapshotsByWeek(
@@ -132,7 +135,20 @@ export async function buildKitchenOpenDatesPayload(
     if (custom) prunedNotes[ymd] = custom;
   }
 
-  return { openDates: filtered, notes: prunedNotes };
+  let finalDates = filtered;
+  if (opts.cartMenuItemIds?.length) {
+    finalDates = await filterOpenDatesByInventoryCart(
+      filtered,
+      opts.cartMenuItemIds
+    );
+  }
+
+  const finalNotes: Record<string, string> = {};
+  for (const ymd of finalDates) {
+    finalNotes[ymd] = prunedNotes[ymd] ?? "";
+  }
+
+  return { openDates: finalDates, notes: finalNotes };
 }
 
 /**

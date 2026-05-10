@@ -199,7 +199,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const slotList = await getKitchenSlotsForDate(pickupDate, cartFlanOnly);
+    const cartMenuItemIds = [
+      ...new Set(
+        items
+          .map((i) => i.menuItemId?.trim())
+          .filter((id): id is string => Boolean(id))
+      ),
+    ];
+    const slotList = await getKitchenSlotsForDate(
+      pickupDate,
+      cartFlanOnly,
+      cartMenuItemIds.length ? cartMenuItemIds : undefined
+    );
     if (!slotList.includes(pickupTime.trim())) {
       return NextResponse.json(
         {
