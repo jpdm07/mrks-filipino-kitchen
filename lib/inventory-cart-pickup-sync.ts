@@ -43,9 +43,14 @@ export async function getCartInventorySlotLabelFilterForDate(
   });
   if (invItems.length === 0) return null;
 
-  const invByMenu = new Map(
-    invItems.filter((i) => i.menuItemId).map((i) => [i.menuItemId!, i])
-  );
+  /** May be multiple inventory rows per menu SKU — Map last-wins would drop slots on "other" rows. */
+  const byMenu = new Map<string, InventoryItem[]>();
+  for (const i of invItems) {
+    if (!i.menuItemId) continue;
+    const arr = byMenu.get(i.menuItemId) ?? [];
+    arr.push(i);
+    byMenu.set(i.menuItemId, arr);
+  }
   const invIds = invItems.map((i) => i.id);
 
   const anySlotRows = await prisma.inventoryPickupSlot.findMany({
@@ -55,14 +60,15 @@ export async function getCartInventorySlotLabelFilterForDate(
   const managedInvId = new Set(anySlotRows.map((r) => r.inventoryItemId));
 
   const cartManagedMenuIds = unique.filter((mid) => {
-    const inv = invByMenu.get(mid);
-    return inv && managedInvId.has(inv.id);
+    const rowsForSku = byMenu.get(mid);
+    if (!rowsForSku?.length) return false;
+    return rowsForSku.some((inv) => managedInvId.has(inv.id));
   });
   if (cartManagedMenuIds.length === 0) return null;
 
-  const cartManagedInventoryIds = cartManagedMenuIds
-    .map((mid) => invByMenu.get(mid)?.id)
-    .filter((id): id is number => id != null);
+  const cartManagedInventoryIds = cartManagedMenuIds.flatMap((mid) =>
+    (byMenu.get(mid) ?? []).map((i) => i.id)
+  );
 
   const rows = await prisma.inventoryPickupSlot.findMany({
     where: {
@@ -76,11 +82,11 @@ export async function getCartInventorySlotLabelFilterForDate(
   const labelSets: Set<string>[] = [];
 
   for (const mid of cartManagedMenuIds) {
-    const inv = invByMenu.get(mid);
-    if (!inv) continue;
+    const invRowsForSku = byMenu.get(mid) ?? [];
+    const idSet = new Set(invRowsForSku.map((i) => i.id));
     const union = new Set<string>();
     for (const row of rows) {
-      if (row.inventoryItemId !== inv.id) continue;
+      if (!idSet.has(row.inventoryItemId)) continue;
       for (const lab of activeLabelsFromSlotRow(row as SlotRow)) {
         union.add(lab);
       }

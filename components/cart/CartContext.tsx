@@ -99,6 +99,8 @@ type CartContextValue = {
   tax: number;
   total: number;
   buildOrderItems: () => OrderItemLine[];
+  /** False until localStorage cart has been read — avoids checkout timing bugs with empty lines. */
+  hydrated: boolean;
 };
 
 function isCartLine(x: unknown): x is CartLine {
@@ -430,6 +432,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       tax,
       total,
       buildOrderItems,
+      hydrated,
     }),
     [
       lines,
@@ -454,6 +457,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       tax,
       total,
       buildOrderItems,
+      hydrated,
     ]
   );
 

@@ -51,7 +51,7 @@ export function OrderForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const cart = useCart();
-  const { buildOrderItems } = cart;
+  const { buildOrderItems, hydrated: cartHydrated } = cart;
   const calendarRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
   const paymentRef = useRef<HTMLDivElement>(null);
@@ -85,10 +85,13 @@ export function OrderForm() {
 
   const cartFlanOnly = useMemo(() => cartHasOnlyFlanItems(items), [items]);
   const cookNeed = useMemo(() => totalCookContribution(items), [items]);
-  const checkoutMenuItemIds = useMemo(
-    () => [...new Set(cart.lines.map((l) => l.menuItemId))].sort(),
-    [cart.lines]
-  );
+  /** Matches POST /api/orders validation — any order line with a menu SKU (not cart.lines only). */
+  const checkoutMenuItemIds = useMemo(() => {
+    const ids = items
+      .map((i) => i.menuItemId?.trim())
+      .filter((id): id is string => Boolean(id));
+    return [...new Set(ids)].sort();
+  }, [items]);
 
   const [capacityWeeks, setCapacityWeeks] = useState<
     Array<{
@@ -149,6 +152,10 @@ export function OrderForm() {
       setPickupTime("");
       return;
     }
+    if (!cartHydrated) {
+      setSlotsLoading(false);
+      return;
+    }
     let cancelled = false;
     setSlotsLoading(true);
     const mode = cartFlanOnly ? "flan" : "mixed";
@@ -203,6 +210,7 @@ export function OrderForm() {
     };
   }, [
     pickupDate,
+    cartHydrated,
     cartFlanOnly,
     cookNeed.mainMinutes,
     cookNeed.flanRamekins,
@@ -652,7 +660,9 @@ export function OrderForm() {
               cartMode={cartFlanOnly ? "flan" : "mixed"}
               mainCookNeed={cookNeed.mainMinutes}
               flanRamekinsNeed={cookNeed.flanRamekins}
-              cartMenuItemIds={checkoutMenuItemIds}
+              cartMenuItemIds={
+                cartHydrated ? checkoutMenuItemIds : undefined
+              }
             />
           </div>
         </div>
