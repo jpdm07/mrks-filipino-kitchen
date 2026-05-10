@@ -40,6 +40,7 @@ import {
 } from "@/lib/checkout-contact-validation";
 import { sanitizeExtraDipOrderLines } from "@/lib/extra-dip-sauce";
 import { revalidateAdminOrderDerivedViews } from "@/lib/revalidate-admin-order-views";
+import { runInventoryHooksForNewOrderInTx } from "@/lib/inventory-pickup-slots";
 
 class CapacityExceededError extends Error {
   constructor() {
@@ -284,9 +285,18 @@ export async function POST(req: NextRequest) {
           } satisfies Record<string, unknown>;
 
           try {
-            return await tx.order.create({
+            const created = await tx.order.create({
               data: data as Prisma.OrderCreateInput,
             });
+            await runInventoryHooksForNewOrderInTx(tx, {
+              id: created.id,
+              items: created.items,
+              manualEntry: created.manualEntry,
+              isDemo: created.isDemo,
+              pickupDate: created.pickupDate,
+              pickupTime: created.pickupTime,
+            });
+            return created;
           } catch (e) {
             if (
               !(e instanceof Prisma.PrismaClientKnownRequestError) ||

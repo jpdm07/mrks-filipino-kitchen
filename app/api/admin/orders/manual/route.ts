@@ -31,6 +31,7 @@ import { syncOrderToSheets } from "@/lib/sheets";
 import { createPickupEvent } from "@/lib/googleCalendar";
 import { sendOwnerSms } from "@/lib/twilio";
 import { revalidateAdminOrderDerivedViews } from "@/lib/revalidate-admin-order-views";
+import { runInventoryHooksForNewOrderInTx } from "@/lib/inventory-pickup-slots";
 
 class CapacityExceededError extends Error {
   constructor() {
@@ -269,7 +270,7 @@ export async function POST(req: NextRequest) {
         await assertPickupSlotFreeInTx(tx, pickupDateRaw, pickupTimeRaw);
       }
 
-      return tx.order.create({
+      const created = await tx.order.create({
         data: {
           orderNumber,
           customerName,
@@ -296,6 +297,15 @@ export async function POST(req: NextRequest) {
           manualEntry: true,
         } as Prisma.OrderCreateInput,
       });
+      await runInventoryHooksForNewOrderInTx(tx, {
+        id: created.id,
+        items: created.items,
+        manualEntry: created.manualEntry,
+        isDemo: created.isDemo,
+        pickupDate: created.pickupDate,
+        pickupTime: created.pickupTime,
+      });
+      return created;
     });
   } catch (e) {
     if (e instanceof PickupSlotTakenError) {
