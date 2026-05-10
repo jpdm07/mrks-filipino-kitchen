@@ -53,9 +53,10 @@ export function lineMatchesInventory(
   inv: InventoryItem,
   line: OrderItemLine
 ): boolean {
+  const cookRule = (inv as { lineCookFilter?: string | null }).lineCookFilter;
   if (
     !inventoryLineCookFilterMatchesLine(
-      normalizeInventoryLineCookFilter(inv.lineCookFilter),
+      normalizeInventoryLineCookFilter(cookRule),
       line.cookedOrFrozen
     )
   ) {

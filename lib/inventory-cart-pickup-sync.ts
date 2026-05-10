@@ -40,6 +40,26 @@ export async function getCartInventorySlotLabelFilterForDate(
   cartMenuItemIds: string[],
   cartInventoryHints?: InventoryCartLineHint[] | null
 ): Promise<string[] | null> {
+  try {
+    return await computeCartInventorySlotLabelFilterForDate(
+      dateYmd,
+      cartMenuItemIds,
+      cartInventoryHints
+    );
+  } catch (e) {
+    console.warn(
+      "[mrk] inventory pickup slot filter skipped — apply DB migrations if this persists:",
+      e instanceof Error ? e.message : e
+    );
+    return null;
+  }
+}
+
+async function computeCartInventorySlotLabelFilterForDate(
+  dateYmd: string,
+  cartMenuItemIds: string[],
+  cartInventoryHints?: InventoryCartLineHint[] | null
+): Promise<string[] | null> {
   const hints =
     cartInventoryHints?.filter((h) => h.menuItemId?.trim()) ?? [];
 
@@ -183,18 +203,26 @@ export async function filterOpenDatesByInventoryCart(
   const hasHints = cartInventoryHints && cartInventoryHints.length > 0;
   if (!hasHints && cartMenuItemIds.length === 0) return openDates;
 
-  const filtered: string[] = [];
-  for (const ymd of openDates) {
-    const f = await getCartInventorySlotLabelFilterForDate(
-      ymd,
-      cartMenuItemIds,
-      cartInventoryHints
-    );
-    if (f === null) {
-      filtered.push(ymd);
-      continue;
+  try {
+    const filtered: string[] = [];
+    for (const ymd of openDates) {
+      const f = await getCartInventorySlotLabelFilterForDate(
+        ymd,
+        cartMenuItemIds,
+        cartInventoryHints
+      );
+      if (f === null) {
+        filtered.push(ymd);
+        continue;
+      }
+      if (f.length > 0) filtered.push(ymd);
     }
-    if (f.length > 0) filtered.push(ymd);
+    return filtered;
+  } catch (e) {
+    console.warn(
+      "[mrk] filterOpenDatesByInventoryCart skipped — apply DB migrations if this persists:",
+      e instanceof Error ? e.message : e
+    );
+    return openDates;
   }
-  return filtered;
 }
