@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
+import { applyInventoryStockRulesInTx } from "@/lib/inventory-stock-rules";
 
 export async function GET() {
   if (!(await isAdminSession())) {
@@ -15,10 +17,11 @@ export async function GET() {
       },
     },
   });
+  type Row = (typeof rows)[number];
   return NextResponse.json({
-    items: rows.map((r) => ({
+    items: rows.map((r: Row) => ({
       ...JSON.parse(JSON.stringify(r)),
-      deductionLogs: r.deductionLogs.map((l) => ({
+      deductionLogs: r.deductionLogs.map((l: Row["deductionLogs"][number]) => ({
         ...JSON.parse(JSON.stringify(l)),
       })),
     })),
@@ -33,6 +36,11 @@ export async function POST(req: NextRequest) {
     itemName?: string;
     unitLabel?: string;
     menuItemId?: string | null;
+    quantityInStock?: number;
+    isAvailable?: boolean;
+    showBanner?: boolean;
+    bannerMessage?: string | null;
+    lowStockThreshold?: number | null;
   };
   const itemName = (body.itemName ?? "").trim();
   const unitLabel = (body.unitLabel ?? "").trim();
@@ -47,18 +55,49 @@ export async function POST(req: NextRequest) {
       ? body.menuItemId.trim()
       : null;
 
-  const row = await prisma.inventoryItem.create({
-    data: {
-      itemName,
-      unitLabel,
-      menuItemId,
-      quantityInStock: 0,
-      isAvailable: false,
-      showBanner: false,
-    },
-    include: {
-      deductionLogs: { take: 0 },
-    },
-  });
-  return NextResponse.json(JSON.parse(JSON.stringify(row)));
+  let qty = Math.max(0, Math.floor(Number(body.quantityInStock ?? 0)));
+  let isAvailable =
+    body.isAvailable !== undefined ? Boolean(body.isAvailable) : false;
+  let showBanner =
+    body.showBanner !== undefined ? Boolean(body.showBanner) : false;
+  if (qty <= 0) {
+    isAvailable = false;
+    showBanner = false;
+  }
+
+  const bannerMessage =
+    typeof body.bannerMessage === "string" && body.bannerMessage.trim()
+      ? body.bannerMessage.trim()
+      : null;
+  const lowStockThreshold =
+    body.lowStockThreshold === null || body.lowStockThreshold === undefined
+      ? null
+      : Math.max(0, Math.floor(Number(body.lowStockThreshold)));
+
+  try {
+    const row = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const created = await tx.inventoryItem.create({
+        data: {
+          itemName,
+          unitLabel,
+          menuItemId,
+          quantityInStock: qty,
+          isAvailable,
+          showBanner,
+          bannerMessage,
+          lowStockThreshold,
+        },
+      });
+      await applyInventoryStockRulesInTx(tx, created.id);
+      return tx.inventoryItem.findUniqueOrThrow({
+        where: { id: created.id },
+        include: {
+          deductionLogs: { take: 0 },
+        },
+      });
+    });
+    return NextResponse.json(JSON.parse(JSON.stringify(row)));
+  } catch {
+    return NextResponse.json({ error: "Create failed" }, { status: 400 });
+  }
 }

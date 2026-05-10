@@ -72,6 +72,9 @@ export function InventoryAnnouncementsClient({
     itemName: "",
     unitLabel: "dozen",
     menuItemId: "",
+    quantityInStock: 0,
+    isAvailable: false,
+    showBanner: false,
   });
 
   const effectiveSchedulingState =
@@ -195,6 +198,9 @@ export function InventoryAnnouncementsClient({
         itemName: newItem.itemName.trim(),
         unitLabel: newItem.unitLabel.trim(),
         menuItemId: newItem.menuItemId || null,
+        quantityInStock: newItem.quantityInStock,
+        isAvailable: newItem.isAvailable,
+        showBanner: newItem.showBanner,
       }),
     });
     if (!res.ok) {
@@ -204,7 +210,14 @@ export function InventoryAnnouncementsClient({
     }
     const row = (await res.json()) as InventoryRow;
     setItems((p) => [...p, { ...row, deductionLogs: [] }]);
-    setNewItem({ itemName: "", unitLabel: "dozen", menuItemId: "" });
+    setNewItem({
+      itemName: "",
+      unitLabel: "dozen",
+      menuItemId: "",
+      quantityInStock: 0,
+      isAvailable: false,
+      showBanner: false,
+    });
     setAdding(false);
     setToast("New inventory item created.");
     window.setTimeout(() => setToast(null), 4000);
@@ -298,6 +311,43 @@ export function InventoryAnnouncementsClient({
                 setNewItem((s) => ({ ...s, unitLabel: e.target.value }))
               }
             />
+            <div>
+              <label className="text-xs font-semibold text-[var(--text-muted)]">
+                Quantity in stock ({newItem.unitLabel || "units"})
+              </label>
+              <input
+                type="number"
+                min={0}
+                className="mt-1 w-full rounded border px-2 py-2"
+                value={newItem.quantityInStock}
+                onChange={(e) =>
+                  setNewItem((s) => ({
+                    ...s,
+                    quantityInStock: parseInt(e.target.value, 10) || 0,
+                  }))
+                }
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={newItem.isAvailable}
+                onChange={(e) =>
+                  setNewItem((s) => ({ ...s, isAvailable: e.target.checked }))
+                }
+              />
+              Mark as available for ordering
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={newItem.showBanner}
+                onChange={(e) =>
+                  setNewItem((s) => ({ ...s, showBanner: e.target.checked }))
+                }
+              />
+              Show announcement on website
+            </label>
             <select
               className="w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-2"
               value={newItem.menuItemId}
