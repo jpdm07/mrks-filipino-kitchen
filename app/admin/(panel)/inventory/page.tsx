@@ -1,23 +1,48 @@
 import { requireAdmin } from "@/lib/admin-auth";
-import { InventoryClient } from "@/components/admin/InventoryClient";
+import {
+  InventoryAnnouncementsClient,
+  type InventoryRow,
+} from "@/components/admin/InventoryAnnouncementsClient";
 import { prisma } from "@/lib/prisma";
 
 export default async function InventoryPage() {
   await requireAdmin();
-  const itemsRaw = await prisma.menuItem.findMany({
-    orderBy: { sortOrder: "asc" },
-  });
-  const items = JSON.parse(JSON.stringify(itemsRaw));
+
+  const [inventoryRaw, menuRaw] = await Promise.all([
+    prisma.inventoryItem.findMany({
+      orderBy: { id: "asc" },
+      include: {
+        deductionLogs: {
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        },
+      },
+    }),
+    prisma.menuItem.findMany({
+      orderBy: { sortOrder: "asc" },
+    }),
+  ]);
+
+  const initialInventory = JSON.parse(
+    JSON.stringify(inventoryRaw)
+  ) as InventoryRow[];
+  const menuItemsFull = JSON.parse(JSON.stringify(menuRaw));
+  const menuItems = menuRaw.map((m) => ({ id: m.id, name: m.name }));
+
   return (
     <div>
       <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold">
-        Inventory
+        Inventory &amp; Announcements
       </h1>
       <p className="mt-2 text-sm text-[var(--text-muted)]">
-        Mark items sold out for the public menu. Inactive items are hidden
-        entirely.
+        Track stock units, website banners, and inventory-linked pickup windows.
+        Sold-out flags for individual menu SKUs remain below.
       </p>
-      <InventoryClient initialItems={items} />
+      <InventoryAnnouncementsClient
+        initialInventory={initialInventory}
+        menuItems={menuItems}
+        menuItemsFull={menuItemsFull}
+      />
     </div>
   );
 }
