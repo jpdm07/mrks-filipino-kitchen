@@ -6,8 +6,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  /// Pooled (e.g. Neon *-pooler*): app traffic. Migrations use `directUrl` (advisory locks).
+  url       = env("DATABASE_URL")
+  /// Non-pooled Neon "direct" connection for `prisma migrate` (required if `url` is a pooler).
+  directUrl = env("DIRECT_URL")
 }
 
 /// Admin kitchen recipes — scalable batch formulas (JSON); never exposed on public menu routes by default.

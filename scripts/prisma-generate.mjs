@@ -5,6 +5,13 @@
  */
 import { spawnSync } from "node:child_process";
 import process from "node:process";
+import {
+  ensureDirectUrlFallback,
+  loadDotenvFromProjectRoot,
+} from "./ensure-prisma-direct-url.mjs";
+
+loadDotenvFromProjectRoot();
+ensureDirectUrlFallback();
 
 const result = spawnSync("npx", ["prisma", "generate", ...process.argv.slice(2)], {
   stdio: "inherit",

@@ -13,6 +13,7 @@
  */
 import { spawnSync } from "node:child_process";
 import process from "node:process";
+import { ensureDirectUrlFallback } from "./ensure-prisma-direct-url.mjs";
 
 /** Blocking sleep without extra deps (used between migrate retries). */
 function sleepSync(ms) {
@@ -85,6 +86,7 @@ if (
         "  → Set DATABASE_URL (+ DIRECT_URL if Neon pooler) on Vercel, or run: npm run db:migrate locally.\n"
     );
   } else {
+    ensureDirectUrlFallback();
     const direct = process.env.DIRECT_URL?.trim();
     const urlLooksPooled = (u) =>
       /-pooler\./i.test(u) || /pooler\.neon\.tech/i.test(u);
@@ -116,15 +118,14 @@ if (
         process.exit(1);
       }
     } else {
-      const migrateEnv =
-        direct && !directLooksPooled ? { DATABASE_URL: direct } : {};
       const label = runMigrateOnVercel
         ? "Vercel VERCEL_RUN_MIGRATE_DEPLOY=1"
         : "local RUN_MIGRATE_ON_BUILD=1";
       console.log(
         `\n========== [build-production] prisma migrate deploy (${label}) ==========\n`
       );
-      runMigrateDeployWithRetry(migrateEnv);
+      // Schema `directUrl` + env DATABASE_URL / DIRECT_URL — no manual URL swap.
+      runMigrateDeployWithRetry({});
     }
   }
 } else if (onVercel) {
