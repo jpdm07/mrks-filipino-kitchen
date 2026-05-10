@@ -7,6 +7,7 @@ import {
 } from "@/lib/pickup-time-slots";
 import { isPickupYmdAllowed, ymdUtcWeekday } from "@/lib/pickup-lead-time";
 import { isFlanTueThuPickupYmdBookableAt } from "@/lib/flan-weekday-unlock";
+import { getBlockedInventorySlotLabels } from "@/lib/inventory-pickup-slots";
 
 export const FLAN_ONLY_DAY_NOTE =
   "Dessert pickups only — other items available Friday and Saturday";
@@ -94,6 +95,14 @@ export function isPickupYmdAllowedForOrderCart(
   return isPickupYmdAllowed(ymd, now);
 }
 
+async function applyInventoryCapacityFilter(
+  dateYmd: string,
+  slots: string[]
+): Promise<string[]> {
+  const blocked = await getBlockedInventorySlotLabels(dateYmd);
+  return sortPickupSlotLabels(slots.filter((s) => !blocked.has(s.trim())));
+}
+
 export async function getKitchenSlotsForDate(
   dateYmd: string,
   /** Dessert-only cart (flan and/or yema) — not strictly flan. */
@@ -108,16 +117,18 @@ export async function getKitchenSlotsForDate(
     if (!cartFlanOnly) return [];
     if (!isFlanTueThuPickupYmdBookableAt(dateYmd, new Date())) return [];
     const taken = await getTakenPickupTimeLabelsForDate(dateYmd);
-    return sortPickupSlotLabels(
+    const slots = sortPickupSlotLabels(
       evening.filter((s) => !taken.has(s.trim()))
     );
+    return applyInventoryCapacityFilter(dateYmd, slots);
   }
 
   if (kind === "friday") {
     const taken = await getTakenPickupTimeLabelsForDate(dateYmd);
-    return sortPickupSlotLabels(
+    const slots = sortPickupSlotLabels(
       evening.filter((s) => !taken.has(s.trim()))
     );
+    return applyInventoryCapacityFilter(dateYmd, slots);
   }
 
   const row = await prisma.availability.findUnique({
@@ -127,5 +138,6 @@ export async function getKitchenSlotsForDate(
   let raw = effectiveSlotsForOpenDay(slotsJsonFromDb(row.slots));
   if (raw.length === 0) raw = [...ALL_SLOTS];
   const taken = await getTakenPickupTimeLabelsForDate(dateYmd);
-  return sortPickupSlotLabels(raw.filter((s) => !taken.has(s.trim())));
+  const slots = sortPickupSlotLabels(raw.filter((s) => !taken.has(s.trim())));
+  return applyInventoryCapacityFilter(dateYmd, slots);
 }
