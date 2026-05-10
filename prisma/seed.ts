@@ -107,6 +107,21 @@ async function main() {
     });
   }
 
+  const lumpiaFrozenInv = await prisma.inventoryItem.findFirst({
+    where: { itemName: "Lumpia (Frozen)" },
+  });
+  if (!lumpiaFrozenInv) {
+    await prisma.inventoryItem.create({
+      data: {
+        itemName: "Lumpia (Frozen)",
+        unitLabel: "dozen",
+        quantityInStock: 0,
+        isAvailable: false,
+        showBanner: false,
+      },
+    });
+  }
+
   const presetPollIds = SUGGESTION_OPTIONS.map((_, i) => `poll-${i}`);
   await prisma.suggestion.deleteMany({
     where: {

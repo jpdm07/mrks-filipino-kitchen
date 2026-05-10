@@ -65,6 +65,7 @@ model Order {
   tipAmount          Float    @default(0)
   /// Internal notes on payment/tip adjustments (why numbers differ).
   paymentRecordNotes String?
+  inventoryDeductionLogs InventoryDeductionLog[]
 }
 
 model Availability {
@@ -74,6 +75,54 @@ model Availability {
   slots     String   @default("[]")
   note      String?
   updatedAt DateTime @default(now()) @updatedAt
+}
+
+/// Stock units for admin-controlled availability, banners, and inventory-linked pickup slots.
+model InventoryItem {
+  id                 Int      @id @default(autoincrement())
+  menuItemId         String?
+  itemName           String
+  unitLabel          String
+  quantityInStock    Int      @default(0)
+  isAvailable        Boolean  @default(false)
+  showBanner         Boolean  @default(false)
+  bannerMessage      String?
+  lowStockThreshold  Int?
+  updatedAt          DateTime @updatedAt
+  menuItem           MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  pickupSlots        InventoryPickupSlot[]
+  deductionLogs      InventoryDeductionLog[]
+}
+
+/// Admin-opened pickup windows tied to an inventory item (capacity + auto-close).
+model InventoryPickupSlot {
+  id                Int      @id @default(autoincrement())
+  inventoryItemId   Int
+  dateYmd           String
+  slotLabelsJson    String   @default("[]")
+  maxOrders         Int
+  ordersFilled      Int      @default(0)
+  autoCloseWhenZero Boolean  @default(true)
+  closed            Boolean  @default(false)
+  inventoryItem     InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  @@index([dateYmd])
+  @@index([inventoryItemId])
+}
+
+model InventoryDeductionLog {
+  id               Int      @id @default(autoincrement())
+  inventoryItemId  Int
+  orderId          String
+  quantityDeducted Int
+  wasManualEntry   Boolean
+  note             String?
+  createdAt        DateTime @default(now())
+  inventoryItem    InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  order            Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryItemId])
+  @@index([orderId])
 }
 
 model MenuItem {
@@ -100,6 +149,7 @@ model MenuItem {
   variantShortLabel  String?
   groupCardTitle     String?
   groupServingBlurb  String?
+  inventoryItems     InventoryItem[]
 }
 
 /// Singleton row: manual “week sold out” override (current week only; ignored when week changes).
