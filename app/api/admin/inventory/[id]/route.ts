@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
 import { applyInventoryStockRulesInTx } from "@/lib/inventory-stock-rules";
+import {
+  isValidDeductionMode,
+  normalizeInventoryDeductionMode,
+} from "@/lib/inventory-deduction-modes";
 
 export async function PATCH(
   req: NextRequest,
@@ -24,6 +28,7 @@ export async function PATCH(
     itemName?: string;
     unitLabel?: string;
     menuItemId?: string | null;
+    deductionMode?: string;
   };
 
   const qty =
@@ -60,6 +65,13 @@ export async function PATCH(
       t === null || t === ""
         ? null
         : Math.max(0, Math.floor(Number(t)));
+  }
+  if (body.deductionMode !== undefined) {
+    const m = String(body.deductionMode).trim();
+    if (!isValidDeductionMode(m)) {
+      return NextResponse.json({ error: "Invalid deductionMode" }, { status: 400 });
+    }
+    data.deductionMode = normalizeInventoryDeductionMode(m);
   }
 
   try {

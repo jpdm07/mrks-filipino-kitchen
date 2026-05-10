@@ -5,11 +5,25 @@ export type InventoryBannerFields = Pick<
   "itemName" | "quantityInStock" | "unitLabel" | "bannerMessage"
 >;
 
+/** Readable count + unit for banners (handles dozen, labels ending in “s”, etc.). */
+export function formatStockUnitPhrase(count: number, unitLabel: string): string {
+  const u = unitLabel.trim() || "units";
+  const n = Math.max(0, Math.floor(Number(count)) || 0);
+  if (/^dozen$/i.test(u)) {
+    return n === 1 ? "1 dozen" : `${n} dozen`;
+  }
+  if (n === 1) return `1 ${u}`;
+  if (/s$/i.test(u)) return `${n} ${u}`;
+  return `${n} ${u}s`;
+}
+
 /** Auto banner when `bannerMessage` is blank — matches admin preview rules. */
 export function autoInventoryBannerMessage(inv: InventoryBannerFields): string {
-  const pluralUnits =
-    inv.quantityInStock === 1 ? inv.unitLabel.trim() : `${inv.unitLabel.trim()}s`;
-  return `🧧 ${inv.itemName.trim()} available now! ${inv.quantityInStock} ${pluralUnits} in stock — order for same-day pickup.`;
+  const qtyPhrase = formatStockUnitPhrase(
+    inv.quantityInStock,
+    inv.unitLabel.trim() || "units"
+  );
+  return `${inv.itemName.trim()} — ${qtyPhrase} in stock. Same-day pickup available — order below.`;
 }
 
 export function resolvedInventoryBannerMessage(inv: InventoryBannerFields): string {

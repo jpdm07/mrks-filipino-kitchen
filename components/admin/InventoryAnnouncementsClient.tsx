@@ -6,6 +6,10 @@ import {
   inventoryBannerAdminWarning,
   resolvedInventoryBannerMessage,
 } from "@/lib/inventory-banner-copy";
+import {
+  INVENTORY_DEDUCTION_LUMPIA_FROZEN_DOZEN,
+  INVENTORY_DEDUCTION_ORDER_LINE_QTY,
+} from "@/lib/inventory-deduction-modes";
 import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
 import type { MenuItem } from "@prisma/client";
 import { InventoryClient } from "@/components/admin/InventoryClient";
@@ -29,6 +33,8 @@ export type InventoryRow = {
   showBanner: boolean;
   bannerMessage: string | null;
   lowStockThreshold: number | null;
+  /** `order_line_qty` | `lumpia_frozen_dozen` — controls how checkout deducts stock */
+  deductionMode?: string;
   updatedAt: string;
   deductionLogs: DeductionLog[];
 };
@@ -76,6 +82,7 @@ export function InventoryAnnouncementsClient({
     quantityInStock: 0,
     isAvailable: false,
     showBanner: false,
+    deductionMode: INVENTORY_DEDUCTION_ORDER_LINE_QTY as string,
   });
 
   const effectiveSchedulingState =
@@ -133,6 +140,10 @@ export function InventoryAnnouncementsClient({
       unitLabel: d.unitLabel !== undefined ? d.unitLabel : row.unitLabel,
       menuItemId:
         d.menuItemId !== undefined ? d.menuItemId : row.menuItemId,
+      deductionMode:
+        d.deductionMode !== undefined
+          ? d.deductionMode
+          : row.deductionMode ?? INVENTORY_DEDUCTION_ORDER_LINE_QTY,
     };
 
     const res = await fetch(`/api/admin/inventory/${row.id}`, {
@@ -146,6 +157,7 @@ export function InventoryAnnouncementsClient({
             ? null
             : payload.lowStockThreshold,
         menuItemId: payload.menuItemId || null,
+        deductionMode: payload.deductionMode,
       }),
     });
     if (!res.ok) {
@@ -202,6 +214,7 @@ export function InventoryAnnouncementsClient({
         quantityInStock: newItem.quantityInStock,
         isAvailable: newItem.isAvailable,
         showBanner: newItem.showBanner,
+        deductionMode: newItem.deductionMode,
       }),
     });
     if (!res.ok) {
@@ -218,6 +231,7 @@ export function InventoryAnnouncementsClient({
       quantityInStock: 0,
       isAvailable: false,
       showBanner: false,
+      deductionMode: INVENTORY_DEDUCTION_ORDER_LINE_QTY,
     });
     setAdding(false);
     setToast("New inventory item created.");
@@ -316,7 +330,7 @@ export function InventoryAnnouncementsClient({
                 <strong className="text-[var(--text)]">
                   {newItem.unitLabel.trim() || "units"}
                 </strong>{" "}
-                you have right now (e.g. dozens of lumpia).
+                you have on hand (match the unit label — ramekins, pieces, dozens, etc.).
               </p>
               <input
                 id="new-qty-stock"
@@ -344,12 +358,35 @@ export function InventoryAnnouncementsClient({
             />
             <input
               className="w-full rounded border px-2 py-2"
-              placeholder="Unit label (e.g. dozen)"
+              placeholder="Unit label (e.g. dozen, ramekin, piece)"
               value={newItem.unitLabel}
               onChange={(e) =>
                 setNewItem((s) => ({ ...s, unitLabel: e.target.value }))
               }
             />
+            <div>
+              <label className="text-xs font-semibold text-[var(--text-muted)]">
+                How checkout reduces stock
+              </label>
+              <select
+                className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-2 text-sm"
+                value={newItem.deductionMode}
+                onChange={(e) =>
+                  setNewItem((s) => ({ ...s, deductionMode: e.target.value }))
+                }
+              >
+                <option value={INVENTORY_DEDUCTION_ORDER_LINE_QTY}>
+                  Per menu item — subtract cart line quantity (flan, yema, pancit, …)
+                </option>
+                <option value={INVENTORY_DEDUCTION_LUMPIA_FROZEN_DOZEN}>
+                  Frozen lumpia — map sizes to dozens (1dz / 2dz / party)
+                </option>
+              </select>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                For almost everything, choose <strong>Per menu item</strong> and link the
+                matching dish below. Use the lumpia option only for frozen lumpia stock.
+              </p>
+            </div>
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -578,6 +615,55 @@ export function InventoryAnnouncementsClient({
                     </option>
                   ))}
                 </select>
+                <div>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]">
+                    How checkout reduces stock
+                  </label>
+                  <select
+                    className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-2 text-sm"
+                    value={
+                      r.deductionMode ?? INVENTORY_DEDUCTION_ORDER_LINE_QTY
+                    }
+                    onChange={(e) =>
+                      setDrafts((p) => ({
+                        ...p,
+                        [row.id]: {
+                          ...p[row.id],
+                          deductionMode: e.target.value,
+                        },
+                      }))
+                    }
+                  >
+                    <option value={INVENTORY_DEDUCTION_ORDER_LINE_QTY}>
+                      Per menu item — subtract cart line quantity (most items)
+                    </option>
+                    <option value={INVENTORY_DEDUCTION_LUMPIA_FROZEN_DOZEN}>
+                      Frozen lumpia — dozens from size keys
+                    </option>
+                  </select>
+                </div>
+                {(r.deductionMode ?? INVENTORY_DEDUCTION_ORDER_LINE_QTY) ===
+                  INVENTORY_DEDUCTION_ORDER_LINE_QTY && !(r.menuItemId ?? "").trim() ? (
+                  <p className="rounded-md border border-amber-400/60 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+                    <strong>Link the menu item</strong> above — otherwise checkout
+                    won&apos;t deduct sales from this stock row.
+                  </p>
+                ) : null}
+                {(r.deductionMode ?? INVENTORY_DEDUCTION_ORDER_LINE_QTY) ===
+                INVENTORY_DEDUCTION_LUMPIA_FROZEN_DOZEN ? (
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Stock is tracked in <strong>dozens</strong>. Only{" "}
+                    <strong>frozen</strong> lumpia lines with 1dz / 2dz / party sizes
+                    reduce this row. Same-day pickup slots you open here still merge into
+                    your normal availability calendar.
+                  </p>
+                ) : (
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Each ordered unit subtracts the cart <strong>quantity</strong> for the
+                    linked menu SKU (e.g. 3 ramekins → −3). Inventory-linked pickup windows
+                    use the same schedule grid as the rest of the site.
+                  </p>
+                )}
                 <button
                   type="button"
                   className="btn btn-primary btn-block"

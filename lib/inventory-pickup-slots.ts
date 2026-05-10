@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
 import type { OrderItemLine } from "@/lib/order-types";
 import {
-  computeDozenUnitsForInventory,
+  computeInventoryStockUnits,
   deductInventoryForOrderInTx,
 } from "@/lib/inventory-deduction";
 
@@ -154,7 +154,7 @@ export async function incrementInventoryPickupSlotFillInTx(
       continue;
     }
     if (!labels.includes(pt)) continue;
-    const units = computeDozenUnitsForInventory(slot.inventoryItem, lines);
+    const units = computeInventoryStockUnits(slot.inventoryItem, lines);
     if (units <= 0) continue;
 
     const nextFill = slot.ordersFilled + 1;

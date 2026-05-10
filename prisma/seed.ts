@@ -118,6 +118,7 @@ async function main() {
         quantityInStock: 0,
         isAvailable: false,
         showBanner: false,
+        deductionMode: "lumpia_frozen_dozen",
       },
     });
   }

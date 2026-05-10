@@ -88,6 +88,8 @@ model InventoryItem {
   showBanner         Boolean  @default(false)
   bannerMessage      String?
   lowStockThreshold  Int?
+  /// How checkout lines map to `quantityInStock`: `order_line_qty` (sum line qty for linked menu SKU), or `lumpia_frozen_dozen` (frozen lumpia sizes → dozens).
+  deductionMode      String   @default("order_line_qty")
   updatedAt          DateTime @updatedAt
   menuItem           MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
   pickupSlots        InventoryPickupSlot[]

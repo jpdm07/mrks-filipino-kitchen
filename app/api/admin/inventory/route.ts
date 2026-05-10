@@ -3,6 +3,11 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
 import { applyInventoryStockRulesInTx } from "@/lib/inventory-stock-rules";
+import {
+  INVENTORY_DEDUCTION_ORDER_LINE_QTY,
+  isValidDeductionMode,
+  normalizeInventoryDeductionMode,
+} from "@/lib/inventory-deduction-modes";
 
 export async function GET() {
   if (!(await isAdminSession())) {
@@ -41,6 +46,7 @@ export async function POST(req: NextRequest) {
     showBanner?: boolean;
     bannerMessage?: string | null;
     lowStockThreshold?: number | null;
+    deductionMode?: string;
   };
   const itemName = (body.itemName ?? "").trim();
   const unitLabel = (body.unitLabel ?? "").trim();
@@ -74,6 +80,15 @@ export async function POST(req: NextRequest) {
       ? null
       : Math.max(0, Math.floor(Number(body.lowStockThreshold)));
 
+  let deductionMode = INVENTORY_DEDUCTION_ORDER_LINE_QTY;
+  if (body.deductionMode !== undefined) {
+    const m = String(body.deductionMode).trim();
+    if (!isValidDeductionMode(m)) {
+      return NextResponse.json({ error: "Invalid deductionMode" }, { status: 400 });
+    }
+    deductionMode = normalizeInventoryDeductionMode(m);
+  }
+
   try {
     const row = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const created = await tx.inventoryItem.create({
@@ -86,6 +101,7 @@ export async function POST(req: NextRequest) {
           showBanner,
           bannerMessage,
           lowStockThreshold,
+          deductionMode,
         },
       });
       await applyInventoryStockRulesInTx(tx, created.id);
