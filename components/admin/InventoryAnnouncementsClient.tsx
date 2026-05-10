@@ -67,7 +67,8 @@ export function InventoryAnnouncementsClient({
     maxOrders: 10,
     autoCloseWhenZero: true,
   });
-  const [adding, setAdding] = useState(false);
+  /** Open “Add item” by default when there is nothing to edit yet (shows quantity immediately). */
+  const [adding, setAdding] = useState(() => initialInventory.length === 0);
   const [newItem, setNewItem] = useState({
     itemName: "",
     unitLabel: "dozen",
@@ -272,11 +273,15 @@ export function InventoryAnnouncementsClient({
             {adding ? "Cancel" : "Add item"}
           </button>
         </div>
-        <p className="text-sm text-[var(--text-muted)]">
-          Set <strong className="text-[var(--text)]">quantity in stock</strong> on each
-          card below (after you have at least one item). This is separate from the{" "}
-          <strong className="text-[var(--text)]">sold out</strong> toggles at the bottom of
-          the page.
+        <p className="rounded-lg border border-[color:var(--gold-muted)] bg-[color:rgba(212,169,68,0.12)] px-3 py-2 text-sm text-[var(--text)]">
+          <span className="font-semibold text-[color:var(--primary)]">
+            Quantity in stock
+          </span>{" "}
+          is the number field at the{" "}
+          <strong>top of each card below</strong>, or at the top of the{" "}
+          <strong>Add item</strong> form. It is{" "}
+          <strong>not</strong> in &quot;Menu items — sold out&quot; at the bottom of this
+          page.
         </p>
 
         {!adding && items.length === 0 ? (
@@ -295,30 +300,31 @@ export function InventoryAnnouncementsClient({
 
         {adding ? (
           <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4 space-y-3">
-            <input
-              className="w-full rounded border px-2 py-2"
-              placeholder="Item name (e.g. Pancit Party Tray)"
-              value={newItem.itemName}
-              onChange={(e) =>
-                setNewItem((s) => ({ ...s, itemName: e.target.value }))
-              }
-            />
-            <input
-              className="w-full rounded border px-2 py-2"
-              placeholder="Unit label (e.g. tray, dozen)"
-              value={newItem.unitLabel}
-              onChange={(e) =>
-                setNewItem((s) => ({ ...s, unitLabel: e.target.value }))
-              }
-            />
-            <div>
-              <label className="text-xs font-semibold text-[var(--text-muted)]">
-                Quantity in stock ({newItem.unitLabel || "units"})
+            <p className="font-semibold text-[color:var(--primary)]">Add inventory item</p>
+            <div
+              id="admin-inventory-quantity-new"
+              className="rounded-lg border-2 border-[color:var(--gold)] bg-[var(--bg)] p-3 shadow-sm"
+            >
+              <label
+                htmlFor="new-qty-stock"
+                className="block text-sm font-bold uppercase tracking-wide text-[color:var(--primary)]"
+              >
+                Quantity in stock
               </label>
+              <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                How many{" "}
+                <strong className="text-[var(--text)]">
+                  {newItem.unitLabel.trim() || "units"}
+                </strong>{" "}
+                you have right now (e.g. dozens of lumpia).
+              </p>
               <input
+                id="new-qty-stock"
                 type="number"
                 min={0}
-                className="mt-1 w-full rounded border px-2 py-2"
+                inputMode="numeric"
+                autoComplete="off"
+                className="mt-2 w-full rounded border-2 border-[color:var(--border)] bg-[var(--card)] px-3 py-3 text-lg font-semibold tabular-nums text-[color:var(--primary)]"
                 value={newItem.quantityInStock}
                 onChange={(e) =>
                   setNewItem((s) => ({
@@ -328,6 +334,22 @@ export function InventoryAnnouncementsClient({
                 }
               />
             </div>
+            <input
+              className="w-full rounded border px-2 py-2"
+              placeholder="Item name (e.g. Lumpia (Frozen))"
+              value={newItem.itemName}
+              onChange={(e) =>
+                setNewItem((s) => ({ ...s, itemName: e.target.value }))
+              }
+            />
+            <input
+              className="w-full rounded border px-2 py-2"
+              placeholder="Unit label (e.g. dozen)"
+              value={newItem.unitLabel}
+              onChange={(e) =>
+                setNewItem((s) => ({ ...s, unitLabel: e.target.value }))
+              }
+            />
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -391,6 +413,40 @@ export function InventoryAnnouncementsClient({
               className="grid gap-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-5 lg:grid-cols-2"
             >
               <div className="space-y-3">
+                <div
+                  id={`admin-inventory-qty-${row.id}`}
+                  className="rounded-lg border-2 border-[color:var(--gold)] bg-[var(--bg)] p-3 shadow-sm"
+                >
+                  <label
+                    htmlFor={`qty-stock-${row.id}`}
+                    className="block text-sm font-bold uppercase tracking-wide text-[color:var(--primary)]"
+                  >
+                    Quantity in stock
+                  </label>
+                  <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                    Count in{" "}
+                    <strong className="text-[var(--text)]">{r.unitLabel}</strong> — change
+                    this number, then Save.
+                  </p>
+                  <input
+                    id={`qty-stock-${row.id}`}
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    className="mt-2 w-full rounded border-2 border-[color:var(--border)] bg-[var(--card)] px-3 py-3 text-lg font-semibold tabular-nums text-[color:var(--primary)]"
+                    value={r.quantityInStock}
+                    onChange={(e) =>
+                      setDrafts((p) => ({
+                        ...p,
+                        [row.id]: {
+                          ...p[row.id],
+                          quantityInStock: parseInt(e.target.value, 10) || 0,
+                        },
+                      }))
+                    }
+                  />
+                </div>
                 <div>
                   <label className="text-xs font-semibold text-[var(--text-muted)]">
                     Item name
@@ -420,26 +476,6 @@ export function InventoryAnnouncementsClient({
                       setDrafts((p) => ({
                         ...p,
                         [row.id]: { ...p[row.id], unitLabel: e.target.value },
-                      }))
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-[var(--text-muted)]">
-                    Quantity in stock ({r.unitLabel})
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    className="mt-1 w-full rounded border px-2 py-2"
-                    value={r.quantityInStock}
-                    onChange={(e) =>
-                      setDrafts((p) => ({
-                        ...p,
-                        [row.id]: {
-                          ...p[row.id],
-                          quantityInStock: parseInt(e.target.value, 10) || 0,
-                        },
                       }))
                     }
                   />
