@@ -1,16 +1,20 @@
 import { Suspense } from "react";
+import { InventoryStockBanner } from "@/components/inventory/InventoryStockBanner";
 import { OrderForm } from "@/components/order/OrderForm";
 
 export default function OrderPage() {
   return (
-    <div className="mx-auto max-w-6xl px-3 py-8 sm:px-4 sm:py-10 md:px-6">
-      <Suspense
-        fallback={
-          <p className="text-center text-[var(--text-muted)]">Loading checkout…</p>
-        }
-      >
-        <OrderForm />
-      </Suspense>
-    </div>
+    <>
+      <InventoryStockBanner />
+      <div className="mx-auto max-w-6xl px-3 py-8 sm:px-4 sm:py-10 md:px-6">
+        <Suspense
+          fallback={
+            <p className="text-center text-[var(--text-muted)]">Loading checkout…</p>
+          }
+        >
+          <OrderForm />
+        </Suspense>
+      </div>
+    </>
   );
 }

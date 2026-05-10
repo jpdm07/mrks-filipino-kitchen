@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { InventoryStockBanner } from "@/components/inventory/InventoryStockBanner";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { FeaturedItems } from "@/components/sections/FeaturedItems";
 import { PickupNotice } from "@/components/sections/PickupNotice";
@@ -22,6 +23,7 @@ function FeaturedFallback() {
 export default function HomePage() {
   return (
     <>
+      <InventoryStockBanner />
       <HeroSection />
       <Suspense fallback={<FeaturedFallback />}>
         <FeaturedItems />
