@@ -259,6 +259,26 @@ export function InventoryAnnouncementsClient({
             {adding ? "Cancel" : "Add item"}
           </button>
         </div>
+        <p className="text-sm text-[var(--text-muted)]">
+          Set <strong className="text-[var(--text)]">quantity in stock</strong> on each
+          card below (after you have at least one item). This is separate from the{" "}
+          <strong className="text-[var(--text)]">sold out</strong> toggles at the bottom of
+          the page.
+        </p>
+
+        {!adding && items.length === 0 ? (
+          <div className="rounded-[var(--radius)] border border-dashed border-[color:var(--gold-muted)] bg-[var(--bg)] px-4 py-4 text-sm text-[var(--text)]">
+            <p className="font-semibold text-[color:var(--primary)]">
+              No inventory rows yet
+            </p>
+            <p className="mt-2 text-[var(--text-muted)]">
+              Click <strong className="text-[var(--text)]">Add item</strong>, enter e.g.{" "}
+              <strong>Lumpia (Frozen)</strong> and unit <strong>dozen</strong>, then create
+              the record. You&apos;ll then see <strong>Quantity in stock</strong>, toggles,
+              and banner fields on that card.
+            </p>
+          </div>
+        ) : null}
 
         {adding ? (
           <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-4 space-y-3">
