@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
 import type { OrderItemLine } from "@/lib/order-types";
+import { userFacingAdminDatabaseError } from "@/lib/safe-db";
 
 function summarize(raw: string): string {
   try {
@@ -19,10 +20,18 @@ export async function GET() {
   if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const orders = await prisma.order.findMany({ orderBy: { createdAt: "desc" } });
-  const rows = orders.map((o) => ({
-    ...JSON.parse(JSON.stringify(o)),
-    itemsSummary: summarize(o.items),
-  }));
-  return NextResponse.json({ orders: rows });
+  try {
+    const orders = await prisma.order.findMany({ orderBy: { createdAt: "desc" } });
+    const rows = orders.map((o) => ({
+      ...JSON.parse(JSON.stringify(o)),
+      itemsSummary: summarize(o.items),
+    }));
+    return NextResponse.json({ orders: rows });
+  } catch (e) {
+    console.error("[api/admin/orders] GET failed:", e);
+    return NextResponse.json(
+      { error: userFacingAdminDatabaseError(e), orders: [] },
+      { status: 503 }
+    );
+  }
 }

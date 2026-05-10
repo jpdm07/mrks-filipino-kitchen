@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
+import { userFacingAdminDatabaseError } from "@/lib/safe-db";
 
 export async function GET(req: NextRequest) {
   if (!(await isAdminSession())) {
@@ -18,44 +19,52 @@ export async function GET(req: NextRequest) {
   }
   const start = new Date(`${startYmd}T00:00:00.000Z`);
   const end = new Date(`${endYmd}T23:59:59.999Z`);
-  const orders = await prisma.order.findMany({
-    where: {
-      status: "Confirmed",
-      isDemo: false,
-      createdAt: { gte: start, lte: end },
-    },
-    orderBy: { createdAt: "desc" },
-    select: {
-      orderNumber: true,
-      createdAt: true,
-      customerName: true,
-      items: true,
-      total: true,
-      pickupDate: true,
-      status: true,
-    },
-  });
-  const rows = orders.map((o) => {
-    let summary = "";
-    try {
-      const arr = JSON.parse(o.items) as { name?: string; quantity?: number }[];
-      if (Array.isArray(arr)) {
-        summary = arr
-          .map((i) => `${i.name ?? "?"} ×${i.quantity ?? 0}`)
-          .join(" | ");
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        status: "Confirmed",
+        isDemo: false,
+        createdAt: { gte: start, lte: end },
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        orderNumber: true,
+        createdAt: true,
+        customerName: true,
+        items: true,
+        total: true,
+        pickupDate: true,
+        status: true,
+      },
+    });
+    const rows = orders.map((o) => {
+      let summary = "";
+      try {
+        const arr = JSON.parse(o.items) as { name?: string; quantity?: number }[];
+        if (Array.isArray(arr)) {
+          summary = arr
+            .map((i) => `${i.name ?? "?"} ×${i.quantity ?? 0}`)
+            .join(" | ");
+        }
+      } catch {
+        summary = "";
       }
-    } catch {
-      summary = "";
-    }
-    return {
-      orderNumber: o.orderNumber,
-      date: o.createdAt.toISOString(),
-      customerName: o.customerName,
-      itemsSummary: summary,
-      total: o.total,
-      pickupDate: o.pickupDate,
-      status: o.status,
-    };
-  });
-  return NextResponse.json({ orders: rows });
+      return {
+        orderNumber: o.orderNumber,
+        date: o.createdAt.toISOString(),
+        customerName: o.customerName,
+        itemsSummary: summary,
+        total: o.total,
+        pickupDate: o.pickupDate,
+        status: o.status,
+      };
+    });
+    return NextResponse.json({ orders: rows });
+  } catch (e) {
+    console.error("[api/admin/finances/income] GET failed:", e);
+    return NextResponse.json(
+      { error: userFacingAdminDatabaseError(e), orders: [] },
+      { status: 503 }
+    );
+  }
 }

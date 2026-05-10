@@ -120,7 +120,16 @@ export function DashboardOrders() {
         setLoadError("Session expired — refresh and sign in again.");
         return;
       }
-      if (!r.ok) throw new Error("Could not load orders.");
+      if (!r.ok) {
+        let detail = "Could not load orders.";
+        try {
+          const j = (await r.json()) as { error?: string };
+          if (typeof j.error === "string" && j.error.trim()) detail = j.error.trim();
+        } catch {
+          /* non-JSON error body */
+        }
+        throw new Error(detail);
+      }
       const data = (await r.json()) as { orders: Row[] };
       setOrders(Array.isArray(data.orders) ? data.orders : []);
       setLoadError(null);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
+import { userFacingAdminDatabaseError } from "@/lib/safe-db";
 
 export async function GET(req: NextRequest) {
   if (!(await isAdminSession())) {
@@ -21,11 +22,19 @@ export async function GET(req: NextRequest) {
     where.date = { ...where.date, lte: endDate };
   }
   if (category) where.category = category;
-  const rows = await prisma.expense.findMany({
-    where,
-    orderBy: { date: "desc" },
-  });
-  return NextResponse.json({ expenses: rows });
+  try {
+    const rows = await prisma.expense.findMany({
+      where,
+      orderBy: { date: "desc" },
+    });
+    return NextResponse.json({ expenses: rows });
+  } catch (e) {
+    console.error("[api/admin/expenses] GET failed:", e);
+    return NextResponse.json(
+      { error: userFacingAdminDatabaseError(e), expenses: [] },
+      { status: 503 }
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {

@@ -105,6 +105,7 @@ export function FinancesAdminClient() {
     }>
   >([]);
   const [toast, setToast] = useState<string | null>(null);
+  const [loadErr, setLoadErr] = useState<string | null>(null);
   const [tab, setTab] = useState<"manual" | "receipt">("manual");
 
   const [form, setForm] = useState<{
@@ -127,20 +128,51 @@ export function FinancesAdminClient() {
   const [parseBusy, setParseBusy] = useState(false);
 
   const load = useCallback(async () => {
+    setLoadErr(null);
     const q = `startDate=${encodeURIComponent(range.start)}&endDate=${encodeURIComponent(range.end)}`;
     const [sRes, eRes, iRes] = await Promise.all([
       fetch(`/api/admin/finances/summary?${q}`, { credentials: "include" }),
       fetch(`/api/admin/expenses?${q}`, { credentials: "include" }),
       fetch(`/api/admin/finances/income?${q}`, { credentials: "include" }),
     ]);
-    if (sRes.ok) setSummary((await sRes.json()) as Summary);
+
+    async function readErr(res: Response): Promise<string> {
+      try {
+        const j = (await res.json()) as { error?: string };
+        if (typeof j.error === "string" && j.error.trim()) return j.error.trim();
+      } catch {
+        /* ignore */
+      }
+      return `Request failed (${res.status}).`;
+    }
+
+    const errs: string[] = [];
+
+    if (sRes.ok) {
+      setSummary((await sRes.json()) as Summary);
+    } else {
+      errs.push(await readErr(sRes));
+      setSummary(null);
+    }
+
     if (eRes.ok) {
       const d = (await eRes.json()) as { expenses: ExpenseRow[] };
       setExpenses(d.expenses ?? []);
+    } else {
+      errs.push(await readErr(eRes));
+      setExpenses([]);
     }
+
     if (iRes.ok) {
       const d = (await iRes.json()) as { orders: typeof income };
       setIncome(d.orders ?? []);
+    } else {
+      errs.push(await readErr(iRes));
+      setIncome([]);
+    }
+
+    if (errs.length) {
+      setLoadErr([...new Set(errs)].join("\n\n"));
     }
   }, [range.start, range.end]);
 
@@ -264,6 +296,15 @@ export function FinancesAdminClient() {
         </Link>{" "}
         (confirmed orders only, matches this revenue).
       </p>
+
+      {loadErr ? (
+        <div
+          className="whitespace-pre-wrap rounded-lg border border-[var(--accent)]/50 bg-[var(--gold-light)] px-4 py-3 text-sm font-medium leading-relaxed text-[var(--text)]"
+          role="alert"
+        >
+          {loadErr}
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         {(
