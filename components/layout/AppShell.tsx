@@ -30,8 +30,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <ConsoleNoiseFilter />
       <CustomCursor />
       <CartProvider>
-        <Navbar />
         <AnnouncementBanner />
+        <Navbar />
         {/*
           z-0 creates a stacking context so fixed layers inside pages (e.g. About corner art)
           cannot paint above the site footer; portaled overlays use document.body and are unaffected.
