@@ -243,6 +243,8 @@ model PricingSettings {
   sampleQuail   Float  @default(2.49)
   sampleFlan    Float  @default(3.5)
   samplePancit  Float  @default(6.3)
+  /// Admin: force scheduling banner State A even when same-day inventory rows exist.
+  schedulingBannerForceStateA Boolean @default(false)
 }
 
 /// Admin prep checklist overrides for a pickup week (anchored by Thursday YMD, Sun–Sat week).

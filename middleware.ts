@@ -12,6 +12,9 @@ export function middleware(request: NextRequest) {
     "";
   const hostname = host.split(":")[0]?.toLowerCase() ?? "";
 
+  const forwarded = new Headers(request.headers);
+  forwarded.set("x-mrk-pathname", request.nextUrl.pathname);
+
   if (hostname === "www.mrkskitchen.com") {
     const url = request.nextUrl.clone();
     url.hostname = "mrkskitchen.com";
@@ -20,7 +23,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  return NextResponse.next();
+  return NextResponse.next({
+    request: { headers: forwarded },
+  });
 }
 
 export const config = {

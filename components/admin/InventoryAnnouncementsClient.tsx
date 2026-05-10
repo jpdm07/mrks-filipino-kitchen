@@ -37,13 +37,24 @@ export function InventoryAnnouncementsClient({
   initialInventory,
   menuItems,
   menuItemsFull,
+  initialScheduling,
 }: {
   initialInventory: InventoryRow[];
   menuItems: { id: string; name: string }[];
   menuItemsFull: MenuItem[];
+  initialScheduling: {
+    schedulingBannerForceStateA: boolean;
+    qualifyingSameDayCount: number;
+  };
 }) {
   const slotLabels = useMemo(() => pickupTimeSlotLabels(), []);
   const [items, setItems] = useState(initialInventory);
+  const [forceStateA, setForceStateA] = useState(
+    initialScheduling.schedulingBannerForceStateA
+  );
+  const [qualifyingSameDayCount, setQualifyingSameDayCount] = useState(
+    initialScheduling.qualifyingSameDayCount
+  );
   const [toast, setToast] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<number, Partial<InventoryRow>>>(
     () => ({})
@@ -62,6 +73,41 @@ export function InventoryAnnouncementsClient({
     unitLabel: "dozen",
     menuItemId: "",
   });
+
+  const effectiveSchedulingState =
+    !forceStateA && qualifyingSameDayCount > 0 ? "B" : "A";
+
+  const schedulingPreview = useMemo(() => {
+    if (forceStateA) {
+      return "Override is on — customers see State A (advance scheduling only), even if items qualify for same-day.";
+    }
+    if (qualifyingSameDayCount === 0) {
+      return 'No rows qualify (need “show announcement”, “available for ordering”, and stock > 0) — customers see State A.';
+    }
+    return `${qualifyingSameDayCount} qualifying item(s) — customers see State B: softer headline plus those items below it.`;
+  }, [forceStateA, qualifyingSameDayCount]);
+
+  const saveSchedulingOverride = async (next: boolean) => {
+    const res = await fetch("/api/admin/scheduling-banner", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ schedulingBannerForceStateA: next }),
+    });
+    if (!res.ok) {
+      setToast("Could not save scheduling banner.");
+      window.setTimeout(() => setToast(null), 4000);
+      return;
+    }
+    const data = (await res.json()) as {
+      schedulingBannerForceStateA: boolean;
+      qualifyingSameDayCount: number;
+      effectiveState: string;
+    };
+    setForceStateA(data.schedulingBannerForceStateA);
+    setQualifyingSameDayCount(data.qualifyingSameDayCount);
+    setToast("Scheduling banner settings saved.");
+    window.setTimeout(() => setToast(null), 4000);
+  };
 
   const mergeRow = (row: InventoryRow): InventoryRow => {
     const d = drafts[row.id];
@@ -171,6 +217,34 @@ export function InventoryAnnouncementsClient({
           {toast}
         </p>
       ) : null}
+
+      <section className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-5 space-y-4">
+        <h2 className="font-bold text-lg text-[color:var(--primary)]">
+          Scheduling banner
+        </h2>
+        <p className="text-sm text-[var(--text-muted)]">
+          Controls the site-wide strip above the navigation: advance notice vs. same-day
+          inventory messaging.
+        </p>
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm">
+          <p className="font-semibold text-[color:var(--primary)]">
+            Active view: State {effectiveSchedulingState}
+          </p>
+          <p className="mt-1 text-[var(--text-muted)]">{schedulingPreview}</p>
+        </div>
+        <label className="flex cursor-pointer items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={forceStateA}
+            onChange={(e) => void saveSchedulingOverride(e.target.checked)}
+          />
+          <span>
+            <span className="font-semibold">Override — force State A</span> even when
+            items are in stock (temporary same-day blackout without changing counts).
+          </span>
+        </label>
+      </section>
 
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">

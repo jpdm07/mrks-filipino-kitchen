@@ -9,6 +9,7 @@ import "./globals.css";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { GoogleAnalyticsRouteTracker } from "@/components/analytics/GoogleAnalyticsRouteTracker";
 import { AppShell } from "@/components/layout/AppShell";
+import { SmartSchedulingBanner } from "@/components/ui/SmartSchedulingBanner";
 import { CATALOG_OG_IMAGE } from "@/lib/menu-catalog";
 
 const SEO_SITE_URL = "https://mrks-filipino-kitchen.vercel.app";
@@ -151,7 +152,7 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.ico", apple: "/apple-touch-icon.png" },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -174,6 +175,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <GoogleAnalyticsRouteTracker />
         </Suspense>
+        <SmartSchedulingBanner />
         <AppShell>{children}</AppShell>
       </body>
     </html>

@@ -5,7 +5,6 @@ import { CartProvider } from "@/components/cart/CartContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { AnnouncementBanner } from "@/components/ui/AnnouncementBanner";
 import { CustomCursor } from "@/components/ui/CustomCursor";
 import { ConsoleNoiseFilter } from "@/components/system/ConsoleNoiseFilter";
 
@@ -30,7 +29,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <ConsoleNoiseFilter />
       <CustomCursor />
       <CartProvider>
-        <AnnouncementBanner />
         <Navbar />
         {/*
           z-0 creates a stacking context so fixed layers inside pages (e.g. About corner art)

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { InventoryStockBanner } from "@/components/inventory/InventoryStockBanner";
 import { MenuCategoryNav } from "@/components/menu/MenuCategoryNav";
 import { MenuGrid } from "@/components/menu/MenuGrid";
 import { MenuKitchenCapacityBanner } from "@/components/menu/MenuKitchenCapacityBanner";
@@ -37,7 +36,6 @@ export default async function MenuPage({ searchParams }: MenuPageProps) {
 
   return (
     <>
-      <InventoryStockBanner />
       <div className="mx-auto max-w-6xl px-4 py-10">
         <SectionHeading
           title="Menu"
