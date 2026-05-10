@@ -9,6 +9,7 @@ import { isPickupYmdAllowed, ymdUtcWeekday } from "@/lib/pickup-lead-time";
 import { isFlanTueThuPickupYmdBookableAt } from "@/lib/flan-weekday-unlock";
 import { getBlockedInventorySlotLabels } from "@/lib/inventory-pickup-slots";
 import { getCartInventorySlotLabelFilterForDate } from "@/lib/inventory-cart-pickup-sync";
+import type { InventoryCartLineHint } from "@/lib/inventory-cart-line-hints";
 
 export const FLAN_ONLY_DAY_NOTE =
   "Dessert pickups only — other items available Friday and Saturday";
@@ -109,7 +110,9 @@ export async function getKitchenSlotsForDate(
   /** Dessert-only cart (flan and/or yema) — not strictly flan. */
   cartFlanOnly: boolean,
   /** When set, intersect with inventory “Open pickup slot” windows for these menu SKUs. */
-  cartMenuItemIds?: string[]
+  cartMenuItemIds?: string[],
+  /** Rich cart lines (cooked/frozen) — preferred over ids-only when narrowing by inventory row. */
+  cartInventoryHints?: InventoryCartLineHint[] | null
 ): Promise<string[]> {
   const kind = kitchenDayKind(dateYmd);
   const evening = eveningPickupSlots1800to2000();
@@ -126,7 +129,8 @@ export async function getKitchenSlotsForDate(
     return applyInventoryCartAndCapacityFilter(
       dateYmd,
       slots,
-      cartMenuItemIds
+      cartMenuItemIds,
+      cartInventoryHints
     );
   }
 
@@ -138,7 +142,8 @@ export async function getKitchenSlotsForDate(
     return applyInventoryCartAndCapacityFilter(
       dateYmd,
       slots,
-      cartMenuItemIds
+      cartMenuItemIds,
+      cartInventoryHints
     );
   }
 
@@ -153,20 +158,24 @@ export async function getKitchenSlotsForDate(
   return applyInventoryCartAndCapacityFilter(
     dateYmd,
     slots,
-    cartMenuItemIds
+    cartMenuItemIds,
+    cartInventoryHints
   );
 }
 
 async function applyInventoryCartAndCapacityFilter(
   dateYmd: string,
   slots: string[],
-  cartMenuItemIds?: string[]
+  cartMenuItemIds?: string[],
+  cartInventoryHints?: InventoryCartLineHint[] | null
 ): Promise<string[]> {
   let out = await applyInventoryCapacityFilter(dateYmd, slots);
-  if (!cartMenuItemIds?.length) return out;
+  const hasHints = cartInventoryHints && cartInventoryHints.length > 0;
+  if (!hasHints && !cartMenuItemIds?.length) return out;
   const invFilter = await getCartInventorySlotLabelFilterForDate(
     dateYmd,
-    cartMenuItemIds
+    cartMenuItemIds ?? [],
+    cartInventoryHints
   );
   if (invFilter === null) return out;
   const allow = new Set(invFilter.map((s) => s.trim()));

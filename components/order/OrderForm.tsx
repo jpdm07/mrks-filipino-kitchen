@@ -22,6 +22,7 @@ import {
 } from "@/lib/checkout-contact-validation";
 import { playOrderSubmitClick } from "@/lib/checkout-ui-sounds";
 import { sortPickupSlotLabels } from "@/lib/pickup-time-slots";
+import type { InventoryCartLineHint } from "@/lib/inventory-cart-line-hints";
 
 type CheckoutIssueKey =
   | "name"
@@ -92,6 +93,22 @@ export function OrderForm() {
       .filter((id): id is string => Boolean(id));
     return [...new Set(ids)].sort();
   }, [items]);
+
+  /** Cooked/frozen + size — must match server inventory rows (same as order POST). */
+  const checkoutInventoryHints = useMemo((): InventoryCartLineHint[] => {
+    return cart.lines.map((l) => ({
+      menuItemId: l.menuItemId,
+      cookedOrFrozen:
+        l.cookedOrFrozen === "frozen"
+          ? "frozen"
+          : l.cookedOrFrozen === "cooked"
+            ? "cooked"
+            : undefined,
+      sizeKey: l.sizeKey,
+      quantity: l.quantity,
+      isSample: false,
+    }));
+  }, [cart.lines]);
 
   const [capacityWeeks, setCapacityWeeks] = useState<
     Array<{
@@ -167,6 +184,9 @@ export function OrderForm() {
     for (const id of checkoutMenuItemIds) {
       qs.append("menuItemIds", id);
     }
+    if (checkoutInventoryHints.length > 0) {
+      qs.set("invCart", JSON.stringify(checkoutInventoryHints));
+    }
     fetch(
       `/api/availability/${encodeURIComponent(pickupDate)}?${qs.toString()}`
     )
@@ -215,6 +235,7 @@ export function OrderForm() {
     cookNeed.mainMinutes,
     cookNeed.flanRamekins,
     checkoutMenuItemIds,
+    checkoutInventoryHints,
   ]);
 
   const emailOk = isValidEmail(email);
@@ -662,6 +683,9 @@ export function OrderForm() {
               flanRamekinsNeed={cookNeed.flanRamekins}
               cartMenuItemIds={
                 cartHydrated ? checkoutMenuItemIds : undefined
+              }
+              inventoryCartHints={
+                cartHydrated ? checkoutInventoryHints : undefined
               }
             />
           </div>

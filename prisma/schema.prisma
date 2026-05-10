@@ -93,6 +93,8 @@ model InventoryItem {
   lowStockThreshold  Int?
   /// How checkout lines map to `quantityInStock`: `order_line_qty` (sum line qty for linked menu SKU), or `lumpia_frozen_dozen` (frozen lumpia sizes → dozens).
   deductionMode      String   @default("order_line_qty")
+  /// Which cart lines tie to this row for deduction + same-day pickup slots: `any`, `cooked`, `frozen`.
+  lineCookFilter       String   @default("any")
   updatedAt          DateTime @updatedAt
   menuItem           MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
   pickupSlots        InventoryPickupSlot[]

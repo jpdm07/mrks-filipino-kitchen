@@ -16,6 +16,7 @@ import {
   ymdFromParts,
 } from "@/lib/pickup-availability-query-range";
 import { useAvailabilityWhitelist } from "@/lib/hooks/useAvailabilityWhitelist";
+import type { InventoryCartLineHint } from "@/lib/inventory-cart-line-hints";
 import { FLAN_WEEKLY_CAP_RAMEKINS } from "@/lib/menu-cook-capacity";
 
 function firstWeekdayOfMonth(year: number, month1: number) {
@@ -61,6 +62,8 @@ export const PickupCalendar = forwardRef<
     flanRamekinsNeed?: number;
     /** Cart menu SKUs — narrows calendar to inventory same-day pickup slots. */
     cartMenuItemIds?: string[];
+    /** Cooked/frozen per line — matches inventory rows (same as checkout slot API). */
+    inventoryCartHints?: InventoryCartLineHint[];
   }
 >(function PickupCalendar(
   {
@@ -72,6 +75,7 @@ export const PickupCalendar = forwardRef<
     mainCookNeed = 0,
     flanRamekinsNeed = 0,
     cartMenuItemIds,
+    inventoryCartHints,
   },
   ref
 ) {
@@ -114,6 +118,9 @@ export const PickupCalendar = forwardRef<
       mainNeed: mainCookNeed,
       flanNeed: flanRamekinsNeed,
       ...(cartMenuItemIds?.length ? { menuItemIds: cartMenuItemIds } : {}),
+      ...(inventoryCartHints?.length
+        ? { inventoryCartHints }
+        : {}),
     }
   );
 
@@ -142,6 +149,9 @@ export const PickupCalendar = forwardRef<
       });
       for (const id of cartMenuItemIds ?? []) {
         p.append("menuItemIds", id);
+      }
+      if (inventoryCartHints?.length) {
+        p.set("invCart", JSON.stringify(inventoryCartHints));
       }
       return p.toString();
     };
@@ -178,7 +188,15 @@ export const PickupCalendar = forwardRef<
     return () => {
       cancelled = true;
     };
-  }, [from, to, cartMode, mainCookNeed, flanRamekinsNeed, cartMenuItemIds]);
+  }, [
+    from,
+    to,
+    cartMode,
+    mainCookNeed,
+    flanRamekinsNeed,
+    cartMenuItemIds,
+    inventoryCartHints,
+  ]);
 
   useEffect(() => {
     if (loading || loadError) return;

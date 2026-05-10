@@ -8,6 +8,10 @@ import {
   isValidDeductionMode,
   normalizeInventoryDeductionMode,
 } from "@/lib/inventory-deduction-modes";
+import {
+  isValidInventoryLineCookFilter,
+  normalizeInventoryLineCookFilter,
+} from "@/lib/inventory-line-cook-filter";
 
 export async function GET() {
   if (!(await isAdminSession())) {
@@ -47,6 +51,7 @@ export async function POST(req: NextRequest) {
     bannerMessage?: string | null;
     lowStockThreshold?: number | null;
     deductionMode?: string;
+    lineCookFilter?: string;
   };
   const itemName = (body.itemName ?? "").trim();
   const unitLabel = (body.unitLabel ?? "").trim();
@@ -89,6 +94,15 @@ export async function POST(req: NextRequest) {
     deductionMode = normalizeInventoryDeductionMode(m);
   }
 
+  let lineCookFilter = normalizeInventoryLineCookFilter("any");
+  if (body.lineCookFilter !== undefined) {
+    const m = String(body.lineCookFilter).trim().toLowerCase();
+    if (!isValidInventoryLineCookFilter(m)) {
+      return NextResponse.json({ error: "Invalid lineCookFilter" }, { status: 400 });
+    }
+    lineCookFilter = normalizeInventoryLineCookFilter(m);
+  }
+
   try {
     const row = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const created = await tx.inventoryItem.create({
@@ -102,6 +116,7 @@ export async function POST(req: NextRequest) {
           bannerMessage,
           lowStockThreshold,
           deductionMode,
+          lineCookFilter,
         },
       });
       await applyInventoryStockRulesInTx(tx, created.id);

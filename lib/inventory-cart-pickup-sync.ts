@@ -1,6 +1,9 @@
 import type { InventoryItem, InventoryPickupSlot } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sortPickupSlotLabels } from "@/lib/pickup-time-slots";
+import { lineMatchesInventory } from "@/lib/inventory-deduction";
+import type { InventoryCartLineHint } from "@/lib/inventory-cart-line-hints";
+import { hintToPseudoOrderLine } from "@/lib/inventory-cart-line-hints";
 
 type SlotRow = InventoryPickupSlot & { inventoryItem: InventoryItem };
 
@@ -25,14 +28,78 @@ function activeLabelsFromSlotRow(row: SlotRow): Set<string> {
  * For checkout: when the cart includes menu SKUs linked to inventory rows that use
  * “Open pickup slots”, restrict times to the intersection of those windows for `dateYmd`.
  *
+ * When `cartInventoryHints` is set, rows are matched with `lineMatchesInventory` so
+ * cooked vs frozen inventory stays aligned with deduction.
+ *
  * @returns `null` — no inventory-window narrowing for this cart/date.
  * @returns `[]` — narrowing applies but no valid window (hide day or no times).
  * @returns string[] — allowed slot labels (must still intersect with kitchen slots).
  */
 export async function getCartInventorySlotLabelFilterForDate(
   dateYmd: string,
-  cartMenuItemIds: string[]
+  cartMenuItemIds: string[],
+  cartInventoryHints?: InventoryCartLineHint[] | null
 ): Promise<string[] | null> {
+  const hints =
+    cartInventoryHints?.filter((h) => h.menuItemId?.trim()) ?? [];
+
+  if (hints.length > 0) {
+    const menuIds = [...new Set(hints.map((h) => h.menuItemId.trim()))];
+    const invItems = await prisma.inventoryItem.findMany({
+      where: { menuItemId: { in: menuIds } },
+    });
+    if (invItems.length === 0) return null;
+
+    const invIds = invItems.map((i) => i.id);
+    const anySlotRows = await prisma.inventoryPickupSlot.findMany({
+      where: { inventoryItemId: { in: invIds } },
+      select: { inventoryItemId: true },
+    });
+    const managedInvId = new Set(anySlotRows.map((r) => r.inventoryItemId));
+
+    const rows = await prisma.inventoryPickupSlot.findMany({
+      where: {
+        dateYmd: dateYmd.trim(),
+        inventoryItemId: { in: invIds },
+        closed: false,
+      },
+      include: { inventoryItem: true },
+    });
+
+    const labelSets: Set<string>[] = [];
+
+    for (const hint of hints) {
+      const pseudo = hintToPseudoOrderLine(hint);
+      const matchingInv = invItems.filter((inv) =>
+        lineMatchesInventory(inv, pseudo)
+      );
+      const slotManaged = matchingInv.filter((inv) =>
+        managedInvId.has(inv.id)
+      );
+      if (slotManaged.length === 0) continue;
+
+      const allowIds = new Set(slotManaged.map((i) => i.id));
+      const union = new Set<string>();
+      for (const row of rows) {
+        if (!allowIds.has(row.inventoryItemId)) continue;
+        for (const lab of activeLabelsFromSlotRow(row as SlotRow)) {
+          union.add(lab);
+        }
+      }
+      labelSets.push(union);
+    }
+
+    if (labelSets.length === 0) return null;
+
+    let inter = labelSets[0]!;
+    for (let i = 1; i < labelSets.length; i++) {
+      inter = new Set([...inter].filter((x) => labelSets[i]!.has(x)));
+    }
+
+    if (inter.size === 0) return [];
+    return sortPickupSlotLabels([...inter]);
+  }
+
   const unique = [
     ...new Set(cartMenuItemIds.map((s) => s.trim()).filter(Boolean)),
   ];
@@ -43,7 +110,6 @@ export async function getCartInventorySlotLabelFilterForDate(
   });
   if (invItems.length === 0) return null;
 
-  /** May be multiple inventory rows per menu SKU — Map last-wins would drop slots on "other" rows. */
   const byMenu = new Map<string, InventoryItem[]>();
   for (const i of invItems) {
     if (!i.menuItemId) continue;
@@ -110,13 +176,20 @@ export async function getCartInventorySlotLabelFilterForDate(
  */
 export async function filterOpenDatesByInventoryCart(
   openDates: string[],
-  cartMenuItemIds: string[]
+  cartMenuItemIds: string[],
+  cartInventoryHints?: InventoryCartLineHint[] | null
 ): Promise<string[]> {
-  if (openDates.length === 0 || cartMenuItemIds.length === 0) return openDates;
+  if (openDates.length === 0) return openDates;
+  const hasHints = cartInventoryHints && cartInventoryHints.length > 0;
+  if (!hasHints && cartMenuItemIds.length === 0) return openDates;
 
   const filtered: string[] = [];
   for (const ymd of openDates) {
-    const f = await getCartInventorySlotLabelFilterForDate(ymd, cartMenuItemIds);
+    const f = await getCartInventorySlotLabelFilterForDate(
+      ymd,
+      cartMenuItemIds,
+      cartInventoryHints
+    );
     if (f === null) {
       filtered.push(ymd);
       continue;

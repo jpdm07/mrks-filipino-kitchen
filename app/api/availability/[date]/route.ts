@@ -8,6 +8,7 @@ import {
 import { kickGoogleAvailabilityBackgroundSync } from "@/lib/google-availability-stale-sync";
 import { isDatabaseUnavailableError } from "@/lib/safe-db";
 import { parseMenuItemIdsFromSearchParams } from "@/lib/availability-menu-item-ids";
+import { parseInventoryCartHintsFromSearchParams } from "@/lib/inventory-cart-line-hints";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,8 @@ export async function GET(
   const flanNeed = Number(searchParams.get("flanNeed") || "0");
   const cartFlanOnly = cartMode === "flan";
   const cartMenuItemIds = parseMenuItemIdsFromSearchParams(searchParams);
+  const cartInventoryHints =
+    parseInventoryCartHintsFromSearchParams(searchParams);
 
   try {
     kickGoogleAvailabilityBackgroundSync();
@@ -47,6 +50,7 @@ export async function GET(
         mainMinutesNeeded: Number.isFinite(mainNeed) ? mainNeed : 0,
         flanRamekinsNeeded: Number.isFinite(flanNeed) ? flanNeed : 0,
         ...(cartMenuItemIds.length ? { cartMenuItemIds } : {}),
+        ...(cartInventoryHints?.length ? { cartInventoryHints } : {}),
       }
     );
 
@@ -66,7 +70,8 @@ export async function GET(
     const slots = await getKitchenSlotsForDate(
       date,
       cartFlanOnly,
-      cartMenuItemIds.length ? cartMenuItemIds : undefined
+      cartMenuItemIds.length ? cartMenuItemIds : undefined,
+      cartInventoryHints?.length ? cartInventoryHints : undefined
     );
     const note =
       notes[date]?.trim() ||

@@ -6,6 +6,10 @@ import {
   isValidDeductionMode,
   normalizeInventoryDeductionMode,
 } from "@/lib/inventory-deduction-modes";
+import {
+  isValidInventoryLineCookFilter,
+  normalizeInventoryLineCookFilter,
+} from "@/lib/inventory-line-cook-filter";
 
 export async function PATCH(
   req: NextRequest,
@@ -29,6 +33,7 @@ export async function PATCH(
     unitLabel?: string;
     menuItemId?: string | null;
     deductionMode?: string;
+    lineCookFilter?: string;
   };
 
   const qty =
@@ -72,6 +77,13 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid deductionMode" }, { status: 400 });
     }
     data.deductionMode = normalizeInventoryDeductionMode(m);
+  }
+  if (body.lineCookFilter !== undefined) {
+    const m = String(body.lineCookFilter).trim().toLowerCase();
+    if (!isValidInventoryLineCookFilter(m)) {
+      return NextResponse.json({ error: "Invalid lineCookFilter" }, { status: 400 });
+    }
+    data.lineCookFilter = normalizeInventoryLineCookFilter(m);
   }
 
   try {

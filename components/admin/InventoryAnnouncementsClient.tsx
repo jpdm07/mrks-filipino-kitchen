@@ -35,6 +35,8 @@ export type InventoryRow = {
   lowStockThreshold: number | null;
   /** `order_line_qty` | `lumpia_frozen_dozen` — controls how checkout deducts stock */
   deductionMode?: string;
+  /** `any` | `cooked` | `frozen` — which cart lines hit this row when SKU is shared */
+  lineCookFilter?: string;
   updatedAt: string;
   deductionLogs: DeductionLog[];
 };
@@ -84,6 +86,7 @@ export function InventoryAnnouncementsClient({
     isAvailable: false,
     showBanner: false,
     deductionMode: INVENTORY_DEDUCTION_ORDER_LINE_QTY as string,
+    lineCookFilter: "any",
   });
 
   const effectiveSchedulingState =
@@ -145,6 +148,10 @@ export function InventoryAnnouncementsClient({
         d.deductionMode !== undefined
           ? d.deductionMode
           : row.deductionMode ?? INVENTORY_DEDUCTION_ORDER_LINE_QTY,
+      lineCookFilter:
+        d.lineCookFilter !== undefined
+          ? d.lineCookFilter
+          : row.lineCookFilter ?? "any",
     };
 
     const res = await fetch(`/api/admin/inventory/${row.id}`, {
@@ -159,6 +166,7 @@ export function InventoryAnnouncementsClient({
             : payload.lowStockThreshold,
         menuItemId: payload.menuItemId || null,
         deductionMode: payload.deductionMode,
+        lineCookFilter: payload.lineCookFilter ?? "any",
       }),
     });
     if (!res.ok) {
@@ -223,6 +231,7 @@ export function InventoryAnnouncementsClient({
           showBanner: newItem.showBanner,
           deductionMode:
             newItem.deductionMode ?? INVENTORY_DEDUCTION_ORDER_LINE_QTY,
+          lineCookFilter: newItem.lineCookFilter ?? "any",
         }),
       });
 
@@ -256,6 +265,7 @@ export function InventoryAnnouncementsClient({
         isAvailable: false,
         showBanner: false,
         deductionMode: INVENTORY_DEDUCTION_ORDER_LINE_QTY,
+        lineCookFilter: "any",
       });
       setAdding(false);
       setToast("New inventory item created.");
@@ -462,6 +472,22 @@ export function InventoryAnnouncementsClient({
                 For almost everything, choose <strong>Per menu item</strong> and link the
                 matching dish below. Use the lumpia option only for frozen lumpia stock.
               </p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-[var(--text-muted)]">
+                Cart lines this row applies to
+              </label>
+              <select
+                className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-2 text-sm"
+                value={newItem.lineCookFilter}
+                onChange={(e) =>
+                  setNewItem((s) => ({ ...s, lineCookFilter: e.target.value }))
+                }
+              >
+                <option value="any">Any — cooked, frozen, or no variant</option>
+                <option value="cooked">Cooked or non-frozen only</option>
+                <option value="frozen">Frozen lines only</option>
+              </select>
             </div>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -718,6 +744,33 @@ export function InventoryAnnouncementsClient({
                       Frozen lumpia — dozens from size keys
                     </option>
                   </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]">
+                    Cart lines this row applies to (same menu SKU)
+                  </label>
+                  <select
+                    className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-2 text-sm"
+                    value={r.lineCookFilter ?? "any"}
+                    onChange={(e) =>
+                      setDrafts((p) => ({
+                        ...p,
+                        [row.id]: {
+                          ...p[row.id],
+                          lineCookFilter: e.target.value,
+                        },
+                      }))
+                    }
+                  >
+                    <option value="any">Any — cooked, frozen, or no variant</option>
+                    <option value="cooked">Cooked or non-frozen only</option>
+                    <option value="frozen">Frozen lines only</option>
+                  </select>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    Use <strong>Frozen only</strong> for frozen lumpia stock and{" "}
+                    <strong>Cooked or non-frozen</strong> for same-day cooked trays so pickup
+                    windows and totals stay separate.
+                  </p>
                 </div>
                 {(r.deductionMode ?? INVENTORY_DEDUCTION_ORDER_LINE_QTY) ===
                   INVENTORY_DEDUCTION_ORDER_LINE_QTY && !(r.menuItemId ?? "").trim() ? (

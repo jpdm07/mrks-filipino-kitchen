@@ -21,6 +21,7 @@ import {
   getKitchenSlotsForDate,
   isPickupYmdAllowedForOrderCart,
 } from "@/lib/kitchen-schedule";
+import { orderLinesToInventoryCartHints } from "@/lib/inventory-cart-line-hints";
 import { cartHasOnlyFlanItems } from "@/lib/menu-cook-capacity";
 import {
   wouldExceedCapacityForPickupWeekWithTx,
@@ -206,10 +207,12 @@ export async function POST(req: NextRequest) {
           .filter((id): id is string => Boolean(id))
       ),
     ];
+    const cartInventoryHints = orderLinesToInventoryCartHints(items);
     const slotList = await getKitchenSlotsForDate(
       pickupDate,
       cartFlanOnly,
-      cartMenuItemIds.length ? cartMenuItemIds : undefined
+      cartMenuItemIds.length ? cartMenuItemIds : undefined,
+      cartInventoryHints.length ? cartInventoryHints : undefined
     );
     if (!slotList.includes(pickupTime.trim())) {
       return NextResponse.json(

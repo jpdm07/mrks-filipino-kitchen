@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { InventoryCartLineHint } from "@/lib/inventory-cart-line-hints";
+
+const EMPTY_INV_HINTS: InventoryCartLineHint[] = [];
 
 export type AvailabilityWhitelistPayload = {
   openDates: string[];
@@ -22,6 +25,8 @@ export function useAvailabilityWhitelist(
     flanNeed?: number;
     /** Cart menu SKUs — narrows dates to inventory same-day pickup slots. */
     menuItemIds?: string[];
+    /** Cooked/frozen per cart line — narrows inventory rows (preferred when set). */
+    inventoryCartHints?: InventoryCartLineHint[];
   }
 ) {
   const pollMsOnError = options?.pollMsOnError ?? 30000;
@@ -44,6 +49,18 @@ export function useAvailabilityWhitelist(
       ].sort(),
     [menuItemIdsKey]
   );
+  const inventoryCartHints =
+    options?.inventoryCartHints ?? EMPTY_INV_HINTS;
+  const invCartKey = useMemo(() => {
+    if (!inventoryCartHints.length) return "";
+    return JSON.stringify(
+      [...inventoryCartHints].sort((a, b) =>
+        `${a.menuItemId}\0${a.cookedOrFrozen ?? ""}\0${a.sizeKey ?? ""}`.localeCompare(
+          `${b.menuItemId}\0${b.cookedOrFrozen ?? ""}\0${b.sizeKey ?? ""}`
+        )
+      )
+    );
+  }, [inventoryCartHints]);
   const [openDates, setOpenDates] = useState<string[]>([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -77,6 +94,9 @@ export function useAvailabilityWhitelist(
         flanNeed: String(flanNeed),
       });
       for (const id of menuItemIds) qs.append("menuItemIds", id);
+      if (inventoryCartHints.length > 0) {
+        qs.set("invCart", JSON.stringify(inventoryCartHints));
+      }
       const r = await fetch(`/api/availability?${qs.toString()}`, {
         cache: "no-store",
       });
@@ -98,7 +118,16 @@ export function useAvailabilityWhitelist(
       setLoadError(true);
       setLoading(false);
     }
-  }, [from, to, applyPayload, cartMode, mainNeed, flanNeed, menuItemIds]);
+  }, [
+    from,
+    to,
+    applyPayload,
+    cartMode,
+    mainNeed,
+    flanNeed,
+    menuItemIds,
+    invCartKey,
+  ]);
 
   useEffect(() => {
     setLoading(true);
@@ -118,6 +147,9 @@ export function useAvailabilityWhitelist(
       flanNeed: String(flanNeed),
     });
     for (const id of menuItemIds) qs.append("menuItemIds", id);
+    if (inventoryCartHints.length > 0) {
+      qs.set("invCart", JSON.stringify(inventoryCartHints));
+    }
     const source = new EventSource(
       `/api/availability/stream?${qs.toString()}`
     );
@@ -160,6 +192,7 @@ export function useAvailabilityWhitelist(
     mainNeed,
     flanNeed,
     menuItemIds,
+    invCartKey,
   ]);
 
   useEffect(() => {

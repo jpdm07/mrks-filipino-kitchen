@@ -8,6 +8,10 @@ import {
   normalizeInventoryDeductionMode,
 } from "@/lib/inventory-deduction-modes";
 import { applyInventoryStockRulesInTx } from "@/lib/inventory-stock-rules";
+import {
+  inventoryLineCookFilterMatchesLine,
+  normalizeInventoryLineCookFilter,
+} from "@/lib/inventory-line-cook-filter";
 
 const lumpiaFrozenIds = new Set<string>(LUMPIA_MENU_ITEM_IDS);
 
@@ -44,7 +48,20 @@ function lumpiaDozenUnitsForMatchedLine(
   return frozenLumpiaDozenUnits(line);
 }
 
-function lineMatchesInventory(inv: InventoryItem, line: OrderItemLine): boolean {
+/** Exported for pickup-slot narrowing — must stay aligned with deduction. */
+export function lineMatchesInventory(
+  inv: InventoryItem,
+  line: OrderItemLine
+): boolean {
+  if (
+    !inventoryLineCookFilterMatchesLine(
+      normalizeInventoryLineCookFilter(inv.lineCookFilter),
+      line.cookedOrFrozen
+    )
+  ) {
+    return false;
+  }
+
   const mode = normalizeInventoryDeductionMode(inv.deductionMode);
 
   if (mode === INVENTORY_DEDUCTION_ORDER_LINE_QTY) {
