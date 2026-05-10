@@ -136,9 +136,21 @@ export async function getKitchenSlotsForDate(
 
   if (kind === "friday") {
     const taken = await getTakenPickupTimeLabelsForDate(dateYmd);
-    const slots = sortPickupSlotLabels(
-      evening.filter((s) => !taken.has(s.trim()))
-    );
+    const row = await prisma.availability.findUnique({
+      where: { date: dateYmd.trim() },
+    });
+    /** Inventory “open pickup slots” merge into `availability`; Friday used to ignore DB and only offer 6–8 PM, which hid lunch same-day windows. */
+    let slots: string[];
+    if (row) {
+      if (!row.isOpen) return [];
+      let raw = effectiveSlotsForOpenDay(slotsJsonFromDb(row.slots));
+      if (raw.length === 0) raw = [...ALL_SLOTS];
+      slots = sortPickupSlotLabels(raw.filter((s) => !taken.has(s.trim())));
+    } else {
+      slots = sortPickupSlotLabels(
+        evening.filter((s) => !taken.has(s.trim()))
+      );
+    }
     return applyInventoryCartAndCapacityFilter(
       dateYmd,
       slots,
