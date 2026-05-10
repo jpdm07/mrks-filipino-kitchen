@@ -113,7 +113,10 @@ export async function POST(req: NextRequest) {
       });
     });
     return NextResponse.json(JSON.parse(JSON.stringify(row)));
-  } catch {
-    return NextResponse.json({ error: "Create failed" }, { status: 400 });
+  } catch (e) {
+    console.error("[admin inventory POST]", e);
+    const detail =
+      e instanceof Error ? e.message : "Unknown error (check DB migration / logs).";
+    return NextResponse.json({ error: `Create failed: ${detail}` }, { status: 400 });
   }
 }

@@ -93,3 +93,26 @@ export async function PATCH(
     return NextResponse.json({ error: "Update failed" }, { status: 400 });
   }
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  if (!(await isAdminSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const id = parseInt(params.id, 10);
+  if (!Number.isFinite(id)) {
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+  }
+
+  try {
+    await prisma.inventoryItem.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    console.error("[admin inventory DELETE]", e);
+    const detail =
+      e instanceof Error ? e.message : "Could not delete — item may not exist.";
+    return NextResponse.json({ error: detail }, { status: 400 });
+  }
+}

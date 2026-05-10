@@ -75,6 +75,7 @@ export function InventoryAnnouncementsClient({
   });
   /** Open “Add item” by default when there is nothing to edit yet (shows quantity immediately). */
   const [adding, setAdding] = useState(() => initialInventory.length === 0);
+  const [creating, setCreating] = useState(false);
   const [newItem, setNewItem] = useState({
     itemName: "",
     unitLabel: "dozen",
@@ -203,38 +204,113 @@ export function InventoryAnnouncementsClient({
   };
 
   const createItem = async () => {
-    if (!newItem.itemName.trim() || !newItem.unitLabel.trim()) return;
-    const res = await fetch("/api/admin/inventory", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        itemName: newItem.itemName.trim(),
-        unitLabel: newItem.unitLabel.trim(),
-        menuItemId: newItem.menuItemId || null,
-        quantityInStock: newItem.quantityInStock,
-        isAvailable: newItem.isAvailable,
-        showBanner: newItem.showBanner,
-        deductionMode: newItem.deductionMode,
-      }),
-    });
-    if (!res.ok) {
-      setToast("Could not add item.");
-      window.setTimeout(() => setToast(null), 4000);
+    if (!newItem.itemName.trim() || !newItem.unitLabel.trim()) {
+      setToast("Enter both item name and unit label (e.g. dozen or ramekin).");
+      window.setTimeout(() => setToast(null), 5000);
       return;
     }
-    const row = (await res.json()) as InventoryRow;
-    setItems((p) => [...p, { ...row, deductionLogs: [] }]);
-    setNewItem({
-      itemName: "",
-      unitLabel: "dozen",
-      menuItemId: "",
-      quantityInStock: 0,
-      isAvailable: false,
-      showBanner: false,
-      deductionMode: INVENTORY_DEDUCTION_ORDER_LINE_QTY,
+    setCreating(true);
+    try {
+      const res = await fetch("/api/admin/inventory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemName: newItem.itemName.trim(),
+          unitLabel: newItem.unitLabel.trim(),
+          menuItemId: newItem.menuItemId || null,
+          quantityInStock: newItem.quantityInStock,
+          isAvailable: newItem.isAvailable,
+          showBanner: newItem.showBanner,
+          deductionMode:
+            newItem.deductionMode ?? INVENTORY_DEDUCTION_ORDER_LINE_QTY,
+        }),
+      });
+
+      let parsed: unknown = null;
+      try {
+        parsed = await res.json();
+      } catch {
+        parsed = null;
+      }
+
+      if (!res.ok) {
+        const msg =
+          parsed &&
+          typeof parsed === "object" &&
+          "error" in parsed &&
+          typeof (parsed as { error?: string }).error === "string"
+            ? (parsed as { error: string }).error
+            : `Could not add item (HTTP ${res.status}).`;
+        setToast(msg);
+        window.setTimeout(() => setToast(null), 8000);
+        return;
+      }
+
+      const row = parsed as InventoryRow;
+      setItems((p) => [...p, { ...row, deductionLogs: [] }]);
+      setNewItem({
+        itemName: "",
+        unitLabel: "dozen",
+        menuItemId: "",
+        quantityInStock: 0,
+        isAvailable: false,
+        showBanner: false,
+        deductionMode: INVENTORY_DEDUCTION_ORDER_LINE_QTY,
+      });
+      setAdding(false);
+      setToast("New inventory item created.");
+      window.setTimeout(() => setToast(null), 4000);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Network error — try again.";
+      setToast(msg);
+      window.setTimeout(() => setToast(null), 6000);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const deleteItem = async (row: InventoryRow) => {
+    if (
+      !window.confirm(
+        `Remove "${row.itemName}" from inventory? Pickup slots and deduction logs for this row are removed. This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    const res = await fetch(`/api/admin/inventory/${row.id}`, {
+      method: "DELETE",
     });
-    setAdding(false);
-    setToast("New inventory item created.");
+    let parsed: unknown = null;
+    try {
+      parsed = await res.json();
+    } catch {
+      parsed = null;
+    }
+    if (!res.ok) {
+      const msg =
+        parsed &&
+        typeof parsed === "object" &&
+        "error" in parsed &&
+        typeof (parsed as { error?: string }).error === "string"
+          ? (parsed as { error: string }).error
+          : `Could not delete (HTTP ${res.status}).`;
+      setToast(msg);
+      window.setTimeout(() => setToast(null), 6000);
+      return;
+    }
+    setItems((p) => {
+      const next = p.filter((x) => x.id !== row.id);
+      if (next.length === 0) {
+        queueMicrotask(() => setAdding(true));
+      }
+      return next;
+    });
+    setDrafts((p) => {
+      const n = { ...p };
+      delete n[row.id];
+      return n;
+    });
+    setToast("Inventory row removed.");
     window.setTimeout(() => setToast(null), 4000);
   };
 
@@ -423,10 +499,11 @@ export function InventoryAnnouncementsClient({
             </select>
             <button
               type="button"
-              className="btn btn-primary btn-sm"
+              disabled={creating}
+              className="btn btn-primary btn-sm disabled:pointer-events-none disabled:opacity-60"
               onClick={() => void createItem()}
             >
-              Create inventory record
+              {creating ? "Creating…" : "Create inventory record"}
             </button>
           </div>
         ) : null}
@@ -670,6 +747,13 @@ export function InventoryAnnouncementsClient({
                   onClick={() => void save(row)}
                 >
                   Save
+                </button>
+                <button
+                  type="button"
+                  className="mt-2 w-full rounded border border-red-800/35 bg-transparent px-3 py-2 text-sm font-semibold text-red-900 hover:bg-red-50"
+                  onClick={() => void deleteItem(row)}
+                >
+                  Remove inventory row…
                 </button>
                 {r.isAvailable && r.quantityInStock > 0 ? (
                   <button
