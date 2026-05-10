@@ -80,8 +80,10 @@ export async function SmartSchedulingBanner() {
         ) : (
           <p className="text-center text-[13px] leading-snug sm:text-[15px]">
             <span className="font-semibold">Advance scheduling required.</span> Pickup orders are
-            fulfilled by appointment — please allow several days&apos; notice. Same-day orders
-            are not available. For next openings, see{" "}
+            fulfilled by appointment — please allow several days&apos; notice. Same-day pickup
+            isn&apos;t offered every day; when we have select items in stock, they&apos;ll appear
+            in this banner—otherwise check back later for same-day options. For next openings,
+            see{" "}
             <Link
               href={availabilityAbsolute}
               className="font-semibold text-[color:var(--primary)] underline decoration-[color:var(--gold)] underline-offset-2 hover:opacity-90"
