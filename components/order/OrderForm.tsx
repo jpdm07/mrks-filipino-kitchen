@@ -873,13 +873,6 @@ export function OrderForm() {
           </p>
         </div>
 
-        {!canSubmitOrder ? (
-          <p className="text-sm text-[var(--text-muted)]">
-            Fill contact + pickup, tick the payment line, and fix any sample
-            picks in the cart.
-          </p>
-        ) : null}
-
         <button
           type="submit"
           disabled={loading || !canSubmitOrder}
