@@ -5,6 +5,10 @@ import {
   buildCustomerReplyFooterPlainText,
 } from "@/lib/mail-reply-routing";
 import { formatPickupDisplay } from "@/lib/format-pickup";
+import {
+  customerPickupMeetupHtmlBlock,
+  customerPickupMeetupPlainBlock,
+} from "@/lib/order-pickup-display";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { sendMail, type MailSendResult } from "@/lib/mailer";
 
@@ -64,6 +68,7 @@ export async function sendCustomerOrderPlacedEmail(
     `Thanks for ordering from Mr. K's Filipino Kitchen. We saved your order as #${params.orderNumber}.`,
     "",
     `Pickup (requested): ${when}`,
+    customerPickupMeetupPlainBlock(),
     `Total due: $${params.total.toFixed(2)}`,
     "",
     "Your order is not final until we receive payment.",
@@ -99,6 +104,7 @@ export async function sendCustomerOrderPlacedEmail(
     <p style="margin:0 0 16px;">Hi ${name},</p>
     <p style="margin:0 0 16px;">Thanks for ordering from Mr. K&apos;s Filipino Kitchen. We saved your order as <strong>#${num}</strong>.</p>
     <p style="margin:0 0 8px;"><strong>Pickup (requested)</strong><br/>${whenH}</p>
+    ${customerPickupMeetupHtmlBlock()}
     <p style="margin:0 0 16px;"><strong>Total due</strong> — $${params.total.toFixed(2)}</p>
     <p style="margin:0 0 16px;padding:12px 14px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;font-size:15px;">Your order is <strong>not final</strong> until we receive payment.</p>
     <p style="margin:0 0 8px;"><strong>Pay with Zelle, Venmo, or Cash App</strong></p>

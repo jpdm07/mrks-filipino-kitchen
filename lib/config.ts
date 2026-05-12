@@ -103,6 +103,16 @@ export const SITE = {
 } as const;
 
 /**
+ * Curbside meetup — checkout “What happens next”, order confirmation page, and
+ * order-placed / payment-confirmed customer emails (keep wording in sync).
+ */
+export const CUSTOMER_PICKUP_MEETUP = {
+  streetAddress: "16503 Mueschke Rd, Cypress, TX 77433",
+  handoffPlain:
+    "Curbside pickup is at the Exxon convenience store at this address. During your scheduled pickup window, park in any open spot along the storefront—we will bring your order to your vehicle.",
+} as const;
+
+/**
  * Pickup date rules for web orders (min date on the picker + API validation).
  * Earliest selectable pickup is the first Friday or Saturday on or after
  * “today” in PICKUP_TIMEZONE (same week when you order Wed–Thu).

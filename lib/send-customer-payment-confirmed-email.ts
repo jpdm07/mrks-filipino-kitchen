@@ -4,7 +4,11 @@ import {
   buildCustomerReplyFooterHtml,
   buildCustomerReplyFooterPlainText,
 } from "@/lib/mail-reply-routing";
-import { formatCustomerPickupLine } from "@/lib/order-pickup-display";
+import {
+  customerPickupMeetupHtmlBlock,
+  customerPickupMeetupPlainBlock,
+  formatCustomerPickupLine,
+} from "@/lib/order-pickup-display";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { sendMail, type MailSendResult } from "@/lib/mailer";
 
@@ -51,6 +55,7 @@ export async function sendCustomerPaymentConfirmedEmail(
     `We've received your payment for order #${order.orderNumber}. Thank you!`,
     "",
     `Pickup: ${when}`,
+    customerPickupMeetupPlainBlock(),
     "",
     `Order total: $${order.total.toFixed(2)}`,
     "",
@@ -79,6 +84,7 @@ export async function sendCustomerPaymentConfirmedEmail(
     <p style="margin:0 0 16px;">Hi ${name},</p>
     <p style="margin:0 0 16px;">We&apos;ve received your payment for order <strong>#${num}</strong>. Thank you!</p>
     <p style="margin:0 0 8px;"><strong>Pickup</strong><br/>${whenH}</p>
+    ${customerPickupMeetupHtmlBlock()}
     <p style="margin:0 0 16px;"><strong>Order total</strong> — $${order.total.toFixed(2)}</p>
     <p style="margin:0 0 8px;"><a href="${urlH}" style="color:#0d6efd;">View your order summary</a> (bookmark or show at pickup).</p>
     <p style="margin:16px 0 0;font-size:14px;color:#555;">You&apos;ll also get a separate email with your full receipt and line items.</p>

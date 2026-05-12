@@ -9,6 +9,7 @@ import { orderHasFrozenLumpia } from "@/lib/order-types";
 import {
   formatUtensilsCheckoutSubtext,
   salesTaxPercentLabel,
+  CUSTOMER_PICKUP_MEETUP,
 } from "@/lib/config";
 import {
   complimentaryUtensilAllowanceFromOrderItems,
@@ -83,6 +84,14 @@ export default async function OrderConfirmationPage({
           Pickup: <strong>{pickupLine}</strong>
         </p>
       ) : null}
+
+      <div className="mx-auto mt-4 max-w-lg rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-left text-sm leading-snug text-[var(--text)] shadow-sm">
+        <p className="font-semibold text-[var(--primary)]">Where to meet</p>
+        <p className="mt-1 font-semibold">{CUSTOMER_PICKUP_MEETUP.streetAddress}</p>
+        <p className="mt-2 text-[var(--text-muted)]">
+          {CUSTOMER_PICKUP_MEETUP.handoffPlain}
+        </p>
+      </div>
 
       <div className="mt-8 rounded-[var(--radius)] border-2 border-[var(--primary)] bg-[var(--primary)]/5 p-5 text-center shadow-[var(--shadow)]">
         <div className="mb-4 rounded-xl border-2 border-amber-500/80 bg-amber-50 px-4 py-3 shadow-sm">

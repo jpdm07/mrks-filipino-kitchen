@@ -24,7 +24,7 @@ import {
 import { playOrderSubmitClick } from "@/lib/checkout-ui-sounds";
 import { sortPickupSlotLabels } from "@/lib/pickup-time-slots";
 import type { InventoryCartLineHint } from "@/lib/inventory-cart-line-hints";
-import { SITE } from "@/lib/config";
+import { SITE, CUSTOMER_PICKUP_MEETUP } from "@/lib/config";
 
 type CheckoutIssueKey =
   | "name"
@@ -831,7 +831,7 @@ export function OrderForm() {
         </div>
 
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
-          <p className="text-sm font-semibold text-[var(--text)]">
+          <p className="text-sm font-semibold uppercase tracking-wide text-[var(--text)]">
             What happens next:
           </p>
           <p className="mt-1 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
@@ -847,18 +847,20 @@ export function OrderForm() {
               payment instructions (Venmo, Zelle, or Cash App).
             </li>
             <li>
-              We email your order summary. When you pay, put that order number in
-              the payment memo so we can match it to you. Like most reserved
-              pickup orders, please complete payment within{" "}
-              <span className="font-semibold">24 hours</span> so we can confirm
-              your order and hold your time—sooner is fine if you&apos;re ready.
+              We email your order summary with payment steps and where to meet for
+              pickup. When you pay, put that order number in the payment memo so we
+              can match it to you. Like most reserved pickup orders, please complete
+              payment within{" "}
+              <span className="font-semibold">24 hours</span> so we can confirm your
+              order and hold your time—sooner is fine if you&apos;re ready.
             </li>
             <li>
-              We email again once payment is on file.{" "}
+              We email again once payment is on file. That message includes your
+              pickup date and time, plus where to meet:{" "}
               <span className="font-semibold text-[var(--text)]">
-                Pickup meetup details
-              </span>{" "}
-              are in that message.
+                {CUSTOMER_PICKUP_MEETUP.streetAddress}
+              </span>
+              . {CUSTOMER_PICKUP_MEETUP.handoffPlain}
             </li>
           </ol>
           <p className="mt-4 border-t border-[var(--border)]/80 pt-3 text-xs leading-snug text-[var(--text-muted)]">
