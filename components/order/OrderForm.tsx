@@ -832,7 +832,7 @@ export function OrderForm() {
 
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
           <p className="text-sm font-semibold text-[var(--text)]">
-            What happens next
+            What happens next:
           </p>
           <p className="mt-1 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
             No card or wallet charge on this step
@@ -862,7 +862,7 @@ export function OrderForm() {
             </li>
           </ol>
           <p className="mt-4 border-t border-[var(--border)]/80 pt-3 text-xs leading-snug text-[var(--text-muted)]">
-            Prefer to talk it through first?{" "}
+            Questions?{" "}
             <a
               href={SITE.phoneTel}
               className="font-semibold text-[var(--primary)] underline decoration-[var(--primary)]/40 underline-offset-2 hover:decoration-[var(--primary)]"
