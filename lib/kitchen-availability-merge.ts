@@ -15,7 +15,10 @@ import {
   getTodayInPickupTimezoneYMD,
   isPickupYmdAllowed,
 } from "@/lib/pickup-lead-time";
-import { filterOpenDatesByInventoryCart } from "@/lib/inventory-cart-pickup-sync";
+import {
+  cartHasManagedPickupSlotInventory,
+  filterOpenDatesByInventoryCart,
+} from "@/lib/inventory-cart-pickup-sync";
 import type { InventoryCartLineHint } from "@/lib/inventory-cart-line-hints";
 
 export type KitchenCalendarOptions = {
@@ -128,7 +131,36 @@ export async function buildKitchenOpenDatesPayload(
     }
   }
 
-  const filtered = openDates.filter((ymd) => !dbExplicitClosed.has(ymd));
+  const unionInventoryWeekdays =
+    !opts.cartFlanOnly &&
+    (await cartHasManagedPickupSlotInventory(
+      opts.cartMenuItemIds ?? [],
+      opts.cartInventoryHints
+    ));
+
+  if (unionInventoryWeekdays) {
+    for (const ymd of allDates) {
+      if (ymd < today) continue;
+      if (openDates.includes(ymd)) continue;
+      const kind = kitchenDayKind(ymd);
+      if (kind === "friday" || kind === "saturday") continue;
+      if (!dbOpen.get(ymd)) continue;
+
+      const weekMon = mondayOfCalendarWeekContaining(ymd);
+      const snap = snapMap.get(weekMon);
+      if (!snap) continue;
+      if (snap.mainSoldOut) continue;
+      if (mainNeed > snap.mainCookRemaining) continue;
+      if (flanNeed > snap.flanRemaining) continue;
+
+      openDates.push(ymd);
+      notes[ymd] = ALL_ITEMS_DAY_NOTE;
+    }
+  }
+
+  const filtered = openDates
+    .filter((ymd) => !dbExplicitClosed.has(ymd))
+    .sort();
   const prunedNotes: Record<string, string> = {};
   for (const ymd of filtered) {
     prunedNotes[ymd] = notes[ymd] ?? "";

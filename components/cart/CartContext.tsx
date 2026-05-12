@@ -11,6 +11,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { usePathname } from "next/navigation";
 import { computeUtensilChargeUsd, PRICING } from "@/lib/config";
 import { complimentaryUtensilAllowanceFromOrderItems } from "@/lib/utensils-allowance";
 import {
@@ -198,6 +199,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 const defaultPrices: SamplePrices = sampleCartPricesFromMenuCatalog();
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [samples, setSamples] = useState<SampleSelection>(() => emptySamples());
   const [samplePrices, setSamplePrices] = useState<SamplePrices>(defaultPrices);
@@ -207,6 +209,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [extraDipSauceQty, setExtraDipSauceQty] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+
+  /** Full-screen cart overlay uses z-5000; navbar is z-50 — close on navigation so the drawer never traps the page. */
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
 
   const openDrawer = useCallback(() => setDrawerOpen(true), []);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);

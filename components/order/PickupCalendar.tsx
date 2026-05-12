@@ -31,16 +31,16 @@ function isBookablePickupDayInCalendar(
   cartMode: "flan" | "mixed"
 ): boolean {
   if (ymd < todayYmd) return false;
-  const leadOkForCart = (() => {
-    if (cartMode === "flan") {
-      const kd = kitchenDayKind(ymd);
-      if (kd === "tue_thu")
-        return isFlanTueThuPickupYmdBookableAt(ymd, new Date());
-      if (kd === "sunday" || kd === "monday") return false;
-    }
+  if (!openSet.has(ymd)) return false;
+  if (cartMode === "flan") {
+    const kd = kitchenDayKind(ymd);
+    if (kd === "tue_thu")
+      return isFlanTueThuPickupYmdBookableAt(ymd, new Date());
+    if (kd === "sunday" || kd === "monday") return false;
     return isPickupYmdAllowed(ymd);
-  })();
-  return openSet.has(ymd) && leadOkForCart;
+  }
+  /** Mixed: kitchen API whitelist is authoritative (includes inventory-open weekdays). */
+  return true;
 }
 
 /**
@@ -356,7 +356,9 @@ export const PickupCalendar = forwardRef<
               if (kd === "tue_thu")
                 return isFlanTueThuPickupYmdBookableAt(ymd, new Date());
               if (kd === "sunday" || kd === "monday") return false;
+              return isPickupYmdAllowed(ymd);
             }
+            if (openSet.has(ymd) && ymd >= todayYmd) return true;
             return isPickupYmdAllowed(ymd);
           })();
           const tooSoon = !leadOkForCart;

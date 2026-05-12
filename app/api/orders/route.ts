@@ -19,7 +19,7 @@ import {
 } from "@/lib/pickup-lead-time";
 import {
   getKitchenSlotsForDate,
-  isPickupYmdAllowedForOrderCart,
+  isPickupYmdAllowedForOrderCartAsync,
 } from "@/lib/kitchen-schedule";
 import { orderLinesToInventoryCartHints } from "@/lib/inventory-cart-line-hints";
 import { cartHasOnlyFlanItems } from "@/lib/menu-cook-capacity";
@@ -193,7 +193,13 @@ export async function POST(req: NextRequest) {
       );
     }
     const cartFlanOnly = cartHasOnlyFlanItems(items);
-    if (!isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly, new Date())) {
+    if (
+      !(await isPickupYmdAllowedForOrderCartAsync(
+        pickupDate,
+        cartFlanOnly,
+        new Date()
+      ))
+    ) {
       return NextResponse.json(
         { error: pickupDateRejectedMessage() },
         { status: 400 }

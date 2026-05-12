@@ -69,11 +69,13 @@ export function AcceptedPaymentMethods({
     return (
       <div
         className="flex flex-wrap items-center justify-center gap-4"
-        aria-label="Venmo, Zelle, and Cash App accepted; pay on the next screen after you submit"
+        aria-label="Venmo, Zelle, and Cash App accepted. No charge on this site—you pay in your wallet app after you place your order and see your order number."
         role="group"
       >
         <span className="sr-only">
-          Venmo, Zelle, and Cash App accepted. You will pay on the next screen.
+          Venmo, Zelle, and Cash App accepted. Nothing is charged on this website;
+          you complete payment in Venmo, Zelle, or Cash App after you place your
+          order.
         </span>
         <div
           className="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm"

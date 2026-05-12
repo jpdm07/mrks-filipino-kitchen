@@ -191,6 +191,30 @@ async function computeCartInventorySlotLabelFilterForDate(
   return sortPickupSlotLabels([...inter]);
 }
 
+/** True when the cart references menu SKUs that use inventory pickup-slot rows (same-day windows). */
+export async function cartHasManagedPickupSlotInventory(
+  cartMenuItemIds: string[],
+  cartInventoryHints?: InventoryCartLineHint[] | null
+): Promise<boolean> {
+  const hints = cartInventoryHints?.filter((h) => h.menuItemId?.trim()) ?? [];
+  const menuIds =
+    hints.length > 0
+      ? [...new Set(hints.map((h) => h.menuItemId.trim()))]
+      : [...new Set(cartMenuItemIds.map((s) => s.trim()).filter(Boolean))];
+  if (menuIds.length === 0) return false;
+  const invItems = await prisma.inventoryItem.findMany({
+    where: { menuItemId: { in: menuIds } },
+    select: { id: true },
+  });
+  if (invItems.length === 0) return false;
+  const invIds = invItems.map((i) => i.id);
+  const slotRow = await prisma.inventoryPickupSlot.findFirst({
+    where: { inventoryItemId: { in: invIds } },
+    select: { id: true },
+  });
+  return Boolean(slotRow);
+}
+
 /**
  * Drop calendar days where inventory-managed cart SKUs have no joint pickup window.
  */

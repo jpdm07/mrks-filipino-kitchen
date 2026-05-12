@@ -7,6 +7,7 @@ import { OrderSummary } from "./OrderSummary";
 import { PickupCalendar } from "./PickupCalendar";
 import { samplesSelectionComplete } from "@/lib/cart-types";
 import {
+  getTodayInPickupTimezoneYMD,
   isWellFormedPickupYMD,
   pickupDateRejectedMessage,
 } from "@/lib/pickup-lead-time";
@@ -23,6 +24,7 @@ import {
 import { playOrderSubmitClick } from "@/lib/checkout-ui-sounds";
 import { sortPickupSlotLabels } from "@/lib/pickup-time-slots";
 import type { InventoryCartLineHint } from "@/lib/inventory-cart-line-hints";
+import { SITE } from "@/lib/config";
 
 type CheckoutIssueKey =
   | "name"
@@ -34,6 +36,22 @@ type CheckoutIssueKey =
   | "samples";
 
 type CheckoutIssues = Partial<Record<CheckoutIssueKey, boolean>>;
+
+/** Mixed carts: legacy Fri/Sat schedule, or an inventory/admin-open day once slots from the API load. */
+function checkoutPickupDatePassesClientValidation(
+  pickupDate: string,
+  cartFlanOnly: boolean,
+  slotsLoading: boolean,
+  slotOptions: string[],
+  pickupTime: string
+): boolean {
+  if (slotsLoading) return false;
+  const slotOk = Boolean(pickupTime && slotOptions.includes(pickupTime));
+  if (isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly)) return slotOk;
+  if (cartFlanOnly) return false;
+  if (slotOptions.length === 0) return false;
+  return slotOk;
+}
 
 /** Keeps every checkout checkbox the same size and top offset for a straight left edge. */
 const checkoutCheckboxInputClass =
@@ -149,7 +167,12 @@ export function OrderForm() {
     appliedUrlPickup.current = true;
     const d = raw.trim();
     const flanOnly = cartHasOnlyFlanItems(buildOrderItems());
-    if (!isPickupYmdAllowedForOrderCart(d, flanOnly)) {
+    const today = getTodayInPickupTimezoneYMD();
+    if (d < today) {
+      setUrlLeadReject(true);
+      return;
+    }
+    if (flanOnly && !isPickupYmdAllowedForOrderCart(d, true)) {
       setUrlLeadReject(true);
       return;
     }
@@ -246,10 +269,13 @@ export function OrderForm() {
     phoneOk &&
     emailOk &&
     pickupDate &&
-    pickupTime &&
-    slotOptions.includes(pickupTime) &&
-    isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly) &&
-    !slotsLoading;
+    checkoutPickupDatePassesClientValidation(
+      pickupDate,
+      cartFlanOnly,
+      slotsLoading,
+      slotOptions,
+      pickupTime
+    );
 
   const samplesOk = samplesSelectionComplete(cart.samples);
   const canSubmitOrder = basicsOk && samplesOk;
@@ -300,14 +326,19 @@ export function OrderForm() {
 
     if (!pickupDate?.trim() || !isWellFormedPickupYMD(pickupDate)) {
       next.pickup = true;
-    } else if (!isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly)) {
-      next.pickup = true;
     } else if (slotsLoading) {
       next.time = true;
-    } else if (slotOptions.length === 0) {
-      next.time = true;
-    } else if (!pickupTime || !slotOptions.includes(pickupTime)) {
-      next.time = true;
+    } else {
+      const legacyOk = isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly);
+      const dateScheduleOk =
+        legacyOk ||
+        (!cartFlanOnly && !legacyOk && slotOptions.length > 0);
+      if (!dateScheduleOk) {
+        if (cartFlanOnly) next.pickup = true;
+        else next.time = true;
+      } else if (!pickupTime || !slotOptions.includes(pickupTime)) {
+        next.time = true;
+      }
     }
 
     if (!samplesOk) {
@@ -344,7 +375,8 @@ export function OrderForm() {
       if (
         next.pickup &&
         pickupDate &&
-        !isPickupYmdAllowedForOrderCart(pickupDate, cartFlanOnly)
+        cartFlanOnly &&
+        !isPickupYmdAllowedForOrderCart(pickupDate, true)
       ) {
         parts.push(pickupDateRejectedMessage());
       } else if (next.pickup) {
@@ -647,7 +679,7 @@ export function OrderForm() {
               }}
             />
             <span className="min-w-0 leading-snug">
-              My order isn&apos;t final until I pay on the next page. I&apos;ll put my
+              My order isn&apos;t final until I make my payment. I&apos;ll put my
               order number in the Venmo, Zelle, or Cash App memo when I pay so Mr. K
               can match it
               with me at pickup.
@@ -798,6 +830,49 @@ export function OrderForm() {
           ) : null}
         </div>
 
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+          <p className="text-sm font-semibold text-[var(--text)]">
+            What happens next
+          </p>
+          <p className="mt-1 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
+            No card or wallet charge on this step
+          </p>
+          <ol className="mt-3 list-decimal space-y-2.5 pl-5 text-sm leading-snug text-[var(--text)] marker:font-semibold">
+            <li>
+              You submit your order here—nothing is collected on the website.
+            </li>
+            <li>
+              You&apos;ll immediately see your{" "}
+              <span className="font-semibold">order number</span> and short
+              payment instructions (Venmo, Zelle, or Cash App).
+            </li>
+            <li>
+              We email your order summary. When you pay, put that order number in
+              the payment memo so we can match it to you. Like most reserved
+              pickup orders, please complete payment within{" "}
+              <span className="font-semibold">24 hours</span> so we can confirm
+              your order and hold your time—sooner is fine if you&apos;re ready.
+            </li>
+            <li>
+              We email again once payment is on file.{" "}
+              <span className="font-semibold text-[var(--text)]">
+                Pickup meetup details
+              </span>{" "}
+              are in that message.
+            </li>
+          </ol>
+          <p className="mt-4 border-t border-[var(--border)]/80 pt-3 text-xs leading-snug text-[var(--text-muted)]">
+            Prefer to talk it through first?{" "}
+            <a
+              href={SITE.phoneTel}
+              className="font-semibold text-[var(--primary)] underline decoration-[var(--primary)]/40 underline-offset-2 hover:decoration-[var(--primary)]"
+            >
+              Text or call {SITE.phoneDisplay}
+            </a>
+            .
+          </p>
+        </div>
+
         {!canSubmitOrder ? (
           <p className="text-sm text-[var(--text-muted)]">
             Fill contact + pickup, tick the payment line, and fix any sample
@@ -810,7 +885,7 @@ export function OrderForm() {
           disabled={loading || !canSubmitOrder}
           className="btn btn-accent btn-block disabled:pointer-events-none disabled:opacity-40"
         >
-          {loading ? "Submitting…" : "Submit Order"}
+          {loading ? "Submitting…" : "Place order — show my order number"}
         </button>
       </div>
       <div className="min-w-0">
