@@ -34,14 +34,6 @@ export function formatSamplesForSms(items: OrderItemLine[]): string {
     .join(", ");
 }
 
-export function orderHasFrozenLumpia(items: OrderItemLine[]): boolean {
-  return items.some(
-    (i) =>
-      i.name.toLowerCase().includes("lumpia") &&
-      i.cookedOrFrozen === "frozen"
-  );
-}
-
 export function orderHasFlan(items: OrderItemLine[]): boolean {
   return items.some((i) => /flan|leche flan/i.test(i.name));
 }

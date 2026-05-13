@@ -5,7 +5,6 @@ import { Logo } from "@/components/ui/Logo";
 import { AnimatedCheck } from "@/components/order/AnimatedCheck";
 import { OrderConfirmationConfetti } from "@/components/order/OrderConfirmationConfetti";
 import type { OrderItemLine } from "@/lib/order-types";
-import { orderHasFrozenLumpia } from "@/lib/order-types";
 import {
   formatUtensilsCheckoutSubtext,
   salesTaxPercentLabel,
@@ -55,7 +54,6 @@ export default async function OrderConfirmationPage({
     items,
     order.utensilCharge
   );
-  const frozenLumpia = orderHasFrozenLumpia(items);
 
   const pickupLine = formatCustomerPickupLine(order);
 
@@ -201,14 +199,6 @@ export default async function OrderConfirmationPage({
               979-703-3827
             </a>
             .
-          </p>
-        </div>
-      ) : null}
-      {frozenLumpia ? (
-        <div className="mt-4 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-section)] p-4 text-sm">
-          <p>
-            Your frozen lumpia will be packaged in a sealed gallon freezer bag
-            with parchment paper separators to prevent sticking.
           </p>
         </div>
       ) : null}
