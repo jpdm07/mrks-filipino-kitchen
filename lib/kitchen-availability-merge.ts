@@ -138,6 +138,27 @@ export async function buildKitchenOpenDatesPayload(
       opts.cartInventoryHints
     ));
 
+  /** Weekdays (Tue–Thu, etc.) saved open in admin — mixed checkout + order API. */
+  if (!opts.cartFlanOnly) {
+    for (const ymd of allDates) {
+      if (ymd < today) continue;
+      if (openDates.includes(ymd)) continue;
+      const kind = kitchenDayKind(ymd);
+      if (kind === "friday" || kind === "saturday") continue;
+      if (!dbOpen.get(ymd)) continue;
+
+      const weekMon = mondayOfCalendarWeekContaining(ymd);
+      const snap = snapMap.get(weekMon);
+      if (!snap) continue;
+      if (snap.mainSoldOut) continue;
+      if (mainNeed > snap.mainCookRemaining) continue;
+      if (flanNeed > snap.flanRemaining) continue;
+
+      openDates.push(ymd);
+      notes[ymd] = ALL_ITEMS_DAY_NOTE;
+    }
+  }
+
   if (unionInventoryWeekdays) {
     for (const ymd of allDates) {
       if (ymd < today) continue;
