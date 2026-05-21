@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
-import { isFlanPickupOnlyNote } from "@/lib/kitchen-schedule";
+import {
+  isFlanPickupOnlyNote,
+  isWeekdayEligibleForAdminMixedCartOverride,
+  kitchenDayKind,
+} from "@/lib/kitchen-schedule";
 import { FlanPickupDayBadge } from "@/components/calendar/FlanPickupDayBadge";
 import { CalendarTodayMark } from "@/components/calendar/CalendarTodayMark";
 import { eachYmdInRangeInclusive } from "@/lib/availability-range";
@@ -815,6 +819,16 @@ export function AdminAvailabilityPanel() {
             <p className="mt-2 rounded-md border border-amber-500/50 bg-amber-50 px-2 py-1.5 text-xs font-semibold text-amber-950">
               Dessert pickups only — customers see this day highlighted the same way on
               all calendars.
+            </p>
+          ) : null}
+          {selected &&
+          days[selected]?.isOpen &&
+          isWeekdayEligibleForAdminMixedCartOverride(kitchenDayKind(selected)) &&
+          !isFlanPickupOnlyNote(days[selected]?.note) ? (
+            <p className="mt-2 rounded-md border border-emerald-600/40 bg-emerald-50 px-2 py-1.5 text-xs text-emerald-950">
+              <strong>Mon–Thu override:</strong> This day is open for{" "}
+              <strong>any menu items</strong> at checkout (not limited to dessert-only),
+              as long as you save slots below.
             </p>
           ) : null}
           <textarea

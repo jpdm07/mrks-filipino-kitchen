@@ -82,6 +82,20 @@ export function kitchenDayKind(ymd: string): KitchenDayKind {
   return "saturday";
 }
 
+export function isFridayOrSaturdayKind(kind: KitchenDayKind): boolean {
+  return kind === "friday" || kind === "saturday";
+}
+
+/**
+ * Mon–Thu (and Sun): automatic schedule is closed or dessert-only. When you save a
+ * date as open in admin, mixed carts (any menu items) may use that day at checkout.
+ */
+export function isWeekdayEligibleForAdminMixedCartOverride(
+  kind: KitchenDayKind
+): boolean {
+  return !isFridayOrSaturdayKind(kind);
+}
+
 /**
  * Fri/Sat use existing lead rules; Tue–Thu is for dessert-only carts (flan and/or
  * yema) when before the weekly Saturday cutoff.
@@ -102,8 +116,8 @@ export function isPickupYmdAllowedForOrderCart(
 }
 
 /**
- * Server-side: allows pickup on Sun–Thu for mixed carts when `availability` was
- * opened (e.g. inventory same-day merge), without requiring the Fri/Sat lead window.
+ * Server-side: mixed carts may pick up on any future date you saved open in admin
+ * (Mon–Thu full-menu override, inventory weekdays, etc.) without the Fri/Sat lead window.
  */
 export async function isPickupYmdAllowedForOrderCartAsync(
   ymd: string,

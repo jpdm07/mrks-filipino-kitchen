@@ -8,17 +8,17 @@ import {
 import {
   ALL_ITEMS_DAY_NOTE,
   FLAN_ONLY_DAY_NOTE,
+  isFlanPickupOnlyNote,
+  isWeekdayEligibleForAdminMixedCartOverride,
   kitchenDayKind,
+  type KitchenDayKind,
 } from "@/lib/kitchen-schedule";
 import { mondayOfCalendarWeekContaining } from "@/lib/pickup-week";
 import {
   getTodayInPickupTimezoneYMD,
   isPickupYmdAllowed,
 } from "@/lib/pickup-lead-time";
-import {
-  cartHasManagedPickupSlotInventory,
-  filterOpenDatesByInventoryCart,
-} from "@/lib/inventory-cart-pickup-sync";
+import { filterOpenDatesByInventoryCart } from "@/lib/inventory-cart-pickup-sync";
 import type { InventoryCartLineHint } from "@/lib/inventory-cart-line-hints";
 
 export type KitchenCalendarOptions = {
@@ -56,6 +56,34 @@ async function snapshotsByWeek(
     );
   }
   return map;
+}
+
+/** Mixed cart: admin-saved open days on Mon–Thu (and Sun), with capacity checks. */
+function tryAddAdminOpenWeekdayForMixedCart(
+  ymd: string,
+  kind: KitchenDayKind,
+  today: string,
+  dbOpen: Map<string, boolean>,
+  openDates: string[],
+  notes: Record<string, string>,
+  snapMap: Map<string, WeekCapacitySnapshot>,
+  mainNeed: number,
+  flanNeed: number
+): void {
+  if (ymd < today) return;
+  if (openDates.includes(ymd)) return;
+  if (!isWeekdayEligibleForAdminMixedCartOverride(kind)) return;
+  if (!dbOpen.get(ymd)) return;
+
+  const weekMon = mondayOfCalendarWeekContaining(ymd);
+  const snap = snapMap.get(weekMon);
+  if (!snap) return;
+  if (snap.mainSoldOut) return;
+  if (mainNeed > snap.mainCookRemaining) return;
+  if (flanNeed > snap.flanRemaining) return;
+
+  openDates.push(ymd);
+  notes[ymd] = ALL_ITEMS_DAY_NOTE;
 }
 
 /**
@@ -131,51 +159,20 @@ export async function buildKitchenOpenDatesPayload(
     }
   }
 
-  const unionInventoryWeekdays =
-    !opts.cartFlanOnly &&
-    (await cartHasManagedPickupSlotInventory(
-      opts.cartMenuItemIds ?? [],
-      opts.cartInventoryHints
-    ));
-
-  /** Weekdays (Tue–Thu, etc.) saved open in admin — mixed checkout + order API. */
+  /** Mon–Thu (and Sun): any date you mark open in admin — full menu at checkout for mixed carts. */
   if (!opts.cartFlanOnly) {
     for (const ymd of allDates) {
-      if (ymd < today) continue;
-      if (openDates.includes(ymd)) continue;
-      const kind = kitchenDayKind(ymd);
-      if (kind === "friday" || kind === "saturday") continue;
-      if (!dbOpen.get(ymd)) continue;
-
-      const weekMon = mondayOfCalendarWeekContaining(ymd);
-      const snap = snapMap.get(weekMon);
-      if (!snap) continue;
-      if (snap.mainSoldOut) continue;
-      if (mainNeed > snap.mainCookRemaining) continue;
-      if (flanNeed > snap.flanRemaining) continue;
-
-      openDates.push(ymd);
-      notes[ymd] = ALL_ITEMS_DAY_NOTE;
-    }
-  }
-
-  if (unionInventoryWeekdays) {
-    for (const ymd of allDates) {
-      if (ymd < today) continue;
-      if (openDates.includes(ymd)) continue;
-      const kind = kitchenDayKind(ymd);
-      if (kind === "friday" || kind === "saturday") continue;
-      if (!dbOpen.get(ymd)) continue;
-
-      const weekMon = mondayOfCalendarWeekContaining(ymd);
-      const snap = snapMap.get(weekMon);
-      if (!snap) continue;
-      if (snap.mainSoldOut) continue;
-      if (mainNeed > snap.mainCookRemaining) continue;
-      if (flanNeed > snap.flanRemaining) continue;
-
-      openDates.push(ymd);
-      notes[ymd] = ALL_ITEMS_DAY_NOTE;
+      tryAddAdminOpenWeekdayForMixedCart(
+        ymd,
+        kitchenDayKind(ymd),
+        today,
+        dbOpen,
+        openDates,
+        notes,
+        snapMap,
+        mainNeed,
+        flanNeed
+      );
     }
   }
 
@@ -232,9 +229,15 @@ export async function buildUnifiedDisplayOpenDatesPayload(
   const notes: Record<string, string> = { ...mixed.notes };
   for (const ymd of flan.openDates) {
     const kd = kitchenDayKind(ymd);
+    const mixedNote = notes[ymd]?.trim() ?? "";
+    const mixedIsAdminAllItems =
+      mixed.openDates.includes(ymd) &&
+      mixedNote.length > 0 &&
+      !isFlanPickupOnlyNote(mixedNote);
+    if (mixedIsAdminAllItems) continue;
     if (kd === "tue_thu") {
-      notes[ymd] = flan.notes[ymd] ?? notes[ymd] ?? "";
-    } else if (!notes[ymd]) {
+      notes[ymd] = flan.notes[ymd] ?? mixedNote ?? "";
+    } else if (!mixedNote) {
       notes[ymd] = flan.notes[ymd] ?? "";
     }
   }

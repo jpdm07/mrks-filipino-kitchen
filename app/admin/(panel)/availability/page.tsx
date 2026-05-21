@@ -18,13 +18,13 @@ export default async function AdminAvailabilityPage() {
         Pickup availability
       </h1>
       <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
-        Mark which calendar dates customers may choose for pickup. Checkout only
-        allows dates on or after the <strong>first Friday or Saturday on or after
-        today</strong> (Central) — so mid-week orders can still target this
-        weekend. Saves go to
-        the same database the live site uses — the public pickup calendar and
-        checkout calendar refresh automatically every few seconds (and when
-        someone returns to your site tab).
+        Mark which calendar dates customers may choose for pickup.{" "}
+        <strong>Mon–Thu</strong> are normally dessert-only online; if you
+        double-click a day to open it and save slots, checkout offers that date
+        for <strong>any items</strong> (lumpia, pancit, flan, etc.). Fri/Sat
+        follow the usual weekend rules (Thu noon cutoff for the current weekend).
+        Saves go to the same database the live site uses — checkout refreshes
+        every few seconds.
       </p>
       <div className="mt-8">
         <AdminAvailabilityPanel />
