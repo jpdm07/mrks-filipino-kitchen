@@ -157,16 +157,25 @@ export const LUMPIA_PRINT_TAKEOUT_LINES = {
   beef: "Beef: 1 dz $14.99 · 2 dz $27 · 50 pcs $60",
 } as const;
 
+/** Customer-facing menu/cart size labels (backend keys unchanged). */
+export const LUMPIA_CUSTOMER_SIZE_LABELS = {
+  sample: "Sample (4 pcs)",
+  dz1: "1 Dozen",
+  dz2: "2 Dozen",
+  party: "Party Tray (50 pcs)",
+} as const;
+
 /** `MENU_CATALOG` sizes: six keys per protein, `cooked-1dz` … `frozen-party`. */
 export function lumpiaCatalogSizesForProtein(p: LumpiaProtein) {
   const t = LUMPIA_RETAIL_TIERS_USD[p];
+  const { dz1, dz2, party } = LUMPIA_CUSTOMER_SIZE_LABELS;
   return [
-    { key: "cooked-1dz", label: "1 Dozen (12 pcs)", price: t.dz1 },
-    { key: "cooked-2dz", label: "2 Dozen (24 pcs)", price: t.dz2 },
-    { key: "cooked-party", label: "Party Tray (50 pcs)", price: t.party50 },
-    { key: "frozen-1dz", label: "1 Dozen (12 pcs)", price: t.dz1 },
-    { key: "frozen-2dz", label: "2 Dozen (24 pcs)", price: t.dz2 },
-    { key: "frozen-party", label: "Party Tray (50 pcs)", price: t.party50 },
+    { key: "cooked-1dz", label: dz1, price: t.dz1 },
+    { key: "cooked-2dz", label: dz2, price: t.dz2 },
+    { key: "cooked-party", label: party, price: t.party50 },
+    { key: "frozen-1dz", label: dz1, price: t.dz1 },
+    { key: "frozen-2dz", label: dz2, price: t.dz2 },
+    { key: "frozen-party", label: party, price: t.party50 },
   ] as const;
 }
 

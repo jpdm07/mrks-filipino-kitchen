@@ -10,16 +10,7 @@ import { CartQuantityField } from "@/components/cart/CartQuantityField";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
 import { MenuItemImageCarousel } from "@/components/menu/MenuItemImageCarousel";
 import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
-import { LUMPIA_MENU_FROM_PRICE_USD } from "@/lib/lumpia-cost-model";
-import { defaultGroupedVariantId } from "@/lib/menu-variant-defaults";
-import { useLumpiaStock } from "@/lib/hooks/useLumpiaStock";
-import {
-  lumpiaHasStockForCartSelection,
-  lumpiaProteinFromMenuItemId,
-  lumpiaStockForMenuItemId,
-  LUMPIA_MIN_ORDER_PIECES,
-  lumpiaPiecesPerUnitFromSizeKey,
-} from "@/lib/lumpia-inventory";
+import { LUMPIA_MENU_FROM_PRICE_USD, LUMPIA_CUSTOMER_SIZE_LABELS } from "@/lib/lumpia-cost-model";
 
 type LumpiaSizeTier = "1dz" | "2dz" | "party";
 
@@ -368,10 +359,10 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
   const servingDetail =
     cookedFrozenPick && isLumpiaGroup
       ? lumpiaTier === "1dz"
-        ? "12 hand-rolled lumpia per order (1 dozen)"
+        ? "1 dozen per order"
         : lumpiaTier === "2dz"
-          ? "24 hand-rolled lumpia per order (2 dozen)"
-          : "50 hand-rolled lumpia per order (party tray)"
+          ? "2 dozen per order"
+          : "Party tray (50 pcs) per order"
       : isTocinoUnified
         ? tocinoStyle === "plate"
           ? "Ready-made plate with egg, rice, cucumber, tomato, and garlic crisps."
@@ -592,10 +583,16 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
                       !out &&
                       lumpiaManagedForVariant(v.id) &&
                       !lumpiaStock.loading ? (
-                        <span className="text-[10px] text-[var(--text-muted)]">
-                          ({lumpiaStockForMenuItemId(lumpiaStock.stock, v.id)}{" "}
-                          pcs)
-                        </span>
+                        (() => {
+                          const hint = formatLumpiaMenuStockHint(
+                            lumpiaStockForMenuItemId(lumpiaStock.stock, v.id)
+                          );
+                          return hint ? (
+                            <span className="text-[10px] text-[var(--text-muted)]">
+                              ({hint})
+                            </span>
+                          ) : null;
+                        })()
                       ) : null}
                     </label>
                   );
@@ -638,15 +635,15 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
                       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                         {(
                           [
-                            { tier: "1dz" as const, label: "1 Dozen (12 pcs)" },
-                            { tier: "2dz" as const, label: "2 Dozen (24 pcs)" },
-                            { tier: "party" as const, label: "Party Tray (50 pcs)" },
+                            { tier: "1dz" as const, label: LUMPIA_CUSTOMER_SIZE_LABELS.dz1 },
+                            { tier: "2dz" as const, label: LUMPIA_CUSTOMER_SIZE_LABELS.dz2 },
+                            {
+                              tier: "party" as const,
+                              label: LUMPIA_CUSTOMER_SIZE_LABELS.party,
+                            },
                           ] as const
                         ).map(({ tier, label }) => {
                           const tierOut = lumpiaTierDisabled(tier);
-                          const pcs = lumpiaPiecesPerUnitFromSizeKey(
-                            lumpiaKeyFrom(cookedOrFrozen, tier)
-                          );
                           return (
                           <label
                             key={tier}
@@ -664,7 +661,7 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
                             {label}
                             {tierOut ? (
                               <span className="text-[10px] font-bold text-[var(--accent)]">
-                                (need {pcs * qty} pcs)
+                                (out)
                               </span>
                             ) : null}
                           </label>

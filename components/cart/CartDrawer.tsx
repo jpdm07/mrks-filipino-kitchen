@@ -106,8 +106,8 @@ export function CartDrawer() {
   const lumpPx = cart.samplePrices.lumpia;
   const lumpProt = cart.samples.lumpiaProtein;
   const lumpiaSampleTitle = lumpProt
-    ? `Lumpia sample (4 pcs) · $${lumpPx[lumpProt].toFixed(2)} ea`
-    : "Lumpia sample (4 pcs)";
+    ? `Sample (4 pcs) · $${lumpPx[lumpProt].toFixed(2)} ea`
+    : "Sample (4 pcs)";
   const lumpiaSampleSub = lumpProt
     ? "⅓ dozen at your protein’s cooked dozen price."
     : `Beef $${lumpPx.beef.toFixed(2)} · Pork $${lumpPx.pork.toFixed(2)} · Turkey $${lumpPx.turkey.toFixed(2)} each — choose protein below`;

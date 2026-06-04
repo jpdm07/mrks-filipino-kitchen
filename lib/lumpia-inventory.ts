@@ -100,12 +100,40 @@ export function formatLumpiaPieceCount(pieces: number): string {
   return n === 1 ? "1 piece" : `${n} pieces`;
 }
 
-/** Banner line for one protein — no cooked/frozen split. */
+/** Whole dozens a customer can order (floor — remainder may still allow samples). */
+export function lumpiaWholeDozensAvailable(pieces: number): number {
+  return Math.floor(Math.max(0, Math.floor(pieces)) / 12);
+}
+
+/** Customer-facing availability phrase for banners (dozens, not raw pieces). */
+export function formatLumpiaCustomerAvailability(pieces: number): string {
+  const dozens = lumpiaWholeDozensAvailable(pieces);
+  if (dozens >= 1) {
+    return dozens === 1 ? "1 dozen" : `${dozens} dozen`;
+  }
+  const p = Math.max(0, Math.floor(pieces));
+  if (p >= 4) return "sample size only";
+  return "";
+}
+
+/** Short hint on menu protein row — null when nothing useful to show. */
+export function formatLumpiaMenuStockHint(pieces: number): string | null {
+  const dozens = lumpiaWholeDozensAvailable(pieces);
+  if (dozens >= 1) {
+    return dozens === 1 ? "1 dozen left" : `${dozens} dozen left`;
+  }
+  const p = Math.max(0, Math.floor(pieces));
+  if (p >= 4) return "samples only";
+  return null;
+}
+
+/** Banner line for one protein — no cooked/frozen split; availability in dozens. */
 export function lumpiaFlavorBannerMessage(
   proteinLabel: string,
   pieces: number
 ): string {
-  return `Lumpia — ${proteinLabel}: ${formatLumpiaPieceCount(pieces)} available for same-day pickup. Order below (cooked or frozen — your choice at checkout).`;
+  const avail = formatLumpiaCustomerAvailability(pieces);
+  return `Lumpia — ${proteinLabel}: ${avail} available for same-day pickup. Order below (cooked or frozen — your choice at checkout).`;
 }
 
 export type LumpiaStockByProtein = Record<LumpiaProtein, number>;
