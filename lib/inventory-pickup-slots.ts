@@ -7,6 +7,7 @@ import {
   computeInventoryStockUnits,
   deductInventoryForOrderInTx,
 } from "@/lib/inventory-deduction";
+import { isSameDayBannerPickupOrder } from "@/lib/same-day-pickup";
 
 const ALL_SLOTS = pickupTimeSlotLabels();
 const SLOT_ORDER = new Map(ALL_SLOTS.map((l, i) => [l.trim(), i]));
@@ -100,6 +101,8 @@ export async function incrementInventoryPickupSlotFillInTx(
   } catch {
     return;
   }
+
+  if (!(await isSameDayBannerPickupOrder(pd, pt, lines))) return;
 
   const slots = await tx.inventoryPickupSlot.findMany({
     where: { dateYmd: pd, closed: false },

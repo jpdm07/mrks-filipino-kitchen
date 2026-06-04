@@ -17,6 +17,7 @@ import {
   isLumpiaMenuItemId,
   lumpiaPiecesForOrderLine,
 } from "@/lib/lumpia-inventory";
+import { isSameDayBannerPickupOrder } from "@/lib/same-day-pickup";
 
 /**
  * Map order line to dozen-units for frozen lumpia inventory.
@@ -111,7 +112,8 @@ function decrementAmountForInventory(
 
 /**
  * Single entry point: subtract stock and write deduction logs after an order is persisted.
- * Idempotent per order via deduction logs.
+ * Same-day orders hit `quantityInStock`; advance lumpia hits `advanceWorkloadPieces` only.
+ * Advance orders never deduct same-day stock and never block at checkout.
  */
 export async function deductInventoryForOrderInTx(
   tx: Prisma.TransactionClient,
@@ -120,6 +122,8 @@ export async function deductInventoryForOrderInTx(
     items: string;
     manualEntry: boolean;
     isDemo: boolean;
+    pickupDate?: string | null;
+    pickupTime?: string | null;
   }
 ): Promise<void> {
   if (order.isDemo) return;
@@ -137,39 +141,80 @@ export async function deductInventoryForOrderInTx(
     return;
   }
 
+  const pd = order.pickupDate?.trim() ?? "";
+  const pt = order.pickupTime?.trim() ?? "";
+  const sameDay =
+    pd && pt ? await isSameDayBannerPickupOrder(pd, pt, lines) : false;
+
   const inventories = await tx.inventoryItem.findMany();
-  const touchedIds: number[] = [];
+  const stockRuleIds: number[] = [];
 
   for (const inv of inventories) {
     const pieceUnits = computeInventoryStockUnits(inv, lines);
     const units = decrementAmountForInventory(inv, pieceUnits);
     if (units <= 0) continue;
 
+    const mode = normalizeInventoryDeductionMode(inv.deductionMode);
+    const lumpia = isLumpiaPiecesDeductionMode(mode);
+
+    if (lumpia) {
+      if (sameDay) {
+        await tx.inventoryItem.update({
+          where: { id: inv.id },
+          data: { quantityInStock: { decrement: units } },
+        });
+        await tx.inventoryDeductionLog.create({
+          data: {
+            inventoryItemId: inv.id,
+            orderId: order.id,
+            quantityDeducted: units,
+            wasManualEntry: order.manualEntry,
+            note: `Same-day pool −${units} ${inv.unitLabel} (${pieceUnits} pcs)`,
+          },
+        });
+        stockRuleIds.push(inv.id);
+      } else {
+        await tx.inventoryItem.update({
+          where: { id: inv.id },
+          data: { advanceWorkloadPieces: { decrement: units } },
+        });
+        await tx.inventoryDeductionLog.create({
+          data: {
+            inventoryItemId: inv.id,
+            orderId: order.id,
+            quantityDeducted: units,
+            wasManualEntry: order.manualEntry,
+            note: `Advance prep plan −${units} pcs (${pieceUnits} pcs ordered)`,
+          },
+        });
+      }
+      continue;
+    }
+
+    if (!sameDay) continue;
+
     await tx.inventoryItem.update({
       where: { id: inv.id },
-      data: {
-        quantityInStock: { decrement: units },
-      },
+      data: { quantityInStock: { decrement: units } },
     });
-
     await tx.inventoryDeductionLog.create({
       data: {
         inventoryItemId: inv.id,
         orderId: order.id,
         quantityDeducted: units,
         wasManualEntry: order.manualEntry,
-        note: `Decrement ${units} ${inv.unitLabel} (${pieceUnits} lumpia pcs when applicable)`,
+        note: `Decrement ${units} ${inv.unitLabel}`,
       },
     });
-    touchedIds.push(inv.id);
+    stockRuleIds.push(inv.id);
   }
 
-  for (const id of new Set(touchedIds)) {
+  for (const id of new Set(stockRuleIds)) {
     await applyInventoryStockRulesInTx(tx, id);
   }
 }
 
-/** Pre-check lumpia stock before order commit (pieces, shared cooked/frozen pool). */
+/** Pre-check same-day lumpia stock only (advance orders never blocked). */
 export async function assertLumpiaInventoryAvailableInTx(
   tx: Prisma.TransactionClient,
   lines: OrderItemLine[]
@@ -189,14 +234,14 @@ export async function assertLumpiaInventoryAvailableInTx(
     if (!inv.isAvailable) {
       return {
         ok: false,
-        message: `${inv.itemName.trim()} is not available for ordering right now.`,
+        message: `${inv.itemName.trim()} is not available for same-day ordering right now.`,
       };
     }
     const have = inventoryQuantityAsPieces(inv);
     if (need > have) {
       return {
         ok: false,
-        message: `Not enough ${inv.itemName.trim()} in stock for this order. Please reduce quantity or pick another protein.`,
+        message: `Not enough ${inv.itemName.trim()} on hand for same-day pickup. Please reduce quantity, choose another flavor, or pick an advance pickup date.`,
       };
     }
   }

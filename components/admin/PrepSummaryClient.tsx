@@ -400,8 +400,9 @@ export function PrepSummaryClient({
                 </h3>
                 <p className="mt-1 text-xs text-[var(--text-muted)]">
                   Orders with pickup this week ({payload.meta.weekStartSun} –{" "}
-                  {payload.meta.weekEndSat}) vs current inventory. Shared pool for
-                  same-day and advance orders.
+                  {payload.meta.weekEndSat}) vs current pools. Same-day stock
+                  blocks same-day orders only; advance prep plan is for planning
+                  and never blocks checkout.
                 </p>
                 <ul className="mt-3 space-y-1.5 text-sm">
                   {payload.lumpiaByFlavor.map((w) => (

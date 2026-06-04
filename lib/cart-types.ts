@@ -17,29 +17,84 @@ export type CartLine = {
   adoboProtein?: "chicken" | "pork";
 };
 
+export type LumpiaSamplesByProtein = Record<LumpiaSampleProtein, number>;
+
 export type SampleSelection = {
-  lumpiaQty: number;
-  lumpiaProtein: "beef" | "pork" | "turkey" | null;
+  lumpiaByProtein: LumpiaSamplesByProtein;
   quailQty: number;
   flanQty: number;
   pancitQty: number;
   pancitType: "chicken" | "shrimp" | null;
 };
 
+export const emptyLumpiaSamplesByProtein = (): LumpiaSamplesByProtein => ({
+  beef: 0,
+  pork: 0,
+  turkey: 0,
+});
+
 export const emptySamples = (): SampleSelection => ({
-  lumpiaQty: 0,
-  lumpiaProtein: null,
+  lumpiaByProtein: emptyLumpiaSamplesByProtein(),
   quailQty: 0,
   flanQty: 0,
   pancitQty: 0,
   pancitType: null,
 });
 
-/** Lumpia / pancit samples in the cart must have protein/type when qty &gt; 0. */
+export function lumpiaSampleQtyTotal(s: SampleSelection): number {
+  return s.lumpiaByProtein.beef + s.lumpiaByProtein.pork + s.lumpiaByProtein.turkey;
+}
+
+export function hasAnyLumpiaSamples(s: SampleSelection): boolean {
+  return lumpiaSampleQtyTotal(s) > 0;
+}
+
+/** Pancit samples in the cart must have type when qty &gt; 0. */
 export function samplesSelectionComplete(s: SampleSelection): boolean {
-  if (s.lumpiaQty > 0 && !s.lumpiaProtein) return false;
   if (s.pancitQty > 0 && !s.pancitType) return false;
   return true;
+}
+
+/** Migrate legacy cart storage (single protein + qty) to per-flavor map. */
+export function normalizeSampleSelection(raw: unknown): SampleSelection | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+
+  if (o.lumpiaByProtein && typeof o.lumpiaByProtein === "object") {
+    const lb = o.lumpiaByProtein as Record<string, unknown>;
+    const beef = Math.max(0, Math.floor(Number(lb.beef)) || 0);
+    const pork = Math.max(0, Math.floor(Number(lb.pork)) || 0);
+    const turkey = Math.max(0, Math.floor(Number(lb.turkey)) || 0);
+    const pt = o.pancitType;
+    return {
+      lumpiaByProtein: { beef, pork, turkey },
+      quailQty: Math.max(0, Math.floor(Number(o.quailQty)) || 0),
+      flanQty: Math.max(0, Math.floor(Number(o.flanQty)) || 0),
+      pancitQty: Math.max(0, Math.floor(Number(o.pancitQty)) || 0),
+      pancitType:
+        pt === "chicken" || pt === "shrimp" ? pt : null,
+    };
+  }
+
+  const legacyQty = Math.max(0, Math.floor(Number(o.lumpiaQty)) || 0);
+  const legacyProtein = o.lumpiaProtein;
+  const byProtein = emptyLumpiaSamplesByProtein();
+  if (
+    legacyQty > 0 &&
+    (legacyProtein === "beef" ||
+      legacyProtein === "pork" ||
+      legacyProtein === "turkey")
+  ) {
+    byProtein[legacyProtein] = legacyQty;
+  }
+  const pt = o.pancitType;
+  return {
+    lumpiaByProtein: byProtein,
+    quailQty: Math.max(0, Math.floor(Number(o.quailQty)) || 0),
+    flanQty: Math.max(0, Math.floor(Number(o.flanQty)) || 0),
+    pancitQty: Math.max(0, Math.floor(Number(o.pancitQty)) || 0),
+    pancitType: pt === "chicken" || pt === "shrimp" ? pt : null,
+  };
 }
 
 export function cartLineKey(
@@ -64,14 +119,15 @@ export function samplesToLines(
   }
 ): OrderItemLine[] {
   const out: OrderItemLine[] = [];
-  if (selection.lumpiaQty > 0 && selection.lumpiaProtein) {
-    const p = selection.lumpiaProtein;
+  for (const p of ["beef", "pork", "turkey"] as const) {
+    const qty = selection.lumpiaByProtein[p];
+    if (qty <= 0) continue;
     const protein = p.charAt(0).toUpperCase() + p.slice(1);
     const menuItemId =
       p === "beef" ? "seed-1" : p === "pork" ? "seed-2" : "seed-3";
     out.push({
       name: `Sample: Lumpia ${protein} (4 pcs)`,
-      quantity: selection.lumpiaQty,
+      quantity: qty,
       unitPrice: prices.lumpia[p],
       isSample: true,
       category: "sample",

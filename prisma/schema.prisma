@@ -87,6 +87,8 @@ model InventoryItem {
   itemName           String
   unitLabel          String
   quantityInStock    Int      @default(0)
+  /// Advance-order prep planning (pieces). Decremented on advance lumpia orders; never blocks checkout.
+  advanceWorkloadPieces Int   @default(0)
   isAvailable        Boolean  @default(false)
   showBanner         Boolean  @default(false)
   bannerMessage      String?

@@ -19,23 +19,18 @@ import {
   EXTRA_DIP_UNIT_PRICE_USD,
 } from "@/lib/extra-dip-sauce";
 import { CartQuantityField } from "@/components/cart/CartQuantityField";
-import { useLumpiaStock } from "@/lib/hooks/useLumpiaStock";
-import { lumpiaHasStockForSampleQty } from "@/lib/lumpia-inventory";
+import { lumpiaSampleQtyTotal } from "@/lib/cart-types";
 
 export function CartDrawer() {
   const router = useRouter();
   const cart = useCart();
-  const lumpiaStock = useLumpiaStock();
   const { drawerOpen, closeDrawer } = cart;
   const [mounted, setMounted] = useState(false);
   const [samplesOpen, setSamplesOpen] = useState(false);
   const [totalsOpen, setTotalsOpen] = useState(false);
   const [checkoutHint, setCheckoutHint] = useState<string | null>(null);
-  const [highlightLumpiaSample, setHighlightLumpiaSample] = useState(false);
   const [highlightPancitSample, setHighlightPancitSample] = useState(false);
-  const [lumpiaNeedProteinNudge, setLumpiaNeedProteinNudge] = useState(false);
   const [pancitNeedTypeNudge, setPancitNeedTypeNudge] = useState(false);
-  const lumpiaSampleRef = useRef<HTMLDivElement>(null);
   const pancitSampleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
@@ -43,28 +38,10 @@ export function CartDrawer() {
   useEffect(() => {
     if (!drawerOpen) {
       setCheckoutHint(null);
-      setHighlightLumpiaSample(false);
       setHighlightPancitSample(false);
-      setLumpiaNeedProteinNudge(false);
       setPancitNeedTypeNudge(false);
     }
   }, [drawerOpen]);
-
-  useEffect(() => {
-    if (cart.samples.lumpiaProtein) {
-      setHighlightLumpiaSample(false);
-      setLumpiaNeedProteinNudge(false);
-    }
-  }, [cart.samples.lumpiaProtein]);
-
-  useEffect(() => {
-    if (
-      cart.samples.lumpiaQty > 0 &&
-      !cart.samples.lumpiaProtein
-    ) {
-      setLumpiaNeedProteinNudge(false);
-    }
-  }, [cart.samples.lumpiaQty, cart.samples.lumpiaProtein]);
 
   useEffect(() => {
     if (cart.samples.pancitType) {
@@ -97,20 +74,13 @@ export function CartDrawer() {
 
   const cartHasAnyOrderContent =
     cart.lines.length > 0 ||
-    cart.samples.lumpiaQty > 0 ||
+    lumpiaSampleQtyTotal(cart.samples) > 0 ||
     cart.samples.quailQty > 0 ||
     cart.samples.flanQty > 0 ||
     cart.samples.pancitQty > 0 ||
     cart.extraDipSauceQty > 0;
 
   const lumpPx = cart.samplePrices.lumpia;
-  const lumpProt = cart.samples.lumpiaProtein;
-  const lumpiaSampleTitle = lumpProt
-    ? `Sample (4 pcs) · $${lumpPx[lumpProt].toFixed(2)} ea`
-    : "Sample (4 pcs)";
-  const lumpiaSampleSub = lumpProt
-    ? "⅓ dozen at your protein’s cooked dozen price."
-    : `Beef $${lumpPx.beef.toFixed(2)} · Pork $${lumpPx.pork.toFixed(2)} · Turkey $${lumpPx.turkey.toFixed(2)} each — choose protein below`;
 
   const breakdownOrderItems = totalsOpen ? cart.buildOrderItems() : [];
 
@@ -148,7 +118,7 @@ export function CartDrawer() {
 
             <div className="flex-1 overflow-y-auto px-4 pb-4">
               {cart.lines.length === 0 &&
-              cart.samples.lumpiaQty === 0 &&
+              lumpiaSampleQtyTotal(cart.samples) === 0 &&
               cart.samples.quailQty === 0 &&
               cart.samples.flanQty === 0 &&
               cart.samples.pancitQty === 0 ? (
@@ -187,104 +157,34 @@ export function CartDrawer() {
                 </button>
                 {samplesOpen ? (
                   <div className="space-y-4 border-t border-[var(--border)] px-4 py-4 text-sm">
-                    <div ref={lumpiaSampleRef}>
-                    <SampleRow
-                      highlight={highlightLumpiaSample}
-                      title={lumpiaSampleTitle}
-                      subtitle={lumpiaSampleSub}
-                      qty={cart.samples.lumpiaQty}
-                      setQty={(n) => {
-                        const next = Math.max(0, Math.min(10, n));
-                        if (
-                          next > 0 &&
-                          !cart.samples.lumpiaProtein &&
-                          next > cart.samples.lumpiaQty
-                        ) {
-                          setLumpiaNeedProteinNudge(true);
-                          return;
-                        }
-                        if (
-                          cart.samples.lumpiaProtein &&
-                          lumpiaStock.managed[cart.samples.lumpiaProtein] &&
-                          !lumpiaStock.loading &&
-                          !lumpiaHasStockForSampleQty(
-                            lumpiaStock.stock,
-                            cart.samples.lumpiaProtein,
-                            next
-                          )
-                        ) {
-                          return;
-                        }
-                        setLumpiaNeedProteinNudge(false);
-                        cart.setSamples((s) => ({ ...s, lumpiaQty: next }));
-                      }}
-                      max={10}
-                      selectorsFirst
-                    >
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-                          Choose protein first
-                        </p>
-                        <div className="mt-1 flex flex-wrap gap-3">
-                          {(["beef", "pork", "turkey"] as const).map((p) => {
-                            const managed = lumpiaStock.managed[p];
-                            const out =
-                              managed &&
-                              !lumpiaStock.loading &&
-                              !lumpiaHasStockForSampleQty(
-                                lumpiaStock.stock,
-                                p,
-                                Math.max(1, cart.samples.lumpiaQty || 1)
-                              );
-                            return (
-                            <label
-                              key={p}
-                              className={`inline-flex items-center gap-2 ${
-                                out
-                                  ? "cursor-not-allowed opacity-50"
-                                  : "cursor-pointer"
-                              }`}
-                            >
-                              <input
-                                type="radio"
-                                name="sample-lumpia"
-                                checked={cart.samples.lumpiaProtein === p}
-                                disabled={out}
-                                onChange={() =>
-                                  cart.setSamples((s) => ({
-                                    ...s,
-                                    lumpiaProtein: p,
-                                  }))
-                                }
-                              />
-                              <span className="capitalize">{p}</span>
-                              {out ? (
-                                <span className="text-[10px] font-bold text-[var(--accent)]">
-                                  (out)
-                                </span>
-                              ) : null}
-                            </label>
-                          );
-                          })}
-                        </div>
-                        {lumpiaNeedProteinNudge ? (
-                          <p
-                            className="mt-2 text-sm font-medium text-red-600 dark:text-red-400"
-                            role="alert"
-                          >
-                            Choose a protein (beef, pork, or turkey) before
-                            increasing quantity.
-                          </p>
-                        ) : null}
-                        {cart.samples.lumpiaQty > 0 &&
-                        !cart.samples.lumpiaProtein ? (
-                          <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
-                            Pick beef, pork, or turkey so we can price and pack
-                            your samples.
-                          </p>
-                        ) : null}
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                        Lumpia samples (4 pcs each)
+                      </p>
+                      <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                        Add one or more flavors — advance orders always welcome.
+                      </p>
+                      <div className="mt-3 space-y-3">
+                        {(["beef", "pork", "turkey"] as const).map((p) => (
+                          <SampleRow
+                            key={p}
+                            title={`${p.charAt(0).toUpperCase() + p.slice(1)} · $${lumpPx[p].toFixed(2)} ea`}
+                            subtitle="Sample (4 pcs)"
+                            qty={cart.samples.lumpiaByProtein[p]}
+                            setQty={(n) => {
+                              const next = Math.max(0, Math.min(10, n));
+                              cart.setSamples((s) => ({
+                                ...s,
+                                lumpiaByProtein: {
+                                  ...s.lumpiaByProtein,
+                                  [p]: next,
+                                },
+                              }));
+                            }}
+                            max={10}
+                          />
+                        ))}
                       </div>
-                    </SampleRow>
                     </div>
                     <SampleRow
                       title={`Breaded quail sample (3 pcs) · $${cart.samplePrices.quail.toFixed(2)} ea`}
@@ -576,14 +476,12 @@ export function CartDrawer() {
                       </p>
                     ) : null}
                     {!samplesSelectionComplete(cart.samples) &&
-                    (cart.samples.lumpiaQty > 0 ||
-                      cart.samples.pancitQty > 0) ? (
+                    cart.samples.pancitQty > 0 ? (
                       <p
                         className="mt-2 rounded-md bg-amber-500/10 px-2 py-1.5 text-xs text-amber-900 dark:text-amber-200"
                         role="status"
                       >
-                        Sample quantities without a protein or pancit type are
-                        not included here yet. Open{" "}
+                        Pancit samples need chicken or shrimp selected. Open{" "}
                         <span className="font-semibold">
                           Add samples to your order
                         </span>{" "}
@@ -617,26 +515,9 @@ export function CartDrawer() {
                 type="button"
                 className="btn btn-gold btn-block btn-sm mt-4"
                 onClick={() => {
-                  setHighlightLumpiaSample(false);
                   setHighlightPancitSample(false);
                   if (!samplesSelectionComplete(cart.samples)) {
                     setSamplesOpen(true);
-                    if (
-                      cart.samples.lumpiaQty > 0 &&
-                      !cart.samples.lumpiaProtein
-                    ) {
-                      setCheckoutHint(
-                        "Choose beef, pork, or turkey for lumpia samples before going to checkout."
-                      );
-                      setHighlightLumpiaSample(true);
-                      window.setTimeout(() => {
-                        lumpiaSampleRef.current?.scrollIntoView({
-                          behavior: "smooth",
-                          block: "center",
-                        });
-                      }, 100);
-                      return;
-                    }
                     if (
                       cart.samples.pancitQty > 0 &&
                       !cart.samples.pancitType

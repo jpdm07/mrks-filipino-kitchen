@@ -24,7 +24,10 @@ import {
   cartLineKey,
   cartLinesToOrderItems,
   emptySamples,
+  normalizeSampleSelection,
   samplesToLines,
+  lumpiaSampleQtyTotal,
+  hasAnyLumpiaSamples,
 } from "@/lib/cart-types";
 import {
   cartQualifiesForExtraDip,
@@ -123,18 +126,7 @@ function isCartLine(x: unknown): x is CartLine {
 }
 
 function isSampleSelection(x: unknown): x is SampleSelection {
-  if (!x || typeof x !== "object") return false;
-  const o = x as Record<string, unknown>;
-  const p = o.lumpiaProtein;
-  const pt = o.pancitType;
-  return (
-    typeof o.lumpiaQty === "number" &&
-    (p === null || p === "beef" || p === "pork" || p === "turkey") &&
-    typeof o.quailQty === "number" &&
-    typeof o.flanQty === "number" &&
-    typeof o.pancitQty === "number" &&
-    (pt === null || pt === "chicken" || pt === "shrimp")
-  );
+  return normalizeSampleSelection(x) !== null;
 }
 
 function readStoredCart(): {
@@ -166,7 +158,8 @@ function readStoredCart(): {
       return null;
     }
     if (!Array.isArray(data.lines) || !data.lines.every(isCartLine)) return null;
-    if (!isSampleSelection(data.samples)) return null;
+    const normalizedSamples = normalizeSampleSelection(data.samples);
+    if (!normalizedSamples) return null;
     const dipRaw =
       typeof data.extraDipSauceQty === "number"
         ? Math.floor(data.extraDipSauceQty)
@@ -183,7 +176,7 @@ function readStoredCart(): {
     if (wantsUtensils && utensilSets < 1) utensilSets = 1;
     return {
       lines: data.lines,
-      samples: data.samples,
+      samples: normalizedSamples,
       wantsUtensils,
       utensilSets,
       newsletterOptIn: Boolean(data.newsletterOptIn),

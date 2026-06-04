@@ -1,4 +1,5 @@
 import type { CartLine, SampleSelection } from "@/lib/cart-types";
+import { hasAnyLumpiaSamples } from "@/lib/cart-types";
 import type { OrderItemLine } from "@/lib/order-types";
 
 export const EXTRA_DIP_UNIT_PRICE_USD = 0.5;
@@ -38,7 +39,7 @@ export function cartQualifiesForExtraDip(
   samples: SampleSelection
 ): boolean {
   if (lines.some(cartLineQualifiesForDipAddon)) return true;
-  if (samples.lumpiaQty > 0 && samples.lumpiaProtein) return true;
+  if (hasAnyLumpiaSamples(samples)) return true;
   if (samples.quailQty > 0) return true;
   return false;
 }

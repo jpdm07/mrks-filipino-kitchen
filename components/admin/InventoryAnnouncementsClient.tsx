@@ -10,6 +10,8 @@ import {
   INVENTORY_DEDUCTION_LUMPIA_FROZEN_DOZEN,
   INVENTORY_DEDUCTION_LUMPIA_PIECES,
   INVENTORY_DEDUCTION_ORDER_LINE_QTY,
+  isLumpiaPiecesDeductionMode,
+  normalizeInventoryDeductionMode,
 } from "@/lib/inventory-deduction-modes";
 import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
 import type { MenuItem } from "@prisma/client";
@@ -30,6 +32,7 @@ export type InventoryRow = {
   itemName: string;
   unitLabel: string;
   quantityInStock: number;
+  advanceWorkloadPieces?: number;
   isAvailable: boolean;
   showBanner: boolean;
   bannerMessage: string | null;
@@ -135,6 +138,10 @@ export function InventoryAnnouncementsClient({
     const payload = {
       quantityInStock:
         d.quantityInStock !== undefined ? d.quantityInStock : row.quantityInStock,
+      advanceWorkloadPieces:
+        d.advanceWorkloadPieces !== undefined
+          ? d.advanceWorkloadPieces
+          : row.advanceWorkloadPieces ?? 0,
       isAvailable: d.isAvailable !== undefined ? d.isAvailable : row.isAvailable,
       showBanner: d.showBanner !== undefined ? d.showBanner : row.showBanner,
       bannerMessage:
@@ -542,6 +549,11 @@ export function InventoryAnnouncementsClient({
 
         {items.map((row) => {
           const r = mergeRow(row);
+          const isLumpiaRow = isLumpiaPiecesDeductionMode(
+            normalizeInventoryDeductionMode(
+              r.deductionMode ?? INVENTORY_DEDUCTION_ORDER_LINE_QTY
+            )
+          );
           const previewMsg = resolvedInventoryBannerMessage({
             itemName: r.itemName,
             quantityInStock: r.quantityInStock,
@@ -567,12 +579,24 @@ export function InventoryAnnouncementsClient({
                     htmlFor={`qty-stock-${row.id}`}
                     className="block text-sm font-bold uppercase tracking-wide text-[color:var(--primary)]"
                   >
-                    Quantity in stock
+                    {isLumpiaRow
+                      ? "Same-day stock (on hand today)"
+                      : "Quantity in stock"}
                   </label>
                   <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-                    Count in{" "}
-                    <strong className="text-[var(--text)]">{r.unitLabel}</strong> — change
-                    this number, then Save.
+                    {isLumpiaRow ? (
+                      <>
+                        Physical pieces available for same-day banner and
+                        same-day pickup only. Advance orders use the prep plan
+                        below and are never blocked by this count.
+                      </>
+                    ) : (
+                      <>
+                        Count in{" "}
+                        <strong className="text-[var(--text)]">{r.unitLabel}</strong>{" "}
+                        — change this number, then Save.
+                      </>
+                    )}
                   </p>
                   <input
                     id={`qty-stock-${row.id}`}
@@ -593,6 +617,42 @@ export function InventoryAnnouncementsClient({
                     }
                   />
                 </div>
+                {isLumpiaRow ? (
+                  <div
+                    id={`admin-inventory-advance-${row.id}`}
+                    className="rounded-lg border border-[var(--border)] bg-[var(--bg)] p-3"
+                  >
+                    <label
+                      htmlFor={`qty-advance-${row.id}`}
+                      className="block text-sm font-bold uppercase tracking-wide text-[color:var(--primary)]"
+                    >
+                      Advance prep plan (pieces)
+                    </label>
+                    <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                      Workload planning only — decrements when advance lumpia
+                      orders are placed. Customers can always order advance
+                      lumpia regardless of this number.
+                    </p>
+                    <input
+                      id={`qty-advance-${row.id}`}
+                      type="number"
+                      min={0}
+                      inputMode="numeric"
+                      className="mt-2 w-full rounded border px-3 py-2 text-lg font-semibold tabular-nums"
+                      value={r.advanceWorkloadPieces ?? 0}
+                      onChange={(e) =>
+                        setDrafts((p) => ({
+                          ...p,
+                          [row.id]: {
+                            ...p[row.id],
+                            advanceWorkloadPieces:
+                              parseInt(e.target.value, 10) || 0,
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+                ) : null}
                 <div>
                   <label className="text-xs font-semibold text-[var(--text-muted)]">
                     Item name

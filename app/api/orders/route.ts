@@ -42,6 +42,7 @@ import {
 import { sanitizeExtraDipOrderLines } from "@/lib/extra-dip-sauce";
 import { revalidateAdminOrderDerivedViews } from "@/lib/revalidate-admin-order-views";
 import { runInventoryHooksForNewOrderInTx } from "@/lib/inventory-pickup-slots";
+import { isSameDayBannerPickupOrder } from "@/lib/same-day-pickup";
 import { assertLumpiaInventoryAvailableInTx } from "@/lib/inventory-deduction";
 
 class CapacityExceededError extends Error {
@@ -276,9 +277,19 @@ export async function POST(req: NextRequest) {
             throw new CapacityExceededError();
           }
           await assertPickupSlotFreeInTx(tx, pickupDate, pickupTime);
-          const lumpiaStock = await assertLumpiaInventoryAvailableInTx(tx, items);
-          if (!lumpiaStock.ok) {
-            throw new LumpiaInventoryError(lumpiaStock.message);
+          const sameDayPickup = await isSameDayBannerPickupOrder(
+            pickupDate,
+            pickupTime,
+            items
+          );
+          if (sameDayPickup) {
+            const lumpiaStock = await assertLumpiaInventoryAvailableInTx(
+              tx,
+              items
+            );
+            if (!lumpiaStock.ok) {
+              throw new LumpiaInventoryError(lumpiaStock.message);
+            }
           }
         }
         const common = {

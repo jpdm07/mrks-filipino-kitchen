@@ -397,9 +397,6 @@ export function OrderForm() {
       }
       if (next.samples) {
         const bits: string[] = [];
-        if (cart.samples.lumpiaQty > 0 && !cart.samples.lumpiaProtein) {
-          bits.push("choose beef, pork, or turkey for lumpia samples");
-        }
         if (cart.samples.pancitQty > 0 && !cart.samples.pancitType) {
           bits.push("choose chicken or shrimp for pancit samples");
         }
@@ -819,9 +816,6 @@ export function OrderForm() {
           {!samplesOk ? (
             <p className="rounded-lg border border-[var(--accent)]/40 bg-[var(--gold-light)] px-4 py-3 text-sm font-medium text-[var(--text)]">
               Samples need a choice:{" "}
-              {cart.samples.lumpiaQty > 0 && !cart.samples.lumpiaProtein
-                ? "lumpia — beef, pork, or turkey. "
-                : null}
               {cart.samples.pancitQty > 0 && !cart.samples.pancitType
                 ? "pancit — chicken or shrimp."
                 : null}{" "}

@@ -11,6 +11,12 @@ import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoo
 import { MenuItemImageCarousel } from "@/components/menu/MenuItemImageCarousel";
 import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
 import { LUMPIA_MENU_FROM_PRICE_USD, LUMPIA_CUSTOMER_SIZE_LABELS } from "@/lib/lumpia-cost-model";
+import { useLumpiaStock } from "@/lib/hooks/useLumpiaStock";
+import {
+  formatLumpiaMenuStockHint,
+  lumpiaProteinFromMenuItemId,
+  lumpiaStockForMenuItemId,
+} from "@/lib/lumpia-inventory";
 
 type LumpiaSizeTier = "1dz" | "2dz" | "party";
 
@@ -253,12 +259,7 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
   };
 
   const lumpiaVariantOutOfStock = (v: MenuItemDTO): boolean => {
-    if (v.soldOut) return true;
-    if (v.variantGroup !== "lumpia") return false;
-    if (lumpiaStock.loading) return false;
-    if (!lumpiaManagedForVariant(v.id)) return false;
-    const pieces = lumpiaStockForMenuItemId(lumpiaStock.stock, v.id);
-    return pieces < LUMPIA_MIN_ORDER_PIECES;
+    return Boolean(v.soldOut);
   };
 
   const title =
@@ -281,32 +282,9 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
   const unitPrice = Number(selectedSize?.price ?? variant?.basePrice ?? 0);
   const safeUnitPrice = Number.isFinite(unitPrice) ? unitPrice : 0;
 
-  const lumpiaTierDisabled = (tier: LumpiaSizeTier): boolean => {
-    if (!variant || variant.variantGroup !== "lumpia") return false;
-    if (lumpiaStock.loading) return false;
-    if (!lumpiaManagedForVariant(variant.id)) return false;
-    const sk = lumpiaKeyFrom(cookedOrFrozen, tier);
-    return !lumpiaHasStockForCartSelection(
-      lumpiaStock.stock,
-      variant.id,
-      sk,
-      qty
-    );
-  };
+  const lumpiaTierDisabled = (_tier: LumpiaSizeTier): boolean => false;
 
-  const lumpiaSelectionBlocked = (): boolean => {
-    if (!variant || variant.variantGroup !== "lumpia" || !selectedSize) {
-      return false;
-    }
-    if (lumpiaStock.loading) return false;
-    if (!lumpiaManagedForVariant(variant.id)) return false;
-    return !lumpiaHasStockForCartSelection(
-      lumpiaStock.stock,
-      variant.id,
-      selectedSize.key,
-      qty
-    );
-  };
+  const lumpiaSelectionBlocked = (): boolean => false;
 
   const disabled =
     !variant ||
@@ -589,7 +567,7 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
                           );
                           return hint ? (
                             <span className="text-[10px] text-[var(--text-muted)]">
-                              ({hint})
+                              ({hint} same-day)
                             </span>
                           ) : null;
                         })()

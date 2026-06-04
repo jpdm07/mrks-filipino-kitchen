@@ -209,6 +209,28 @@ export async function getSameDayOpenDatesForBannerCart(
   return [...open].sort();
 }
 
+export async function isSameDayBannerPickupOrder(
+  pickupDateYmd: string,
+  pickupTimeLabel: string,
+  lines: OrderItemLine[]
+): Promise<boolean> {
+  const menuIds = [
+    ...new Set(
+      lines
+        .map((l) => l.menuItemId?.trim())
+        .filter(Boolean) as string[]
+    ),
+  ];
+  const hints = orderLinesToInventoryCartHints(lines);
+  if (!(await cartEligibleForSameDayPickup(menuIds, hints))) return false;
+  const slots = await getSameDaySlotLabelsForBannerCart(
+    pickupDateYmd.trim(),
+    menuIds,
+    hints
+  );
+  return slots.includes(pickupTimeLabel.trim());
+}
+
 /** Pickup time labels for a same-day date (banner cart only). Empty = no same-day window. */
 export async function getSameDaySlotLabelsForBannerCart(
   dateYmd: string,
@@ -335,12 +357,10 @@ export async function countQualifyingSameDayBannerItems(): Promise<number> {
 export type LumpiaFlavorWorkload = {
   protein: LumpiaProtein;
   label: string;
-  /** Pieces ordered (pickup in range). */
-  piecesOrdered: number;
-  /** Pieces remaining in inventory now. */
-  piecesInStock: number;
-  dozenOrdered: number;
-  dozenRemaining: number;
+  sameDayPiecesInStock: number;
+  advanceWorkloadPieces: number;
+  sameDayPiecesOrdered: number;
+  advancePiecesOrdered: number;
 };
 
 const PROTEIN_LABEL: Record<LumpiaProtein, string> = {
@@ -349,7 +369,18 @@ const PROTEIN_LABEL: Record<LumpiaProtein, string> = {
   turkey: "Turkey",
 };
 
-/** Per-flavor lumpia workload + remaining stock for admin dashboard. */
+function lumpiaPiecesFromLine(line: OrderItemLine): number {
+  const mid = line.menuItemId?.trim();
+  if (mid && isLumpiaMenuItemId(mid)) {
+    return lumpiaPiecesForOrderLine(line);
+  }
+  if (line.isSample && /lumpia/i.test(line.name)) {
+    return lumpiaPiecesForOrderLine(line);
+  }
+  return 0;
+}
+
+/** Per-flavor same-day stock + advance prep plan vs orders in pickup range. */
 export async function loadLumpiaFlavorWorkload(
   pickupFromYmd: string,
   pickupToYmd: string
@@ -357,13 +388,22 @@ export async function loadLumpiaFlavorWorkload(
   const invRows = await prisma.inventoryItem.findMany({
     where: { menuItemId: { in: ["seed-1", "seed-2", "seed-3"] } },
   });
-  const stockByProtein = { beef: 0, pork: 0, turkey: 0 } as Record<
+  const sameDayStock = { beef: 0, pork: 0, turkey: 0 } as Record<
+    LumpiaProtein,
+    number
+  >;
+  const advancePlan = { beef: 0, pork: 0, turkey: 0 } as Record<
     LumpiaProtein,
     number
   >;
   for (const row of invRows) {
     const p = lumpiaProteinFromMenuItemId(row.menuItemId);
-    if (p) stockByProtein[p] += inventoryQuantityAsPieces(row);
+    if (!p) continue;
+    sameDayStock[p] += inventoryQuantityAsPieces(row);
+    advancePlan[p] += Math.max(
+      0,
+      Math.floor(Number(row.advanceWorkloadPieces)) || 0
+    );
   }
 
   const orders = await prisma.order.findMany({
@@ -379,10 +419,18 @@ export async function loadLumpiaFlavorWorkload(
         ],
       },
     },
-    select: { items: true },
+    select: { items: true, pickupDate: true, pickupTime: true },
   });
 
-  const ordered = { beef: 0, pork: 0, turkey: 0 } as Record<LumpiaProtein, number>;
+  const sameDayOrdered = { beef: 0, pork: 0, turkey: 0 } as Record<
+    LumpiaProtein,
+    number
+  >;
+  const advanceOrdered = { beef: 0, pork: 0, turkey: 0 } as Record<
+    LumpiaProtein,
+    number
+  >;
+
   for (const o of orders) {
     let lines: OrderItemLine[];
     try {
@@ -391,50 +439,52 @@ export async function loadLumpiaFlavorWorkload(
     } catch {
       continue;
     }
+    const pd = o.pickupDate?.trim() ?? "";
+    const pt = o.pickupTime?.trim() ?? "";
+    const sameDay =
+      pd && pt
+        ? await isSameDayBannerPickupOrder(pd, pt, lines)
+        : false;
+    const bucket = sameDay ? sameDayOrdered : advanceOrdered;
     for (const line of lines) {
-      const mid = line.menuItemId?.trim();
-      if (mid && isLumpiaMenuItemId(mid)) {
-        const p = lumpiaProteinFromMenuItemId(mid)!;
-        ordered[p] += lumpiaPiecesForOrderLine(line);
-        continue;
-      }
-      if (line.isSample && /lumpia/i.test(line.name)) {
-        const p =
-          lumpiaProteinFromMenuItemId(line.menuItemId) ??
-          (line.name.toLowerCase().includes("beef")
-            ? "beef"
-            : line.name.toLowerCase().includes("turkey")
-              ? "turkey"
-              : "pork");
-        ordered[p] += lumpiaPiecesForOrderLine(line);
-      }
+      const pieces = lumpiaPiecesFromLine(line);
+      if (pieces <= 0) continue;
+      const p =
+        lumpiaProteinFromMenuItemId(line.menuItemId) ??
+        (line.name.toLowerCase().includes("beef")
+          ? "beef"
+          : line.name.toLowerCase().includes("turkey")
+            ? "turkey"
+            : "pork");
+      bucket[p] += pieces;
     }
   }
 
   return (["beef", "pork", "turkey"] as const).map((protein) => ({
     protein,
     label: PROTEIN_LABEL[protein],
-    piecesOrdered: ordered[protein],
-    piecesInStock: stockByProtein[protein],
-    dozenOrdered: Math.round((ordered[protein] / 12) * 10) / 10,
-    dozenRemaining: lumpiaWholeDozensAvailable(stockByProtein[protein]),
+    sameDayPiecesInStock: sameDayStock[protein],
+    advanceWorkloadPieces: advancePlan[protein],
+    sameDayPiecesOrdered: sameDayOrdered[protein],
+    advancePiecesOrdered: advanceOrdered[protein],
   }));
 }
 
+function dozenLabel(pieces: number): string {
+  const d = lumpiaWholeDozensAvailable(pieces);
+  if (d >= 1) return d === 1 ? "1 dozen" : `${d} dozen`;
+  if (pieces >= 4) return "sample size";
+  if (pieces > 0) return `${pieces} pcs`;
+  return "0";
+}
+
 export function formatLumpiaWorkloadLine(w: LumpiaFlavorWorkload): string {
-  const ord =
-    w.dozenOrdered >= 1
-      ? `${w.dozenOrdered} dozen ordered`
-      : w.piecesOrdered > 0
-        ? `${w.piecesOrdered} pcs ordered (samples/partial)`
-        : "0 orders";
-  const rem =
-    w.dozenRemaining >= 1
-      ? `${w.dozenRemaining} dozen remaining`
-      : w.piecesInStock >= 4
-        ? "sample size remaining"
-        : "none in stock";
-  return `${w.label} lumpia: ${ord}, ${rem}`;
+  const sameDayRem = dozenLabel(w.sameDayPiecesInStock);
+  const advanceRem = dozenLabel(w.advanceWorkloadPieces);
+  const advOrd = dozenLabel(w.advancePiecesOrdered);
+  const sdOrd =
+    w.sameDayPiecesOrdered > 0 ? dozenLabel(w.sameDayPiecesOrdered) : "0";
+  return `${w.label} lumpia — Same-day: ${sdOrd} ordered, ${sameDayRem} on hand · Advance: ${advOrd} ordered, ${advanceRem} prep plan remaining`;
 }
 
 export async function assertSameDayPickupOrderValid(

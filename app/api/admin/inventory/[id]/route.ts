@@ -25,6 +25,7 @@ export async function PATCH(
 
   const body = (await req.json()) as {
     quantityInStock?: number;
+    advanceWorkloadPieces?: number;
     isAvailable?: boolean;
     showBanner?: boolean;
     bannerMessage?: string | null;
@@ -56,6 +57,12 @@ export async function PATCH(
       data.isAvailable = false;
       data.showBanner = false;
     }
+  }
+  if (body.advanceWorkloadPieces !== undefined) {
+    data.advanceWorkloadPieces = Math.max(
+      0,
+      Math.floor(Number(body.advanceWorkloadPieces)) || 0
+    );
   }
   if (body.isAvailable !== undefined) data.isAvailable = Boolean(body.isAvailable);
   if (body.showBanner !== undefined) data.showBanner = Boolean(body.showBanner);
