@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import type { MenuItemDTO } from "@/lib/menu-types";
+import { menuItemDisplayPhotos, type MenuItemDTO } from "@/lib/menu-types";
 import { useCart } from "@/components/cart/CartContext";
 import { CartQuantityField } from "@/components/cart/CartQuantityField";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
+import { MenuItemImageCarousel } from "@/components/menu/MenuItemImageCarousel";
 import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
 import { FlanWeekStockNote } from "@/components/menu/FlanWeekStockNote";
 
@@ -66,6 +67,7 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
     () => splitMenuTakeoutLine(item.description),
     [item.description]
   );
+  const displayPhotos = useMemo(() => menuItemDisplayPhotos(item), [item]);
   const disabled =
     !item.isActive || item.soldOut || !Number.isFinite(unitPrice);
 
@@ -92,13 +94,21 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
       className="card-elevated group flex h-full min-h-0 scroll-mt-24 flex-col overflow-hidden"
     >
       <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[var(--bg-section)]">
-        <Image
-          src={item.photoUrl}
-          alt={`${item.name} Filipino food in Cypress TX`}
-          fill
-          className="object-cover transition duration-500 group-hover:scale-[1.03]"
-          sizes="(max-width:768px) 100vw, 33vw"
-        />
+        {displayPhotos.length > 1 ? (
+          <MenuItemImageCarousel
+            urls={displayPhotos}
+            alt={`${item.name} Filipino food in Cypress TX`}
+            sizes="(max-width:768px) 100vw, 33vw"
+          />
+        ) : (
+          <Image
+            src={displayPhotos[0] ?? item.photoUrl}
+            alt={`${item.name} Filipino food in Cypress TX`}
+            fill
+            className="object-cover transition duration-500 group-hover:scale-[1.03]"
+            sizes="(max-width:768px) 100vw, 33vw"
+          />
+        )}
         <MenuPhotoComingSoonOverlay />
         {item.soldOut ? (
           <span className="pointer-events-none absolute left-3 top-3 z-[2] rounded-full bg-[color:var(--primary)] px-3 py-1 text-xs font-bold text-[color:var(--cream)]">

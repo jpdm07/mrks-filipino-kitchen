@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { buildSiteBannerEntries } from "@/lib/lumpia-inventory-banners";
+import { bannerInventoryRowsForSiteBanner } from "@/lib/same-day-pickup";
 
 const WRAPPER =
   "print:hidden relative z-40 w-full border-b border-[color:var(--gold-muted)]/45 bg-[rgba(251,246,236,0.97)] text-[color:var(--primary)] shadow-[inset_0_-1px_0_rgba(6,15,31,0.06)]";
@@ -33,7 +34,7 @@ export async function SmartSchedulingBanner() {
       }),
     ]);
     forceStateA = settings?.schedulingBannerForceStateA === true;
-    sameDayItems = items;
+    sameDayItems = await bannerInventoryRowsForSiteBanner(items);
   } catch {
     /* DB unavailable — fall back to State A messaging only */
   }

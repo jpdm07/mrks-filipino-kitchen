@@ -8,6 +8,16 @@ import {
   YEMA_PLANNER_WEEKLY_PIECES_CAP,
   YEMA_RETAIL_SINGLE_USD,
 } from "@/lib/yema-cost-model";
+import {
+  POLVORON_COGS_BUNDLE_6_USD,
+  POLVORON_COGS_CLASSIC_PIECE_USD,
+  POLVORON_COGS_SPECIALTY_PIECE_USD,
+  POLVORON_PLANNER_WEEKLY_BUNDLES_CAP,
+  POLVORON_PLANNER_WEEKLY_PIECES_CAP,
+  POLVORON_RETAIL_BUNDLE_6_USD,
+  POLVORON_RETAIL_CLASSIC_PIECE_USD,
+  POLVORON_RETAIL_SPECIALTY_PIECE_USD,
+} from "@/lib/polvoron-cost-model";
 import { ORDER_FULFILLMENT } from "@/lib/config";
 import { useAdminDataSync } from "@/lib/use-admin-data-sync";
 
@@ -76,6 +86,34 @@ const MENU_ITEMS = [
     name: "Yema (per piece)",
     price: YEMA_RETAIL_SINGLE_USD,
     cost: YEMA_COGS_PER_PIECE_USD,
+    cookMin: 0,
+  },
+  {
+    id: "polvoronClassic",
+    name: "Polvoron — classic (per piece)",
+    price: POLVORON_RETAIL_CLASSIC_PIECE_USD,
+    cost: POLVORON_COGS_CLASSIC_PIECE_USD,
+    cookMin: 0,
+  },
+  {
+    id: "polvoronUbe",
+    name: "Polvoron — ube (per piece)",
+    price: POLVORON_RETAIL_SPECIALTY_PIECE_USD,
+    cost: POLVORON_COGS_SPECIALTY_PIECE_USD,
+    cookMin: 0,
+  },
+  {
+    id: "polvoronCookies",
+    name: "Polvoron — cookies & cream (per piece)",
+    price: POLVORON_RETAIL_SPECIALTY_PIECE_USD,
+    cost: POLVORON_COGS_SPECIALTY_PIECE_USD,
+    cookMin: 0,
+  },
+  {
+    id: "polvoronBundle6",
+    name: "Polvoron — 6-pc mix & match bundle",
+    price: POLVORON_RETAIL_BUNDLE_6_USD,
+    cost: POLVORON_COGS_BUNDLE_6_USD,
     cookMin: 0,
   },
 ] as const;
@@ -147,6 +185,24 @@ function scalePreset(
       );
       continue;
     }
+    if (
+      it.id === "polvoronClassic" ||
+      it.id === "polvoronUbe" ||
+      it.id === "polvoronCookies"
+    ) {
+      out[it.id] = Math.min(
+        POLVORON_PLANNER_WEEKLY_PIECES_CAP,
+        Math.max(0, Math.floor(q * scale))
+      );
+      continue;
+    }
+    if (it.id === "polvoronBundle6") {
+      out.polvoronBundle6 = Math.min(
+        POLVORON_PLANNER_WEEKLY_BUNDLES_CAP,
+        Math.max(0, Math.floor(q * scale))
+      );
+      continue;
+    }
     out[it.id] = Math.max(0, Math.floor(q * scale));
   }
   return normalizeWithinCookCap(out, weeklyCap);
@@ -176,6 +232,18 @@ function normalizeWithinCookCap(qty: Record<ItemId, number>, weeklyCap: number):
   }
   if ((q.flan ?? 0) > FLAN_WEEKLY_CAP_RAMEKINS) q.flan = FLAN_WEEKLY_CAP_RAMEKINS;
   if ((q.yema ?? 0) > YEMA_PLANNER_WEEKLY_PIECES_CAP) q.yema = YEMA_PLANNER_WEEKLY_PIECES_CAP;
+  if ((q.polvoronClassic ?? 0) > POLVORON_PLANNER_WEEKLY_PIECES_CAP) {
+    q.polvoronClassic = POLVORON_PLANNER_WEEKLY_PIECES_CAP;
+  }
+  if ((q.polvoronUbe ?? 0) > POLVORON_PLANNER_WEEKLY_PIECES_CAP) {
+    q.polvoronUbe = POLVORON_PLANNER_WEEKLY_PIECES_CAP;
+  }
+  if ((q.polvoronCookies ?? 0) > POLVORON_PLANNER_WEEKLY_PIECES_CAP) {
+    q.polvoronCookies = POLVORON_PLANNER_WEEKLY_PIECES_CAP;
+  }
+  if ((q.polvoronBundle6 ?? 0) > POLVORON_PLANNER_WEEKLY_BUNDLES_CAP) {
+    q.polvoronBundle6 = POLVORON_PLANNER_WEEKLY_BUNDLES_CAP;
+  }
   return q;
 }
 
@@ -225,6 +293,18 @@ function maxProfitQuantities(weeklyCap: number): Record<ItemId, number> {
   q.flan = flanProfit > 0 ? FLAN_WEEKLY_CAP_RAMEKINS : 0;
   const yemaProfit = profitC("yema");
   q.yema = yemaProfit > 0 ? YEMA_PLANNER_WEEKLY_PIECES_CAP : 0;
+  if (profitC("polvoronBundle6") > 0) {
+    q.polvoronBundle6 = POLVORON_PLANNER_WEEKLY_BUNDLES_CAP;
+  }
+  if (profitC("polvoronClassic") > 0) {
+    q.polvoronClassic = POLVORON_PLANNER_WEEKLY_PIECES_CAP;
+  }
+  if (profitC("polvoronUbe") > 0) {
+    q.polvoronUbe = POLVORON_PLANNER_WEEKLY_PIECES_CAP;
+  }
+  if (profitC("polvoronCookies") > 0) {
+    q.polvoronCookies = POLVORON_PLANNER_WEEKLY_PIECES_CAP;
+  }
   return q;
 }
 
@@ -278,6 +358,8 @@ export function EarningsPlannerClient() {
     let cookMinutes = 0;
     let flanCount = 0;
     let yemaPieceCount = 0;
+    let polvoronPieceCount = 0;
+    let polvoronBundleCount = 0;
 
     for (const it of MENU_ITEMS) {
       const q = quantities[it.id] ?? 0;
@@ -286,6 +368,13 @@ export function EarningsPlannerClient() {
       foodCost += q * it.cost;
       if (it.id === "flan") flanCount += q;
       else if (it.id === "yema") yemaPieceCount += q;
+      else if (
+        it.id === "polvoronClassic" ||
+        it.id === "polvoronUbe" ||
+        it.id === "polvoronCookies"
+      ) {
+        polvoronPieceCount += q;
+      } else if (it.id === "polvoronBundle6") polvoronBundleCount += q;
       else cookMinutes += q * it.cookMin;
     }
 
@@ -293,6 +382,10 @@ export function EarningsPlannerClient() {
     const overCook = cookMinutes > weeklyCookCap;
     const overFlan = flanCount > FLAN_WEEKLY_CAP_RAMEKINS;
     const overYema = yemaPieceCount > YEMA_PLANNER_WEEKLY_PIECES_CAP;
+    const overPolvoronPieces =
+      polvoronPieceCount > POLVORON_PLANNER_WEEKLY_PIECES_CAP;
+    const overPolvoronBundles =
+      polvoronBundleCount > POLVORON_PLANNER_WEEKLY_BUNDLES_CAP;
 
     return {
       revenue,
@@ -301,9 +394,13 @@ export function EarningsPlannerClient() {
       cookMinutes,
       flanCount,
       yemaPieceCount,
+      polvoronPieceCount,
+      polvoronBundleCount,
       overCook,
       overFlan,
       overYema,
+      overPolvoronPieces,
+      overPolvoronBundles,
     };
   }, [quantities, weeklyCookCap]);
 
@@ -314,6 +411,13 @@ export function EarningsPlannerClient() {
       if (id === "flan" && n > FLAN_WEEKLY_CAP_RAMEKINS) next.flan = FLAN_WEEKLY_CAP_RAMEKINS;
       if (id === "yema" && n > YEMA_PLANNER_WEEKLY_PIECES_CAP)
         next.yema = YEMA_PLANNER_WEEKLY_PIECES_CAP;
+      const capPc = POLVORON_PLANNER_WEEKLY_PIECES_CAP;
+      if (id === "polvoronClassic" && n > capPc) next.polvoronClassic = capPc;
+      if (id === "polvoronUbe" && n > capPc) next.polvoronUbe = capPc;
+      if (id === "polvoronCookies" && n > capPc) next.polvoronCookies = capPc;
+      if (id === "polvoronBundle6" && n > POLVORON_PLANNER_WEEKLY_BUNDLES_CAP) {
+        next.polvoronBundle6 = POLVORON_PLANNER_WEEKLY_BUNDLES_CAP;
+      }
       return next;
     });
   }, []);
@@ -536,6 +640,18 @@ export function EarningsPlannerClient() {
               {totals.yemaPieceCount} / {YEMA_PLANNER_WEEKLY_PIECES_CAP}
             </span>
           </li>
+          <li className="flex flex-wrap justify-between gap-2">
+            <span>🍪 Polvoron (pieces, all flavors)</span>
+            <span className="font-semibold tabular-nums">
+              {totals.polvoronPieceCount} / {POLVORON_PLANNER_WEEKLY_PIECES_CAP}
+            </span>
+          </li>
+          <li className="flex flex-wrap justify-between gap-2">
+            <span>🍪 Polvoron (6-pc bundles)</span>
+            <span className="font-semibold tabular-nums">
+              {totals.polvoronBundleCount} / {POLVORON_PLANNER_WEEKLY_BUNDLES_CAP}
+            </span>
+          </li>
         </ul>
         {totals.overCook ? (
           <p className="mt-3 text-base font-semibold text-red-600" role="alert">
@@ -552,6 +668,17 @@ export function EarningsPlannerClient() {
           <p className="mt-2 text-base font-semibold text-red-600" role="alert">
             ⚠️ Yema is capped at {YEMA_PLANNER_WEEKLY_PIECES_CAP} pieces per week in this planner (
             {money(YEMA_RETAIL_SINGLE_USD)}/pc menu).
+          </p>
+        ) : null}
+        {totals.overPolvoronPieces ? (
+          <p className="mt-2 text-base font-semibold text-red-600" role="alert">
+            ⚠️ Polvoron piece lines exceed {POLVORON_PLANNER_WEEKLY_PIECES_CAP} total pieces/week in this
+            planner (classic + ube + cookies &amp; cream sliders combined).
+          </p>
+        ) : null}
+        {totals.overPolvoronBundles ? (
+          <p className="mt-2 text-base font-semibold text-red-600" role="alert">
+            ⚠️ Polvoron 6-pc bundles are capped at {POLVORON_PLANNER_WEEKLY_BUNDLES_CAP}/week in this planner.
           </p>
         ) : null}
       </div>

@@ -37,6 +37,7 @@ export async function FeaturedItems() {
           basePrice: r.basePrice,
           sizes: ensureMenuSizes(parseMenuSizes(r.sizes), r.basePrice),
           photoUrl: r.photoUrl,
+          photoGalleryUrls: [],
           isActive: r.isActive,
           soldOut: r.soldOut,
           hasCooked: r.hasCooked,

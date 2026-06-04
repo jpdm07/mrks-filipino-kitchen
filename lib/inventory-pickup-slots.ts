@@ -21,44 +21,6 @@ export function slotLabelsInWindow(startLabel: string, endLabel: string): string
   return ALL_SLOTS.filter((_, i) => i >= lo && i <= hi);
 }
 
-async function mergeLabelsIntoAvailabilityDay(
-  tx: Prisma.TransactionClient,
-  dateYmd: string,
-  labels: string[]
-): Promise<void> {
-  if (labels.length === 0) return;
-  const row = await tx.availability.findUnique({
-    where: { date: dateYmd },
-  });
-  let existing: string[] = [];
-  if (row?.slots) {
-    try {
-      const parsed = JSON.parse(row.slots) as unknown;
-      if (Array.isArray(parsed)) {
-        existing = parsed.filter((x): x is string => typeof x === "string");
-      }
-    } catch {
-      existing = [];
-    }
-  }
-  const set = new Set([...existing, ...labels].map((s) => s.trim()));
-  const merged = ALL_SLOTS.filter((s) => set.has(s));
-  const slotsJson = JSON.stringify(merged.length > 0 ? merged : ALL_SLOTS);
-  await tx.availability.upsert({
-    where: { date: dateYmd },
-    create: {
-      date: dateYmd,
-      isOpen: true,
-      slots: slotsJson,
-      note: null,
-    },
-    update: {
-      isOpen: true,
-      slots: slotsJson,
-    },
-  });
-}
-
 export async function createInventoryPickupSlotsInTx(
   tx: Prisma.TransactionClient,
   params: {
@@ -80,7 +42,6 @@ export async function createInventoryPickupSlotsInTx(
 
   for (const dateYmd of params.datesYmd) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateYmd)) continue;
-    await mergeLabelsIntoAvailabilityDay(tx, dateYmd, labels);
     await tx.inventoryPickupSlot.create({
       data: {
         inventoryItemId: params.inventoryItemId,

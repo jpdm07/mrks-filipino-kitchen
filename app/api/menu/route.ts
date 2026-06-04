@@ -23,6 +23,7 @@ export async function GET() {
         basePrice: m.basePrice,
         sizes: ensureMenuSizes(parseMenuSizes(m.sizes), m.basePrice),
         photoUrl: m.photoUrl,
+        photoGalleryUrls: [],
         isActive: m.isActive,
         soldOut: m.soldOut,
         hasCooked: m.hasCooked,

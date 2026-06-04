@@ -84,10 +84,10 @@ const LOCAL_FOOD_ESTABLISHMENT_SCHEMA = {
     },
     {
       "@type": "MenuItem",
-      name: "Yema",
+      name: "Polvoron",
       description:
-        "Buttery slow-cooked Filipino milk candy, the classic merienda treat.",
-      offers: { "@type": "Offer", price: "0.75", priceCurrency: "USD" },
+        "Filipino milk shortbread candy — classic, ube, or cookies & cream; 6-piece mix-and-match bundle.",
+      offers: { "@type": "Offer", price: "1.50", priceCurrency: "USD" },
     },
   ],
 } as const;

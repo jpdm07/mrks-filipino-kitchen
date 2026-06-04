@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
+import { countQualifyingSameDayBannerItems } from "@/lib/same-day-pickup";
 
 export async function GET() {
   if (!(await isAdminSession())) {
@@ -8,13 +9,7 @@ export async function GET() {
   }
   const [settings, qualifyingSameDayCount] = await Promise.all([
     prisma.pricingSettings.findUnique({ where: { id: "default" } }),
-    prisma.inventoryItem.count({
-      where: {
-        showBanner: true,
-        isAvailable: true,
-        quantityInStock: { gt: 0 },
-      },
-    }),
+    countQualifyingSameDayBannerItems(),
   ]);
   const schedulingBannerForceStateA =
     settings?.schedulingBannerForceStateA === true;
@@ -46,13 +41,7 @@ export async function PATCH(req: NextRequest) {
     },
     update: { schedulingBannerForceStateA: body.schedulingBannerForceStateA },
   });
-  const qualifyingSameDayCount = await prisma.inventoryItem.count({
-    where: {
-      showBanner: true,
-      isAvailable: true,
-      quantityInStock: { gt: 0 },
-    },
-  });
+  const qualifyingSameDayCount = await countQualifyingSameDayBannerItems();
   const effectiveState =
     !p.schedulingBannerForceStateA && qualifyingSameDayCount > 0 ? "B" : "A";
   return NextResponse.json({

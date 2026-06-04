@@ -4,7 +4,17 @@ import type { MenuItemDTO } from "./menu-types";
 
 type CatalogRow = (typeof MENU_CATALOG)[number];
 
+export function catalogNullableString(v: unknown): string | null {
+  return typeof v === "string" ? v : null;
+}
+
 function catalogRowToDtoBase(c: CatalogRow): Omit<MenuItemDTO, "isActive" | "soldOut"> {
+  const gallery =
+    "photoGalleryUrls" in c &&
+    Array.isArray(c.photoGalleryUrls) &&
+    c.photoGalleryUrls.length > 0
+      ? c.photoGalleryUrls.map((u) => String(u).trim()).filter(Boolean)
+      : [];
   return {
     id: c.id,
     name: c.name,
@@ -14,13 +24,22 @@ function catalogRowToDtoBase(c: CatalogRow): Omit<MenuItemDTO, "isActive" | "sol
     basePrice: c.basePrice,
     sizes: c.sizes.map((s) => ({ ...s })),
     photoUrl: c.photoUrl,
+    photoGalleryUrls: gallery,
     hasCooked: c.hasCooked,
     hasFrozen: c.hasFrozen,
     sortOrder: c.sortOrder,
-    variantGroup: "variantGroup" in c ? c.variantGroup : null,
-    variantShortLabel: "variantShortLabel" in c ? c.variantShortLabel : null,
-    groupCardTitle: "groupCardTitle" in c ? c.groupCardTitle : null,
-    groupServingBlurb: "groupServingBlurb" in c ? c.groupServingBlurb : null,
+    variantGroup:
+      "variantGroup" in c ? catalogNullableString(c.variantGroup) : null,
+    variantShortLabel:
+      "variantShortLabel" in c
+        ? catalogNullableString(c.variantShortLabel)
+        : null,
+    groupCardTitle:
+      "groupCardTitle" in c ? catalogNullableString(c.groupCardTitle) : null,
+    groupServingBlurb:
+      "groupServingBlurb" in c
+        ? catalogNullableString(c.groupServingBlurb)
+        : null,
   };
 }
 
@@ -49,5 +68,19 @@ export function catalogMenuItemsMissingFromDb(
     ...catalogRowToDtoBase(m),
     isActive: true,
     soldOut: false,
+  }));
+}
+
+/** Public menu rows from `MENU_CATALOG` (e.g. DB-offline fallback). */
+export function menuCatalogAsPublicDtos(
+  flags: { isActive: boolean; soldOut: boolean } = {
+    isActive: true,
+    soldOut: false,
+  }
+): MenuItemDTO[] {
+  return MENU_CATALOG.map((m) => ({
+    ...catalogRowToDtoBase(m),
+    isActive: flags.isActive,
+    soldOut: flags.soldOut,
   }));
 }

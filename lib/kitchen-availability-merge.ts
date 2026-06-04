@@ -18,8 +18,12 @@ import {
   getTodayInPickupTimezoneYMD,
   isPickupYmdAllowed,
 } from "@/lib/pickup-lead-time";
-import { filterOpenDatesByInventoryCart } from "@/lib/inventory-cart-pickup-sync";
 import type { InventoryCartLineHint } from "@/lib/inventory-cart-line-hints";
+import {
+  cartEligibleForSameDayPickup,
+  getSameDayOpenDatesForBannerCart,
+  SAME_DAY_PICKUP_NOTE,
+} from "@/lib/same-day-pickup";
 
 export type KitchenCalendarOptions = {
   /** True when the cart is dessert-only (flan and/or yema) — same as legacy `cartMode=flan`. */
@@ -28,7 +32,7 @@ export type KitchenCalendarOptions = {
   mainMinutesNeeded?: number;
   /** When set, week must have enough flan ramekins left (ignored for yema-only need). */
   flanRamekinsNeeded?: number;
-  /** Checkout: menu item IDs in cart — narrows open dates to inventory same-day slot windows. */
+  /** Checkout: menu item IDs in cart — adds same-day banner pickup dates when eligible. */
   cartMenuItemIds?: string[];
   /** Cooked/frozen per line — when set, narrows inventory rows to match cart (same as deduction). */
   cartInventoryHints?: InventoryCartLineHint[];
@@ -188,18 +192,35 @@ export async function buildKitchenOpenDatesPayload(
     if (custom) prunedNotes[ymd] = custom;
   }
 
-  let finalDates = filtered;
-  if (opts.cartMenuItemIds?.length || opts.cartInventoryHints?.length) {
-    finalDates = await filterOpenDatesByInventoryCart(
-      filtered,
+  const finalNotes: Record<string, string> = {};
+  for (const ymd of filtered) {
+    finalNotes[ymd] = prunedNotes[ymd] ?? "";
+  }
+
+  let finalDates = [...filtered];
+  const hasCartContext =
+    (opts.cartMenuItemIds?.length ?? 0) > 0 ||
+    (opts.cartInventoryHints?.length ?? 0) > 0;
+  if (hasCartContext && !opts.cartFlanOnly) {
+    const eligible = await cartEligibleForSameDayPickup(
       opts.cartMenuItemIds ?? [],
       opts.cartInventoryHints
     );
-  }
-
-  const finalNotes: Record<string, string> = {};
-  for (const ymd of finalDates) {
-    finalNotes[ymd] = prunedNotes[ymd] ?? "";
+    if (eligible) {
+      const sameDayDates = await getSameDayOpenDatesForBannerCart(
+        fromYmd,
+        toYmd,
+        opts.cartMenuItemIds ?? [],
+        opts.cartInventoryHints
+      );
+      for (const ymd of sameDayDates) {
+        if (!finalDates.includes(ymd)) {
+          finalDates.push(ymd);
+          finalNotes[ymd] = SAME_DAY_PICKUP_NOTE;
+        }
+      }
+      finalDates.sort();
+    }
   }
 
   return { openDates: finalDates, notes: finalNotes };

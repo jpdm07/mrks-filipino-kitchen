@@ -31,7 +31,7 @@ export function isPastFlanOrderDeadlineForPickupWeekMonday(
 }
 
 /**
- * Tue–Thu pickup dates for a dessert-only cart (flan and/or yema): pickup must be
+ * Tue–Thu pickup dates for a dessert-only cart (flan, yema, polvoron, etc.): pickup must be
  * on or after “today” (Central) and the customer must still be before the weekly
  * dessert order deadline (Saturday 11:59 PM Central the week before that pickup week).
  */

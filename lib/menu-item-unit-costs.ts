@@ -7,6 +7,7 @@ import type { OrderItemLine } from "./order-types";
 import { LUMPIA_DOZEN_COGS_USD } from "./lumpia-cost-model";
 import { adoboCogsForOrderLine } from "./adobo-cost-model";
 import { tocinoUnitCostFromHaystack } from "./tocino-cost-model";
+import { polvoronUnitCogsUsd } from "./polvoron-cost-model";
 import { yemaUnitCogsUsd } from "./yema-cost-model";
 
 function round2(n: number) {
@@ -119,6 +120,7 @@ export function getUnitCost(
   if (h.includes("pancit") && h.includes("shrimp")) return 9.71;
 
   if (/flan|leche flan/i.test(name)) return 2.71;
+  if (/\bpolvoron\b/i.test(name)) return polvoronUnitCogsUsd(size ?? null);
   if (/\byema\b/i.test(name)) return yemaUnitCogsUsd(size ?? null);
   if (h.includes("quail")) return 3.82;
 

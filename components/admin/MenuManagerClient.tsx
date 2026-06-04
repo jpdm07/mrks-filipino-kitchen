@@ -9,6 +9,14 @@ import {
   FLAN_TRUE_COST_PER_RAMEKIN_USD,
 } from "@/lib/flan-cost-model";
 import {
+  POLVORON_COGS_BUNDLE_6_USD,
+  POLVORON_COGS_CLASSIC_PIECE_USD,
+  POLVORON_COGS_SPECIALTY_PIECE_USD,
+  POLVORON_RETAIL_BUNDLE_6_USD,
+  POLVORON_RETAIL_CLASSIC_PIECE_USD,
+  POLVORON_RETAIL_SPECIALTY_PIECE_USD,
+} from "@/lib/polvoron-cost-model";
+import {
   YEMA_COGS_PER_PIECE_USD,
   YEMA_RETAIL_SINGLE_USD,
 } from "@/lib/yema-cost-model";
@@ -304,6 +312,35 @@ export function MenuManagerClient({
                     </strong>{" "}
                     · Rough COGS ~$
                     {YEMA_COGS_PER_PIECE_USD.toFixed(2)}/pc (internal). Run seed after catalog edits.
+                  </span>
+                </div>
+              ) : null}
+              {m.id === "seed-14" ? (
+                <div className="mt-2 rounded border border-violet-900/25 bg-violet-50 p-2 text-xs text-[var(--text)] dark:bg-violet-950/35">
+                  <strong className="text-violet-900 dark:text-violet-100">
+                    Polvoron — catalog + cost model
+                  </strong>
+                  <span className="mt-1 block leading-snug">
+                    List prices: classic{" "}
+                    <strong className="tabular-nums">
+                      ${POLVORON_RETAIL_CLASSIC_PIECE_USD.toFixed(2)}
+                    </strong>
+                    , specialty (ube / cookies &amp; cream){" "}
+                    <strong className="tabular-nums">
+                      ${POLVORON_RETAIL_SPECIALTY_PIECE_USD.toFixed(2)}
+                    </strong>
+                    , 6-pc bundle{" "}
+                    <strong className="tabular-nums">
+                      ${POLVORON_RETAIL_BUNDLE_6_USD.toFixed(2)}
+                    </strong>
+                    . Internal COGS (Sheets / profit): classic ~$
+                    {POLVORON_COGS_CLASSIC_PIECE_USD.toFixed(2)}/pc · specialty ~$
+                    {POLVORON_COGS_SPECIALTY_PIECE_USD.toFixed(2)}/pc · bundle ~$
+                    {POLVORON_COGS_BUNDLE_6_USD.toFixed(2)} each. Edit{" "}
+                    <code className="rounded bg-black/10 px-1 dark:bg-white/10">
+                      polvoron-cost-model.ts
+                    </code>{" "}
+                    then run seed.
                   </span>
                 </div>
               ) : null}

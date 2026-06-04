@@ -11,9 +11,12 @@ import {
   ymdUtcWeekday,
 } from "@/lib/pickup-lead-time";
 import { isFlanTueThuPickupYmdBookableAt } from "@/lib/flan-weekday-unlock";
-import { getBlockedInventorySlotLabels } from "@/lib/inventory-pickup-slots";
-import { getCartInventorySlotLabelFilterForDate } from "@/lib/inventory-cart-pickup-sync";
 import type { InventoryCartLineHint } from "@/lib/inventory-cart-line-hints";
+import {
+  cartEligibleForSameDayPickup,
+  getSameDayOpenDatesForBannerCart,
+  getSameDaySlotLabelsForBannerCart,
+} from "@/lib/same-day-pickup";
 
 export const FLAN_ONLY_DAY_NOTE =
   "Dessert pickups only — other items available Friday and Saturday";
@@ -134,40 +137,48 @@ export async function isPickupYmdAllowedForOrderCartAsync(
   return ymd.trim() >= today;
 }
 
-async function applyInventoryCapacityFilter(
-  dateYmd: string,
-  slots: string[]
-): Promise<string[]> {
-  const blocked = await getBlockedInventorySlotLabels(dateYmd);
-  return sortPickupSlotLabels(slots.filter((s) => !blocked.has(s.trim())));
+export async function isPickupYmdAllowedForCheckout(
+  ymd: string,
+  cartFlanOnly: boolean,
+  cartMenuItemIds?: string[],
+  cartInventoryHints?: InventoryCartLineHint[] | null,
+  now = new Date()
+): Promise<boolean> {
+  if (await isPickupYmdAllowedForOrderCartAsync(ymd, cartFlanOnly, now)) {
+    return true;
+  }
+  if (cartFlanOnly) return false;
+  const hasCart =
+    (cartMenuItemIds?.length ?? 0) > 0 ||
+    (cartInventoryHints?.length ?? 0) > 0;
+  if (!hasCart) return false;
+  const eligible = await cartEligibleForSameDayPickup(
+    cartMenuItemIds ?? [],
+    cartInventoryHints
+  );
+  if (!eligible) return false;
+  const sameDay = await getSameDayOpenDatesForBannerCart(
+    ymd.trim(),
+    ymd.trim(),
+    cartMenuItemIds ?? [],
+    cartInventoryHints
+  );
+  return sameDay.includes(ymd.trim());
 }
 
-export async function getKitchenSlotsForDate(
-  dateYmd: string,
-  /** Dessert-only cart (flan and/or yema) — not strictly flan. */
+async function getWeeklyAdvanceSlotsForDate(
+  dateTrim: string,
   cartFlanOnly: boolean,
-  /** When set, intersect with inventory “Open pickup slot” windows for these menu SKUs. */
-  cartMenuItemIds?: string[],
-  /** Rich cart lines (cooked/frozen) — preferred over ids-only when narrowing by inventory row. */
-  cartInventoryHints?: InventoryCartLineHint[] | null
+  taken: Set<string>
 ): Promise<string[]> {
-  const dateTrim = dateYmd.trim();
   const row = await prisma.availability.findUnique({
     where: { date: dateTrim },
   });
 
-  /** Inventory merges pickup windows into `availability.slots` — honor that for any weekday before legacy-only rules. */
   if (row?.isOpen) {
     let raw = effectiveSlotsForOpenDay(slotsJsonFromDb(row.slots));
     if (raw.length === 0) raw = [...ALL_SLOTS];
-    const taken = await getTakenPickupTimeLabelsForDate(dateTrim);
-    const slots = sortPickupSlotLabels(raw.filter((s) => !taken.has(s.trim())));
-    return applyInventoryCartAndCapacityFilter(
-      dateTrim,
-      slots,
-      cartMenuItemIds,
-      cartInventoryHints
-    );
+    return sortPickupSlotLabels(raw.filter((s) => !taken.has(s.trim())));
   }
   if (row && !row.isOpen) return [];
 
@@ -179,50 +190,60 @@ export async function getKitchenSlotsForDate(
   if (kind === "tue_thu") {
     if (!cartFlanOnly) return [];
     if (!isFlanTueThuPickupYmdBookableAt(dateTrim, new Date())) return [];
-    const taken = await getTakenPickupTimeLabelsForDate(dateTrim);
-    const slots = sortPickupSlotLabels(
+    return sortPickupSlotLabels(
       evening.filter((s) => !taken.has(s.trim()))
-    );
-    return applyInventoryCartAndCapacityFilter(
-      dateTrim,
-      slots,
-      cartMenuItemIds,
-      cartInventoryHints
     );
   }
 
   if (kind === "friday") {
-    const taken = await getTakenPickupTimeLabelsForDate(dateTrim);
-    const slots = sortPickupSlotLabels(
+    return sortPickupSlotLabels(
       evening.filter((s) => !taken.has(s.trim()))
-    );
-    return applyInventoryCartAndCapacityFilter(
-      dateTrim,
-      slots,
-      cartMenuItemIds,
-      cartInventoryHints
     );
   }
 
   return [];
 }
 
-async function applyInventoryCartAndCapacityFilter(
+export async function getKitchenSlotsForDate(
   dateYmd: string,
-  slots: string[],
+  /** Dessert-only cart (flan and/or yema) — not strictly flan. */
+  cartFlanOnly: boolean,
+  /** When set, same-day banner pickup windows may apply on non-weekly dates. */
   cartMenuItemIds?: string[],
+  /** Rich cart lines (cooked/frozen) — preferred over ids-only for same-day matching. */
   cartInventoryHints?: InventoryCartLineHint[] | null
 ): Promise<string[]> {
-  let out = await applyInventoryCapacityFilter(dateYmd, slots);
-  const hasHints = cartInventoryHints && cartInventoryHints.length > 0;
-  if (!hasHints && !cartMenuItemIds?.length) return out;
-  const invFilter = await getCartInventorySlotLabelFilterForDate(
-    dateYmd,
-    cartMenuItemIds ?? [],
-    cartInventoryHints
+  const dateTrim = dateYmd.trim();
+  const taken = await getTakenPickupTimeLabelsForDate(dateTrim);
+
+  const hasCartContext =
+    (cartInventoryHints?.length ?? 0) > 0 || (cartMenuItemIds?.length ?? 0) > 0;
+  let sameDaySlots: string[] = [];
+  if (hasCartContext && !cartFlanOnly) {
+    const eligible = await cartEligibleForSameDayPickup(
+      cartMenuItemIds ?? [],
+      cartInventoryHints
+    );
+    if (eligible) {
+      sameDaySlots = await getSameDaySlotLabelsForBannerCart(
+        dateTrim,
+        cartMenuItemIds ?? [],
+        cartInventoryHints
+      );
+    }
+  }
+
+  const weeklyAllowed = await isPickupYmdAllowedForOrderCartAsync(
+    dateTrim,
+    cartFlanOnly,
+    new Date()
   );
-  if (invFilter === null) return out;
-  const allow = new Set(invFilter.map((s) => s.trim()));
-  out = out.filter((s) => allow.has(s.trim()));
-  return sortPickupSlotLabels(out);
+
+  if (sameDaySlots.length > 0 && !weeklyAllowed) {
+    return sortPickupSlotLabels(
+      sameDaySlots.filter((s) => !taken.has(s.trim()))
+    );
+  }
+
+  return getWeeklyAdvanceSlotsForDate(dateTrim, cartFlanOnly, taken);
 }

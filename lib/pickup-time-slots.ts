@@ -60,3 +60,15 @@ export function sortPickupSlotLabels(slots: string[]): string[] {
 export function isValidPickupTimeLabel(t: string): boolean {
   return ALLOWED.has(t.trim());
 }
+
+/** Minutes from midnight for labels like `11:15 AM`; null if unparsable. */
+export function pickupLabelToMinutesSinceMidnight(label: string): number | null {
+  const m = /^(\d{1,2}):(\d{2})\s+(AM|PM)$/.exec(label.trim());
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const mins = parseInt(m[2], 10);
+  const ap = m[3];
+  if (ap === "PM" && h !== 12) h += 12;
+  if (ap === "AM" && h === 12) h = 0;
+  return h * 60 + mins;
+}

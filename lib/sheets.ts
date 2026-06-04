@@ -64,6 +64,15 @@ export function lineToSheetsOrderPayload(
       frozenBag: false,
     };
   }
+  if (/\bpolvoron\b/i.test(i.name)) {
+    return {
+      ...base,
+      container: "individually wrapped pieces / small bag",
+      dipCup: false,
+      foilCover: false,
+      frozenBag: false,
+    };
+  }
   return base;
 }
 

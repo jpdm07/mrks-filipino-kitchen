@@ -19,7 +19,7 @@ import {
 } from "@/lib/pickup-lead-time";
 import {
   getKitchenSlotsForDate,
-  isPickupYmdAllowedForOrderCartAsync,
+  isPickupYmdAllowedForCheckout,
 } from "@/lib/kitchen-schedule";
 import { orderLinesToInventoryCartHints } from "@/lib/inventory-cart-line-hints";
 import { cartHasOnlyFlanItems } from "@/lib/menu-cook-capacity";
@@ -201,10 +201,20 @@ export async function POST(req: NextRequest) {
       );
     }
     const cartFlanOnly = cartHasOnlyFlanItems(items);
+    const cartMenuItemIds = [
+      ...new Set(
+        items
+          .map((i) => i.menuItemId?.trim())
+          .filter((id): id is string => Boolean(id))
+      ),
+    ];
+    const cartInventoryHints = orderLinesToInventoryCartHints(items);
     if (
-      !(await isPickupYmdAllowedForOrderCartAsync(
+      !(await isPickupYmdAllowedForCheckout(
         pickupDate,
         cartFlanOnly,
+        cartMenuItemIds.length ? cartMenuItemIds : undefined,
+        cartInventoryHints.length ? cartInventoryHints : undefined,
         new Date()
       ))
     ) {
@@ -214,14 +224,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const cartMenuItemIds = [
-      ...new Set(
-        items
-          .map((i) => i.menuItemId?.trim())
-          .filter((id): id is string => Boolean(id))
-      ),
-    ];
-    const cartInventoryHints = orderLinesToInventoryCartHints(items);
     const slotList = await getKitchenSlotsForDate(
       pickupDate,
       cartFlanOnly,

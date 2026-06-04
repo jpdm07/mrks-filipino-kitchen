@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { buildSiteBannerEntries } from "@/lib/lumpia-inventory-banners";
+import { bannerInventoryRowsForSiteBanner } from "@/lib/same-day-pickup";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,8 @@ export async function GET() {
       },
       orderBy: { id: "asc" },
     });
-    const items = buildSiteBannerEntries(rows).map((entry) => ({
+    const bannerRows = await bannerInventoryRowsForSiteBanner(rows);
+    const items = buildSiteBannerEntries(bannerRows).map((entry) => ({
       id: entry.key,
       message: entry.message,
     }));

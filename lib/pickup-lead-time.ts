@@ -21,7 +21,7 @@ export function getYmdInPickupTimezoneForInstant(instant: Date): string {
 }
 
 /** Hour (0–23) and minute in PICKUP_TIMEZONE for an instant. */
-function getPickupTzHm(now: Date): { h: number; m: number } {
+export function getPickupTimezoneHm(now: Date): { h: number; m: number } {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: ORDER_FULFILLMENT.PICKUP_TIMEZONE,
     hour: "2-digit",
@@ -59,7 +59,7 @@ export function isPastThisWeekThursdayNoonCentral(now: Date = new Date()): boole
   const thuYmd = getThursdayYmdOfSameWeek(todayYmd);
   if (todayYmd > thuYmd) return true;
   if (todayYmd < thuYmd) return false;
-  const { h, m } = getPickupTzHm(now);
+  const { h, m } = getPickupTimezoneHm(now);
   return h * 60 + m >= 12 * 60;
 }
 

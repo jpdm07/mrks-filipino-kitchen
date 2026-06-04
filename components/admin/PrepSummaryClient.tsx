@@ -19,6 +19,8 @@ import {
   type PrepSummaryComputed,
   type PrepSummaryOverrideState,
 } from "@/lib/prep-summary";
+import type { LumpiaFlavorWorkload } from "@/lib/same-day-pickup";
+import { formatLumpiaWorkloadLine } from "@/lib/same-day-pickup";
 import { useAdminDataSync } from "@/lib/use-admin-data-sync";
 
 type Payload = {
@@ -27,6 +29,7 @@ type Payload = {
   state: PrepSummaryOverrideState;
   meta: PrepSummaryComputed["meta"];
   emailSentAt: string | null;
+  lumpiaByFlavor?: LumpiaFlavorWorkload[];
 };
 
 function defaultWeek(): string {
@@ -389,6 +392,26 @@ export function PrepSummaryClient({
                 </p>
               ) : null}
             </header>
+
+            {payload.lumpiaByFlavor?.length ? (
+              <div className="prep-no-print mt-4 rounded-lg border border-[var(--gold-muted)]/60 bg-[rgba(251,246,236,0.6)] px-4 py-3">
+                <h3 className="text-sm font-bold uppercase tracking-wide text-[var(--primary)]">
+                  Lumpia by flavor
+                </h3>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">
+                  Orders with pickup this week ({payload.meta.weekStartSun} –{" "}
+                  {payload.meta.weekEndSat}) vs current inventory. Shared pool for
+                  same-day and advance orders.
+                </p>
+                <ul className="mt-3 space-y-1.5 text-sm">
+                  {payload.lumpiaByFlavor.map((w) => (
+                    <li key={w.protein} className="font-medium text-[var(--primary)]">
+                      {formatLumpiaWorkloadLine(w)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             {thursdayHits ? (
               <div className="prep-no-print mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">

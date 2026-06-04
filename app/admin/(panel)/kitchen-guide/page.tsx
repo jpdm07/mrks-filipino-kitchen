@@ -1,5 +1,10 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
+import {
+  POLVORON_RETAIL_BUNDLE_6_USD,
+  POLVORON_RETAIL_CLASSIC_PIECE_USD,
+  POLVORON_RETAIL_SPECIALTY_PIECE_USD,
+} from "@/lib/polvoron-cost-model";
 
 const RECIPES = [
   { id: "lumpia", title: "Lumpia (Beef, Pork, or Turkey)", body: `YIELD: 1 dozen | COOK ~45 min\nCONTAINER: 8×8 alum + foil + 2 dips (cooked) or gallon Ziploc + parchment + 2 dips (frozen)\n\nINGREDIENTS / DOZEN: 0.5 lb ground meat; ¼ medium yellow onion; 3 cloves garlic; ¼ cup shredded carrots; 2 tbsp soy sauce; salt & pepper; 12–14 lumpia wrappers (Spring Home/Menlo — HMart Katy); 2–3 c oil to fry.\n\n1. Mix meat, onion, garlic, carrots, soy, salt, pepper.\n2. Wrap ~1 heaping tbsp filling per roll; seal with water.\n3. COOKED: fry 350–375°F 3–4 min. FROZEN: freeze raw on parchment, then bag.` },
@@ -13,6 +18,11 @@ const RECIPES = [
     id: "yema",
     title: "Yema (milk candy)",
     body: `Milk candy — cook sweetened condensed milk with egg yolks and a little butter until thick; cool slightly; portion and roll or shape as you like (optional coat in sugar).\n\nRETAIL: $0.75 per piece (bulk/dozen TBD).\n\nPack in small cups or parchment; no dip cup.`,
+  },
+  {
+    id: "polvoron",
+    title: "Polvoron",
+    body: `Toast all-purpose flour in a dry pan until nutty and sandy (stir constantly; do not scorch). Off heat, whisk in powdered milk and sugar; rub in melted butter until crumbs hold when squeezed. Press into a pan, score, cool fully, then break/cut into pieces. Fold in ube halaya powder or crushed cookies for specialty batches.\n\nRETAIL (menu seed-14): classic $${POLVORON_RETAIL_CLASSIC_PIECE_USD.toFixed(2)}/pc · ube & cookies & cream $${POLVORON_RETAIL_SPECIALTY_PIECE_USD.toFixed(2)}/pc · any 6 mix $${POLVORON_RETAIL_BUNDLE_6_USD.toFixed(2)}.\n\nWrap pieces in candy cellophane or small bags; no dip cup.`,
   },
   { id: "tocino-mar", title: "Tocino marinade", body: `Batch from 1 lb pork shoulder/belly OR chicken thighs (¼\" slices); ¼ c brown sugar; 3 tbsp soy; 2 tbsp white vinegar; 1 tsp annatto; 4 garlic cloves; ½ tsp salt. Marinate overnight. Plates: pan-fry complete plate with egg, rice, veg, dip. RETAIL FROZEN PACK: portion 12 oz (340g) marinated meat per bag — seal + parchment, gallon or quart freezer bag per your workflow.` },
   { id: "tocino-plate", title: "Tocino plate assembly", body: `5–6 slices + sunny egg + 1 c jasmine rice + 3 cucumber + 3 tomato + garlic crisps + 1 dip cup in 3-comp foam.` },

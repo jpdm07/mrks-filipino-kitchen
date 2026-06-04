@@ -788,20 +788,24 @@ export function InventoryAnnouncementsClient({
                   </p>
                 ) : null}
                 {(r.deductionMode ?? INVENTORY_DEDUCTION_ORDER_LINE_QTY) ===
-                INVENTORY_DEDUCTION_LUMPIA_FROZEN_DOZEN ? (
-                  <p className="text-xs text-[var(--text-muted)]">
-                    Stock is tracked in <strong>dozens</strong>. Only{" "}
-                    <strong>frozen</strong> lumpia lines with 1dz / 2dz / party sizes
-                    reduce this row. Same-day pickup slots you open here still merge into
-                    your normal availability calendar.
-                  </p>
-                ) : (
+                  INVENTORY_DEDUCTION_ORDER_LINE_QTY ||
+                (r.deductionMode ?? "") === INVENTORY_DEDUCTION_LUMPIA_PIECES ||
+                (r.deductionMode ?? "") === INVENTORY_DEDUCTION_LUMPIA_FROZEN_DOZEN ? (
+                  (r.deductionMode ?? "") === INVENTORY_DEDUCTION_ORDER_LINE_QTY ? (
                   <p className="text-xs text-[var(--text-muted)]">
                     Each ordered unit subtracts the cart <strong>quantity</strong> for the
                     linked menu SKU (e.g. 3 ramekins → −3). Inventory-linked pickup windows
                     use the same schedule grid as the rest of the site.
                   </p>
-                )}
+                  ) : (
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Enter stock in <strong>pieces</strong> (4 dozen = 48). Cooked and frozen
+                    share this count — customers pick preference at checkout. Orders subtract
+                    12 / 24 / 50 / 4 (sample) by size. The site shows availability in{" "}
+                    <strong>dozens</strong> to customers.
+                  </p>
+                  )
+                ) : null}
                 <button
                   type="button"
                   className="btn btn-primary btn-block"
@@ -883,8 +887,11 @@ export function InventoryAnnouncementsClient({
               Open pickup slots
             </h3>
             <p className="mt-2 text-sm text-[var(--text-muted)]">
-              One window per save. Dates must be YYYY-MM-DD, one per line. Times use
-              the standard 15-minute pickup grid.
+              Same-day pickup only — does not change your Friday/Saturday advance
+              calendar or Pickup availability. Customers with banner items in their
+              cart will see these times at checkout. One window per save. Dates must
+              be YYYY-MM-DD, one per line. Times use the standard 15-minute pickup
+              grid.
             </p>
             <label className="mt-4 block text-xs font-semibold">Dates</label>
             <textarea

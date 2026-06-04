@@ -7,12 +7,13 @@ export const MAIN_COOK_CAP_MINUTES = 300;
 export const FLAN_WEEKLY_CAP_RAMEKINS = 24;
 
 /**
- * Caramel flan and yema follow the same Tue–Thu dessert-pickup schedule (see
+ * Caramel flan, yema, and polvoron follow the same Tue–Thu dessert-pickup schedule (see
  * `cartHasOnlyDessertPickupItems` in `menu-cook-capacity`).
  */
 export const DESSERT_PICKUP_ONLY_MENU_ITEM_IDS: ReadonlySet<string> = new Set([
   "seed-6",
   "seed-13",
+  "seed-14",
 ]);
 
 /** Statuses that reserve kitchen capacity (excludes Cancelled, demo, etc.). */
@@ -88,5 +89,8 @@ export const COOK_MINUTES_BY_MENU_ITEM: Record<
   },
   "seed-12": {
     bySize: { plate: 30, party: 75 },
+  },
+  "seed-14": {
+    bySize: { classic: 0, ube: 0, cookiesCream: 0, bundle6: 0 },
   },
 };

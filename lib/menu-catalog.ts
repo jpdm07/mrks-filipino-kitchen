@@ -5,6 +5,7 @@
  * Lumpia retail is derived from `lumpia-cost-model.ts` (50-ct batch COGS + labor + oil).
  * Lumpia 4-pc sample prices: `LUMPIA_SAMPLE_4PC_RETAIL_BY_PROTEIN` (⅓ dozen per protein).
  * Tocino list prices from `tocino-cost-model.ts` (COGS for Sheets via `menu-item-unit-costs`).
+ * Polvoron: list prices + internal COGS in `polvoron-cost-model.ts` (`seed-14` in `MENU_CATALOG`).
  * Adobo list prices from `adobo-cost-model.ts`.
  * Flan retail is `FLAN_RETAIL_PER_RAMEKIN_USD` in `flan-cost-model.ts` (individual ramekin only).
  * Yema: **per piece only** in catalog (`YEMA_RETAIL_SINGLE_USD`). No dozen/bulk size row until you add it here + optional bulk constant in `yema-cost-model.ts`.
@@ -14,6 +15,11 @@
 import { ADOBO_RETAIL_USD } from "./adobo-cost-model";
 import { FLAN_RETAIL_PER_RAMEKIN_USD } from "./flan-cost-model";
 import { YEMA_RETAIL_SINGLE_USD } from "./yema-cost-model";
+import {
+  POLVORON_RETAIL_BUNDLE_6_USD,
+  POLVORON_RETAIL_CLASSIC_PIECE_USD,
+  POLVORON_RETAIL_SPECIALTY_PIECE_USD,
+} from "./polvoron-cost-model";
 import {
   lumpiaCatalogSizesForProtein,
   LUMPIA_RETAIL_TIERS_USD,
@@ -32,13 +38,25 @@ export {
 } from "./pancit-limes";
 
 /**
- * Your lumpia photos — add a JPEG at `public/images/lumpia.jpg` (hero, menu cards, social preview).
- * For .png or .webp, change the path here and the filename on disk.
+ * Lumpia photo for menu cards (and anywhere that imports `LUMPIA_IMAGE`). File: `public/images/lumpia.png`.
  */
-export const LUMPIA_IMAGE = "/images/lumpia.jpg";
+export const LUMPIA_IMAGE = "/images/lumpia.png";
+
+/**
+ * Extra lumpia photos after `LUMPIA_IMAGE` (menu carousel). Add files under `public/images/` and list
+ * `/images/your-file.jpg` paths here — same list is used for Beef, Pork, and Turkey rows.
+ */
+export const LUMPIA_MENU_PHOTO_GALLERY_EXTRA: readonly string[] = [];
 
 /** Pancit — add `public/images/pancit.jpg`. */
 export const PANCIT_IMAGE = "/images/pancit.jpg";
+
+/**
+ * Extra pancit photos after `PANCIT_IMAGE` (menu carousel). Shared by Chicken and Shrimp rows.
+ */
+export const PANCIT_MENU_PHOTO_GALLERY_EXTRA: readonly string[] = [
+  "/images/pancit1.jpeg",
+];
 
 /** Breaded quail eggs — add `public/images/quail-eggs.jpg`. */
 export const QUAIL_EGGS_IMAGE = "/images/quail-eggs.jpg";
@@ -51,6 +69,9 @@ export const FLAN_IMAGE = "/images/flan.jpg";
 
 /** Yema candy — `public/images/yema.jpg`. */
 export const YEMA_IMAGE = "/images/yema.jpg";
+
+/** Polvoron — `public/images/polvoron.jpeg`. */
+export const POLVORON_IMAGE = "/images/polvoron.jpeg";
 
 /** Chicken or Pork Adobo — `public/images/chickenadobo.jpeg`. */
 export const ADOBO_IMAGE = "/images/chickenadobo.jpeg";
@@ -88,6 +109,7 @@ export const CATALOG_PHOTOS = {
   pancit: PANCIT_IMAGE,
   flan: FLAN_IMAGE,
   yema: YEMA_IMAGE,
+  polvoron: POLVORON_IMAGE,
   quail: QUAIL_EGGS_IMAGE,
   tocino: TOCINO_IMAGE,
   adobo: ADOBO_IMAGE,
@@ -106,6 +128,7 @@ export const MENU_CATALOG = [
     basePrice: LUMPIA_RETAIL_TIERS_USD.beef.dz1,
     sizes: [...lumpiaCatalogSizesForProtein("beef")].map((s) => ({ ...s })),
     photoUrl: CATALOG_PHOTOS.lumpia,
+    photoGalleryUrls: [...LUMPIA_MENU_PHOTO_GALLERY_EXTRA],
     hasCooked: true,
     hasFrozen: true,
     sortOrder: 3,
@@ -122,6 +145,7 @@ export const MENU_CATALOG = [
     basePrice: LUMPIA_RETAIL_TIERS_USD.pork.dz1,
     sizes: [...lumpiaCatalogSizesForProtein("pork")].map((s) => ({ ...s })),
     photoUrl: CATALOG_PHOTOS.lumpia,
+    photoGalleryUrls: [...LUMPIA_MENU_PHOTO_GALLERY_EXTRA],
     hasCooked: true,
     hasFrozen: true,
     sortOrder: 1,
@@ -138,6 +162,7 @@ export const MENU_CATALOG = [
     basePrice: LUMPIA_RETAIL_TIERS_USD.turkey.dz1,
     sizes: [...lumpiaCatalogSizesForProtein("turkey")].map((s) => ({ ...s })),
     photoUrl: CATALOG_PHOTOS.lumpia,
+    photoGalleryUrls: [...LUMPIA_MENU_PHOTO_GALLERY_EXTRA],
     hasCooked: true,
     hasFrozen: true,
     sortOrder: 2,
@@ -171,6 +196,7 @@ export const MENU_CATALOG = [
       },
     ],
     photoUrl: CATALOG_PHOTOS.pancit,
+    photoGalleryUrls: [...PANCIT_MENU_PHOTO_GALLERY_EXTRA],
     hasCooked: false,
     hasFrozen: false,
     sortOrder: 4,
@@ -204,6 +230,7 @@ export const MENU_CATALOG = [
       },
     ],
     photoUrl: CATALOG_PHOTOS.pancit,
+    photoGalleryUrls: [...PANCIT_MENU_PHOTO_GALLERY_EXTRA],
     hasCooked: false,
     hasFrozen: false,
     sortOrder: 5,
@@ -381,6 +408,41 @@ export const MENU_CATALOG = [
     hasCooked: false,
     hasFrozen: false,
     sortOrder: 13,
+  },
+  {
+    id: "seed-14",
+    name: "Polvoron",
+    description:
+      "Filipino milk shortbread crumb candy — toasted flour, milk powder, and sugar pressed into bite-size pieces, often wrapped individually. Classic flavor or specialty ube and cookies & cream. Order by the piece, or choose the 6-piece bundle to mix flavors (tell us your split at pickup or in order notes).",
+    category: "Desserts",
+    calories: "~95 cal per piece (estimate)",
+    basePrice: POLVORON_RETAIL_CLASSIC_PIECE_USD,
+    sizes: [
+      {
+        key: "classic",
+        label: "Classic — per piece",
+        price: POLVORON_RETAIL_CLASSIC_PIECE_USD,
+      },
+      {
+        key: "ube",
+        label: "Ube (specialty) — per piece",
+        price: POLVORON_RETAIL_SPECIALTY_PIECE_USD,
+      },
+      {
+        key: "cookiesCream",
+        label: "Cookies & cream (specialty) — per piece",
+        price: POLVORON_RETAIL_SPECIALTY_PIECE_USD,
+      },
+      {
+        key: "bundle6",
+        label: "Mix & match — any 6 pieces",
+        price: POLVORON_RETAIL_BUNDLE_6_USD,
+      },
+    ],
+    photoUrl: CATALOG_PHOTOS.polvoron,
+    hasCooked: false,
+    hasFrozen: false,
+    sortOrder: 14,
   },
 ] as const;
 

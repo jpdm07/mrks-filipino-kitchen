@@ -13,6 +13,8 @@ export type MenuItemDTO = {
   basePrice: number;
   sizes: SizeOption[];
   photoUrl: string;
+  /** Extra image URLs after `photoUrl` for menu card carousel (from `MENU_CATALOG`). */
+  photoGalleryUrls: string[];
   isActive: boolean;
   soldOut: boolean;
   hasCooked: boolean;
@@ -50,4 +52,33 @@ export function ensureMenuSizes(
   const p = Number(basePrice);
   const price = Number.isFinite(p) ? p : 0;
   return [{ key: "default", label: "Standard", price }];
+}
+
+/** Normalize optional gallery URLs from JSON or unknown input. */
+export function normalizePhotoGalleryUrls(urls: unknown): string[] {
+  if (!Array.isArray(urls)) return [];
+  return urls
+    .filter((u): u is string => typeof u === "string" && u.trim().length > 0)
+    .map((u) => u.trim());
+}
+
+/** Unique ordered list for menu carousel: primary `photoUrl` first, then extras. */
+export function menuItemDisplayPhotos(
+  item: Pick<MenuItemDTO, "photoUrl" | "photoGalleryUrls">
+): string[] {
+  const primary = item.photoUrl.trim();
+  const extras = normalizePhotoGalleryUrls(item.photoGalleryUrls);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  if (primary) {
+    seen.add(primary);
+    out.push(primary);
+  }
+  for (const u of extras) {
+    if (!seen.has(u)) {
+      seen.add(u);
+      out.push(u);
+    }
+  }
+  return out;
 }

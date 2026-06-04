@@ -170,6 +170,13 @@ export const GROCERY_CATALOG: GroceryCatalogLine[] = [
     anticipatedUsd: 1.5,
   },
   {
+    id: "dry-milk-polvoron",
+    label: "Nonfat dry milk powder + AP flour (polvoron)",
+    store: "Kroger",
+    unit: "batch",
+    anticipatedUsd: 8.0,
+  },
+  {
     id: "drumsticks-thighs",
     label: "Chicken drumsticks / thighs (adobo)",
     store: "Kroger",

@@ -64,7 +64,7 @@ export function totalCookContribution(lines: OrderItemLine[]): CookContribution 
 }
 
 /**
- * True when the cart is **dessert-pickup only** (Caramel flan and/or Yema) — no savory /
+ * True when the cart is **dessert-pickup only** (flan, yema, polvoron, etc.) — no savory /
  * other menu SKUs. Same schedule as the historical “flan only” path (`cartMode=flan`):
  * Tue–Thu dessert days and standard rules for full-menu days.
  */
@@ -78,7 +78,7 @@ export function cartHasOnlyDessertPickupItems(
       if (mid && DESSERT_PICKUP_ONLY_MENU_ITEM_IDS.has(mid)) return true;
       const n = line.name.toLowerCase();
       return (
-        n.includes("flan") || n.includes("leche") || n.includes("yema")
+        n.includes("flan") || n.includes("leche") || n.includes("yema") || n.includes("polvoron")
       );
     }
     const mid = line.menuItemId?.trim();
@@ -92,7 +92,7 @@ export function cartHasOnlyDessertPickupItems(
 
 /**
  * @deprecated Use {@link cartHasOnlyDessertPickupItems}. Name kept for callers;
- * “flan only” now means dessert-only (flan + yema).
+ * “flan only” now means dessert-only (flan, yema, polvoron, etc.).
  */
 export const cartHasOnlyFlanItems = cartHasOnlyDessertPickupItems;
 

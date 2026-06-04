@@ -8,6 +8,7 @@ import {
   parsePrepOverrideState,
   weekSunToSatFromThursday,
 } from "@/lib/prep-summary";
+import { loadLumpiaFlavorWorkload } from "@/lib/same-day-pickup";
 
 export async function loadPrepSummaryPayload(weekThursdayYmd: string) {
   const { sun, sat: weekEndSat } = weekSunToSatFromThursday(weekThursdayYmd);
@@ -36,6 +37,7 @@ export async function loadPrepSummaryPayload(weekThursdayYmd: string) {
   });
 
   const computed = aggregatePrepForWeek(orders, weekThursdayYmd);
+  const lumpiaByFlavor = await loadLumpiaFlavorWorkload(sun, weekEndSat);
   const row = await prisma.prepSummaryWeekState.findUnique({
     where: { weekThursdayYmd },
   });
@@ -51,5 +53,6 @@ export async function loadPrepSummaryPayload(weekThursdayYmd: string) {
     state,
     meta: computed.meta,
     emailSentAt: emailLog?.sentAt ?? null,
+    lumpiaByFlavor,
   };
 }
