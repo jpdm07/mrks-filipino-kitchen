@@ -10,6 +10,7 @@ import { CartQuantityField } from "@/components/cart/CartQuantityField";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
 import { MenuItemImageCarousel } from "@/components/menu/MenuItemImageCarousel";
 import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
+import { defaultGroupedVariantId } from "@/lib/menu-variant-defaults";
 import { LUMPIA_MENU_FROM_PRICE_USD, LUMPIA_CUSTOMER_SIZE_LABELS } from "@/lib/lumpia-cost-model";
 import { useLumpiaStock } from "@/lib/hooks/useLumpiaStock";
 import {
