@@ -3,13 +3,29 @@ import {
   InventoryAnnouncementsClient,
   type InventoryRow,
 } from "@/components/admin/InventoryAnnouncementsClient";
+import { slotWindowFromLabelsJson } from "@/lib/inventory-pickup-slots";
+import {
+  addCalendarDaysYMD,
+  getTodayInPickupTimezoneYMD,
+} from "@/lib/pickup-lead-time";
 import { prisma } from "@/lib/prisma";
 
 export default async function InventoryPage() {
   await requireAdmin();
 
-  let inventoryRaw: Awaited<ReturnType<typeof prisma.inventoryItem.findMany>> =
-    [];
+  let inventoryRaw: Awaited<
+    ReturnType<
+      typeof prisma.inventoryItem.findMany<{
+        include: {
+          deductionLogs: { orderBy: { createdAt: "desc" }; take: 5 };
+          pickupSlots: {
+            where: { dateYmd: { gte: string } };
+            orderBy: [{ dateYmd: "asc" }, { id: "asc" }];
+          };
+        };
+      }>
+    >
+  > = [];
   let menuRaw: Awaited<ReturnType<typeof prisma.menuItem.findMany>> = [];
   let pricing: Awaited<
     ReturnType<typeof prisma.pricingSettings.findUnique>
@@ -18,6 +34,7 @@ export default async function InventoryPage() {
   let loadError: string | null = null;
 
   try {
+    const slotFromYmd = addCalendarDaysYMD(getTodayInPickupTimezoneYMD(), -7);
     const result = await Promise.all([
       prisma.inventoryItem.findMany({
         orderBy: { id: "asc" },
@@ -25,6 +42,10 @@ export default async function InventoryPage() {
           deductionLogs: {
             orderBy: { createdAt: "desc" },
             take: 5,
+          },
+          pickupSlots: {
+            where: { dateYmd: { gte: slotFromYmd } },
+            orderBy: [{ dateYmd: "asc" }, { id: "asc" }],
           },
         },
       }),
@@ -56,7 +77,24 @@ export default async function InventoryPage() {
   }
 
   const initialInventory = JSON.parse(
-    JSON.stringify(inventoryRaw)
+    JSON.stringify(
+      inventoryRaw.map((row) => ({
+        ...row,
+        pickupSlots: row.pickupSlots.map((s) => {
+          const window = slotWindowFromLabelsJson(s.slotLabelsJson);
+          return {
+            id: s.id,
+            dateYmd: s.dateYmd,
+            startLabel: window?.startLabel ?? "11:00 AM",
+            endLabel: window?.endLabel ?? "2:00 PM",
+            maxOrders: s.maxOrders,
+            ordersFilled: s.ordersFilled,
+            autoCloseWhenZero: s.autoCloseWhenZero,
+            closed: s.closed,
+          };
+        }),
+      }))
+    )
   ) as InventoryRow[];
   const menuItemsFull = JSON.parse(JSON.stringify(menuRaw));
   const menuItems = menuRaw.map((m) => ({ id: m.id, name: m.name }));

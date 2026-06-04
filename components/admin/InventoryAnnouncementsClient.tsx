@@ -26,6 +26,17 @@ type DeductionLog = {
   note: string | null;
 };
 
+export type InventoryPickupSlotRow = {
+  id: number;
+  dateYmd: string;
+  startLabel: string;
+  endLabel: string;
+  maxOrders: number;
+  ordersFilled: number;
+  autoCloseWhenZero: boolean;
+  closed: boolean;
+};
+
 export type InventoryRow = {
   id: number;
   menuItemId: string | null;
@@ -43,6 +54,7 @@ export type InventoryRow = {
   lineCookFilter?: string;
   updatedAt: string;
   deductionLogs: DeductionLog[];
+  pickupSlots?: InventoryPickupSlotRow[];
 };
 
 export function InventoryAnnouncementsClient({
@@ -72,6 +84,18 @@ export function InventoryAnnouncementsClient({
     () => ({})
   );
   const [modalId, setModalId] = useState<number | null>(null);
+  const [editSlotId, setEditSlotId] = useState<number | null>(null);
+  const [editSlotInventoryId, setEditSlotInventoryId] = useState<number | null>(
+    null
+  );
+  const [editSlotForm, setEditSlotForm] = useState({
+    dateYmd: "",
+    startLabel: "11:00 AM",
+    endLabel: "2:00 PM",
+    maxOrders: 10,
+    autoCloseWhenZero: true,
+    closed: false,
+  });
   const [slotForm, setSlotForm] = useState({
     datesText: "",
     startLabel: "11:00 AM",
@@ -183,7 +207,13 @@ export function InventoryAnnouncementsClient({
       return;
     }
     const updated = (await res.json()) as InventoryRow;
-    setItems((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
+    setItems((prev) =>
+      prev.map((x) =>
+        x.id === updated.id
+          ? { ...updated, pickupSlots: x.pickupSlots ?? [] }
+          : x
+      )
+    );
     setDrafts((p) => {
       const n = { ...p };
       delete n[row.id];
@@ -191,6 +221,22 @@ export function InventoryAnnouncementsClient({
     });
     setToast("Saved inventory settings.");
     window.setTimeout(() => setToast(null), 4000);
+  };
+
+  const refreshPickupSlots = async (inventoryItemId: number) => {
+    const res = await fetch(
+      `/api/admin/inventory/${inventoryItemId}/pickup-slots`,
+      { credentials: "same-origin" }
+    );
+    if (!res.ok) return;
+    const data = (await res.json()) as { slots?: InventoryPickupSlotRow[] };
+    setItems((prev) =>
+      prev.map((x) =>
+        x.id === inventoryItemId
+          ? { ...x, pickupSlots: data.slots ?? [] }
+          : x
+      )
+    );
   };
 
   const openSlots = async (row: InventoryRow) => {
@@ -213,8 +259,76 @@ export function InventoryAnnouncementsClient({
     if (!res.ok) {
       setToast(data.error ?? "Could not open slots.");
     } else {
-      setToast("Pickup slots added to the calendar.");
+      setToast("Same-day pickup slots saved.");
       setModalId(null);
+      await refreshPickupSlots(row.id);
+    }
+    window.setTimeout(() => setToast(null), 5000);
+  };
+
+  const beginEditPickupSlot = (
+    inventoryItemId: number,
+    slot: InventoryPickupSlotRow
+  ) => {
+    setEditSlotInventoryId(inventoryItemId);
+    setEditSlotId(slot.id);
+    setEditSlotForm({
+      dateYmd: slot.dateYmd,
+      startLabel: slot.startLabel,
+      endLabel: slot.endLabel,
+      maxOrders: slot.maxOrders,
+      autoCloseWhenZero: slot.autoCloseWhenZero,
+      closed: slot.closed,
+    });
+  };
+
+  const saveEditPickupSlot = async () => {
+    if (editSlotId === null || editSlotInventoryId === null) return;
+    const res = await fetch(
+      `/api/admin/inventory/${editSlotInventoryId}/pickup-slots/${editSlotId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editSlotForm),
+      }
+    );
+    const data = (await res.json()) as { ok?: boolean; error?: string };
+    if (!res.ok) {
+      setToast(data.error ?? "Could not update slot.");
+    } else {
+      setToast("Pickup slot updated.");
+      setEditSlotId(null);
+      setEditSlotInventoryId(null);
+      await refreshPickupSlots(editSlotInventoryId);
+    }
+    window.setTimeout(() => setToast(null), 5000);
+  };
+
+  const deletePickupSlot = async (
+    inventoryItemId: number,
+    slotId: number
+  ) => {
+    if (
+      !window.confirm(
+        "Remove this same-day pickup slot? Customers will no longer see that date/time for this item."
+      )
+    ) {
+      return;
+    }
+    const res = await fetch(
+      `/api/admin/inventory/${inventoryItemId}/pickup-slots/${slotId}`,
+      { method: "DELETE" }
+    );
+    const data = (await res.json()) as { ok?: boolean; error?: string };
+    if (!res.ok) {
+      setToast(data.error ?? "Could not remove slot.");
+    } else {
+      setToast("Pickup slot removed.");
+      if (editSlotId === slotId) {
+        setEditSlotId(null);
+        setEditSlotInventoryId(null);
+      }
+      await refreshPickupSlots(inventoryItemId);
     }
     window.setTimeout(() => setToast(null), 5000);
   };
@@ -264,7 +378,7 @@ export function InventoryAnnouncementsClient({
       }
 
       const row = parsed as InventoryRow;
-      setItems((p) => [...p, { ...row, deductionLogs: [] }]);
+      setItems((p) => [...p, { ...row, deductionLogs: [], pickupSlots: [] }]);
       setNewItem({
         itemName: "",
         unitLabel: "dozen",
@@ -881,16 +995,83 @@ export function InventoryAnnouncementsClient({
                   Remove inventory row…
                 </button>
                 {r.isAvailable && r.quantityInStock > 0 ? (
-                  <button
-                    type="button"
-                    className="btn btn-gold btn-block"
-                    onClick={() => {
-                      setModalId(row.id);
-                      setSlotForm((s) => ({ ...s }));
-                    }}
-                  >
-                    Open Pickup Slots
-                  </button>
+                  <>
+                    {(row.pickupSlots?.length ?? 0) > 0 ? (
+                      <div className="mt-4 space-y-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] p-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                          Same-day pickup slots
+                        </p>
+                        <p className="text-xs text-[var(--text-muted)]">
+                          Edit times or capacity without recreating — saving a
+                          date again also updates an existing slot.
+                        </p>
+                        <ul className="space-y-2">
+                          {row.pickupSlots!.map((slot) => (
+                            <li
+                              key={slot.id}
+                              className="rounded border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm"
+                            >
+                              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                                <span className="font-semibold text-[color:var(--primary)]">
+                                  {slot.dateYmd}
+                                </span>
+                                <span className="text-[var(--text-muted)]">
+                                  {slot.startLabel} – {slot.endLabel}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                                {slot.ordersFilled} / {slot.maxOrders} orders ·{" "}
+                                {slot.closed ? (
+                                  <span className="font-medium text-[var(--accent)]">
+                                    Closed
+                                  </span>
+                                ) : (
+                                  <span className="font-medium text-emerald-700">
+                                    Open
+                                  </span>
+                                )}
+                                {slot.autoCloseWhenZero
+                                  ? " · auto-close at zero stock"
+                                  : null}
+                              </p>
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  className="rounded border border-[var(--border)] px-2 py-1 text-xs font-semibold hover:bg-[var(--gold-light)]"
+                                  onClick={() =>
+                                    beginEditPickupSlot(row.id, slot)
+                                  }
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  className="rounded border border-red-200 px-2 py-1 text-xs font-semibold text-red-800 hover:bg-red-50"
+                                  onClick={() =>
+                                    void deletePickupSlot(row.id, slot.id)
+                                  }
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="btn btn-gold btn-block mt-4"
+                      onClick={() => {
+                        setModalId(row.id);
+                        setSlotForm((s) => ({ ...s }));
+                      }}
+                    >
+                      {row.pickupSlots?.length
+                        ? "Add / update pickup dates"
+                        : "Open pickup slots"}
+                    </button>
+                  </>
                 ) : null}
               </div>
 
@@ -944,14 +1125,15 @@ export function InventoryAnnouncementsClient({
         <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 p-4 sm:items-center">
           <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-xl">
             <h3 className="font-bold text-lg text-[color:var(--primary)]">
-              Open pickup slots
+              {modalId !== null &&
+              items.find((x) => x.id === modalId)?.pickupSlots?.length
+                ? "Add or update pickup dates"
+                : "Open pickup slots"}
             </h3>
             <p className="mt-2 text-sm text-[var(--text-muted)]">
               Same-day pickup only — does not change your Friday/Saturday advance
-              calendar or Pickup availability. Customers with banner items in their
-              cart will see these times at checkout. One window per save. Dates must
-              be YYYY-MM-DD, one per line. Times use the standard 15-minute pickup
-              grid.
+              calendar. If a date already has a slot for this item, saving
+              updates that window instead of duplicating it.
             </p>
             <label className="mt-4 block text-xs font-semibold">Dates</label>
             <textarea
@@ -1040,6 +1222,122 @@ export function InventoryAnnouncementsClient({
                 type="button"
                 className="rounded border px-3 py-2 text-sm"
                 onClick={() => setModalId(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {editSlotId !== null && editSlotInventoryId !== null ? (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 p-4 sm:items-center">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-xl">
+            <h3 className="font-bold text-lg text-[color:var(--primary)]">
+              Edit same-day pickup slot
+            </h3>
+            <label className="mt-4 block text-xs font-semibold">Date</label>
+            <input
+              type="date"
+              className="mt-1 w-full rounded border px-2 py-2 font-mono text-sm"
+              value={editSlotForm.dateYmd}
+              onChange={(e) =>
+                setEditSlotForm((s) => ({ ...s, dateYmd: e.target.value }))
+              }
+            />
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs font-semibold">Start</label>
+                <select
+                  className="mt-1 w-full rounded border px-2 py-2 text-sm"
+                  value={editSlotForm.startLabel}
+                  onChange={(e) =>
+                    setEditSlotForm((s) => ({
+                      ...s,
+                      startLabel: e.target.value,
+                    }))
+                  }
+                >
+                  {slotLabels.map((l) => (
+                    <option key={l} value={l}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold">End</label>
+                <select
+                  className="mt-1 w-full rounded border px-2 py-2 text-sm"
+                  value={editSlotForm.endLabel}
+                  onChange={(e) =>
+                    setEditSlotForm((s) => ({
+                      ...s,
+                      endLabel: e.target.value,
+                    }))
+                  }
+                >
+                  {slotLabels.map((l) => (
+                    <option key={l} value={l}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <label className="mt-3 block text-xs font-semibold">
+              Max orders this window
+            </label>
+            <input
+              type="number"
+              min={1}
+              className="mt-1 w-full rounded border px-2 py-2"
+              value={editSlotForm.maxOrders}
+              onChange={(e) =>
+                setEditSlotForm((s) => ({
+                  ...s,
+                  maxOrders: Math.max(1, parseInt(e.target.value, 10) || 1),
+                }))
+              }
+            />
+            <label className="mt-3 flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={editSlotForm.autoCloseWhenZero}
+                onChange={(e) =>
+                  setEditSlotForm((s) => ({
+                    ...s,
+                    autoCloseWhenZero: e.target.checked,
+                  }))
+                }
+              />
+              Automatically close when inventory hits zero
+            </label>
+            <label className="mt-2 flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={editSlotForm.closed}
+                onChange={(e) =>
+                  setEditSlotForm((s) => ({ ...s, closed: e.target.checked }))
+                }
+              />
+              Closed (hidden from checkout)
+            </label>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => void saveEditPickupSlot()}
+              >
+                Save changes
+              </button>
+              <button
+                type="button"
+                className="rounded border px-3 py-2 text-sm"
+                onClick={() => {
+                  setEditSlotId(null);
+                  setEditSlotInventoryId(null);
+                }}
               >
                 Cancel
               </button>

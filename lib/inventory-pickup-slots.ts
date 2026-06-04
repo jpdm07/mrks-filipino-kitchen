@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import type { Order } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
+import { pickupTimeSlotLabels, sortPickupSlotLabels } from "@/lib/pickup-time-slots";
 import type { OrderItemLine } from "@/lib/order-types";
 import {
   computeInventoryStockUnits,
@@ -22,6 +22,38 @@ export function slotLabelsInWindow(startLabel: string, endLabel: string): string
   return ALL_SLOTS.filter((_, i) => i >= lo && i <= hi);
 }
 
+export function parseSlotLabelsJson(raw: string | null | undefined): string[] {
+  if (raw == null || raw.trim() === "") return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return sortPickupSlotLabels(
+      parsed.filter((x): x is string => typeof x === "string" && SLOT_ORDER.has(x.trim()))
+    );
+  } catch {
+    return [];
+  }
+}
+
+/** First and last label in a stored same-day window (for admin edit forms). */
+export function slotWindowFromLabelsJson(
+  raw: string | null | undefined
+): { startLabel: string; endLabel: string } | null {
+  const labels = parseSlotLabelsJson(raw);
+  if (labels.length === 0) return null;
+  return { startLabel: labels[0]!, endLabel: labels[labels.length - 1]! };
+}
+
+function slotLabelsJsonForWindow(startLabel: string, endLabel: string): string {
+  const labels = slotLabelsInWindow(startLabel, endLabel);
+  if (labels.length === 0) {
+    throw new Error(
+      "No pickup slots in that time range — use labels like 11:00 AM and 2:00 PM from the standard grid."
+    );
+  }
+  return JSON.stringify(labels);
+}
+
 export async function createInventoryPickupSlotsInTx(
   tx: Prisma.TransactionClient,
   params: {
@@ -33,28 +65,103 @@ export async function createInventoryPickupSlotsInTx(
     autoCloseWhenZero: boolean;
   }
 ): Promise<void> {
-  const labels = slotLabelsInWindow(params.startLabel, params.endLabel);
-  if (labels.length === 0) {
-    throw new Error(
-      "No pickup slots in that time range — use labels like 11:00 AM and 2:00 PM from the standard grid."
-    );
-  }
-  const json = JSON.stringify(labels);
+  const json = slotLabelsJsonForWindow(params.startLabel, params.endLabel);
+  const maxOrders = Math.max(1, params.maxOrders);
 
   for (const dateYmd of params.datesYmd) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateYmd)) continue;
-    await tx.inventoryPickupSlot.create({
-      data: {
-        inventoryItemId: params.inventoryItemId,
-        dateYmd,
-        slotLabelsJson: json,
-        maxOrders: Math.max(1, params.maxOrders),
-        ordersFilled: 0,
-        autoCloseWhenZero: params.autoCloseWhenZero,
-        closed: false,
-      },
+    const existing = await tx.inventoryPickupSlot.findFirst({
+      where: { inventoryItemId: params.inventoryItemId, dateYmd },
     });
+    if (existing) {
+      await tx.inventoryPickupSlot.update({
+        where: { id: existing.id },
+        data: {
+          slotLabelsJson: json,
+          maxOrders,
+          autoCloseWhenZero: params.autoCloseWhenZero,
+          closed: false,
+        },
+      });
+    } else {
+      await tx.inventoryPickupSlot.create({
+        data: {
+          inventoryItemId: params.inventoryItemId,
+          dateYmd,
+          slotLabelsJson: json,
+          maxOrders,
+          ordersFilled: 0,
+          autoCloseWhenZero: params.autoCloseWhenZero,
+          closed: false,
+        },
+      });
+    }
   }
+}
+
+export async function updateInventoryPickupSlotInTx(
+  tx: Prisma.TransactionClient,
+  params: {
+    slotId: number;
+    inventoryItemId: number;
+    dateYmd: string;
+    startLabel: string;
+    endLabel: string;
+    maxOrders: number;
+    autoCloseWhenZero: boolean;
+    closed: boolean;
+  }
+): Promise<void> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(params.dateYmd.trim())) {
+    throw new Error("dateYmd must be YYYY-MM-DD");
+  }
+  const json = slotLabelsJsonForWindow(params.startLabel, params.endLabel);
+  const maxOrders = Math.max(1, params.maxOrders);
+
+  const slot = await tx.inventoryPickupSlot.findFirst({
+    where: { id: params.slotId, inventoryItemId: params.inventoryItemId },
+  });
+  if (!slot) {
+    throw new Error("Pickup slot not found for this inventory item.");
+  }
+
+  const duplicate = await tx.inventoryPickupSlot.findFirst({
+    where: {
+      inventoryItemId: params.inventoryItemId,
+      dateYmd: params.dateYmd.trim(),
+      NOT: { id: params.slotId },
+    },
+  });
+  if (duplicate) {
+    throw new Error(
+      "Another pickup slot already exists for that date — edit that row or delete it first."
+    );
+  }
+
+  await tx.inventoryPickupSlot.update({
+    where: { id: params.slotId },
+    data: {
+      dateYmd: params.dateYmd.trim(),
+      slotLabelsJson: json,
+      maxOrders,
+      autoCloseWhenZero: params.autoCloseWhenZero,
+      closed: params.closed,
+    },
+  });
+}
+
+export async function deleteInventoryPickupSlotInTx(
+  tx: Prisma.TransactionClient,
+  slotId: number,
+  inventoryItemId: number
+): Promise<void> {
+  const slot = await tx.inventoryPickupSlot.findFirst({
+    where: { id: slotId, inventoryItemId },
+  });
+  if (!slot) {
+    throw new Error("Pickup slot not found for this inventory item.");
+  }
+  await tx.inventoryPickupSlot.delete({ where: { id: slotId } });
 }
 
 /** Remove slot labels from customer view when capacity or stock rules block them. */
