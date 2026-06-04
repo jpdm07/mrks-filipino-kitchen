@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { resolvedInventoryBannerMessage } from "@/lib/inventory-banner-copy";
+import { buildSiteBannerEntries } from "@/lib/lumpia-inventory-banners";
 
 export const dynamic = "force-dynamic";
 
@@ -20,9 +20,9 @@ export async function GET() {
       },
       orderBy: { id: "asc" },
     });
-    const items = rows.map((r) => ({
-      id: r.id,
-      message: resolvedInventoryBannerMessage(r),
+    const items = buildSiteBannerEntries(rows).map((entry) => ({
+      id: entry.key,
+      message: entry.message,
     }));
     return NextResponse.json({ items }, { headers: NO_STORE });
   } catch {

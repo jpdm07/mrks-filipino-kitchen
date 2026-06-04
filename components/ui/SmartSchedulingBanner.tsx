@@ -2,7 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
-import { resolvedInventoryBannerMessage } from "@/lib/inventory-banner-copy";
+import { buildSiteBannerEntries } from "@/lib/lumpia-inventory-banners";
 
 const WRAPPER =
   "print:hidden relative z-40 w-full border-b border-[color:var(--gold-muted)]/45 bg-[rgba(251,246,236,0.97)] text-[color:var(--primary)] shadow-[inset_0_-1px_0_rgba(6,15,31,0.06)]";
@@ -39,6 +39,7 @@ export async function SmartSchedulingBanner() {
   }
 
   const stateB = !forceStateA && sameDayItems.length > 0;
+  const bannerEntries = stateB ? buildSiteBannerEntries(sameDayItems) : [];
 
   return (
     <div className={WRAPPER} role="status">
@@ -59,13 +60,13 @@ export async function SmartSchedulingBanner() {
               .
             </p>
             <div className="space-y-3 border-t border-[color:var(--gold-muted)]/35 pt-3">
-              {sameDayItems.map((inv) => (
+              {bannerEntries.map((entry) => (
                 <div
-                  key={inv.id}
+                  key={entry.key}
                   className="flex flex-col items-center justify-between gap-3 sm:flex-row sm:gap-4"
                 >
                   <p className="text-center text-[13px] leading-snug sm:flex-1 sm:text-left sm:text-[15px]">
-                    {resolvedInventoryBannerMessage(inv)}
+                    {entry.message}
                   </p>
                   <Link
                     href={`${origin}/order`}

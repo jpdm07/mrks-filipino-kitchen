@@ -19,10 +19,13 @@ import {
   EXTRA_DIP_UNIT_PRICE_USD,
 } from "@/lib/extra-dip-sauce";
 import { CartQuantityField } from "@/components/cart/CartQuantityField";
+import { useLumpiaStock } from "@/lib/hooks/useLumpiaStock";
+import { lumpiaHasStockForSampleQty } from "@/lib/lumpia-inventory";
 
 export function CartDrawer() {
   const router = useRouter();
   const cart = useCart();
+  const lumpiaStock = useLumpiaStock();
   const { drawerOpen, closeDrawer } = cart;
   const [mounted, setMounted] = useState(false);
   const [samplesOpen, setSamplesOpen] = useState(false);
@@ -200,6 +203,18 @@ export function CartDrawer() {
                           setLumpiaNeedProteinNudge(true);
                           return;
                         }
+                        if (
+                          cart.samples.lumpiaProtein &&
+                          lumpiaStock.managed[cart.samples.lumpiaProtein] &&
+                          !lumpiaStock.loading &&
+                          !lumpiaHasStockForSampleQty(
+                            lumpiaStock.stock,
+                            cart.samples.lumpiaProtein,
+                            next
+                          )
+                        ) {
+                          return;
+                        }
                         setLumpiaNeedProteinNudge(false);
                         cart.setSamples((s) => ({ ...s, lumpiaQty: next }));
                       }}
@@ -211,15 +226,30 @@ export function CartDrawer() {
                           Choose protein first
                         </p>
                         <div className="mt-1 flex flex-wrap gap-3">
-                          {(["beef", "pork", "turkey"] as const).map((p) => (
+                          {(["beef", "pork", "turkey"] as const).map((p) => {
+                            const managed = lumpiaStock.managed[p];
+                            const out =
+                              managed &&
+                              !lumpiaStock.loading &&
+                              !lumpiaHasStockForSampleQty(
+                                lumpiaStock.stock,
+                                p,
+                                Math.max(1, cart.samples.lumpiaQty || 1)
+                              );
+                            return (
                             <label
                               key={p}
-                              className="inline-flex cursor-pointer items-center gap-2"
+                              className={`inline-flex items-center gap-2 ${
+                                out
+                                  ? "cursor-not-allowed opacity-50"
+                                  : "cursor-pointer"
+                              }`}
                             >
                               <input
                                 type="radio"
                                 name="sample-lumpia"
                                 checked={cart.samples.lumpiaProtein === p}
+                                disabled={out}
                                 onChange={() =>
                                   cart.setSamples((s) => ({
                                     ...s,
@@ -228,8 +258,14 @@ export function CartDrawer() {
                                 }
                               />
                               <span className="capitalize">{p}</span>
+                              {out ? (
+                                <span className="text-[10px] font-bold text-[var(--accent)]">
+                                  (out)
+                                </span>
+                              ) : null}
                             </label>
-                          ))}
+                          );
+                          })}
                         </div>
                         {lumpiaNeedProteinNudge ? (
                           <p

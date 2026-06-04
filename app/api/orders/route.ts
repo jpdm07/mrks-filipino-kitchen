@@ -42,11 +42,19 @@ import {
 import { sanitizeExtraDipOrderLines } from "@/lib/extra-dip-sauce";
 import { revalidateAdminOrderDerivedViews } from "@/lib/revalidate-admin-order-views";
 import { runInventoryHooksForNewOrderInTx } from "@/lib/inventory-pickup-slots";
+import { assertLumpiaInventoryAvailableInTx } from "@/lib/inventory-deduction";
 
 class CapacityExceededError extends Error {
   constructor() {
     super("Capacity exceeded");
     this.name = "CapacityExceededError";
+  }
+}
+
+class LumpiaInventoryError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "LumpiaInventoryError";
   }
 }
 
@@ -266,6 +274,10 @@ export async function POST(req: NextRequest) {
             throw new CapacityExceededError();
           }
           await assertPickupSlotFreeInTx(tx, pickupDate, pickupTime);
+          const lumpiaStock = await assertLumpiaInventoryAvailableInTx(tx, items);
+          if (!lumpiaStock.ok) {
+            throw new LumpiaInventoryError(lumpiaStock.message);
+          }
         }
         const common = {
           orderNumber,
@@ -362,6 +374,9 @@ export async function POST(req: NextRequest) {
           },
           { status: 409 }
         );
+      }
+      if (e instanceof LumpiaInventoryError) {
+        return NextResponse.json({ error: e.message }, { status: 409 });
       }
       throw e;
     }

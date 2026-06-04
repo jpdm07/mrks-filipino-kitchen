@@ -3,6 +3,7 @@ import { computeUtensilChargeUsd, PRICING, SUGGESTION_OPTIONS } from "../lib/con
 import { complimentaryUtensilAllowanceFromOrderItems } from "../lib/utensils-allowance";
 import type { OrderItemLine } from "../lib/order-types";
 import { MENU_CATALOG } from "../lib/menu-catalog";
+import { catalogNullableString } from "../lib/menu-catalog-merge";
 import { COOK_MINUTES_BY_MENU_ITEM } from "../lib/menu-capacity-catalog";
 import { FLAN_RETAIL_PER_RAMEKIN_USD } from "../lib/flan-cost-model";
 import { LUMPIA_SAMPLE_4PC_RETAIL_USD } from "../lib/lumpia-cost-model";
@@ -53,10 +54,18 @@ async function main() {
   await upsertKitchenRecipes(prisma);
 
   for (const m of MENU_CATALOG) {
-    const variantGroup = "variantGroup" in m ? m.variantGroup : null;
-    const variantShortLabel = "variantShortLabel" in m ? m.variantShortLabel : null;
-    const groupCardTitle = "groupCardTitle" in m ? m.groupCardTitle : null;
-    const groupServingBlurb = "groupServingBlurb" in m ? m.groupServingBlurb : null;
+    const variantGroup =
+      "variantGroup" in m ? catalogNullableString(m.variantGroup) : null;
+    const variantShortLabel =
+      "variantShortLabel" in m
+        ? catalogNullableString(m.variantShortLabel)
+        : null;
+    const groupCardTitle =
+      "groupCardTitle" in m ? catalogNullableString(m.groupCardTitle) : null;
+    const groupServingBlurb =
+      "groupServingBlurb" in m
+        ? catalogNullableString(m.groupServingBlurb)
+        : null;
     const cap = COOK_MINUTES_BY_MENU_ITEM[m.id];
     const isFlanItem = cap?.isFlan === true;
     const cookMinutes =
@@ -121,6 +130,34 @@ async function main() {
         deductionMode: "lumpia_frozen_dozen",
       },
     });
+  }
+
+  const lumpiaPerProtein: Array<{
+    menuItemId: string;
+    itemName: string;
+  }> = [
+    { menuItemId: "seed-1", itemName: "Lumpia — Beef" },
+    { menuItemId: "seed-2", itemName: "Lumpia — Pork" },
+    { menuItemId: "seed-3", itemName: "Lumpia — Turkey" },
+  ];
+  for (const row of lumpiaPerProtein) {
+    const existing = await prisma.inventoryItem.findFirst({
+      where: { menuItemId: row.menuItemId },
+    });
+    if (!existing) {
+      await prisma.inventoryItem.create({
+        data: {
+          itemName: row.itemName,
+          menuItemId: row.menuItemId,
+          unitLabel: "pieces",
+          quantityInStock: 0,
+          isAvailable: false,
+          showBanner: false,
+          deductionMode: "lumpia_pieces",
+          lineCookFilter: "any",
+        },
+      });
+    }
   }
 
   const presetPollIds = SUGGESTION_OPTIONS.map((_, i) => `poll-${i}`);

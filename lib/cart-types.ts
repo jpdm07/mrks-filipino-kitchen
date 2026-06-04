@@ -67,12 +67,15 @@ export function samplesToLines(
   if (selection.lumpiaQty > 0 && selection.lumpiaProtein) {
     const p = selection.lumpiaProtein;
     const protein = p.charAt(0).toUpperCase() + p.slice(1);
+    const menuItemId =
+      p === "beef" ? "seed-1" : p === "pork" ? "seed-2" : "seed-3";
     out.push({
       name: `Sample: Lumpia ${protein} (4 pcs)`,
       quantity: selection.lumpiaQty,
       unitPrice: prices.lumpia[p],
       isSample: true,
       category: "sample",
+      menuItemId,
     });
   }
   if (selection.quailQty > 0) {

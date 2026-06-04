@@ -8,6 +8,7 @@ import {
 } from "@/lib/inventory-banner-copy";
 import {
   INVENTORY_DEDUCTION_LUMPIA_FROZEN_DOZEN,
+  INVENTORY_DEDUCTION_LUMPIA_PIECES,
   INVENTORY_DEDUCTION_ORDER_LINE_QTY,
 } from "@/lib/inventory-deduction-modes";
 import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
@@ -464,13 +465,18 @@ export function InventoryAnnouncementsClient({
                 <option value={INVENTORY_DEDUCTION_ORDER_LINE_QTY}>
                   Per menu item — subtract cart line quantity (flan, yema, pancit, …)
                 </option>
+                <option value={INVENTORY_DEDUCTION_LUMPIA_PIECES}>
+                  Lumpia (per protein) — subtract pieces (cooked + frozen share stock)
+                </option>
                 <option value={INVENTORY_DEDUCTION_LUMPIA_FROZEN_DOZEN}>
-                  Frozen lumpia — map sizes to dozens (1dz / 2dz / party)
+                  Lumpia (legacy dozen mode — same as pieces)
                 </option>
               </select>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
-                For almost everything, choose <strong>Per menu item</strong> and link the
-                matching dish below. Use the lumpia option only for frozen lumpia stock.
+                For lumpia, link <strong>Beef / Pork / Turkey</strong> menu rows below,
+                set stock in <strong>pieces</strong>, and use one row per protein.
+                Cooked vs frozen is the customer&apos;s preference at checkout — both
+                pull from the same count.
               </p>
             </div>
             <div>
@@ -740,14 +746,17 @@ export function InventoryAnnouncementsClient({
                     <option value={INVENTORY_DEDUCTION_ORDER_LINE_QTY}>
                       Per menu item — subtract cart line quantity (most items)
                     </option>
+                    <option value={INVENTORY_DEDUCTION_LUMPIA_PIECES}>
+                      Lumpia — pieces (cooked + frozen share stock)
+                    </option>
                     <option value={INVENTORY_DEDUCTION_LUMPIA_FROZEN_DOZEN}>
-                      Frozen lumpia — dozens from size keys
+                      Lumpia (legacy dozen mode)
                     </option>
                   </select>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-[var(--text-muted)]">
-                    Cart lines this row applies to (same menu SKU)
+                    Cart lines this row applies to (non-lumpia only)
                   </label>
                   <select
                     className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-2 text-sm"
@@ -767,9 +776,8 @@ export function InventoryAnnouncementsClient({
                     <option value="frozen">Frozen lines only</option>
                   </select>
                   <p className="mt-1 text-xs text-[var(--text-muted)]">
-                    Use <strong>Frozen only</strong> for frozen lumpia stock and{" "}
-                    <strong>Cooked or non-frozen</strong> for same-day cooked trays so pickup
-                    windows and totals stay separate.
+                    For <strong>lumpia</strong>, leave on <strong>Any</strong> — cooked and
+                    frozen share one piece count per protein.
                   </p>
                 </div>
                 {(r.deductionMode ?? INVENTORY_DEDUCTION_ORDER_LINE_QTY) ===

@@ -12,6 +12,9 @@ export function formatStockUnitPhrase(count: number, unitLabel: string): string 
   if (/^dozen$/i.test(u)) {
     return n === 1 ? "1 dozen" : `${n} dozen`;
   }
+  if (/^pieces?$/i.test(u)) {
+    return n === 1 ? "1 piece" : `${n} pieces`;
+  }
   if (n === 1) return `1 ${u}`;
   if (/s$/i.test(u)) return `${n} ${u}`;
   return `${n} ${u}s`;

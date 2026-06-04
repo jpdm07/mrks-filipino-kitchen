@@ -4,12 +4,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { MenuItemDTO } from "@/lib/menu-types";
+import { menuItemDisplayPhotos } from "@/lib/menu-types";
 import { useCart } from "@/components/cart/CartContext";
 import { CartQuantityField } from "@/components/cart/CartQuantityField";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
+import { MenuItemImageCarousel } from "@/components/menu/MenuItemImageCarousel";
 import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
 import { LUMPIA_MENU_FROM_PRICE_USD } from "@/lib/lumpia-cost-model";
 import { defaultGroupedVariantId } from "@/lib/menu-variant-defaults";
+import { useLumpiaStock } from "@/lib/hooks/useLumpiaStock";
+import {
+  lumpiaHasStockForCartSelection,
+  lumpiaProteinFromMenuItemId,
+  lumpiaStockForMenuItemId,
+  LUMPIA_MIN_ORDER_PIECES,
+  lumpiaPiecesPerUnitFromSizeKey,
+} from "@/lib/lumpia-inventory";
 
 type LumpiaSizeTier = "1dz" | "2dz" | "party";
 
@@ -63,6 +73,7 @@ function firstTocinoDefaults(list: MenuItemDTO[]): {
 
 export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
   const { addLine } = useCart();
+  const lumpiaStock = useLumpiaStock();
   const sorted = useMemo(
     () => [...variants].sort((a, b) => a.sortOrder - b.sortOrder),
     [variants]
@@ -245,6 +256,20 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
     sizeKey,
   ]);
 
+  const lumpiaManagedForVariant = (menuItemId: string): boolean => {
+    const p = lumpiaProteinFromMenuItemId(menuItemId);
+    return p ? lumpiaStock.managed[p] : false;
+  };
+
+  const lumpiaVariantOutOfStock = (v: MenuItemDTO): boolean => {
+    if (v.soldOut) return true;
+    if (v.variantGroup !== "lumpia") return false;
+    if (lumpiaStock.loading) return false;
+    if (!lumpiaManagedForVariant(v.id)) return false;
+    const pieces = lumpiaStockForMenuItemId(lumpiaStock.stock, v.id);
+    return pieces < LUMPIA_MIN_ORDER_PIECES;
+  };
+
   const title =
     variant?.groupCardTitle?.trim() || variant?.category || "Menu item";
 
@@ -253,17 +278,52 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
     if (!variant) return null;
     return splitMenuTakeoutLine(variant.description);
   }, [variant]);
-  const photoUrl = sorted[0]?.photoUrl ?? "";
-  const allSoldOut = sorted.length > 0 && sorted.every((v) => v.soldOut);
+  const photoLead = sorted[0];
+  const displayPhotos = useMemo(
+    () => (photoLead ? menuItemDisplayPhotos(photoLead) : []),
+    [photoLead]
+  );
+  const allSoldOut =
+    sorted.length > 0 &&
+    sorted.every((v) => lumpiaVariantOutOfStock(v) || v.soldOut);
 
   const unitPrice = Number(selectedSize?.price ?? variant?.basePrice ?? 0);
   const safeUnitPrice = Number.isFinite(unitPrice) ? unitPrice : 0;
+
+  const lumpiaTierDisabled = (tier: LumpiaSizeTier): boolean => {
+    if (!variant || variant.variantGroup !== "lumpia") return false;
+    if (lumpiaStock.loading) return false;
+    if (!lumpiaManagedForVariant(variant.id)) return false;
+    const sk = lumpiaKeyFrom(cookedOrFrozen, tier);
+    return !lumpiaHasStockForCartSelection(
+      lumpiaStock.stock,
+      variant.id,
+      sk,
+      qty
+    );
+  };
+
+  const lumpiaSelectionBlocked = (): boolean => {
+    if (!variant || variant.variantGroup !== "lumpia" || !selectedSize) {
+      return false;
+    }
+    if (lumpiaStock.loading) return false;
+    if (!lumpiaManagedForVariant(variant.id)) return false;
+    return !lumpiaHasStockForCartSelection(
+      lumpiaStock.stock,
+      variant.id,
+      selectedSize.key,
+      qty
+    );
+  };
+
   const disabled =
     !variant ||
     !variant.isActive ||
-    variant.soldOut ||
+    lumpiaVariantOutOfStock(variant) ||
     !selectedSize ||
-    !Number.isFinite(unitPrice);
+    !Number.isFinite(unitPrice) ||
+    lumpiaSelectionBlocked();
 
   const handleAdd = () => {
     if (disabled || !variant || !selectedSize) return;
@@ -339,13 +399,21 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
       className="card-elevated group flex h-full min-h-0 scroll-mt-24 flex-col overflow-hidden"
     >
       <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[var(--bg-section)]">
-        <Image
-          src={photoUrl}
-          alt={`${title} Filipino dish in Cypress TX`}
-          fill
-          className="object-cover transition duration-500 group-hover:scale-[1.03]"
-          sizes="(max-width:768px) 100vw, 33vw"
-        />
+        {displayPhotos.length > 1 ? (
+          <MenuItemImageCarousel
+            urls={displayPhotos}
+            alt={`${title} Filipino dish in Cypress TX`}
+            sizes="(max-width:768px) 100vw, 33vw"
+          />
+        ) : (
+          <Image
+            src={displayPhotos[0] ?? photoLead?.photoUrl ?? ""}
+            alt={`${title} Filipino dish in Cypress TX`}
+            fill
+            className="object-cover transition duration-500 group-hover:scale-[1.03]"
+            sizes="(max-width:768px) 100vw, 33vw"
+          />
+        )}
         <MenuPhotoComingSoonOverlay />
         {allSoldOut ? (
           <span className="pointer-events-none absolute left-3 top-3 z-[2] rounded-full bg-[color:var(--primary)] px-3 py-1 text-xs font-bold text-[color:var(--cream)]">
@@ -492,18 +560,20 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
                   {variant.variantGroup === "lumpia" ? "Protein" : "Option"}
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  {sorted.map((v) => (
+                  {sorted.map((v) => {
+                    const out = lumpiaVariantOutOfStock(v);
+                    return (
                     <label
                       key={v.id}
                       className={`flex cursor-pointer items-center gap-2 text-sm ${
-                        v.soldOut ? "cursor-not-allowed opacity-50" : ""
+                        out ? "cursor-not-allowed opacity-50" : ""
                       }`}
                     >
                       <input
                         type="radio"
                         name={`protein-${groupKey}`}
                         checked={variantId === v.id}
-                        disabled={v.soldOut}
+                        disabled={out}
                         onChange={() => {
                           setVariantId(v.id);
                           if (v.variantGroup === "lumpia") {
@@ -513,13 +583,23 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
                         }}
                       />
                       {shortLabel(v)}
-                      {v.soldOut ? (
+                      {out ? (
                         <span className="text-[10px] font-bold text-[var(--accent)]">
                           (out)
                         </span>
                       ) : null}
+                      {isLumpiaGroup &&
+                      !out &&
+                      lumpiaManagedForVariant(v.id) &&
+                      !lumpiaStock.loading ? (
+                        <span className="text-[10px] text-[var(--text-muted)]">
+                          ({lumpiaStockForMenuItemId(lumpiaStock.stock, v.id)}{" "}
+                          pcs)
+                        </span>
+                      ) : null}
                     </label>
-                  ))}
+                  );
+                  })}
                 </div>
               </div>
 
@@ -562,20 +642,34 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
                             { tier: "2dz" as const, label: "2 Dozen (24 pcs)" },
                             { tier: "party" as const, label: "Party Tray (50 pcs)" },
                           ] as const
-                        ).map(({ tier, label }) => (
+                        ).map(({ tier, label }) => {
+                          const tierOut = lumpiaTierDisabled(tier);
+                          const pcs = lumpiaPiecesPerUnitFromSizeKey(
+                            lumpiaKeyFrom(cookedOrFrozen, tier)
+                          );
+                          return (
                           <label
                             key={tier}
-                            className="flex cursor-pointer items-center gap-2 text-sm"
+                            className={`flex cursor-pointer items-center gap-2 text-sm ${
+                              tierOut ? "cursor-not-allowed opacity-50" : ""
+                            }`}
                           >
                             <input
                               type="radio"
                               name={`lumpia-size-${groupKey}`}
                               checked={lumpiaTier === tier}
+                              disabled={tierOut}
                               onChange={() => setLumpiaTier(tier)}
                             />
                             {label}
+                            {tierOut ? (
+                              <span className="text-[10px] font-bold text-[var(--accent)]">
+                                (need {pcs * qty} pcs)
+                              </span>
+                            ) : null}
                           </label>
-                        ))}
+                        );
+                        })}
                       </div>
                     </div>
                   ) : null}
