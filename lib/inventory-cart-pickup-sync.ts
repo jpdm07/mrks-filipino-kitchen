@@ -96,6 +96,9 @@ async function computeCartInventorySlotLabelFilterForDate(
       const slotManaged = matchingInv.filter((inv) =>
         managedInvId.has(inv.id)
       );
+      if (matchingInv.length > 0 && slotManaged.length === 0) {
+        return [];
+      }
       if (slotManaged.length === 0) continue;
 
       const allowIds = new Set(slotManaged.map((i) => i.id));

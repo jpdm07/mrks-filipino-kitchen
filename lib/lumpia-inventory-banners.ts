@@ -4,6 +4,7 @@ import {
   normalizeInventoryDeductionMode,
 } from "@/lib/inventory-deduction-modes";
 import { resolvedInventoryBannerMessage } from "@/lib/inventory-banner-copy";
+import { normalizeInventoryLineCookFilter } from "@/lib/inventory-line-cook-filter";
 import {
   aggregateLumpiaStockFromRows,
   emptyLumpiaStock,
@@ -55,7 +56,7 @@ export function lumpiaManagedProteins(
   return out;
 }
 
-/** One banner line per lumpia flavor (shared cooked + frozen count). */
+/** One banner line per lumpia flavor. */
 export function buildLumpiaBannerEntries(
   qualifyingRows: InventoryItem[]
 ): SiteBannerEntry[] {
@@ -67,9 +68,23 @@ export function buildLumpiaBannerEntries(
   for (const protein of ["beef", "pork", "turkey"] as const) {
     const pieces = stock[protein];
     if (pieces <= 0) continue;
+    const proteinRows = lumpiaRows.filter(
+      (r) => lumpiaProteinFromMenuItemId(r.menuItemId) === protein
+    );
+    const filters = new Set(
+      proteinRows.map((r) =>
+        normalizeInventoryLineCookFilter(r.lineCookFilter)
+      )
+    );
+    const cookFilter =
+      filters.size === 1 ? [...filters][0]! : "any";
     entries.push({
       key: `lumpia-${protein}`,
-      message: lumpiaFlavorBannerMessage(PROTEIN_LABEL[protein], pieces),
+      message: lumpiaFlavorBannerMessage(
+        PROTEIN_LABEL[protein],
+        pieces,
+        cookFilter
+      ),
     });
   }
   return entries;

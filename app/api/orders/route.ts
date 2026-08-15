@@ -20,6 +20,7 @@ import {
 import {
   getKitchenSlotsForDate,
   isPickupYmdAllowedForCheckout,
+  isPickupYmdAllowedForOrderCartAsync,
 } from "@/lib/kitchen-schedule";
 import { orderLinesToInventoryCartHints } from "@/lib/inventory-cart-line-hints";
 import { cartHasOnlyFlanItems } from "@/lib/menu-cook-capacity";
@@ -42,7 +43,10 @@ import {
 import { sanitizeExtraDipOrderLines } from "@/lib/extra-dip-sauce";
 import { revalidateAdminOrderDerivedViews } from "@/lib/revalidate-admin-order-views";
 import { runInventoryHooksForNewOrderInTx } from "@/lib/inventory-pickup-slots";
-import { isSameDayBannerPickupOrder } from "@/lib/same-day-pickup";
+import {
+  assertSameDayPickupOrderValid,
+  isSameDayBannerPickupOrder,
+} from "@/lib/same-day-pickup";
 import { assertLumpiaInventoryAvailableInTx } from "@/lib/inventory-deduction";
 
 class CapacityExceededError extends Error {
@@ -239,6 +243,21 @@ export async function POST(req: NextRequest) {
         },
         { status: 400 }
       );
+    }
+
+    const weeklyAllowed = await isPickupYmdAllowedForOrderCartAsync(
+      pickupDate,
+      cartFlanOnly,
+      new Date()
+    );
+    const sameDayGate = await assertSameDayPickupOrderValid(
+      pickupDate,
+      pickupTime,
+      items,
+      weeklyAllowed
+    );
+    if (!sameDayGate.ok) {
+      return NextResponse.json({ error: sameDayGate.message }, { status: 400 });
     }
 
     const wantsUtensils = Boolean(body.wantsUtensils);

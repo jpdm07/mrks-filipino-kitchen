@@ -2,7 +2,7 @@
 export const INVENTORY_DEDUCTION_ORDER_LINE_QTY = "order_line_qty";
 /**
  * Lumpia per protein: map order sizes to pieces (12 / 24 / 50 / 4 sample).
- * Cooked and frozen share the same stock pool (`lineCookFilter` ignored).
+ * `lineCookFilter` still applies — frozen-only stock does not match cooked lines.
  */
 export const INVENTORY_DEDUCTION_LUMPIA_FROZEN_DOZEN = "lumpia_frozen_dozen";
 /** Alias — same behavior as `lumpia_frozen_dozen`. */

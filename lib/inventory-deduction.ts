@@ -36,17 +36,6 @@ export function lineMatchesInventory(
 ): boolean {
   const mode = normalizeInventoryDeductionMode(inv.deductionMode);
 
-  if (isLumpiaPiecesDeductionMode(mode)) {
-    const mid = inv.menuItemId?.trim();
-    if (!mid || !isLumpiaMenuItemId(mid)) return false;
-    if (line.isSample) {
-      if (!/lumpia/i.test(line.name)) return false;
-      const lineMid = line.menuItemId?.trim();
-      return lineMid === mid;
-    }
-    return line.menuItemId?.trim() === mid;
-  }
-
   const cookRule = (inv as { lineCookFilter?: string | null }).lineCookFilter;
   if (
     !inventoryLineCookFilterMatchesLine(
@@ -55,6 +44,12 @@ export function lineMatchesInventory(
     )
   ) {
     return false;
+  }
+
+  if (isLumpiaPiecesDeductionMode(mode)) {
+    const mid = inv.menuItemId?.trim();
+    if (!mid || !isLumpiaMenuItemId(mid)) return false;
+    return line.menuItemId?.trim() === mid;
   }
 
   if (mode === INVENTORY_DEDUCTION_ORDER_LINE_QTY) {
@@ -227,6 +222,19 @@ export async function assertLumpiaInventoryAvailableInTx(
       ],
     },
   });
+
+  for (const line of lines) {
+    const need = lumpiaPiecesForOrderLine(line);
+    if (need <= 0) continue;
+    const matching = inventories.filter((inv) => lineMatchesInventory(inv, line));
+    if (matching.length === 0) {
+      return {
+        ok: false,
+        message:
+          "That lumpia flavor or cooked/frozen option is not available for same-day pickup. Remove it from your cart or choose an advance pickup date.",
+      };
+    }
+  }
 
   for (const inv of inventories) {
     const need = computeInventoryStockUnits(inv, lines);

@@ -127,13 +127,20 @@ export function formatLumpiaMenuStockHint(pieces: number): string | null {
   return null;
 }
 
-/** Banner line for one protein — no cooked/frozen split; availability in dozens. */
+/** Banner line for one protein — mentions cooked/frozen when the stock row is limited. */
 export function lumpiaFlavorBannerMessage(
   proteinLabel: string,
-  pieces: number
+  pieces: number,
+  cookFilter: "any" | "cooked" | "frozen" = "any"
 ): string {
   const avail = formatLumpiaCustomerAvailability(pieces);
-  return `Lumpia — ${proteinLabel}: ${avail} available for same-day pickup. Order below (cooked or frozen — your choice at checkout).`;
+  const style =
+    cookFilter === "frozen"
+      ? "frozen"
+      : cookFilter === "cooked"
+        ? "cooked"
+        : "cooked or frozen";
+  return `Lumpia — ${proteinLabel}: ${avail} available for same-day pickup (${style}). Order below.`;
 }
 
 export type LumpiaStockByProtein = Record<LumpiaProtein, number>;
@@ -142,7 +149,7 @@ export function emptyLumpiaStock(): LumpiaStockByProtein {
   return { beef: 0, pork: 0, turkey: 0 };
 }
 
-/** Sum inventory rows linked to each lumpia menu SKU (ignores lineCookFilter — shared pool). */
+/** Sum inventory rows linked to each lumpia menu SKU. */
 export function aggregateLumpiaStockFromRows(
   rows: InventoryItem[]
 ): LumpiaStockByProtein {

@@ -14,6 +14,7 @@ import {
   hintToPseudoOrderLine,
   orderLinesToInventoryCartHints,
 } from "@/lib/inventory-cart-line-hints";
+import { isExtraDipOrderLine } from "@/lib/extra-dip-sauce";
 import { lineMatchesInventory } from "@/lib/inventory-deduction";
 import {
   inventoryQuantityAsPieces,
@@ -93,49 +94,144 @@ function activeLabelsFromSlotRow(row: SlotRow): Set<string> {
   return new Set(labels.map((l) => l.trim()).filter(Boolean));
 }
 
+function isExemptFromSameDayInventoryCoverage(
+  hint: InventoryCartLineHint
+): boolean {
+  return isExtraDipOrderLine({
+    menuItemId: hint.menuItemId,
+    sizeKey: hint.sizeKey ?? undefined,
+  });
+}
+
+type CoverageHint = InventoryCartLineHint & {
+  /**
+   * Menu-ID-only fallback (invCart omitted a flavor that `menuItemIds` still lists).
+   * Try cooked and frozen so we don't drop a real frozen-only pork-only cart when
+   * cook type is unknown — still fails if that SKU has no on-hand banner row.
+   */
+  tryEitherCook?: boolean;
+};
+
+/** Cart lines that must each have matching same-day inventory (flavor + cooked/frozen). */
+export function sameDayCoverageHints(
+  cartMenuItemIds: string[],
+  cartInventoryHints?: InventoryCartLineHint[] | null
+): InventoryCartLineHint[] {
+  return mergeSameDayCoverageHints(cartMenuItemIds, cartInventoryHints);
+}
+
+function mergeSameDayCoverageHints(
+  cartMenuItemIds: string[],
+  cartInventoryHints?: InventoryCartLineHint[] | null
+): CoverageHint[] {
+  const hints = (cartInventoryHints ?? []).filter((h) => h.menuItemId?.trim());
+  const fromHints: CoverageHint[] = hints.filter(
+    (h) => !isExemptFromSameDayInventoryCoverage(h)
+  );
+  const idsInHints = new Set(fromHints.map((h) => h.menuItemId.trim()));
+  const out: CoverageHint[] = [...fromHints];
+  for (const id of [
+    ...new Set(cartMenuItemIds.map((s) => s.trim()).filter(Boolean)),
+  ]) {
+    if (isExtraDipOrderLine({ menuItemId: id })) continue;
+    if (idsInHints.has(id)) continue;
+    out.push({ menuItemId: id, tryEitherCook: true });
+  }
+  return out;
+}
+
+function bannerRowsMatchingLine(
+  rows: InventoryItem[],
+  line: ReturnType<typeof hintToPseudoOrderLine>
+): InventoryItem[] {
+  return rows.filter(
+    (r) => isBannerSameDayInventoryRow(r) && lineMatchesInventory(r, line)
+  );
+}
+
+function bannerRowsMatchingCoverageHint(
+  rows: InventoryItem[],
+  hint: CoverageHint
+): InventoryItem[] {
+  const direct = bannerRowsMatchingLine(rows, hintToPseudoOrderLine(hint));
+  if (direct.length > 0) return direct;
+  if (!hint.tryEitherCook || hint.cookedOrFrozen) return [];
+  const seen = new Set<number>();
+  const out: InventoryItem[] = [];
+  for (const cookedOrFrozen of ["frozen", "cooked"] as const) {
+    const matched = bannerRowsMatchingLine(
+      rows,
+      hintToPseudoOrderLine({ ...hint, cookedOrFrozen })
+    );
+    for (const row of matched) {
+      if (seen.has(row.id)) continue;
+      seen.add(row.id);
+      out.push(row);
+    }
+  }
+  return out;
+}
+
+async function loadInventoryForCoverageHints(
+  hints: InventoryCartLineHint[]
+): Promise<InventoryItem[]> {
+  const ids = [
+    ...new Set(hints.map((h) => h.menuItemId.trim()).filter(Boolean)),
+  ];
+  if (!ids.length) return [];
+  return prisma.inventoryItem.findMany({
+    where: { menuItemId: { in: ids } },
+  });
+}
+
 /** Menu SKUs in cart that match banner same-day inventory rows. */
 export async function bannerMenuIdsInCart(
   cartMenuItemIds: string[],
   cartInventoryHints?: InventoryCartLineHint[] | null
 ): Promise<string[]> {
-  const fromHints = [
-    ...new Set(
-      (cartInventoryHints ?? [])
-        .map((h) => h.menuItemId?.trim())
-        .filter(Boolean) as string[]
-    ),
-  ];
-  const ids = fromHints.length
-    ? fromHints
-    : [...new Set(cartMenuItemIds.map((s) => s.trim()).filter(Boolean))];
-  if (ids.length === 0) return [];
-
-  const rows = await prisma.inventoryItem.findMany({
-    where: { menuItemId: { in: ids } },
-  });
-  const bannerIds = new Set(
-    rows.filter(isBannerSameDayInventoryRow).map((r) => r.menuItemId!.trim())
-  );
-  return ids.filter((id) => bannerIds.has(id));
+  const hints = mergeSameDayCoverageHints(cartMenuItemIds, cartInventoryHints);
+  if (hints.length === 0) return [];
+  const rows = await loadInventoryForCoverageHints(hints);
+  const matched = new Set<string>();
+  for (const hint of hints) {
+    const covering = bannerRowsMatchingCoverageHint(rows, hint);
+    if (covering.length > 0) matched.add(hint.menuItemId.trim());
+  }
+  return [...matched];
 }
 
+/**
+ * Same-day inventory windows only when **every** cart food line is on-hand
+ * (matching flavor / cooked-vs-frozen). Extra dip is ignored.
+ */
 export async function cartEligibleForSameDayPickup(
   cartMenuItemIds: string[],
   cartInventoryHints?: InventoryCartLineHint[] | null
 ): Promise<boolean> {
-  const matched = await bannerMenuIdsInCart(cartMenuItemIds, cartInventoryHints);
-  return matched.length > 0;
+  const hints = mergeSameDayCoverageHints(cartMenuItemIds, cartInventoryHints);
+  if (hints.length === 0) return false;
+  const rows = await loadInventoryForCoverageHints(hints);
+  return hints.every(
+    (hint) => bannerRowsMatchingCoverageHint(rows, hint).length > 0
+  );
 }
 
 async function bannerInventoryForCart(
   cartMenuItemIds: string[],
   cartInventoryHints?: InventoryCartLineHint[] | null
 ): Promise<InventoryItem[]> {
-  const menuIds = await bannerMenuIdsInCart(cartMenuItemIds, cartInventoryHints);
-  if (!menuIds.length) return [];
-  return prisma.inventoryItem.findMany({
-    where: { menuItemId: { in: menuIds } },
-  });
+  if (!(await cartEligibleForSameDayPickup(cartMenuItemIds, cartInventoryHints))) {
+    return [];
+  }
+  const hints = mergeSameDayCoverageHints(cartMenuItemIds, cartInventoryHints);
+  const rows = await loadInventoryForCoverageHints(hints);
+  const coveringIds = new Set<number>();
+  for (const hint of hints) {
+    for (const row of bannerRowsMatchingCoverageHint(rows, hint)) {
+      coveringIds.add(row.id);
+    }
+  }
+  return rows.filter((r) => coveringIds.has(r.id));
 }
 
 /**
@@ -171,39 +267,35 @@ export async function getSameDayOpenDatesForBannerCart(
     const daySlots = slotRows.filter((s) => s.dateYmd === ymd);
     if (!daySlots.length) continue;
 
-    const hints = cartInventoryHints?.filter((h) => h.menuItemId?.trim()) ?? [];
-    const menuIds =
-      hints.length > 0
-        ? [...new Set(hints.map((h) => h.menuItemId.trim()))]
-        : cartMenuItemIds;
+    const hints = mergeSameDayCoverageHints(cartMenuItemIds, cartInventoryHints);
+    if (!hints.length) continue;
 
-    let hasActive = false;
-    for (const mid of menuIds) {
-      const invForSku = invRows.filter((i) => i.menuItemId?.trim() === mid);
-      if (!invForSku.length) continue;
-      const invIdSet = new Set(invForSku.map((i) => i.id));
+    let hasActiveForEveryLine = true;
+    for (const hint of hints) {
+      const covering = bannerRowsMatchingCoverageHint(invRows, hint);
+      if (!covering.length) {
+        hasActiveForEveryLine = false;
+        break;
+      }
+      const invIdSet = new Set(covering.map((i) => i.id));
+      let lineHasSlot = false;
       for (const slot of daySlots) {
         if (!invIdSet.has(slot.inventoryItemId)) continue;
-        if (hints.length) {
-          const pseudo = hintToPseudoOrderLine(
-            hints.find((h) => h.menuItemId.trim() === mid) ?? {
-              menuItemId: mid,
-            }
-          );
-          if (!lineMatchesInventory(slot.inventoryItem, pseudo)) continue;
-        }
         const active = applySameDayOrderLeadFilter(
           [...activeLabelsFromSlotRow(slot as SlotRow)],
           ymd
         );
         if (active.length > 0) {
-          hasActive = true;
+          lineHasSlot = true;
           break;
         }
       }
-      if (hasActive) break;
+      if (!lineHasSlot) {
+        hasActiveForEveryLine = false;
+        break;
+      }
     }
-    if (hasActive) open.add(ymd);
+    if (hasActiveForEveryLine) open.add(ymd);
   }
 
   return [...open].sort();
@@ -254,33 +346,24 @@ export async function getSameDaySlotLabelsForBannerCart(
   });
   if (!slotRows.length) return [];
 
-  const hints = cartInventoryHints?.filter((h) => h.menuItemId?.trim()) ?? [];
-  const menuIds =
-    hints.length > 0
-      ? [...new Set(hints.map((h) => h.menuItemId.trim()))]
-      : cartMenuItemIds;
+  const hints = mergeSameDayCoverageHints(cartMenuItemIds, cartInventoryHints);
+  if (!hints.length) return [];
 
   const labelSets: Set<string>[] = [];
 
-  for (const mid of menuIds) {
-    const invForSku = invRows.filter((i) => i.menuItemId?.trim() === mid);
-    if (!invForSku.length) continue;
-    const invIdSet = new Set(invForSku.map((i) => i.id));
+  for (const hint of hints) {
+    const covering = bannerRowsMatchingCoverageHint(invRows, hint);
+    if (!covering.length) return [];
+    const invIdSet = new Set(covering.map((i) => i.id));
     const union = new Set<string>();
     for (const slot of slotRows) {
       if (!invIdSet.has(slot.inventoryItemId)) continue;
-      if (hints.length) {
-        const hint = hints.find((h) => h.menuItemId.trim() === mid);
-        if (hint) {
-          const pseudo = hintToPseudoOrderLine(hint);
-          if (!lineMatchesInventory(slot.inventoryItem, pseudo)) continue;
-        }
-      }
       for (const lab of activeLabelsFromSlotRow(slot as SlotRow)) {
         union.add(lab);
       }
     }
-    if (union.size > 0) labelSets.push(union);
+    if (union.size === 0) return [];
+    labelSets.push(union);
   }
 
   if (!labelSets.length) return [];
@@ -501,26 +584,19 @@ export async function assertSameDayPickupOrderValid(
     ),
   ];
   const hints = orderLinesToInventoryCartHints(lines);
+  const cartFullyCovered = await cartEligibleForSameDayPickup(menuIds, hints);
+  const sameDaySlots = cartFullyCovered
+    ? await getSameDaySlotLabelsForBannerCart(
+        pickupDateYmd,
+        menuIds,
+        hints
+      )
+    : [];
+  const t = pickupTimeLabel.trim();
 
-  const sameDaySlots = await getSameDaySlotLabelsForBannerCart(
-    pickupDateYmd,
-    menuIds,
-    hints
-  );
-  const isSameDayDate = sameDaySlots.length > 0;
-  const cartHasBanner = (await bannerMenuIdsInCart(menuIds, hints)).length > 0;
-
-  if (isSameDayDate && !cartHasBanner) {
-    return {
-      ok: false,
-      message:
-        "That pickup time is for same-day banner items only. Remove non-banner items or choose a regular advance pickup date.",
-    };
-  }
-
-  if (isSameDayDate && cartHasBanner) {
-    const t = pickupTimeLabel.trim();
+  if (cartFullyCovered && sameDaySlots.length > 0) {
     if (!sameDaySlots.includes(t)) {
+      if (weeklyDateAllowed) return { ok: true };
       return {
         ok: false,
         message:
@@ -534,7 +610,7 @@ export async function assertSameDayPickupOrderValid(
     return {
       ok: false,
       message:
-        "That pickup date is not available. Choose an open date on the calendar.",
+        "That pickup time is for on-hand items only. Remove flavors or dishes that are not in today’s inventory, or choose a regular Friday/Saturday pickup.",
     };
   }
 

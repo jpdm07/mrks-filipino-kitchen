@@ -16,6 +16,7 @@ import {
 import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
 import type { MenuItem } from "@prisma/client";
 import { InventoryClient } from "@/components/admin/InventoryClient";
+import { SameDaySubscriberEmailPanel } from "@/components/admin/SameDaySubscriberEmailPanel";
 
 type DeductionLog = {
   id: number;
@@ -482,6 +483,8 @@ export function InventoryAnnouncementsClient({
         </label>
       </section>
 
+      <SameDaySubscriberEmailPanel />
+
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-bold text-lg text-[color:var(--primary)]">
@@ -587,17 +590,19 @@ export function InventoryAnnouncementsClient({
                   Per menu item — subtract cart line quantity (flan, yema, pancit, …)
                 </option>
                 <option value={INVENTORY_DEDUCTION_LUMPIA_PIECES}>
-                  Lumpia (per protein) — subtract pieces (cooked + frozen share stock)
+                  Lumpia (per protein) — subtract pieces
                 </option>
                 <option value={INVENTORY_DEDUCTION_LUMPIA_FROZEN_DOZEN}>
                   Lumpia (legacy dozen mode — same as pieces)
                 </option>
               </select>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
-                For lumpia, link <strong>Beef / Pork / Turkey</strong> menu rows below,
-                set stock in <strong>pieces</strong>, and use one row per protein.
-                Cooked vs frozen is the customer&apos;s preference at checkout — both
-                pull from the same count.
+                For lumpia, link <strong>Beef / Pork / Turkey</strong> separately and set
+                stock in <strong>pieces</strong>. Use <strong>Frozen</strong> below if
+                this protein is freezer-only — cooked orders will not get same-day slots.
+                Same-day times only show when <strong>every</strong> flavor in the cart
+                is on hand for today; adding beef or turkey to frozen pork hides pork’s
+                same-day windows.
               </p>
             </div>
             <div>
@@ -615,6 +620,10 @@ export function InventoryAnnouncementsClient({
                 <option value="cooked">Cooked or non-frozen only</option>
                 <option value="frozen">Frozen lines only</option>
               </select>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                For freezer-only lumpia, choose <strong>Frozen</strong> so cooked orders
+                do not get same-day pickup slots.
+              </p>
             </div>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -921,7 +930,7 @@ export function InventoryAnnouncementsClient({
                       Per menu item — subtract cart line quantity (most items)
                     </option>
                     <option value={INVENTORY_DEDUCTION_LUMPIA_PIECES}>
-                      Lumpia — pieces (cooked + frozen share stock)
+                      Lumpia — pieces (per protein)
                     </option>
                     <option value={INVENTORY_DEDUCTION_LUMPIA_FROZEN_DOZEN}>
                       Lumpia (legacy dozen mode)
@@ -930,7 +939,7 @@ export function InventoryAnnouncementsClient({
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-[var(--text-muted)]">
-                    Cart lines this row applies to (non-lumpia only)
+                    Cart lines this row applies to
                   </label>
                   <select
                     className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--card)] px-2 py-2 text-sm"
@@ -950,8 +959,9 @@ export function InventoryAnnouncementsClient({
                     <option value="frozen">Frozen lines only</option>
                   </select>
                   <p className="mt-1 text-xs text-[var(--text-muted)]">
-                    For <strong>lumpia</strong>, leave on <strong>Any</strong> — cooked and
-                    frozen share one piece count per protein.
+                    Same-day pickup slots for this row only appear when the cart line
+                    matches. For lumpia freezer stock, choose <strong>Frozen</strong> —
+                    cooked orders of this protein will not get today&apos;s slots.
                   </p>
                 </div>
                 {(r.deductionMode ?? INVENTORY_DEDUCTION_ORDER_LINE_QTY) ===

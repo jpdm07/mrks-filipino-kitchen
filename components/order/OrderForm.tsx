@@ -23,7 +23,10 @@ import {
 } from "@/lib/checkout-contact-validation";
 import { playOrderSubmitClick } from "@/lib/checkout-ui-sounds";
 import { sortPickupSlotLabels } from "@/lib/pickup-time-slots";
-import type { InventoryCartLineHint } from "@/lib/inventory-cart-line-hints";
+import {
+  orderLinesToInventoryCartHints,
+  type InventoryCartLineHint,
+} from "@/lib/inventory-cart-line-hints";
 import { SITE, CUSTOMER_PICKUP_MEETUP } from "@/lib/config";
 
 type CheckoutIssueKey =
@@ -114,19 +117,13 @@ export function OrderForm() {
 
   /** Cooked/frozen + size — must match server inventory rows (same as order POST). */
   const checkoutInventoryHints = useMemo((): InventoryCartLineHint[] => {
-    return cart.lines.map((l) => ({
-      menuItemId: l.menuItemId,
-      cookedOrFrozen:
-        l.cookedOrFrozen === "frozen"
-          ? "frozen"
-          : l.cookedOrFrozen === "cooked"
-            ? "cooked"
-            : undefined,
-      sizeKey: l.sizeKey,
-      quantity: l.quantity,
-      isSample: false,
-    }));
-  }, [cart.lines]);
+    return orderLinesToInventoryCartHints(items);
+  }, [items]);
+  const checkoutMenuIdsKey = checkoutMenuItemIds.join(",");
+  const checkoutInvCartKey = useMemo(
+    () => JSON.stringify(checkoutInventoryHints),
+    [checkoutInventoryHints]
+  );
 
   const [capacityWeeks, setCapacityWeeks] = useState<
     Array<{
@@ -257,8 +254,8 @@ export function OrderForm() {
     cartFlanOnly,
     cookNeed.mainMinutes,
     cookNeed.flanRamekins,
-    checkoutMenuItemIds,
-    checkoutInventoryHints,
+    checkoutMenuIdsKey,
+    checkoutInvCartKey,
   ]);
 
   const emailOk = isValidEmail(email);
