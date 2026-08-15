@@ -15,6 +15,7 @@ import {
   bannerInventoryRowsForSiteBanner,
 } from "@/lib/same-day-pickup";
 import { sortPickupSlotLabels } from "@/lib/pickup-time-slots";
+import { DEFAULT_SAME_DAY_INTRO } from "@/lib/same-day-subscriber-email-copy";
 
 export type SameDayEmailItem = {
   inventoryId: number;
@@ -27,9 +28,6 @@ export type SameDayEmailItem = {
   pickupDateLabel: string;
   pickupWindowLabel: string;
 };
-
-export const DEFAULT_SAME_DAY_INTRO =
-  "Good news — we have items ready for same-day pickup today at Mr. K's Filipino Kitchen. Order online, then choose your pickup time at checkout.";
 
 function escapeHtml(s: string): string {
   return s

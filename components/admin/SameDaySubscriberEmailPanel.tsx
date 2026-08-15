@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { DEFAULT_SAME_DAY_INTRO } from "@/lib/same-day-subscriber-email";
+import { DEFAULT_SAME_DAY_INTRO } from "@/lib/same-day-subscriber-email-copy";
 
 type PreviewItem = {
   inventoryId: number;
