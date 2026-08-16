@@ -73,7 +73,7 @@ export async function SmartSchedulingBanner() {
                     ) : null}
                   </div>
                   <Link
-                    href="/order"
+                    href="/menu"
                     className="btn btn-primary btn-sm relative z-10 shrink-0 whitespace-nowrap !px-5 !py-2.5 !text-sm !font-extrabold"
                   >
                     Order now
