@@ -50,16 +50,19 @@ export const SAME_DAY_EMAIL_TEMPLATES: SameDayEmailTemplate[] = [
     blurb: "Default notice — brief stock update.",
     subject: "Same-day pickup available — Mr. K's Filipino Kitchen",
     intro:
-      "Limited same-day pickup is available. Order online and choose your time at checkout.",
-    closing: "Mr. K's Filipino Kitchen · Cypress, TX · 979-703-3827",
+      "We’ve got a little same-day pickup ready for you — limited stock, so grab it while it lasts. Order online and pick the time that works best at checkout.",
+    closing:
+      "Thank you for staying with us — it means a lot.\n\nMr. K's Filipino Kitchen · Cypress, TX · 979-703-3827",
   },
   {
     id: "limited",
     label: "Going fast",
     blurb: "When stock is low.",
     subject: "Limited same-day pickup — Mr. K's Filipino Kitchen",
-    intro: "Stock is limited. Order soon if you’d like any of the items below.",
-    closing: "Questions? 979-703-3827 · Mr. K's Filipino Kitchen",
+    intro:
+      "Stock is moving quickly today. If something below looks good, we’d love for you to order soon.",
+    closing:
+      "Thank you for being part of our kitchen community.\n\nQuestions? 979-703-3827 · Mr. K's Filipino Kitchen",
   },
   {
     id: "after-work",
@@ -67,8 +70,9 @@ export const SAME_DAY_EMAIL_TEMPLATES: SameDayEmailTemplate[] = [
     blurb: "Dinner without cooking.",
     subject: "Same-day pickup available — Mr. K's Filipino Kitchen",
     intro:
-      "Need dinner without cooking? Limited same-day pickup is open — order online.",
-    closing: "Mr. K's Filipino Kitchen · Cypress, TX · 979-703-3827",
+      "Need dinner without cooking? We’ve got limited same-day pickup open — order online whenever you’re ready.",
+    closing:
+      "Thank you for staying with us — enjoy your meal.\n\nMr. K's Filipino Kitchen · Cypress, TX · 979-703-3827",
   },
   {
     id: "family",
@@ -76,16 +80,18 @@ export const SAME_DAY_EMAIL_TEMPLATES: SameDayEmailTemplate[] = [
     blurb: "Household or small gathering.",
     subject: "Same-day pickup available — Mr. K's Filipino Kitchen",
     intro:
-      "Limited same-day pickup for the household or a small gathering. Cypress pickup only; choose your time at checkout.",
-    closing: "Mr. K's Filipino Kitchen · Cypress, TX · 979-703-3827",
+      "Feeding the household or a small gathering? Limited same-day pickup is ready in Cypress — choose your time at checkout.",
+    closing:
+      "Thank you for letting us cook for your table.\n\nMr. K's Filipino Kitchen · Cypress, TX · 979-703-3827",
   },
   {
     id: "notice",
     label: "Short kitchen notice",
     blurb: "Minimal copy.",
     subject: "Same-day pickup available — Mr. K's Filipino Kitchen",
-    intro: "Limited same-day pickup is available. See below.",
-    closing: "Mr. K's Filipino Kitchen · Cypress, TX · 979-703-3827",
+    intro: "A quick note from the kitchen: limited same-day pickup is available. See below.",
+    closing:
+      "Thank you for staying with us!\n\nMr. K's Filipino Kitchen · Cypress, TX · 979-703-3827",
   },
 ];
 
