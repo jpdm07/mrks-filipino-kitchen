@@ -36,72 +36,11 @@ export function todayYmdPickupTz(now: Date = new Date()): string {
   }).format(now);
 }
 
-/** Ready-to-send subject line. Pass in-stock item names (and optional grouping). */
-export type SameDayTitlePart = {
-  name: string;
-  groupTitle?: string | null;
-  variantLabel?: string | null;
-};
-
-function asTitlePart(item: string | SameDayTitlePart): SameDayTitlePart {
-  return typeof item === "string" ? { name: item } : item;
-}
-
-function groupAndVariant(part: SameDayTitlePart): {
-  group: string;
-  variant: string | null;
-} {
-  const group = part.groupTitle?.trim();
-  const variant = part.variantLabel?.trim() || null;
-  if (group) return { group, variant };
-  const name = part.name.trim();
-  const split = name.split(/\s+[—–]\s+/);
-  if (split.length >= 2) {
-    return {
-      group: split[0]!.trim(),
-      variant: split.slice(1).join(" — ").trim() || null,
-    };
-  }
-  return { group: name, variant: null };
-}
-
-function formatGroupPhrase(group: string, variants: string[]): string {
-  const uniq = [...new Set(variants.map((v) => v.trim()).filter(Boolean))];
-  if (uniq.length === 0) return group;
-  if (uniq.length === 1) return `${group}: ${uniq[0]}`;
-  if (uniq.length === 2) return `${group} (${uniq[0]} & ${uniq[1]})`;
-  return `${group} (${uniq[0]}, ${uniq[1]} & more)`;
-}
-
-function joinGroupPhrases(phrases: string[]): string {
-  if (phrases.length === 1) return phrases[0]!;
-  if (phrases.length === 2) return `${phrases[0]} & ${phrases[1]}`;
-  if (phrases.length === 3) return `${phrases[0]}, ${phrases[1]} & ${phrases[2]}`;
-  return `${phrases[0]}, ${phrases[1]} & more`;
-}
-
+/** Short subject — item names belong in the email body, not here. */
 export function suggestedSameDayTitle(
-  itemNames: Array<string | SameDayTitlePart> = []
+  _itemNames?: Array<string | { name: string }>
 ): string {
-  const parts = itemNames.map(asTitlePart).filter((p) => p.name.trim());
-  if (parts.length === 0) {
-    return `Same-day pickup items are in stock (limited quantity) — Mr. K's Filipino Kitchen`;
-  }
-
-  const grouped = new Map<string, { group: string; variants: string[] }>();
-  for (const part of parts) {
-    const { group, variant } = groupAndVariant(part);
-    const key = group.toLowerCase();
-    const row = grouped.get(key) ?? { group, variants: [] };
-    if (variant) row.variants.push(variant);
-    grouped.set(key, row);
-  }
-  const phrases = [...grouped.values()].map((row) =>
-    formatGroupPhrase(row.group, row.variants)
-  );
-  const lead = joinGroupPhrases(phrases);
-  const verb = grouped.size === 1 ? "is" : "are";
-  return `${lead} ${verb} in stock for same-day pickup (limited quantity) — Mr. K's Filipino Kitchen`;
+  return `Available for same-day pickup (limited quantity) — Mr. K's Filipino Kitchen`;
 }
 
 export const SAME_DAY_EMAIL_TEMPLATES: SameDayEmailTemplate[] = [
@@ -110,7 +49,7 @@ export const SAME_DAY_EMAIL_TEMPLATES: SameDayEmailTemplate[] = [
     label: "In stock now",
     blurb: "What’s available for same-day pickup — use this most days.",
     subject:
-      "Same-day pickup items are in stock (limited quantity) — Mr. K's Filipino Kitchen",
+      "Available for same-day pickup (limited quantity) — Mr. K's Filipino Kitchen",
     intro:
       "A quick update from Mr. K's Filipino Kitchen: the items below are in stock for same-day pickup. Quantities are limited. Order on the website if you'd like some — you'll choose your pickup time at checkout.",
     closing:

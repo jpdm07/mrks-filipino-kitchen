@@ -255,13 +255,7 @@ export async function buildSameDaySubscriberEmailDraft(
   }
 
   const subscriberCount = await prisma.subscriber.count();
-  const suggested = suggestedSameDayTitle(
-    loaded.items.map((item) => ({
-      name: item.displayName,
-      groupTitle: item.groupTitle,
-      variantLabel: item.variantLabel,
-    }))
-  );
+  const suggested = suggestedSameDayTitle();
   const subject = fillSameDayDateToken(
     (customSubject?.trim() || suggested).trim(),
     loaded.todayYmd
