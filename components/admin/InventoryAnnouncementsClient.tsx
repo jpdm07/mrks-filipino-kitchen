@@ -103,6 +103,7 @@ export function InventoryAnnouncementsClient({
     endLabel: "2:00 PM",
     maxOrders: 10,
     autoCloseWhenZero: true,
+    mixedWindows: false,
   });
   /** Open “Add item” by default when there is nothing to edit yet (shows quantity immediately). */
   const [adding, setAdding] = useState(() => initialInventory.length === 0);
@@ -238,6 +239,35 @@ export function InventoryAnnouncementsClient({
           : x
       )
     );
+  };
+
+  const openPickupSlotEditor = (row: InventoryRow) => {
+    const slots = row.pickupSlots ?? [];
+    if (slots.length === 0) {
+      setSlotForm({
+        datesText: "",
+        startLabel: "11:00 AM",
+        endLabel: "2:00 PM",
+        maxOrders: 10,
+        autoCloseWhenZero: true,
+        mixedWindows: false,
+      });
+    } else {
+      const first = slots[0]!;
+      const mixedWindows = slots.some(
+        (s) =>
+          s.startLabel !== first.startLabel || s.endLabel !== first.endLabel
+      );
+      setSlotForm({
+        datesText: [...new Set(slots.map((s) => s.dateYmd))].join("\n"),
+        startLabel: first.startLabel,
+        endLabel: first.endLabel,
+        maxOrders: first.maxOrders,
+        autoCloseWhenZero: first.autoCloseWhenZero,
+        mixedWindows,
+      });
+    }
+    setModalId(row.id);
   };
 
   const openSlots = async (row: InventoryRow) => {
@@ -1072,10 +1102,7 @@ export function InventoryAnnouncementsClient({
                     <button
                       type="button"
                       className="btn btn-gold btn-block mt-4"
-                      onClick={() => {
-                        setModalId(row.id);
-                        setSlotForm((s) => ({ ...s }));
-                      }}
+                      onClick={() => openPickupSlotEditor(row)}
                     >
                       {row.pickupSlots?.length
                         ? "Add / update pickup dates"
@@ -1142,9 +1169,16 @@ export function InventoryAnnouncementsClient({
             </h3>
             <p className="mt-2 text-sm text-[var(--text-muted)]">
               Same-day pickup only — does not change your Friday/Saturday advance
-              calendar. If a date already has a slot for this item, saving
-              updates that window instead of duplicating it.
+              calendar. Dates and times below are what is already saved. Change
+              only what you need, then save. Removing a date from the list
+              removes that slot for customers.
             </p>
+            {slotForm.mixedWindows ? (
+              <p className="mt-2 text-sm font-medium text-[var(--accent)]">
+                These dates currently have different time windows. Saving applies
+                the start/end times below to every date listed.
+              </p>
+            ) : null}
             <label className="mt-4 block text-xs font-semibold">Dates</label>
             <textarea
               className="mt-1 w-full rounded border px-2 py-2 font-mono text-sm"

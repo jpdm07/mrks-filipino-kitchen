@@ -233,13 +233,7 @@ export async function getKitchenSlotsForDate(
     }
   }
 
-  const weeklyAllowed = await isPickupYmdAllowedForOrderCartAsync(
-    dateTrim,
-    cartFlanOnly,
-    new Date()
-  );
-
-  if (sameDaySlots.length > 0 && !weeklyAllowed) {
+  if (sameDaySlots.length > 0) {
     return sortPickupSlotLabels(
       sameDaySlots.filter((s) => !taken.has(s.trim()))
     );

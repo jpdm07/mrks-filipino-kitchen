@@ -63,13 +63,38 @@ export async function createInventoryPickupSlotsInTx(
     endLabel: string;
     maxOrders: number;
     autoCloseWhenZero: boolean;
+    /** Drop this item’s slots on/after this YMD that are not in `datesYmd`. */
+    removeUnlistedFromYmd?: string;
   }
 ): Promise<void> {
   const json = slotLabelsJsonForWindow(params.startLabel, params.endLabel);
   const maxOrders = Math.max(1, params.maxOrders);
+  const listed = new Set(
+    params.datesYmd.filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+  );
 
-  for (const dateYmd of params.datesYmd) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateYmd)) continue;
+  if (params.removeUnlistedFromYmd) {
+    const fromYmd = params.removeUnlistedFromYmd.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fromYmd)) {
+      const extra = await tx.inventoryPickupSlot.findMany({
+        where: {
+          inventoryItemId: params.inventoryItemId,
+          dateYmd: { gte: fromYmd },
+        },
+        select: { id: true, dateYmd: true },
+      });
+      const dropIds = extra
+        .filter((s) => !listed.has(s.dateYmd))
+        .map((s) => s.id);
+      if (dropIds.length) {
+        await tx.inventoryPickupSlot.deleteMany({
+          where: { id: { in: dropIds } },
+        });
+      }
+    }
+  }
+
+  for (const dateYmd of listed) {
     const existing = await tx.inventoryPickupSlot.findFirst({
       where: { inventoryItemId: params.inventoryItemId, dateYmd },
     });

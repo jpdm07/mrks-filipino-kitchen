@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
 import { createInventoryPickupSlotsInTx } from "@/lib/inventory-pickup-slots";
+import { getTodayInPickupTimezoneYMD } from "@/lib/pickup-lead-time";
 
 export async function POST(
   req: NextRequest,
@@ -66,6 +67,7 @@ export async function POST(
         endLabel,
         maxOrders,
         autoCloseWhenZero,
+        removeUnlistedFromYmd: getTodayInPickupTimezoneYMD(),
       });
     });
     return NextResponse.json({ ok: true });
