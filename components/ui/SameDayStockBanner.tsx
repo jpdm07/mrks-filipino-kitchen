@@ -23,9 +23,9 @@ export function SameDayStockBanner({
       className="print:hidden relative z-40 w-full border-b-4 border-[var(--gold)] bg-[var(--primary-deep)] text-white shadow-[0_8px_24px_rgba(6,15,31,0.28)]"
       role="status"
     >
-      <div className="relative mx-auto max-w-5xl px-4 py-3.5 pr-12 sm:py-4 sm:pr-14">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <div className="min-w-0 flex-1 text-center sm:text-left">
+      <div className="relative mx-auto max-w-5xl px-4 py-3.5 pr-12 sm:px-12 sm:py-4">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="min-w-0 w-full">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[var(--gold)] sm:text-xs">
               Same-day pickup · in stock now
               {entries.length > 1 ? ` · ${entries.length} items` : ""}
@@ -63,7 +63,7 @@ export function SameDayStockBanner({
           </div>
           <Link
             href="/menu"
-            className="btn btn-primary btn-sm relative z-10 mx-auto shrink-0 whitespace-nowrap !px-5 !py-2.5 !text-sm !font-extrabold sm:mx-0"
+            className="btn btn-primary btn-sm relative z-10 shrink-0 whitespace-nowrap !px-5 !py-2.5 !text-sm !font-extrabold"
           >
             Order now
           </Link>
