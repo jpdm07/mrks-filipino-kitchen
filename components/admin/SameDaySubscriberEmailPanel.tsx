@@ -421,7 +421,7 @@ export function SameDaySubscriberEmailPanel({
           {preview.items.map((item) => (
             <li key={item.inventoryId}>
               <strong className="text-[var(--text)]">{item.displayName}</strong>
-              {" — same-day pickup · limited quantity"}
+              {item.availabilityLine ? ` — ${item.availabilityLine}` : null}
             </li>
           ))}
         </ul>

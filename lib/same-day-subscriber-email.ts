@@ -1,6 +1,6 @@
 import type { MenuItem } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { resolvedInventoryBannerMessage } from "@/lib/inventory-banner-copy";
+import { formatStockUnitPhrase } from "@/lib/inventory-banner-copy";
 import { parseSlotLabelsJson } from "@/lib/inventory-pickup-slots";
 import { newsletterHtml } from "@/lib/mailer";
 import { buildCustomerReplyFooterPlainText } from "@/lib/mail-reply-routing";
@@ -53,6 +53,21 @@ function formatPickupWindow(labels: string[]): string {
   if (sorted.length === 0) return "";
   if (sorted.length === 1) return sorted[0]!;
   return `${sorted[0]} – ${sorted[sorted.length - 1]}`;
+}
+
+/** Stock line for email — no repeated dish name or same-day CTA (those live in the intro). */
+function emailStockLine(inv: {
+  itemName: string;
+  quantityInStock: number;
+  unitLabel: string;
+  bannerMessage: string | null;
+}): string {
+  const custom = inv.bannerMessage?.trim();
+  if (custom) return custom;
+  return `${formatStockUnitPhrase(
+    inv.quantityInStock,
+    inv.unitLabel.trim() || "units"
+  )} in stock`;
 }
 
 export function defaultSameDaySubject(itemNames: string[] = []): string {
@@ -130,7 +145,7 @@ export async function loadSameDaySubscriberEmailItems(): Promise<
       displayName,
       groupTitle: menu?.groupCardTitle?.trim() || null,
       variantLabel: menu?.variantShortLabel?.trim() || null,
-      availabilityLine: resolvedInventoryBannerMessage(inv),
+      availabilityLine: emailStockLine(inv),
       photoUrlAbsolute: resolveEmailMenuPhotoUrl({
         photoUrl: menu?.photoUrl,
         menuItemId: inv.menuItemId,
@@ -153,20 +168,15 @@ export function buildSameDayPickupItemsHtml(items: SameDayEmailItem[]): string {
       const img = item.photoUrlAbsolute
         ? `<img data-mrk-photo="${item.inventoryId}" src="${escapeHtml(item.photoUrlAbsolute)}" alt="${escapeHtml(item.displayName)}" width="560" border="0" style="max-width:560px;width:100%;height:auto;border-radius:12px 12px 0 0;display:block;margin:0 auto;border:0;outline:none;text-decoration:none;"/>`
         : "";
-      const desc = item.menuDescription
-        ? `<p style="margin:0 0 12px;font-size:15px;line-height:1.5;color:#444;">${escapeHtml(item.menuDescription)}</p>`
-        : "";
       const price = item.priceLabel
-        ? `<p style="margin:0 0 12px;font-weight:bold;color:#CE1126;font-size:15px;">From ${escapeHtml(item.priceLabel)}</p>`
+        ? `<p style="margin:4px 0 0;font-weight:bold;color:#CE1126;font-size:15px;">From ${escapeHtml(item.priceLabel)}</p>`
         : "";
-      return `<div style="margin-bottom:28px;border:1px solid #e8e8e8;border-radius:12px;overflow:hidden;background:#fff;">
+      return `<div style="margin-bottom:20px;border:1px solid #e8e8e8;border-radius:12px;overflow:hidden;background:#fff;">
 ${img}
-<div style="padding:20px 24px;">
-<h2 style="color:#0e1d35;margin:0 0 8px;font-size:22px;font-family:Georgia,serif;">${escapeHtml(item.displayName)}</h2>
-${desc}
+<div style="padding:16px 20px;">
+<h2 style="color:#0e1d35;margin:0;font-size:20px;font-family:Georgia,serif;line-height:1.25;">${escapeHtml(item.displayName)}</h2>
+<p style="margin:8px 0 0;font-size:15px;font-weight:600;color:#1A1A1A;">${escapeHtml(item.availabilityLine)}</p>
 ${price}
-<p style="margin:0 0 8px;font-size:15px;font-weight:600;color:#1A1A1A;">${escapeHtml(item.availabilityLine)}</p>
-<p style="margin:0;font-size:14px;color:#444;">Same-day pickup · limited quantity</p>
 </div>
 </div>`;
     })
@@ -179,20 +189,12 @@ export function buildSameDaySubscriberEmailPlainText(params: {
   orderUrl: string;
   closingMessage?: string;
 }): string {
-  const lines = [
-    params.introMessage,
-    "",
-    "In stock for same-day pickup (limited quantity):",
-    "",
-  ];
+  const lines = [params.introMessage, ""];
   for (const item of params.items) {
-    lines.push(item.displayName);
-    lines.push(`  ${item.availabilityLine}`);
-    lines.push(`  Same-day pickup · limited quantity`);
-    if (item.priceLabel) lines.push(`  From ${item.priceLabel}`);
-    lines.push("");
+    const price = item.priceLabel ? ` · from ${item.priceLabel}` : "";
+    lines.push(`• ${item.displayName} — ${item.availabilityLine}${price}`);
   }
-  lines.push(`Order online: ${params.orderUrl}`);
+  lines.push("", `Order: ${params.orderUrl}`);
   if (params.closingMessage?.trim()) {
     lines.push("", params.closingMessage.trim());
   }
@@ -205,10 +207,12 @@ export function composeSameDaySubscriberEmailHtml(params: {
   unsubscribeUrl: string;
   closingMessage?: string;
 }): string {
-  const introHtml = `<p style="font-size:17px;line-height:1.65;margin:0 0 28px;">${escapeHtml(params.introMessage).replace(/\n/g, "<br/>")}</p>`;
+  const introHtml = `<p style="font-size:16px;line-height:1.55;margin:0 0 20px;color:#1A1A1A;">${escapeHtml(params.introMessage).replace(/\n/g, "<br/>")}</p>`;
   const itemBlock = introHtml + buildSameDayPickupItemsHtml(params.items);
   const closing = (params.closingMessage ?? DEFAULT_SAME_DAY_CLOSING).trim();
-  const closingHtml = `<p style="margin-top:8px;font-size:15px;line-height:1.6;">${escapeHtml(closing).replace(/\n/g, "<br/>")}</p>`;
+  const closingHtml = closing
+    ? `<p style="margin-top:4px;font-size:13px;line-height:1.5;color:#555;">${escapeHtml(closing).replace(/\n/g, "<br/>")}</p>`
+    : "";
   return newsletterHtml({
     message: closingHtml,
     itemBlock,
