@@ -52,7 +52,7 @@ export const SAME_DAY_EMAIL_TEMPLATES: SameDayEmailTemplate[] = [
     intro:
       "We’ve got a little same-day pickup ready for you — limited stock, so grab it while it lasts. Order online and pick the time that works best at checkout.",
     closing:
-      "Thank you for staying with us — it means a lot.\n\nMr. K's Filipino Kitchen · Cypress, TX · 979-703-3827",
+      "Thank you for staying with us — it means a lot. 💛\n\nMr. K's Filipino Kitchen · Cypress, TX · 979-703-3827",
   },
   {
     id: "limited",
