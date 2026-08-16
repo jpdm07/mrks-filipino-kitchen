@@ -44,17 +44,17 @@ export async function SmartSchedulingBanner() {
           role="status"
         >
           <div className="mx-auto max-w-5xl px-4 py-3.5 sm:py-4">
-            <p className="text-center text-[11px] font-extrabold uppercase tracking-[0.22em] text-[var(--gold)] sm:text-xs">
-              Same-day pickup · in stock now
-            </p>
-            <div className="mt-3 space-y-3">
+            <div className="space-y-3">
               {bannerEntries.map((entry) => (
                 <div
                   key={entry.key}
-                  className="flex flex-col items-center justify-between gap-3 rounded-xl border border-[var(--gold)]/55 bg-[rgba(14,29,53,0.65)] px-4 py-3 sm:flex-row sm:gap-4"
+                  className="flex flex-col items-center justify-between gap-3 rounded-xl border border-[var(--gold)]/55 bg-[rgba(14,29,53,0.65)] px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
                 >
                   <div className="min-w-0 flex-1 text-center sm:text-left">
-                    <p className="text-xl font-extrabold leading-tight tracking-tight sm:text-2xl">
+                    <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[var(--gold)] sm:text-xs">
+                      Same-day pickup · in stock now
+                    </p>
+                    <p className="mt-1.5 text-xl font-extrabold leading-tight tracking-tight sm:text-2xl">
                       {entry.title ?? entry.message}
                     </p>
                     {entry.availability ? (
