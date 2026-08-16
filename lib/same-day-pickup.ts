@@ -30,11 +30,12 @@ export const SAME_DAY_PICKUP_NOTE =
   "Same-day pickup — in-stock banner items only";
 
 /** Minimum minutes after order placement before first same-day pickup slot. */
-export const SAME_DAY_ORDER_LEAD_MINUTES = 30;
+export const SAME_DAY_ORDER_LEAD_MINUTES = 60;
 
 /**
- * Same-day only: earliest slot is max(window start, order time + lead).
- * Never before the admin window or after the window end.
+ * Same-day only: drop times earlier than now + lead (1 hour).
+ * Past calendar days are excluded by callers; if every slot for today is too soon,
+ * this returns [] so today disappears from the calendar until a later window opens.
  */
 export function applySameDayOrderLeadFilter(
   labels: string[],
@@ -578,7 +579,7 @@ export async function assertSameDayPickupOrderValid(
       return {
         ok: false,
         message:
-          "That pickup time is not available for same-day banner pickup. Choose another time or date.",
+          "That pickup time needs at least 1 hour notice for same-day pickup. Choose a later time or another date.",
       };
     }
     return { ok: true };

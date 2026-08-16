@@ -4,6 +4,7 @@ import { sortPickupSlotLabels } from "@/lib/pickup-time-slots";
 import { lineMatchesInventory } from "@/lib/inventory-deduction";
 import type { InventoryCartLineHint } from "@/lib/inventory-cart-line-hints";
 import { hintToPseudoOrderLine } from "@/lib/inventory-cart-line-hints";
+import { applySameDayOrderLeadFilter } from "@/lib/same-day-pickup";
 
 type SlotRow = InventoryPickupSlot & { inventoryItem: InventoryItem };
 
@@ -120,7 +121,10 @@ async function computeCartInventorySlotLabelFilterForDate(
     }
 
     if (inter.size === 0) return [];
-    return sortPickupSlotLabels([...inter]);
+    return applySameDayOrderLeadFilter(
+      sortPickupSlotLabels([...inter]),
+      dateYmd.trim()
+    );
   }
 
   const unique = [
@@ -191,7 +195,10 @@ async function computeCartInventorySlotLabelFilterForDate(
   }
 
   if (inter.size === 0) return [];
-  return sortPickupSlotLabels([...inter]);
+  return applySameDayOrderLeadFilter(
+    sortPickupSlotLabels([...inter]),
+    dateYmd.trim()
+  );
 }
 
 /** True when the cart references menu SKUs that use inventory pickup-slot rows (same-day windows). */
