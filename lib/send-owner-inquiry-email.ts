@@ -1,6 +1,7 @@
 import { buildEmailBrandBannerHtml } from "@/lib/email-brand-header";
 import { getOwnerInquiryNotificationEmails } from "@/lib/mail-env-status";
 import { sendMail, type MailSendResult } from "@/lib/mailer";
+import { getPublicSiteOrigin } from "@/lib/public-site-url";
 
 function escapeHtml(s: string): string {
   return s
@@ -22,6 +23,8 @@ export async function sendOwnerInquiryEmail(params: {
     return { ok: false, error: "No inquiry recipient configured." };
   }
 
+  const adminUrl = `${getPublicSiteOrigin()}/admin/inquiries`;
+
   const subj = `[Website] ${params.subject.trim() || "Contact message"}`;
   const name = escapeHtml(params.name);
   const email = escapeHtml(params.email);
@@ -40,6 +43,8 @@ export async function sendOwnerInquiryEmail(params: {
     params.message,
     ``,
     `Reply to the customer directly using their email above.`,
+    ``,
+    `Admin: ${adminUrl}`,
   ].join("\n");
 
   const html = `<!DOCTYPE html>
@@ -61,6 +66,7 @@ export async function sendOwnerInquiryEmail(params: {
         <p style="margin:0;white-space:pre-wrap;">${message}</p>
       </div>
       <p style="margin:20px 0 0;font-size:14px;color:#555;">Use <strong>Reply</strong> in your mail app to respond — it is set to the customer&apos;s email.</p>
+      <p style="margin:16px 0 0;font-size:14px;"><a href="${adminUrl}" style="color:#0e1d35;font-weight:700;">Open in admin</a></p>
     </div>
   </div>
 </body>

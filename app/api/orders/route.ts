@@ -6,6 +6,7 @@ import { generateOrderNumber } from "@/lib/orderNumber";
 import { sendCustomerSms, sendOwnerSms } from "@/lib/twilio";
 import { sendNewOrderEmailToOwner } from "@/lib/order-owner-email";
 import { sendCustomerOrderPlacedEmail } from "@/lib/send-customer-order-placed-email";
+import { sendOwnerSubscriberEmail } from "@/lib/send-owner-subscriber-email";
 import { syncOrderToSheets } from "@/lib/sheets";
 import type { OrderItemLine } from "@/lib/order-types";
 import {
@@ -529,6 +530,17 @@ export async function POST(req: NextRequest) {
           await prisma.subscriber.create({
             data: { email: em, name: customerName },
           });
+          const subMail = await sendOwnerSubscriberEmail({
+            email: em,
+            name: customerName,
+            source: "checkout",
+          });
+          if (!subMail.ok) {
+            console.warn(
+              "[orders] Owner subscriber email failed:",
+              subMail.error
+            );
+          }
         }
       } catch (subErr) {
         console.warn("[orders] Newsletter subscriber row not saved (order still placed):", subErr);

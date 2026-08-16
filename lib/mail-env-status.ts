@@ -12,15 +12,29 @@ export function getOwnerOrderNotificationEmail(): string {
   );
 }
 
-/** Contact form notifications; defaults to kitchen Gmail when env unset. Override with OWNER_INQUIRY_EMAIL (comma-separated ok). */
+function splitEmailList(raw: string): string[] {
+  return raw
+    .split(/[,;]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Inbox(es) for contact-form and new-subscriber alerts.
+ * OWNER_INQUIRY_EMAIL → OWNER_ORDER_EMAIL → EMAIL_USER → kitchen Gmail.
+ */
+export function getOwnerAlertNotificationEmails(): string[] {
+  const raw =
+    process.env.OWNER_INQUIRY_EMAIL?.trim() ||
+    process.env.OWNER_ORDER_EMAIL?.trim() ||
+    process.env.EMAIL_USER?.trim() ||
+    "mrksfilipinokitchen@gmail.com";
+  return splitEmailList(raw);
+}
+
+/** Contact form notifications (same recipients as subscriber alerts). */
 export function getOwnerInquiryNotificationEmails(): string[] {
-  const raw = process.env.OWNER_INQUIRY_EMAIL?.trim();
-  if (raw) {
-    return raw.split(/[,;]+/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-  }
-  return ["mrksfilipinokitchen@gmail.com"];
+  return getOwnerAlertNotificationEmails();
 }
 
 export type MailEnvStatus = {

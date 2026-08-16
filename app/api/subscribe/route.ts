@@ -7,6 +7,7 @@ import {
 } from "@/lib/mail-reply-routing";
 import { sendMail } from "@/lib/mailer";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
+import { sendOwnerSubscriberEmail } from "@/lib/send-owner-subscriber-email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,6 +28,12 @@ export async function POST(req: NextRequest) {
 
     await prisma.subscriber.create({ data: { email, name } });
 
+    const ownerAlert = sendOwnerSubscriberEmail({
+      email,
+      name,
+      source: "newsletter",
+    });
+
     const base = getPublicSiteOrigin();
     const welcomeHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin:0;background:#FFFDF5;padding:20px 12px;font-family:Georgia,serif;color:#1a1a1a;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
@@ -41,14 +48,20 @@ ${buildCustomerReplyFooterHtml()}
 </td></tr></table>
 </body></html>`;
 
-    const welcome = await sendMail({
-      to: email,
-      subject: "You're on the list: Mr. K's Filipino Kitchen",
-      html: welcomeHtml,
-      text: `Thanks for subscribing to Mr. K's Filipino Kitchen updates.${buildCustomerReplyFooterPlainText()}`,
-    });
+    const [welcome, ownerMail] = await Promise.all([
+      sendMail({
+        to: email,
+        subject: "You're on the list: Mr. K's Filipino Kitchen",
+        html: welcomeHtml,
+        text: `Thanks for subscribing to Mr. K's Filipino Kitchen updates.${buildCustomerReplyFooterPlainText()}`,
+      }),
+      ownerAlert,
+    ]);
     if (!welcome.ok) {
       console.warn("[subscribe] Welcome email failed:", welcome.error);
+    }
+    if (!ownerMail.ok) {
+      console.warn("[subscribe] Owner subscriber email failed:", ownerMail.error);
     }
 
     return NextResponse.json({ success: true });
