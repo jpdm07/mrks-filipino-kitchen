@@ -33,9 +33,9 @@ export const SAME_DAY_PICKUP_NOTE =
 export const SAME_DAY_ORDER_LEAD_MINUTES = 60;
 
 /**
- * Same-day only: drop times earlier than now + lead (1 hour).
- * Past calendar days are excluded by callers; if every slot for today is too soon,
- * this returns [] so today disappears from the calendar until a later window opens.
+ * Same-day only: keep admin-opened slot labels that are at least 1 hour from now.
+ * Does not invent times — e.g. order at 5:35 with 6:00 / 7:00 open → drop 6:00, offer 7:00.
+ * If none remain for today, returns [] so that day drops off the calendar.
  */
 export function applySameDayOrderLeadFilter(
   labels: string[],
