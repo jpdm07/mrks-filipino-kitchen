@@ -393,35 +393,13 @@ export async function isSameDayPickupDateForBannerCart(
 }
 
 /**
- * Banner rows for the public site strip: in-stock + a pickup window saved for today.
- * Do not apply the 30-minute checkout lead here — that only hides bookable times,
- * not the inventory announcement.
+ * In-stock banner rows for the public site strip.
+ * Pickup-slot dates only control checkout times, not whether stock is announced.
  */
 export async function bannerInventoryRowsForSiteBanner(
   rows: InventoryItem[]
 ): Promise<InventoryItem[]> {
-  const today = getTodayInPickupTimezoneYMD();
-  const qualifying = rows.filter(isBannerSameDayInventoryRow);
-  if (!qualifying.length) return [];
-
-  const invIds = qualifying.map((r) => r.id);
-  const todaySlots = await prisma.inventoryPickupSlot.findMany({
-    where: {
-      inventoryItemId: { in: invIds },
-      dateYmd: today,
-      closed: false,
-    },
-    include: { inventoryItem: true },
-  });
-
-  const invWithSlotToday = new Set<number>();
-  for (const slot of todaySlots) {
-    if (activeLabelsFromSlotRow(slot as SlotRow).size > 0) {
-      invWithSlotToday.add(slot.inventoryItemId);
-    }
-  }
-
-  return qualifying.filter((r) => invWithSlotToday.has(r.id));
+  return rows.filter(isBannerSameDayInventoryRow);
 }
 
 /** Count of inventory rows that would show on the public same-day banner. */

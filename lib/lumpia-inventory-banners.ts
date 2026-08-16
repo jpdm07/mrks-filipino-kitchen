@@ -65,12 +65,14 @@ export function buildLumpiaBannerEntries(
 
   const stock = aggregateLumpiaStockFromRows(lumpiaRows);
   const entries: SiteBannerEntry[] = [];
+  const covered = new Set<number>();
   for (const protein of ["beef", "pork", "turkey"] as const) {
     const pieces = stock[protein];
     if (pieces <= 0) continue;
     const proteinRows = lumpiaRows.filter(
       (r) => lumpiaProteinFromMenuItemId(r.menuItemId) === protein
     );
+    for (const row of proteinRows) covered.add(row.id);
     const filters = new Set(
       proteinRows.map((r) =>
         normalizeInventoryLineCookFilter(r.lineCookFilter)
@@ -85,6 +87,18 @@ export function buildLumpiaBannerEntries(
         pieces,
         cookFilter
       ),
+    });
+  }
+  for (const row of lumpiaRows) {
+    if (covered.has(row.id)) continue;
+    entries.push({
+      key: `inv-${row.id}`,
+      message: resolvedInventoryBannerMessage({
+        itemName: row.itemName,
+        quantityInStock: row.quantityInStock,
+        unitLabel: row.unitLabel,
+        bannerMessage: row.bannerMessage,
+      }),
     });
   }
   return entries;
