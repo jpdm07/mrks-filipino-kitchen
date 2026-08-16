@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { buildSiteBannerEntries } from "@/lib/lumpia-inventory-banners";
 import { StoreNoticeBanner } from "@/components/ui/StoreNoticeBanner";
 
@@ -11,8 +10,6 @@ import { StoreNoticeBanner } from "@/components/ui/StoreNoticeBanner";
 export async function SmartSchedulingBanner() {
   const path = headers().get("x-mrk-pathname") ?? "";
   if (path.startsWith("/admin")) return null;
-
-  const origin = getPublicSiteOrigin();
 
   let forceStateA = false;
   let sameDayItems: Awaited<ReturnType<typeof prisma.inventoryItem.findMany>> =
@@ -76,8 +73,8 @@ export async function SmartSchedulingBanner() {
                     ) : null}
                   </div>
                   <Link
-                    href={`${origin}/order`}
-                    className="btn btn-primary btn-sm shrink-0 whitespace-nowrap !px-5 !py-2.5 !text-sm !font-extrabold"
+                    href="/order"
+                    className="btn btn-primary btn-sm relative z-10 shrink-0 whitespace-nowrap !px-5 !py-2.5 !text-sm !font-extrabold"
                   >
                     Order now
                   </Link>
