@@ -84,19 +84,21 @@ export async function prepareInlineMenuPhotos(
 }> {
   const inlineImages: MailInlineImage[] = [];
   const pairs: { from: string; to: string }[] = [];
-  const used = new Set<string>();
+  const usedIds = new Set<string>();
+  const usedUrls = new Set<string>();
 
   for (const photo of photos) {
     const url = photo.url?.trim();
-    if (!url) continue;
+    if (!url || usedUrls.has(url)) continue;
     const loaded = await loadPublicMenuImageForEmail(url);
     if (!loaded) continue;
     const contentId = `mrk-${photo.id.replace(/[^a-zA-Z0-9_-]/g, "")}`.slice(
       0,
       40
     );
-    if (!contentId || used.has(contentId)) continue;
-    used.add(contentId);
+    if (!contentId || usedIds.has(contentId)) continue;
+    usedIds.add(contentId);
+    usedUrls.add(url);
     pairs.push({ from: url, to: `cid:${contentId}` });
     inlineImages.push({ ...loaded, contentId });
   }

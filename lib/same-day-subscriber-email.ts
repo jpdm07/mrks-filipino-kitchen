@@ -26,6 +26,7 @@ export type SameDayEmailItem = {
   displayName: string;
   groupTitle: string | null;
   variantLabel: string | null;
+  variantGroup: string | null;
   availabilityLine: string;
   photoUrlAbsolute: string | null;
   menuDescription: string | null;
@@ -33,6 +34,77 @@ export type SameDayEmailItem = {
   pickupDateLabel: string;
   pickupWindowLabel: string;
 };
+
+/** Cards for HTML: flavors that share a menu group / photo collapse to one image. */
+type SameDayEmailCard =
+  | { kind: "single"; item: SameDayEmailItem }
+  | {
+      kind: "group";
+      groupKey: string;
+      title: string;
+      photoId: number;
+      photoUrlAbsolute: string | null;
+      variants: SameDayEmailItem[];
+    };
+
+/** Group key for shared product photo (lumpia flavors, etc.). */
+function sameDayPhotoGroupKey(item: SameDayEmailItem): string | null {
+  const vg = item.variantGroup?.trim();
+  if (vg) return `vg:${vg.toLowerCase()}`;
+  const title = item.groupTitle?.trim();
+  const photo = item.photoUrlAbsolute?.trim();
+  if (title && photo) return `photo:${title.toLowerCase()}|${photo}`;
+  return null;
+}
+
+function variantLineLabel(item: SameDayEmailItem): string {
+  const v = item.variantLabel?.trim();
+  if (v) return v;
+  return item.displayName;
+}
+
+function groupSameDayEmailItems(items: SameDayEmailItem[]): SameDayEmailCard[] {
+  const buckets = new Map<string, SameDayEmailItem[]>();
+  for (const item of items) {
+    const key = sameDayPhotoGroupKey(item);
+    if (!key) continue;
+    const list = buckets.get(key) ?? [];
+    list.push(item);
+    buckets.set(key, list);
+  }
+
+  const cards: SameDayEmailCard[] = [];
+  const seen = new Set<string>();
+  for (const item of items) {
+    const key = sameDayPhotoGroupKey(item);
+    if (!key) {
+      cards.push({ kind: "single", item });
+      continue;
+    }
+    const bucket = buckets.get(key)!;
+    if (bucket.length < 2) {
+      cards.push({ kind: "single", item });
+      continue;
+    }
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const title =
+      bucket.find((b) => b.groupTitle?.trim())?.groupTitle?.trim() ||
+      bucket[0]!.displayName.replace(/\s*[—–-]\s*.+$/, "").trim() ||
+      "Menu item";
+    const withPhoto =
+      bucket.find((b) => b.photoUrlAbsolute?.trim()) ?? bucket[0]!;
+    cards.push({
+      kind: "group",
+      groupKey: key,
+      title,
+      photoId: withPhoto.inventoryId,
+      photoUrlAbsolute: withPhoto.photoUrlAbsolute,
+      variants: bucket,
+    });
+  }
+  return cards;
+}
 
 function escapeHtml(s: string): string {
   return s
@@ -145,6 +217,7 @@ export async function loadSameDaySubscriberEmailItems(): Promise<
       displayName,
       groupTitle: menu?.groupCardTitle?.trim() || null,
       variantLabel: menu?.variantShortLabel?.trim() || null,
+      variantGroup: menu?.variantGroup?.trim() || null,
       availabilityLine: emailStockLine(inv),
       photoUrlAbsolute: resolveEmailMenuPhotoUrl({
         photoUrl: menu?.photoUrl,
@@ -162,16 +235,14 @@ export async function loadSameDaySubscriberEmailItems(): Promise<
   return { ok: true, todayYmd: today, items };
 }
 
-export function buildSameDayPickupItemsHtml(items: SameDayEmailItem[]): string {
-  return items
-    .map((item) => {
-      const img = item.photoUrlAbsolute
-        ? `<img data-mrk-photo="${item.inventoryId}" src="${escapeHtml(item.photoUrlAbsolute)}" alt="${escapeHtml(item.displayName)}" width="560" border="0" style="max-width:560px;width:100%;height:auto;border-radius:12px 12px 0 0;display:block;margin:0 auto;border:0;outline:none;text-decoration:none;"/>`
-        : "";
-      const price = item.priceLabel
-        ? `<p style="margin:4px 0 0;font-weight:bold;color:#CE1126;font-size:15px;">From ${escapeHtml(item.priceLabel)}</p>`
-        : "";
-      return `<div style="margin-bottom:20px;border:1px solid #e8e8e8;border-radius:12px;overflow:hidden;background:#fff;">
+function buildSingleItemCardHtml(item: SameDayEmailItem): string {
+  const img = item.photoUrlAbsolute
+    ? `<img data-mrk-photo="${item.inventoryId}" src="${escapeHtml(item.photoUrlAbsolute)}" alt="${escapeHtml(item.displayName)}" width="560" border="0" style="max-width:560px;width:100%;height:auto;border-radius:12px 12px 0 0;display:block;margin:0 auto;border:0;outline:none;text-decoration:none;"/>`
+    : "";
+  const price = item.priceLabel
+    ? `<p style="margin:4px 0 0;font-weight:bold;color:#CE1126;font-size:15px;">From ${escapeHtml(item.priceLabel)}</p>`
+    : "";
+  return `<div style="margin-bottom:20px;border:1px solid #e8e8e8;border-radius:12px;overflow:hidden;background:#fff;">
 ${img}
 <div style="padding:16px 20px;">
 <h2 style="color:#0e1d35;margin:0;font-size:20px;font-family:Georgia,serif;line-height:1.25;">${escapeHtml(item.displayName)}</h2>
@@ -179,7 +250,39 @@ ${img}
 ${price}
 </div>
 </div>`;
+}
+
+function buildGroupedItemCardHtml(card: Extract<SameDayEmailCard, { kind: "group" }>): string {
+  const img = card.photoUrlAbsolute
+    ? `<img data-mrk-photo="${card.photoId}" src="${escapeHtml(card.photoUrlAbsolute)}" alt="${escapeHtml(card.title)}" width="560" border="0" style="max-width:560px;width:100%;height:auto;border-radius:12px 12px 0 0;display:block;margin:0 auto;border:0;outline:none;text-decoration:none;"/>`
+    : "";
+  const rows = card.variants
+    .map((v) => {
+      const price = v.priceLabel ? ` · from ${escapeHtml(v.priceLabel)}` : "";
+      return `<tr>
+<td style="padding:8px 0;border-top:1px solid #eee;font-size:15px;font-weight:700;color:#0e1d35;vertical-align:top;">${escapeHtml(variantLineLabel(v))}</td>
+<td style="padding:8px 0 8px 12px;border-top:1px solid #eee;font-size:14px;font-weight:600;color:#1A1A1A;text-align:right;vertical-align:top;">${escapeHtml(v.availabilityLine)}${price}</td>
+</tr>`;
     })
+    .join("");
+  return `<div style="margin-bottom:20px;border:1px solid #e8e8e8;border-radius:12px;overflow:hidden;background:#fff;">
+${img}
+<div style="padding:16px 20px;">
+<h2 style="color:#0e1d35;margin:0 0 8px;font-size:20px;font-family:Georgia,serif;line-height:1.25;">${escapeHtml(card.title)}</h2>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+${rows}
+</table>
+</div>
+</div>`;
+}
+
+export function buildSameDayPickupItemsHtml(items: SameDayEmailItem[]): string {
+  return groupSameDayEmailItems(items)
+    .map((card) =>
+      card.kind === "group"
+        ? buildGroupedItemCardHtml(card)
+        : buildSingleItemCardHtml(card.item)
+    )
     .join("");
 }
 
@@ -190,11 +293,23 @@ export function buildSameDaySubscriberEmailPlainText(params: {
   closingMessage?: string;
 }): string {
   const lines = [params.introMessage, ""];
-  for (const item of params.items) {
+  for (const card of groupSameDayEmailItems(params.items)) {
+    if (card.kind === "group") {
+      lines.push(card.title);
+      for (const v of card.variants) {
+        const price = v.priceLabel ? ` · from ${v.priceLabel}` : "";
+        lines.push(
+          `  • ${variantLineLabel(v)} — ${v.availabilityLine}${price}`
+        );
+      }
+      lines.push("");
+      continue;
+    }
+    const item = card.item;
     const price = item.priceLabel ? ` · from ${item.priceLabel}` : "";
     lines.push(`• ${item.displayName} — ${item.availabilityLine}${price}`);
   }
-  lines.push("", `Order: ${params.orderUrl}`);
+  lines.push(`Order: ${params.orderUrl}`);
   if (params.closingMessage?.trim()) {
     lines.push("", params.closingMessage.trim());
   }
