@@ -56,6 +56,8 @@ export async function POST(req: NextRequest) {
       items: draft.items.map((item) => ({
         inventoryId: item.inventoryId,
         displayName: item.displayName,
+        groupTitle: item.groupTitle,
+        variantLabel: item.variantLabel,
         pickupWindowLabel: item.pickupWindowLabel,
         pickupDateLabel: item.pickupDateLabel,
         availabilityLine: item.availabilityLine,

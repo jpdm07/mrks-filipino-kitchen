@@ -24,6 +24,8 @@ export type SameDayEmailItem = {
   inventoryId: number;
   menuItemId: string | null;
   displayName: string;
+  groupTitle: string | null;
+  variantLabel: string | null;
   availabilityLine: string;
   photoUrlAbsolute: string | null;
   menuDescription: string | null;
@@ -126,6 +128,8 @@ export async function loadSameDaySubscriberEmailItems(): Promise<
       inventoryId: inv.id,
       menuItemId: inv.menuItemId,
       displayName,
+      groupTitle: menu?.groupCardTitle?.trim() || null,
+      variantLabel: menu?.variantShortLabel?.trim() || null,
       availabilityLine: resolvedInventoryBannerMessage(inv),
       photoUrlAbsolute: resolveEmailMenuPhotoUrl({
         photoUrl: menu?.photoUrl,
@@ -252,7 +256,11 @@ export async function buildSameDaySubscriberEmailDraft(
 
   const subscriberCount = await prisma.subscriber.count();
   const suggested = suggestedSameDayTitle(
-    loaded.items.map((item) => item.displayName)
+    loaded.items.map((item) => ({
+      name: item.displayName,
+      groupTitle: item.groupTitle,
+      variantLabel: item.variantLabel,
+    }))
   );
   const subject = fillSameDayDateToken(
     (customSubject?.trim() || suggested).trim(),

@@ -36,21 +36,72 @@ export function todayYmdPickupTz(now: Date = new Date()): string {
   }).format(now);
 }
 
-/** Ready-to-send subject line. Pass in-stock item names when you have them. */
-export function suggestedSameDayTitle(itemNames: string[] = []): string {
-  const names = [
-    ...new Set(itemNames.map((n) => n.trim()).filter(Boolean)),
-  ];
-  if (names.length === 1) {
-    return `${names[0]} is in stock for same-day pickup (limited quantity) — Mr. K's Filipino Kitchen`;
+/** Ready-to-send subject line. Pass in-stock item names (and optional grouping). */
+export type SameDayTitlePart = {
+  name: string;
+  groupTitle?: string | null;
+  variantLabel?: string | null;
+};
+
+function asTitlePart(item: string | SameDayTitlePart): SameDayTitlePart {
+  return typeof item === "string" ? { name: item } : item;
+}
+
+function groupAndVariant(part: SameDayTitlePart): {
+  group: string;
+  variant: string | null;
+} {
+  const group = part.groupTitle?.trim();
+  const variant = part.variantLabel?.trim() || null;
+  if (group) return { group, variant };
+  const name = part.name.trim();
+  const split = name.split(/\s+[—–]\s+/);
+  if (split.length >= 2) {
+    return {
+      group: split[0]!.trim(),
+      variant: split.slice(1).join(" — ").trim() || null,
+    };
   }
-  if (names.length === 2) {
-    return `${names[0]} & ${names[1]} in stock for same-day pickup (limited quantity) — Mr. K's Filipino Kitchen`;
+  return { group: name, variant: null };
+}
+
+function formatGroupPhrase(group: string, variants: string[]): string {
+  const uniq = [...new Set(variants.map((v) => v.trim()).filter(Boolean))];
+  if (uniq.length === 0) return group;
+  if (uniq.length === 1) return `${group}: ${uniq[0]}`;
+  if (uniq.length === 2) return `${group} (${uniq[0]} & ${uniq[1]})`;
+  return `${group} (${uniq[0]}, ${uniq[1]} & more)`;
+}
+
+function joinGroupPhrases(phrases: string[]): string {
+  if (phrases.length === 1) return phrases[0]!;
+  if (phrases.length === 2) return `${phrases[0]} & ${phrases[1]}`;
+  if (phrases.length === 3) return `${phrases[0]}, ${phrases[1]} & ${phrases[2]}`;
+  return `${phrases[0]}, ${phrases[1]} & more`;
+}
+
+export function suggestedSameDayTitle(
+  itemNames: Array<string | SameDayTitlePart> = []
+): string {
+  const parts = itemNames.map(asTitlePart).filter((p) => p.name.trim());
+  if (parts.length === 0) {
+    return `Same-day pickup items are in stock (limited quantity) — Mr. K's Filipino Kitchen`;
   }
-  if (names.length > 2) {
-    return `${names[0]}, ${names[1]} & more in stock for same-day pickup (limited quantity) — Mr. K's Filipino Kitchen`;
+
+  const grouped = new Map<string, { group: string; variants: string[] }>();
+  for (const part of parts) {
+    const { group, variant } = groupAndVariant(part);
+    const key = group.toLowerCase();
+    const row = grouped.get(key) ?? { group, variants: [] };
+    if (variant) row.variants.push(variant);
+    grouped.set(key, row);
   }
-  return `Same-day pickup items are in stock (limited quantity) — Mr. K's Filipino Kitchen`;
+  const phrases = [...grouped.values()].map((row) =>
+    formatGroupPhrase(row.group, row.variants)
+  );
+  const lead = joinGroupPhrases(phrases);
+  const verb = grouped.size === 1 ? "is" : "are";
+  return `${lead} ${verb} in stock for same-day pickup (limited quantity) — Mr. K's Filipino Kitchen`;
 }
 
 export const SAME_DAY_EMAIL_TEMPLATES: SameDayEmailTemplate[] = [

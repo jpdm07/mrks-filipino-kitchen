@@ -20,6 +20,8 @@ import {
 type PreviewItem = {
   inventoryId: number;
   displayName: string;
+  groupTitle?: string | null;
+  variantLabel?: string | null;
   pickupWindowLabel: string;
   pickupDateLabel?: string;
   availabilityLine: string;
@@ -35,6 +37,16 @@ type PreviewPayload = {
   subscriberCount: number;
   todayYmd: string;
 };
+
+function titleFromPreviewItems(items: PreviewItem[]): string {
+  return suggestedSameDayTitle(
+    items.map((item) => ({
+      name: item.displayName,
+      groupTitle: item.groupTitle,
+      variantLabel: item.variantLabel,
+    }))
+  );
+}
 
 export function SameDaySubscriberEmailPanel({
   hideSubscribersLink = false,
@@ -127,9 +139,7 @@ export function SameDaySubscriberEmailPanel({
         setPreview(data);
         setPreviewHtml(data.html);
         if (!subjectEdited.current) {
-          setSubject(
-            suggestedSameDayTitle(data.items.map((item) => item.displayName))
-          );
+          setSubject(titleFromPreviewItems(data.items));
         }
       } catch (e) {
         setPreview(null);
@@ -162,14 +172,16 @@ export function SameDaySubscriberEmailPanel({
       ? fillSameDayDateToken(template.closing, ymd)
       : template.closing;
     setTemplateId(id);
-    setSubject(nextSubject);
     setIntroMessage(nextIntro);
     setClosingMessage(nextClosing);
-    subjectEdited.current = true;
+    const stockTitle =
+      preview?.items.length ? titleFromPreviewItems(preview.items) : nextSubject;
+    const titleToUse = subjectEdited.current ? subject : stockTitle;
+    setSubject(titleToUse);
     void loadPreview({
       introMessage: nextIntro,
       closingMessage: nextClosing,
-      subject: nextSubject,
+      subject: titleToUse,
     });
   };
 
@@ -181,7 +193,12 @@ export function SameDaySubscriberEmailPanel({
     const ids = idsOverride ?? selectedIds;
     if (audience === "selected" && ids.length === 0) return;
     if (audience === "all" && subscribers.length === 0) return;
-    const title = subject.trim() || preview.subject;
+    const stockTitle = preview.items.length
+      ? titleFromPreviewItems(preview.items)
+      : suggestedSameDayTitle();
+    const title = subjectEdited.current
+      ? subject.trim() || preview.subject
+      : stockTitle;
     const ok = confirmSubscriberSend({
       audience,
       selectedIds: ids,
@@ -295,7 +312,9 @@ export function SameDaySubscriberEmailPanel({
       <label className="block text-sm">
         <span className="font-semibold">Title</span>
         <span className="mt-0.5 block text-xs text-[var(--text-muted)]">
-          This is the email subject. It&apos;s written for you — edit it anytime.
+          Email subject. It follows whatever is currently in stock for same-day
+          pickup — one item, several flavors, or mixed dishes. Edit it if you
+          want different wording.
         </span>
         <input
           className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-2"
@@ -306,6 +325,24 @@ export function SameDaySubscriberEmailPanel({
             setTemplateId(null);
           }}
         />
+        {preview?.items.length ? (
+          <button
+            type="button"
+            className="mt-1 text-xs font-semibold text-[color:var(--primary)] underline"
+            onClick={() => {
+              subjectEdited.current = false;
+              const next = titleFromPreviewItems(preview.items);
+              setSubject(next);
+              void loadPreview({
+                introMessage,
+                closingMessage,
+                subject: next,
+              });
+            }}
+          >
+            Use title from current stock
+          </button>
+        ) : null}
       </label>
 
       <AdminSubscriberPicker
