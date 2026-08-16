@@ -18,8 +18,8 @@ export function StoreNoticeBanner({
       role="region"
       aria-label="Ordering notes"
     >
-      <div className="mx-auto flex max-w-5xl items-start gap-3 px-4 py-3 sm:py-3.5">
-        <ul className="min-w-0 flex-1 space-y-1.5 text-center sm:text-left">
+      <div className="relative mx-auto max-w-5xl px-4 py-3 sm:px-12 sm:py-3.5">
+        <ul className="space-y-1.5 text-center">
           <li className="text-[15px] leading-snug sm:text-[17px]">
             <span className="text-lg font-extrabold tracking-tight text-[var(--gold)] sm:text-xl">
               Advance scheduling
@@ -50,7 +50,7 @@ export function StoreNoticeBanner({
         <button
           type="button"
           onClick={() => setShow(false)}
-          className="shrink-0 rounded-md p-1.5 text-white/80 transition hover:bg-white/10 hover:text-white"
+          className="absolute right-3 top-3 shrink-0 rounded-md p-1.5 text-white/80 transition hover:bg-white/10 hover:text-white sm:right-4 sm:top-3.5"
           aria-label="Dismiss ordering notes"
         >
           <X className="h-5 w-5" strokeWidth={2.5} aria-hidden />
