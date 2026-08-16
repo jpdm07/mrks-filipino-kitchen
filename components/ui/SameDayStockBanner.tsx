@@ -18,6 +18,8 @@ export function SameDayStockBanner({
 
   if (entries.length === 0) return null;
 
+  const toggleLabel = open ? "Hide details" : "Show details";
+
   return (
     <div
       className="print:hidden relative z-40 w-full border-b-4 border-[var(--gold)] bg-[var(--primary-deep)] text-white shadow-[0_8px_24px_rgba(6,15,31,0.28)]"
@@ -26,27 +28,36 @@ export function SameDayStockBanner({
       <div className="mx-auto max-w-5xl px-4 py-3.5 sm:py-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="min-w-0 flex-1 text-left">
-            <div className="flex items-start justify-between gap-2">
-              <button
-                type="button"
-                onClick={() => setOpen((v) => !v)}
-                className="flex min-w-0 flex-1 items-center gap-2 text-left"
-                aria-expanded={open}
-              >
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              className="group flex w-full items-start justify-between gap-3 text-left"
+              aria-expanded={open}
+              aria-controls="same-day-stock-details"
+            >
+              <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[var(--gold)] sm:text-xs">
                   Same-day pickup · in stock now
                   {entries.length > 1 ? ` · ${entries.length} items` : ""}
                 </p>
+                {!open ? (
+                  <p className="mt-1 text-sm font-semibold text-white/90">
+                    {entries.length === 1
+                      ? "1 item available — tap to expand"
+                      : `${entries.length} items available — tap to expand`}
+                  </p>
+                ) : null}
+              </div>
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[var(--gold)]/55 bg-white/10 px-2.5 py-1.5 text-xs font-bold text-[var(--gold)] transition group-hover:bg-white/15 group-hover:border-[var(--gold)]">
+                {toggleLabel}
                 <ChevronDown
-                  className={`h-4 w-4 shrink-0 text-[var(--gold)] transition ${
-                    open ? "rotate-180" : ""
-                  }`}
+                  className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`}
                   aria-hidden
                 />
-              </button>
-            </div>
+              </span>
+            </button>
             {open ? (
-              <>
+              <div id="same-day-stock-details">
                 <ul className="mt-2 space-y-1.5">
                   {entries.map((entry) => (
                     <li
@@ -77,12 +88,8 @@ export function SameDayStockBanner({
                 <p className="mt-2 text-xs font-medium text-white/75 sm:text-sm">
                   Limited quantity · choose your pickup time at checkout
                 </p>
-              </>
-            ) : (
-              <p className="mt-1 text-sm font-semibold text-white/85">
-                Tap to see what’s available
-              </p>
-            )}
+              </div>
+            ) : null}
           </div>
           <Link
             href="/menu"
