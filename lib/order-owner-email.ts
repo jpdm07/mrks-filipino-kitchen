@@ -151,6 +151,7 @@ export async function sendNewOrderEmailToOwner(params: {
       subject: `${demoTag}New order #${params.orderNumber} — ${params.customerName} ($${params.total.toFixed(2)})`,
       html,
       text,
+      priority: "high",
       replyTo:
         formatNamedReplyTo(params.customerName, params.email) ??
         params.email.trim(),

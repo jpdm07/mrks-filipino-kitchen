@@ -32,6 +32,35 @@ function withHtmlUniquenessStamp(html: string): string {
   return `${html}\n${stamp}\n`;
 }
 
+function newMailEntityId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
+/**
+ * Append a send-time stamp so Gmail/Yahoo keep each campaign as its own message
+ * instead of stacking identical subjects into one thread (which feels like older
+ * newsletters “disappear” after you read the latest).
+ */
+export function withCampaignSubjectStamp(subject: string, now = new Date()): string {
+  const base = subject.trim();
+  if (!base) return base;
+  if (/·\s*(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(base)) {
+    return base;
+  }
+  const stamp = now.toLocaleString("en-US", {
+    timeZone: "America/Chicago",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return `${base} · ${stamp}`;
+}
+
 function getSmtpFromAddress(): string {
   const explicit = process.env.EMAIL_FROM?.trim();
   const user = process.env.EMAIL_USER?.trim();
@@ -105,6 +134,8 @@ async function sendMailViaResend(
     bcc?: string;
     replyTo?: string;
     inlineImages?: MailInlineImage[];
+    entityId: string;
+    priority?: "high" | "normal";
   }
 ): Promise<MailSendResult> {
   const from = process.env.RESEND_FROM_EMAIL?.trim();
@@ -128,6 +159,9 @@ async function sendMailViaResend(
     subject: opts.subject,
     html: opts.html,
     text: opts.text,
+    headers: {
+      "X-Entity-Ref-ID": `${opts.entityId}@mrkskitchen.com`,
+    },
   };
   if (bcc) body.bcc = [bcc];
   const rt = opts.replyTo?.trim();
@@ -176,10 +210,14 @@ export async function sendMail(opts: {
   replyTo?: string;
   /** Inline images referenced as cid:… in HTML (same-day item photos). */
   inlineImages?: MailInlineImage[];
+  /** Default normal — high is for order/alert mail only. */
+  priority?: "high" | "normal";
 }): Promise<MailSendResult> {
   const replyTo = (opts.replyTo?.trim() || getReplyToEmail()) ?? undefined;
   const htmlOut = withHtmlUniquenessStamp(opts.html);
-  const stamped = { ...opts, html: htmlOut };
+  const entityId = newMailEntityId();
+  const priority = opts.priority ?? "normal";
+  const stamped = { ...opts, html: htmlOut, entityId, priority };
   const resendKey = process.env.RESEND_API_KEY?.trim();
   if (resendKey) {
     return sendMailViaResend(resendKey, { ...stamped, replyTo });
@@ -204,9 +242,10 @@ export async function sendMail(opts: {
       subject: opts.subject,
       html: htmlOut,
       text: opts.text,
-      priority: "high",
+      messageId: `<mrk-${entityId}@mrkskitchen.com>`,
+      ...(priority === "high" ? { priority: "high" as const } : {}),
       headers: {
-        "X-Entity-Ref-ID": `${Date.now()}-${Math.random().toString(36).slice(2, 10)}@mrkskitchen.com`,
+        "X-Entity-Ref-ID": `${entityId}@mrkskitchen.com`,
       },
       attachments: opts.inlineImages?.map((img) => ({
         filename: img.filename,

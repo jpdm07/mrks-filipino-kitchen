@@ -2,7 +2,7 @@ import type { MenuItem } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAdminSession } from "@/lib/admin-auth";
-import { sendMail, newsletterHtml } from "@/lib/mailer";
+import { sendMail, newsletterHtml, withCampaignSubjectStamp } from "@/lib/mailer";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { buildCustomerReplyFooterPlainText } from "@/lib/mail-reply-routing";
 import {
@@ -82,14 +82,8 @@ export async function POST(req: NextRequest) {
   }
 
   const base = getPublicSiteOrigin();
-  /** Distinct subject per send so Gmail is less likely to stack campaigns in one thread. */
-  const mailSubject = `${subject} · ${new Date().toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  })}`;
+  /** Distinct subject per send so Gmail/Yahoo keep each campaign as its own message. */
+  const mailSubject = withCampaignSubjectStamp(subject);
   const spotlightText = buildNewsletterSpotlightPlainText(spotlightItems);
   const textCore = spotlightText
     ? `${message}\n\n${spotlightText}\nOrder: ${base}/menu`

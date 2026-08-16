@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminSession } from "@/lib/admin-auth";
-import { sendMail } from "@/lib/mailer";
+import { sendMail, withCampaignSubjectStamp } from "@/lib/mailer";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import {
   parseNewsletterAudience,
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
   }
 
   const base = getPublicSiteOrigin();
-  const mailSubject = draft.subject;
+  const mailSubject = withCampaignSubjectStamp(draft.subject);
   let sent = 0;
   let failed = 0;
   let lastError: string | undefined;
