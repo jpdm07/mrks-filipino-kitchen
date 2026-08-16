@@ -1,4 +1,5 @@
 import { buildEmailBrandBannerHtml } from "@/lib/email-brand-header";
+import { formatNamedReplyTo } from "@/lib/customer-mailto";
 import { getOwnerOrderNotificationEmail } from "@/lib/mail-env-status";
 import { sendMail } from "@/lib/mailer";
 import type { OrderItemLine } from "@/lib/order-types";
@@ -150,6 +151,9 @@ export async function sendNewOrderEmailToOwner(params: {
       subject: `${demoTag}New order #${params.orderNumber} — ${params.customerName} ($${params.total.toFixed(2)})`,
       html,
       text,
+      replyTo:
+        formatNamedReplyTo(params.customerName, params.email) ??
+        params.email.trim(),
     });
     if (!r.ok) {
       const err = truncateHint(r.error);

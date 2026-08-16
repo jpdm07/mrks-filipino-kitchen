@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
+import { SameDaySubscriberEmailPanel } from "@/components/admin/SameDaySubscriberEmailPanel";
 import { SubscribersClient } from "@/components/admin/SubscribersClient";
 
 export default async function SubscribersPage() {
@@ -16,6 +17,22 @@ export default async function SubscribersPage() {
       <h1 className="font-[family-name:var(--font-playfair)] text-3xl font-bold">
         Subscribers
       </h1>
+      <p className="mt-2 text-sm text-[var(--text-muted)]">
+        Use the same-day blast when inventory is in stock, or the newsletter below
+        for a custom message.
+      </p>
+      <div className="mt-6">
+        <SameDaySubscriberEmailPanel
+          hideSubscribersLink
+          initialSubscribers={subscribers.map(
+            (s: { id: string; email: string; name: string | null }) => ({
+              id: s.id,
+              email: s.email,
+              name: s.name,
+            })
+          )}
+        />
+      </div>
       <SubscribersClient
         initialSubscribers={subscribers}
         menuItems={menuItems.map((m) => ({

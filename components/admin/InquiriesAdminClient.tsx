@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ADMIN_POLL_INTERVAL_MS } from "@/lib/admin-poll-interval";
+import { inquiryReplyDraftBody } from "@/lib/customer-mailto";
 import type { Inquiry } from "@prisma/client";
 import { Trash2 } from "lucide-react";
 
@@ -15,11 +16,13 @@ export function InquiriesAdminClient({
 }) {
   const router = useRouter();
   const [items, setItems] = useState(initialInquiries);
-  const [openId, setOpenId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [err, setErr] = useState<string | null>(null);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [replyBusyId, setReplyBusyId] = useState<string | null>(null);
+  const [replyHint, setReplyHint] = useState<Record<string, string>>({});
   const selectAllRef = useRef<HTMLInputElement>(null);
   const deleteBusyRef = useRef(deleteBusy);
   deleteBusyRef.current = deleteBusy;
@@ -108,7 +111,6 @@ export function InquiriesAdminClient({
         ids.forEach((id) => next.delete(id));
         return next;
       });
-      if (openId && deleted.has(openId)) setOpenId(null);
       router.refresh();
     } finally {
       setDeleteBusy(false);
@@ -124,6 +126,60 @@ export function InquiriesAdminClient({
       return;
     }
     void deleteIds(ids);
+  };
+
+  const sendReply = async (row: InquiryRow, rawMessage?: string) => {
+    const message = (
+      rawMessage ??
+      replyDrafts[row.id] ??
+      inquiryReplyDraftBody({
+        customerName: row.name,
+        originalMessage: row.message,
+      })
+    ).trim();
+    if (!message) {
+      setReplyHint((prev) => ({
+        ...prev,
+        [row.id]: "Type a reply first.",
+      }));
+      return;
+    }
+    setErr(null);
+    setReplyBusyId(row.id);
+    try {
+      const res = await fetch(
+        `/api/admin/inquiries/${encodeURIComponent(row.id)}/reply`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }),
+          credentials: "same-origin",
+        }
+      );
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setReplyHint((prev) => ({
+          ...prev,
+          [row.id]: data.error ?? "Send failed.",
+        }));
+        return;
+      }
+      setReplyHint((prev) => ({
+        ...prev,
+        [row.id]: `Sent to ${row.email}. If they use Yahoo, ask them to check Spam / Junk.`,
+      }));
+      setItems((prev) =>
+        prev.map((i) => (i.id === row.id ? { ...i, isRead: true } : i))
+      );
+      router.refresh();
+    } catch {
+      setReplyHint((prev) => ({
+        ...prev,
+        [row.id]: "Network error — try again.",
+      }));
+    } finally {
+      setReplyBusyId(null);
+    }
   };
 
   const setRead = async (id: string, isRead: boolean) => {
@@ -165,8 +221,10 @@ export function InquiriesAdminClient({
         ) : (
           "All caught up."
         )}{" "}
-        · Messages from the contact page are saved here (and an SMS is sent when
-        Twilio is configured).
+        · Messages from the contact page are saved here. Do not use Gmail Reply
+        on the kitchen alert — it can show as Sent to Yahoo but land in Spam.
+        Type your reply in the box on each message, then{" "}
+        <strong className="text-[var(--text)]">Send to customer</strong>.
       </p>
       {items.length === 0 ? (
         <p className="mt-8 text-[var(--text-muted)]">
@@ -218,7 +276,6 @@ export function InquiriesAdminClient({
           </div>
           <ul className="mt-6 space-y-4">
             {items.map((i) => {
-              const expanded = openId === i.id;
               const isChecked = selected.has(i.id);
               return (
                 <li
@@ -262,7 +319,7 @@ export function InquiriesAdminClient({
                         </span>
                         {" · "}
                         <a
-                          href={`mailto:${encodeURIComponent(i.email)}`}
+                          href={`mailto:${i.email}`}
                           className="text-[var(--primary)] underline-offset-2 hover:underline"
                         >
                           {i.email}
@@ -278,13 +335,6 @@ export function InquiriesAdminClient({
                     </div>
                     <div className="flex w-full min-w-[12rem] shrink-0 flex-col gap-2 sm:w-auto sm:max-w-[min(100%,20rem)]">
                       <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium hover:bg-[var(--gold-light)]"
-                          onClick={() => setOpenId(expanded ? null : i.id)}
-                        >
-                          {expanded ? "Hide" : "View message"}
-                        </button>
                         {!i.isRead ? (
                           <button
                             type="button"
@@ -321,10 +371,57 @@ export function InquiriesAdminClient({
                       </button>
                     </div>
                   </div>
-                  {expanded ? (
-                    <div className="mt-4 space-y-3">
+                  <div className="mt-4 space-y-3">
                       <div className="whitespace-pre-wrap rounded-lg border border-[var(--border)] bg-[var(--bg-section)] p-4 text-sm text-[var(--text)]">
                         {i.message}
+                      </div>
+                      <label className="block text-sm">
+                        <span className="font-semibold">Your reply</span>
+                        <span className="mt-0.5 block text-xs text-[var(--text-muted)]">
+                          Type here, then Send to customer ({i.email}).
+                        </span>
+                        <textarea
+                          className="mt-2 w-full min-h-[120px] rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm"
+                          placeholder="Type your reply…"
+                          value={
+                            replyDrafts[i.id] ??
+                            inquiryReplyDraftBody({
+                              customerName: i.name,
+                              originalMessage: i.message,
+                            })
+                          }
+                          onChange={(e) =>
+                            setReplyDrafts((prev) => ({
+                              ...prev,
+                              [i.id]: e.target.value,
+                            }))
+                          }
+                        />
+                      </label>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={replyBusyId === i.id}
+                          className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+                          onClick={() => {
+                            const text =
+                              replyDrafts[i.id] ??
+                              inquiryReplyDraftBody({
+                                customerName: i.name,
+                                originalMessage: i.message,
+                              });
+                            void sendReply(i, text);
+                          }}
+                        >
+                          {replyBusyId === i.id
+                            ? "Sending…"
+                            : "Send to customer"}
+                        </button>
+                        {replyHint[i.id] ? (
+                          <p className="text-sm font-semibold text-[color:var(--primary)]">
+                            {replyHint[i.id]}
+                          </p>
+                        ) : null}
                       </div>
                       <button
                         type="button"
@@ -341,7 +438,6 @@ export function InquiriesAdminClient({
                         Delete this inquiry
                       </button>
                     </div>
-                  ) : null}
                 </li>
               );
             })}

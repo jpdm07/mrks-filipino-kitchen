@@ -21,6 +21,17 @@ import {
   type NamedNewsletterDraft,
   type NewsletterAutosave,
 } from "@/lib/newsletter-draft-storage";
+import {
+  DEFAULT_NEWSLETTER_MESSAGE,
+  DEFAULT_NEWSLETTER_SUBJECT,
+  DEFAULT_NEWSLETTER_TEMPLATE_ID,
+  NEWSLETTER_TEMPLATES,
+} from "@/lib/newsletter-templates";
+import { AdminPremadeCopyButtons } from "@/components/admin/AdminPremadeCopyButtons";
+import {
+  AdminSubscriberPicker,
+  confirmSubscriberSend,
+} from "@/components/admin/AdminSubscriberPicker";
 
 type SubscriberClientRow = Omit<Subscriber, "createdAt"> & {
   createdAt: string;
@@ -28,9 +39,8 @@ type SubscriberClientRow = Omit<Subscriber, "createdAt"> & {
 
 type MenuPickRow = { id: string; name: string; category: string };
 
-const DEFAULT_SUBJECT = "Update from Mr. K's Filipino Kitchen";
-const DEFAULT_MESSAGE =
-  "We have something delicious to share with you!";
+const DEFAULT_SUBJECT = DEFAULT_NEWSLETTER_SUBJECT;
+const DEFAULT_MESSAGE = DEFAULT_NEWSLETTER_MESSAGE;
 
 function parseItemIdsFromSearchParams(sp: ReturnType<typeof useSearchParams>): string[] {
   const item = sp.get("item")?.trim();
@@ -67,6 +77,12 @@ function Inner({
   const [menuFilter, setMenuFilter] = useState("");
   const [sent, setSent] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [templateId, setTemplateId] = useState<string | null>(
+    DEFAULT_NEWSLETTER_TEMPLATE_ID
+  );
+  const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>(
+    []
+  );
   const [namedDrafts, setNamedDrafts] = useState<NamedNewsletterDraft[]>([]);
   const [autosaveOffer, setAutosaveOffer] = useState<NewsletterAutosave | null>(
     null
@@ -196,6 +212,7 @@ function Inner({
       setSubject(state.subject);
       setMessage(state.message);
       setSelectedItemIds([...state.itemIds]);
+      setTemplateId(null);
     },
     []
   );
@@ -304,12 +321,23 @@ function Inner({
         return;
       }
       setSubs((prev) => prev.filter((s) => s.id !== id));
+      setSelectedRecipientIds((prev) => prev.filter((x) => x !== id));
     } finally {
       setDeletingId(null);
     }
   };
 
-  const sendNewsletter = async () => {
+  const sendNewsletter = async (audience: "selected" | "all") => {
+    if (audience === "selected" && selectedRecipientIds.length === 0) return;
+    if (audience === "all" && subs.length === 0) return;
+    const ok = confirmSubscriberSend({
+      audience,
+      selectedIds: selectedRecipientIds,
+      subscribers: subs,
+      subject,
+    });
+    if (!ok) return;
+
     setSent(null);
     setSending(true);
     try {
@@ -320,6 +348,9 @@ function Inner({
           subject,
           message,
           itemIds: selectedItemIds.length ? selectedItemIds : undefined,
+          audience,
+          subscriberIds:
+            audience === "selected" ? selectedRecipientIds : undefined,
         }),
       });
       const data = (await res.json()) as {
@@ -377,12 +408,27 @@ function Inner({
 
       {showNews ? (
         <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-5">
-          <h2 className="font-bold text-lg">Email subscribers</h2>
+          <h2 className="font-bold text-lg">Custom newsletter</h2>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
-            Write your note, pick menu items to feature (photos and prices in the
-            email), reorder the spotlight, then send. Drafts autosave in{" "}
-            <strong>this browser</strong> only.
+            Pick premade copy, optionally feature menu items, then email selected
+            people first. For same-day pickup stock, use the blast at the top of
+            this page. Drafts autosave in <strong>this browser</strong> only.
           </p>
+
+          <div className="mt-4">
+            <AdminPremadeCopyButtons
+              options={NEWSLETTER_TEMPLATES}
+              activeId={templateId}
+              onSelect={(id) => {
+                const t = NEWSLETTER_TEMPLATES.find((row) => row.id === id);
+                if (!t) return;
+                setTemplateId(id);
+                setSubject(t.subject);
+                setMessage(t.message);
+                setDraftUiHint(null);
+              }}
+            />
+          </div>
 
           {autosaveOffer ? (
             <div
@@ -493,13 +539,17 @@ function Inner({
             <p className="mt-2 text-sm text-[var(--text-muted)]">{draftUiHint}</p>
           ) : null}
 
-          <label className="mt-4 block text-sm font-semibold">
-            Subject
+          <label className="mt-4 block text-sm">
+            <span className="font-semibold">Title</span>
+            <span className="mt-0.5 block text-xs font-normal text-[var(--text-muted)]">
+              Email subject — filled in for you. Edit anytime.
+            </span>
             <input
               className="mt-1 w-full rounded border px-2 py-2"
               value={subject}
               onChange={(e) => {
                 setSubject(e.target.value);
+                setTemplateId(null);
                 setDraftUiHint(null);
               }}
             />
@@ -512,6 +562,7 @@ function Inner({
               value={message}
               onChange={(e) => {
                 setMessage(e.target.value);
+                setTemplateId(null);
                 setDraftUiHint(null);
               }}
             />
@@ -631,18 +682,39 @@ function Inner({
               )}
             </div>
           </div>
-          <button
-            type="button"
-            disabled={sending || subs.length === 0}
-            onClick={sendNewsletter}
-            className="mt-4 rounded bg-[var(--accent)] px-4 py-2 font-bold text-white disabled:opacity-50"
-          >
-            {sending ? "Sending…" : "Send to all subscribers"}
-          </button>
+          <div className="mt-4">
+            <AdminSubscriberPicker
+              subscribers={subs}
+              selectedIds={selectedRecipientIds}
+              onSelectedIdsChange={setSelectedRecipientIds}
+            />
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={sending || selectedRecipientIds.length === 0}
+              onClick={() => void sendNewsletter("selected")}
+              className="rounded bg-[var(--accent)] px-4 py-2 font-bold text-white disabled:opacity-50"
+            >
+              {sending
+                ? "Sending…"
+                : `Send to selected (${selectedRecipientIds.length})`}
+            </button>
+            <button
+              type="button"
+              disabled={sending || subs.length === 0}
+              onClick={() => void sendNewsletter("all")}
+              className="rounded bg-[var(--primary)] px-4 py-2 font-bold text-white disabled:opacity-50"
+            >
+              {sending
+                ? "Sending…"
+                : `Send to everyone (${subs.length})`}
+            </button>
+          </div>
           {sent ? <p className="mt-2 text-sm font-semibold">{sent}</p> : null}
           <p className="mt-3 text-xs text-[var(--text-muted)]">
-            Large lists send one email at a time; if the run stops early on production,
-            check Vercel function logs (time limit) or send in smaller batches later.
+            Test with selected people first. Large lists send one email at a time;
+            if a production run stops early, check Vercel logs.
           </p>
         </div>
       ) : null}

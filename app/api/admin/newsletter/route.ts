@@ -6,6 +6,10 @@ import { sendMail, newsletterHtml } from "@/lib/mailer";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { buildCustomerReplyFooterPlainText } from "@/lib/mail-reply-routing";
 import {
+  parseNewsletterAudience,
+  resolveNewsletterRecipients,
+} from "@/lib/admin-subscriber-recipients";
+import {
   buildNewsletterSpotlightHtml,
   buildNewsletterSpotlightPlainText,
 } from "@/lib/newsletter-spotlight-html";
@@ -36,6 +40,8 @@ export async function POST(req: NextRequest) {
     message?: string;
     itemId?: string;
     itemIds?: string[];
+    audience?: "all" | "selected";
+    subscriberIds?: string[];
   };
   const subject = (body.subject ?? "").trim();
   const message = (body.message ?? "").trim();
@@ -58,7 +64,21 @@ export async function POST(req: NextRequest) {
     itemBlock = buildNewsletterSpotlightHtml(spotlightItems);
   }
 
-  const subs = await prisma.subscriber.findMany();
+  const audience = parseNewsletterAudience(body.audience);
+  if (!audience) {
+    return NextResponse.json(
+      { error: "Choose selected subscribers or the full list." },
+      { status: 400 }
+    );
+  }
+  const recipients = await resolveNewsletterRecipients({
+    audience,
+    subscriberIds: body.subscriberIds,
+  });
+  if (!recipients.ok) {
+    return NextResponse.json({ error: recipients.error }, { status: 400 });
+  }
+
   const base = getPublicSiteOrigin();
   /** Distinct subject per send so Gmail is less likely to stack campaigns in one thread. */
   const mailSubject = `${subject} · ${new Date().toLocaleString("en-US", {
@@ -78,7 +98,7 @@ export async function POST(req: NextRequest) {
   let failed = 0;
   let lastError: string | undefined;
 
-  for (const s of subs) {
+  for (const s of recipients.subscribers) {
     const unsub = `${base}/api/unsubscribe?email=${encodeURIComponent(s.email)}`;
     const html = newsletterHtml({
       message: message.replace(/\n/g, "<br/>"),
@@ -101,8 +121,9 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     sent,
     failed,
-    total: subs.length,
+    total: recipients.subscribers.length,
     featuredCount: spotlightItems.length,
+    audience,
     ...(lastError && failed > 0 ? { lastError } : {}),
   });
 }

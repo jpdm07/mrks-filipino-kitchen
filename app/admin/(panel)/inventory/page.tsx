@@ -31,6 +31,7 @@ export default async function InventoryPage() {
     ReturnType<typeof prisma.pricingSettings.findUnique>
   > = null;
   let qualifyingSameDayCount = 0;
+  let subscribersRaw: { id: string; email: string; name: string | null }[] = [];
   let loadError: string | null = null;
 
   try {
@@ -60,8 +61,13 @@ export default async function InventoryPage() {
           quantityInStock: { gt: 0 },
         },
       }),
+      prisma.subscriber.findMany({
+        orderBy: { createdAt: "desc" },
+        select: { id: true, email: true, name: true },
+      }),
     ]);
-    [inventoryRaw, menuRaw, pricing, qualifyingSameDayCount] = result;
+    [inventoryRaw, menuRaw, pricing, qualifyingSameDayCount, subscribersRaw] =
+      result;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     const isSchema =
@@ -120,6 +126,7 @@ export default async function InventoryPage() {
         initialInventory={initialInventory}
         menuItems={menuItems}
         menuItemsFull={menuItemsFull}
+        initialSubscribers={JSON.parse(JSON.stringify(subscribersRaw))}
         initialScheduling={{
           schedulingBannerForceStateA:
             pricing?.schedulingBannerForceStateA === true,

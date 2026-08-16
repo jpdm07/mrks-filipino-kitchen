@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendCustomerInquiryReceivedEmail } from "@/lib/send-customer-inquiry-email";
 import { sendOwnerInquiryEmail } from "@/lib/send-owner-inquiry-email";
 import { sendOwnerSms } from "@/lib/twilio";
 
@@ -40,6 +41,19 @@ export async function POST(req: NextRequest) {
     });
     if (!mail.ok) {
       console.warn("[inquiries] Owner inquiry email was not delivered:", mail.error);
+    }
+
+    const customerMail = await sendCustomerInquiryReceivedEmail({
+      name,
+      email,
+      subject,
+      message,
+    });
+    if (!customerMail.ok) {
+      console.warn(
+        "[inquiries] Customer inquiry confirmation was not delivered:",
+        customerMail.error
+      );
     }
 
     return NextResponse.json({ success: true });

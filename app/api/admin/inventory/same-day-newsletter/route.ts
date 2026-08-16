@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminSession } from "@/lib/admin-auth";
 import { sendMail } from "@/lib/mailer";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
-import { prisma } from "@/lib/prisma";
+import {
+  parseNewsletterAudience,
+  resolveNewsletterRecipients,
+} from "@/lib/admin-subscriber-recipients";
 import {
   buildSameDaySubscriberEmailDraft,
   composeSameDaySubscriberEmailHtml,
@@ -15,6 +18,9 @@ type Body = {
   action?: "preview" | "send";
   introMessage?: string;
   subject?: string;
+  closingMessage?: string;
+  audience?: "all" | "selected";
+  subscriberIds?: string[];
 };
 
 export async function POST(req: NextRequest) {
@@ -32,7 +38,8 @@ export async function POST(req: NextRequest) {
   const action = body.action === "send" ? "send" : "preview";
   const draft = await buildSameDaySubscriberEmailDraft(
     body.introMessage,
-    body.subject
+    body.subject,
+    body.closingMessage
   );
   if (!draft.ok) {
     return NextResponse.json({ error: draft.error }, { status: 400 });
@@ -42,6 +49,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       subject: draft.subject,
       introMessage: draft.introMessage,
+      closingMessage: draft.closingMessage,
       html: draft.html,
       text: draft.text,
       itemCount: draft.items.length,
@@ -49,6 +57,7 @@ export async function POST(req: NextRequest) {
         inventoryId: item.inventoryId,
         displayName: item.displayName,
         pickupWindowLabel: item.pickupWindowLabel,
+        pickupDateLabel: item.pickupDateLabel,
         availabilityLine: item.availabilityLine,
       })),
       subscriberCount: draft.subscriberCount,
@@ -57,11 +66,20 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  if (draft.subscriberCount === 0) {
+  const audience = parseNewsletterAudience(body.audience);
+  if (!audience) {
     return NextResponse.json(
-      { error: "No subscribers on the list yet." },
+      { error: "Choose selected subscribers or the full list." },
       { status: 400 }
     );
+  }
+
+  const recipients = await resolveNewsletterRecipients({
+    audience,
+    subscriberIds: body.subscriberIds,
+  });
+  if (!recipients.ok) {
+    return NextResponse.json({ error: recipients.error }, { status: 400 });
   }
 
   const base = getPublicSiteOrigin();
@@ -70,12 +88,12 @@ export async function POST(req: NextRequest) {
   let failed = 0;
   let lastError: string | undefined;
 
-  const subs = await prisma.subscriber.findMany();
-  for (const s of subs) {
+  for (const s of recipients.subscribers) {
     const unsub = `${base}/api/unsubscribe?email=${encodeURIComponent(s.email)}`;
     const html = composeSameDaySubscriberEmailHtml({
       introMessage: draft.introMessage,
       items: draft.items,
+      closingMessage: draft.closingMessage,
       unsubscribeUrl: unsub,
     });
     const r = await sendMail({
@@ -94,9 +112,10 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     sent,
     failed,
-    total: subs.length,
+    total: recipients.subscribers.length,
     itemCount: draft.items.length,
     subject: mailSubject,
+    audience,
     ...(lastError && failed > 0 ? { lastError } : {}),
   });
 }

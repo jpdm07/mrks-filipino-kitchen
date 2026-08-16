@@ -17,6 +17,7 @@ import { pickupTimeSlotLabels } from "@/lib/pickup-time-slots";
 import type { MenuItem } from "@prisma/client";
 import { InventoryClient } from "@/components/admin/InventoryClient";
 import { SameDaySubscriberEmailPanel } from "@/components/admin/SameDaySubscriberEmailPanel";
+import type { AdminSubscriberOption } from "@/components/admin/AdminSubscriberPicker";
 
 type DeductionLog = {
   id: number;
@@ -63,6 +64,7 @@ export function InventoryAnnouncementsClient({
   menuItems,
   menuItemsFull,
   initialScheduling,
+  initialSubscribers = [],
 }: {
   initialInventory: InventoryRow[];
   menuItems: { id: string; name: string }[];
@@ -71,6 +73,7 @@ export function InventoryAnnouncementsClient({
     schedulingBannerForceStateA: boolean;
     qualifyingSameDayCount: number;
   };
+  initialSubscribers?: AdminSubscriberOption[];
 }) {
   const slotLabels = useMemo(() => pickupTimeSlotLabels(), []);
   const [items, setItems] = useState(initialInventory);
@@ -485,6 +488,8 @@ export function InventoryAnnouncementsClient({
         </p>
       ) : null}
 
+      <SameDaySubscriberEmailPanel initialSubscribers={initialSubscribers} />
+
       <section className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-5 space-y-4">
         <h2 className="font-bold text-lg text-[color:var(--primary)]">
           Scheduling banner
@@ -512,8 +517,6 @@ export function InventoryAnnouncementsClient({
           </span>
         </label>
       </section>
-
-      <SameDaySubscriberEmailPanel />
 
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">

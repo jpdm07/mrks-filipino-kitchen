@@ -16,10 +16,10 @@ export default async function AdminInquiriesPage() {
         Contact inquiries
       </h1>
       <p className="mt-2 text-sm text-[var(--text-muted)]">
-        Submissions from the public contact / custom inquiry form. Use the
-        checkboxes and <strong className="text-[var(--text)]">Delete selected</strong>,
-        or the red <strong className="text-[var(--text)]">Delete</strong> button on
-        each message, to remove them permanently.
+        Submissions from the public contact / custom inquiry form. Use{" "}
+        <strong className="text-[var(--text)]">Send to customer</strong> from
+        this page. Gmail Reply on the kitchen alert can show as Sent but land in
+        Yahoo Spam.
       </p>
       <InquiriesAdminClient initialInquiries={inquiries} />
     </div>

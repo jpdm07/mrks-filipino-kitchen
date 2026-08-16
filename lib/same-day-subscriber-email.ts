@@ -10,12 +10,14 @@ import {
   getTodayInPickupTimezoneYMD,
 } from "@/lib/pickup-lead-time";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
-import {
-  applySameDayOrderLeadFilter,
-  bannerInventoryRowsForSiteBanner,
-} from "@/lib/same-day-pickup";
+import { bannerInventoryRowsForSiteBanner } from "@/lib/same-day-pickup";
 import { sortPickupSlotLabels } from "@/lib/pickup-time-slots";
-import { DEFAULT_SAME_DAY_INTRO } from "@/lib/same-day-subscriber-email-copy";
+import {
+  DEFAULT_SAME_DAY_CLOSING,
+  DEFAULT_SAME_DAY_INTRO,
+  fillSameDayDateToken,
+  suggestedSameDayTitle,
+} from "@/lib/same-day-subscriber-email-copy";
 
 export type SameDayEmailItem = {
   inventoryId: number;
@@ -61,10 +63,11 @@ function formatPickupWindow(labels: string[]): string {
   return `${sorted[0]} – ${sorted[sorted.length - 1]}`;
 }
 
-export function defaultSameDaySubject(todayYmd: string): string {
-  const long = formatPickupYmdLong(todayYmd);
-  const short = long.replace(/,\s*\d{4}$/, "");
-  return `Same-day pickup today (${short}) — Mr. K's Filipino Kitchen`;
+export function defaultSameDaySubject(
+  todayYmd: string,
+  itemNames: string[] = []
+): string {
+  return suggestedSameDayTitle(todayYmd, itemNames);
 }
 
 export async function loadSameDaySubscriberEmailItems(): Promise<
@@ -85,19 +88,25 @@ export async function loadSameDaySubscriberEmailItems(): Promise<
     return {
       ok: false,
       error:
-        "No same-day banner items with open pickup slots for today. Turn on Show banner, set stock, and open today's pickup window on an item card below.",
+        "No same-day items to announce. Mark an inventory row available, turn on Show banner, and set stock above zero.",
     };
   }
 
   const invIds = qualifying.map((r) => r.id);
-  const todaySlots = await prisma.inventoryPickupSlot.findMany({
+  const slotRows = await prisma.inventoryPickupSlot.findMany({
     where: {
       inventoryItemId: { in: invIds },
-      dateYmd: today,
+      dateYmd: { gte: today },
       closed: false,
     },
+    orderBy: [{ dateYmd: "asc" }, { id: "asc" }],
   });
-  const slotByInv = new Map(todaySlots.map((s) => [s.inventoryItemId, s]));
+  const slotByInv = new Map<number, (typeof slotRows)[number]>();
+  for (const slot of slotRows) {
+    if (!slotByInv.has(slot.inventoryItemId)) {
+      slotByInv.set(slot.inventoryItemId, slot);
+    }
+  }
 
   const menuIds = [
     ...new Set(
@@ -112,15 +121,17 @@ export async function loadSameDaySubscriberEmailItems(): Promise<
   const menuById = new Map(menuRows.map((m) => [m.id, m]));
 
   const base = getPublicSiteOrigin();
-  const pickupDateLabel = formatPickupYmdLong(today);
   const items: SameDayEmailItem[] = [];
 
   for (const inv of qualifying) {
     const slot = slotByInv.get(inv.id);
-    if (!slot) continue;
-    const allLabels = parseSlotLabelsJson(slot.slotLabelsJson);
-    const available = applySameDayOrderLeadFilter(allLabels, today);
-    if (!available.length) continue;
+    const labels = slot ? parseSlotLabelsJson(slot.slotLabelsJson) : [];
+    const pickupDateLabel = slot
+      ? formatPickupYmdLong(slot.dateYmd)
+      : "Available now";
+    const pickupWindowLabel = labels.length
+      ? formatPickupWindow(labels)
+      : "See the website for pickup times";
 
     const menu = inv.menuItemId ? menuById.get(inv.menuItemId) : undefined;
     const displayName = menu?.name ?? inv.itemName;
@@ -133,16 +144,8 @@ export async function loadSameDaySubscriberEmailItems(): Promise<
       menuDescription: menu?.description ?? null,
       priceLabel: menu ? menuPriceLabel(menu) : null,
       pickupDateLabel,
-      pickupWindowLabel: formatPickupWindow(available),
+      pickupWindowLabel,
     });
-  }
-
-  if (!items.length) {
-    return {
-      ok: false,
-      error:
-        "Pickup windows for today have closed or are not yet bookable (30-minute lead time after you place an order).",
-    };
   }
 
   return { ok: true, todayYmd: today, items };
@@ -178,6 +181,7 @@ export function buildSameDaySubscriberEmailPlainText(params: {
   introMessage: string;
   items: SameDayEmailItem[];
   orderUrl: string;
+  closingMessage?: string;
 }): string {
   const lines = [
     params.introMessage,
@@ -195,6 +199,9 @@ export function buildSameDaySubscriberEmailPlainText(params: {
     lines.push("");
   }
   lines.push(`Order online: ${params.orderUrl}`);
+  if (params.closingMessage?.trim()) {
+    lines.push("", params.closingMessage.trim());
+  }
   return lines.join("\n") + buildCustomerReplyFooterPlainText();
 }
 
@@ -202,13 +209,14 @@ export function composeSameDaySubscriberEmailHtml(params: {
   introMessage: string;
   items: SameDayEmailItem[];
   unsubscribeUrl: string;
+  closingMessage?: string;
 }): string {
   const introHtml = `<p style="font-size:17px;line-height:1.65;margin:0 0 28px;">${escapeHtml(params.introMessage).replace(/\n/g, "<br/>")}</p>`;
   const itemBlock = introHtml + buildSameDayPickupItemsHtml(params.items);
-  const closing =
-    "<p style=\"margin-top:8px;font-size:15px;line-height:1.6;\">We look forward to serving you today!</p>";
+  const closing = (params.closingMessage ?? DEFAULT_SAME_DAY_CLOSING).trim();
+  const closingHtml = `<p style="margin-top:8px;font-size:15px;line-height:1.6;">${escapeHtml(closing).replace(/\n/g, "<br/>")}</p>`;
   return newsletterHtml({
-    message: closing,
+    message: closingHtml,
     itemBlock,
     unsubscribeUrl: params.unsubscribeUrl,
   });
@@ -216,7 +224,8 @@ export function composeSameDaySubscriberEmailHtml(params: {
 
 export async function buildSameDaySubscriberEmailDraft(
   customIntro?: string,
-  customSubject?: string
+  customSubject?: string,
+  customClosing?: string
 ): Promise<
   | {
       ok: true;
@@ -225,6 +234,7 @@ export async function buildSameDaySubscriberEmailDraft(
       subscriberCount: number;
       subject: string;
       introMessage: string;
+      closingMessage: string;
       html: string;
       text: string;
       orderUrl: string;
@@ -234,26 +244,44 @@ export async function buildSameDaySubscriberEmailDraft(
   const loaded = await loadSameDaySubscriberEmailItems();
   if (!loaded.ok) return loaded;
 
-  const introMessage = (customIntro ?? DEFAULT_SAME_DAY_INTRO).trim();
+  const introMessage = fillSameDayDateToken(
+    (customIntro ?? DEFAULT_SAME_DAY_INTRO).trim(),
+    loaded.todayYmd
+  );
   if (!introMessage) {
     return { ok: false, error: "Intro message is required." };
   }
 
+  const closingMessage = fillSameDayDateToken(
+    (customClosing ?? DEFAULT_SAME_DAY_CLOSING).trim(),
+    loaded.todayYmd
+  );
+  if (!closingMessage) {
+    return { ok: false, error: "Closing message is required." };
+  }
+
   const subscriberCount = await prisma.subscriber.count();
-  const subject = (
-    customSubject?.trim() || defaultSameDaySubject(loaded.todayYmd)
-  ).trim();
+  const suggested = suggestedSameDayTitle(
+    loaded.todayYmd,
+    loaded.items.map((item) => item.displayName)
+  );
+  const subject = fillSameDayDateToken(
+    (customSubject?.trim() || suggested).trim(),
+    loaded.todayYmd
+  );
   const base = getPublicSiteOrigin();
-  const orderUrl = `${base}/order`;
+  const orderUrl = `${base}/menu`;
   const html = composeSameDaySubscriberEmailHtml({
     introMessage,
     items: loaded.items,
+    closingMessage,
     unsubscribeUrl: `${base}/api/unsubscribe?email=preview%40example.com`,
   });
   const text = buildSameDaySubscriberEmailPlainText({
     introMessage,
     items: loaded.items,
     orderUrl,
+    closingMessage,
   });
 
   return {
@@ -263,6 +291,7 @@ export async function buildSameDaySubscriberEmailDraft(
     subscriberCount,
     subject,
     introMessage,
+    closingMessage,
     html,
     text,
     orderUrl,

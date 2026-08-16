@@ -33,7 +33,9 @@ function FormInner() {
     });
     const data = await res.json();
     if (res.ok) {
-      setMsg("Message sent! We will get back to you soon.");
+      setMsg(
+        "Message sent. We’ll email you a reply — if it isn’t in your inbox, please check Spam or Junk."
+      );
       setMessage("");
     } else setMsg(data.error ?? "Could not send.");
   };
