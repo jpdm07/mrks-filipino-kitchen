@@ -3,11 +3,15 @@ import {
   isLumpiaPiecesDeductionMode,
   normalizeInventoryDeductionMode,
 } from "@/lib/inventory-deduction-modes";
-import { resolvedInventoryBannerMessage } from "@/lib/inventory-banner-copy";
+import {
+  formatStockUnitPhrase,
+  resolvedInventoryBannerMessage,
+} from "@/lib/inventory-banner-copy";
 import { normalizeInventoryLineCookFilter } from "@/lib/inventory-line-cook-filter";
 import {
   aggregateLumpiaStockFromRows,
   emptyLumpiaStock,
+  formatLumpiaCustomerAvailability,
   formatLumpiaPieceCount,
   inventoryQuantityAsPieces,
   lumpiaFlavorBannerMessage,
@@ -19,7 +23,35 @@ import {
 export type SiteBannerEntry = {
   key: string;
   message: string;
+  title?: string;
+  availability?: string;
+  styleNote?: string;
 };
+
+function cookStyleNote(
+  cookFilter: "any" | "cooked" | "frozen"
+): string {
+  if (cookFilter === "frozen") return "Frozen";
+  if (cookFilter === "cooked") return "Cooked";
+  return "Cooked or frozen";
+}
+
+function inventoryRowEntry(row: InventoryItem): SiteBannerEntry {
+  return {
+    key: `inv-${row.id}`,
+    message: resolvedInventoryBannerMessage({
+      itemName: row.itemName,
+      quantityInStock: row.quantityInStock,
+      unitLabel: row.unitLabel,
+      bannerMessage: row.bannerMessage,
+    }),
+    title: row.itemName.trim(),
+    availability: formatStockUnitPhrase(
+      row.quantityInStock,
+      row.unitLabel.trim() || "units"
+    ),
+  };
+}
 
 const PROTEIN_LABEL: Record<LumpiaProtein, string> = {
   beef: "Beef",
@@ -80,6 +112,9 @@ export function buildLumpiaBannerEntries(
     );
     const cookFilter =
       filters.size === 1 ? [...filters][0]! : "any";
+    const avail =
+      formatLumpiaCustomerAvailability(pieces) ||
+      formatLumpiaPieceCount(pieces);
     entries.push({
       key: `lumpia-${protein}`,
       message: lumpiaFlavorBannerMessage(
@@ -87,19 +122,14 @@ export function buildLumpiaBannerEntries(
         pieces,
         cookFilter
       ),
+      title: `Lumpia — ${PROTEIN_LABEL[protein]}`,
+      availability: avail,
+      styleNote: cookStyleNote(cookFilter),
     });
   }
   for (const row of lumpiaRows) {
     if (covered.has(row.id)) continue;
-    entries.push({
-      key: `inv-${row.id}`,
-      message: resolvedInventoryBannerMessage({
-        itemName: row.itemName,
-        quantityInStock: row.quantityInStock,
-        unitLabel: row.unitLabel,
-        bannerMessage: row.bannerMessage,
-      }),
-    });
+    entries.push(inventoryRowEntry(row));
   }
   return entries;
 }
@@ -113,15 +143,7 @@ export function buildSiteBannerEntries(
 
   return [
     ...buildLumpiaBannerEntries(lumpiaRows),
-    ...otherRows.map((inv) => ({
-      key: `inv-${inv.id}`,
-      message: resolvedInventoryBannerMessage({
-        itemName: inv.itemName,
-        quantityInStock: inv.quantityInStock,
-        unitLabel: inv.unitLabel,
-        bannerMessage: inv.bannerMessage,
-      }),
-    })),
+    ...otherRows.map((inv) => inventoryRowEntry(inv)),
   ];
 }
 
