@@ -7,9 +7,33 @@ import { getPublicSiteOrigin } from "@/lib/public-site-url";
  */
 const PHOTO_PATH_ALIASES: Record<string, string> = {
   "/images/lumpia.png": "/images/lumpia.jpg",
+  "/images/lumpia.jpeg": "/images/lumpia.jpg",
 };
 
-const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+export function allRequiredCatalogPhotoPaths(): string[] {
+  const set = new Set<string>();
+  for (const v of Object.values(CATALOG_PHOTOS)) {
+    if (typeof v === "string" && v.startsWith("/images/")) {
+      set.add(applyPhotoAliases(v));
+    }
+  }
+  for (const row of MENU_CATALOG) {
+    if (row.photoUrl?.startsWith("/images/")) {
+      set.add(applyPhotoAliases(row.photoUrl));
+    }
+    const extras =
+      "photoGalleryUrls" in row && Array.isArray(row.photoGalleryUrls)
+        ? row.photoGalleryUrls
+        : [];
+    for (const extra of extras) {
+      if (typeof extra === "string" && extra.startsWith("/images/")) {
+        set.add(applyPhotoAliases(extra));
+      }
+    }
+  }
+  for (const dest of Object.values(PHOTO_PATH_ALIASES)) set.add(dest);
+  return [...set].sort();
+}
 
 function applyPhotoAliases(path: string): string {
   const bare = path.split("?")[0] ?? path;
@@ -86,33 +110,16 @@ export function resolvePublicMenuPhotoSrc(
   if (fromCatalog) return fromCatalog;
 
   const path = sitePathFromPhotoUrl(photo);
-  if (!path) {
-    const raw = photo?.trim() ?? "";
-    if (/^https:\/\//i.test(raw)) return raw;
+  if (!path || path.startsWith("/uploads/") || !path.startsWith("/images/")) {
     return null;
   }
-  if (path.startsWith("/uploads/")) return null;
   return applyPhotoAliases(path);
 }
 
-function rewriteHostedSitePath(url: URL, origin: string): string | null {
-  const host = url.hostname.toLowerCase();
-  const path = applyPhotoAliases(url.pathname);
-  if (path.startsWith("/uploads/")) return null;
-  if (
-    LOCAL_HOSTS.has(host) ||
-    host === "mrkskitchen.com" ||
-    host === "www.mrkskitchen.com" ||
-    host.endsWith(".vercel.app")
-  ) {
-    return `${origin}${path}${url.search}${url.search ? "&" : "?"}v=2`;
-  }
-  return null;
-}
-
 /**
- * Absolute https URL for HTML emails. Email clients cannot load `/images/…`
- * relative paths, and they 404 on deleted files still stored in Prisma.
+ * Absolute https URL for HTML emails (admin preview only).
+ * Sent mail inlines catalog files as cid: attachments — never a URL that can 404.
+ * Only catalog photos are used; stale DB /uploads paths are ignored.
  */
 export function resolveEmailMenuPhotoUrl(opts: {
   photoUrl?: string | null;
@@ -124,29 +131,8 @@ export function resolveEmailMenuPhotoUrl(opts: {
   const catalogPath =
     catalogPhotoPathForMenuItemId(opts.menuItemId) ??
     catalogPhotoPathForName(opts.displayName);
-  if (catalogPath) {
-    const path = catalogPath.startsWith("http")
-      ? catalogPath
-      : `${origin}${catalogPath}`;
-    return `${path}${path.includes("?") ? "&" : "?"}v=2`;
+  if (!catalogPath || catalogPath.startsWith("http")) {
+    return catalogPath?.startsWith("http") ? catalogPath : null;
   }
-
-  const raw = opts.photoUrl?.trim() ?? "";
-  if (!raw || /^(blob:|data:)/i.test(raw)) return null;
-
-  if (/^https?:\/\//i.test(raw) || raw.startsWith("//")) {
-    try {
-      const u = new URL(raw.startsWith("//") ? `https:${raw}` : raw);
-      const rewritten = rewriteHostedSitePath(u, origin);
-      if (rewritten) return rewritten;
-      if (u.protocol === "https:") return raw;
-      return null;
-    } catch {
-      return null;
-    }
-  }
-
-  const path = sitePathFromPhotoUrl(raw);
-  if (!path || path.startsWith("/uploads/")) return null;
-  return `${origin}${applyPhotoAliases(path)}?v=2`;
+  return `${origin}${catalogPath}?v=2`;
 }

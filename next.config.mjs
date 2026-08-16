@@ -39,6 +39,10 @@ const nextConfig = {
   outputFileTracingIncludes: {
     "/api/admin/inventory/same-day-newsletter": ["./public/images/**"],
     "/api/admin/newsletter": ["./public/images/**"],
+    "/app/api/admin/inventory/same-day-newsletter/route": [
+      "./public/images/**",
+    ],
+    "/app/api/admin/newsletter/route": ["./public/images/**"],
   },
 };
 

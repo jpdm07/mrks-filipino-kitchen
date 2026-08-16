@@ -32,7 +32,6 @@ export function MenuManagerClient({
 }) {
   const [items, setItems] = useState(initialItems);
   const [sentItemId, setSentItemId] = useState<string | null>(null);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -92,31 +91,6 @@ export function MenuManagerClient({
     setItems((p) => p.filter((x) => x.id !== id));
   };
 
-  const uploadMenuPhoto = async (fileList: FileList | null) => {
-    const file = fileList?.[0];
-    if (!file) return;
-    setUploadingPhoto(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/admin/menu-photo", {
-        method: "POST",
-        body: fd,
-      });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (!res.ok) {
-        throw new Error(data.error ?? "Upload failed");
-      }
-      if (data.url) {
-        setForm((p) => ({ ...p, photoUrl: data.url }));
-      }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setUploadingPhoto(false);
-    }
-  };
-
   return (
     <div className="mt-8 grid gap-10 lg:grid-cols-2">
       <form
@@ -164,23 +138,13 @@ export function MenuManagerClient({
             setForm({ ...form, basePrice: parseFloat(e.target.value) || 0 })
           }
         />
-        <label className="block text-sm font-semibold">Photo</label>
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          disabled={uploadingPhoto}
-          className="w-full text-sm file:mr-3 file:rounded file:border file:bg-[var(--bg-section)] file:px-2 file:py-1"
-          onChange={(e) => {
-            void uploadMenuPhoto(e.target.files).finally(() => {
-              e.target.value = "";
-            });
-          }}
-        />
+        <label className="block text-sm font-semibold">Photo path</label>
         <p className="text-xs text-[var(--text-muted)]">
-          {uploadingPhoto ? "Uploading…" : "JPG, PNG, or WebP — max 5MB. Saved under /uploads/menu."}
+          Use a file in the site catalog so it stays in git and never 404s after
+          a deploy (example: /images/lumpia.jpg).
         </p>
         <input
-          placeholder="Or paste image URL (optional)"
+          placeholder="/images/lumpia.jpg"
           className="w-full rounded border px-2 py-2"
           value={form.photoUrl}
           onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}

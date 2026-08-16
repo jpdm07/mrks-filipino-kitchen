@@ -147,7 +147,7 @@ export function buildSameDayPickupItemsHtml(items: SameDayEmailItem[]): string {
   return items
     .map((item) => {
       const img = item.photoUrlAbsolute
-        ? `<img src="${escapeHtml(item.photoUrlAbsolute)}" alt="${escapeHtml(item.displayName)}" width="560" height="auto" border="0" style="max-width:560px;width:100%;height:auto;border-radius:12px 12px 0 0;display:block;margin:0 auto;border:0;outline:none;text-decoration:none;"/>`
+        ? `<img data-mrk-photo="${item.inventoryId}" src="${escapeHtml(item.photoUrlAbsolute)}" alt="${escapeHtml(item.displayName)}" width="560" border="0" style="max-width:560px;width:100%;height:auto;border-radius:12px 12px 0 0;display:block;margin:0 auto;border:0;outline:none;text-decoration:none;"/>`
         : "";
       const desc = item.menuDescription
         ? `<p style="margin:0 0 12px;font-size:15px;line-height:1.5;color:#444;">${escapeHtml(item.menuDescription)}</p>`

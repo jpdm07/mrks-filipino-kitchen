@@ -27,7 +27,7 @@ export function buildNewsletterSpotlightHtml(items: MenuItem[]): string {
         displayName: item.name,
       });
       const img = photo
-        ? `<img src="${escapeHtml(photo)}" alt="${escapeHtml(item.name)}" width="100%" style="max-width:560px;border-radius:12px;display:block"/>`
+        ? `<img data-mrk-photo="${escapeHtml(item.id)}" src="${escapeHtml(photo)}" alt="${escapeHtml(item.name)}" width="560" border="0" style="max-width:560px;width:100%;height:auto;border-radius:12px;display:block;border:0;outline:none;text-decoration:none;"/>`
         : "";
       const soldNote = item.soldOut
         ? `<p style="margin:8px 0 0;font-size:14px;color:#92400e;">Temporarily sold out — you can still browse the rest of the menu.</p>`

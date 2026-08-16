@@ -1,45 +1,20 @@
-import { randomUUID } from "crypto";
-import { mkdir, writeFile } from "fs/promises";
-import { join } from "path";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { isAdminSession } from "@/lib/admin-auth";
 
-const MAX_BYTES = 5 * 1024 * 1024;
-
-export async function POST(req: NextRequest) {
+/**
+ * Vercel’s filesystem is ephemeral — files written to public/uploads vanish
+ * on the next deploy and break the menu and emails. Kitchen photos must live
+ * in git at public/images/ and in MENU_CATALOG.
+ */
+export async function POST() {
   if (!(await isAdminSession())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const form = await req.formData();
-  const file = form.get("file");
-  if (!file || !(file instanceof Blob)) {
-    return NextResponse.json({ error: "file required" }, { status: 400 });
-  }
-  if (file.size > MAX_BYTES) {
-    return NextResponse.json(
-      { error: "Image must be 5MB or smaller." },
-      { status: 400 }
-    );
-  }
-  const mime = file.type || "";
-  const ext =
-    mime === "image/png"
-      ? "png"
-      : mime === "image/jpeg" || mime === "image/jpg"
-        ? "jpg"
-        : mime === "image/webp"
-          ? "webp"
-          : "";
-  if (!ext) {
-    return NextResponse.json(
-      { error: "Use a JPG, PNG, or WebP image." },
-      { status: 400 }
-    );
-  }
-  const buf = Buffer.from(await file.arrayBuffer());
-  const name = `${Date.now()}-${randomUUID().slice(0, 8)}.${ext}`;
-  const dir = join(process.cwd(), "public", "uploads", "menu");
-  await mkdir(dir, { recursive: true });
-  await writeFile(join(dir, name), buf);
-  return NextResponse.json({ url: `/uploads/menu/${name}` });
+  return NextResponse.json(
+    {
+      error:
+        "Menu photos have to be files in the site (public/images) so they stay in git and never 404 after a deploy. Uploading here would vanish on Vercel. Use the catalog path such as /images/lumpia.jpg.",
+    },
+    { status: 400 }
+  );
 }

@@ -1,5 +1,6 @@
 import { readFile } from "fs/promises";
 import { basename, join, normalize, sep } from "path";
+import { bundledMenuImage } from "@/lib/bundled-menu-images";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { sitePathFromPhotoUrl } from "@/lib/menu-photo-url";
 
@@ -57,13 +58,21 @@ export async function loadPublicMenuImageForEmail(
   const sitePath = sitePathFromPhotoUrl(photoUrl);
   if (!sitePath?.startsWith("/images/")) return null;
   const content =
-    (await readDiskImage(sitePath)) ?? (await fetchPublicImage(sitePath));
+    bundledMenuImage(sitePath) ??
+    (await readDiskImage(sitePath)) ??
+    (await fetchPublicImage(sitePath));
   if (!content?.length) return null;
   return {
     filename: basename(sitePath),
     content,
     contentType: mimeFromPath(sitePath),
   };
+}
+
+function stripUninlinedFoodPhotos(html: string): string {
+  return html.replace(/<img\b[^>]*\bdata-mrk-photo="[^"]+"[^>]*>/gi, (tag) =>
+    /src=["']cid:/i.test(tag) ? tag : ""
+  );
 }
 
 /** Load menu photos once, then swap hosted URLs for cid: on each recipient’s HTML. */
@@ -97,7 +106,7 @@ export async function prepareInlineMenuPhotos(
     apply(html: string) {
       let out = html;
       for (const pair of pairs) out = out.split(pair.from).join(pair.to);
-      return out;
+      return stripUninlinedFoodPhotos(out);
     },
   };
 }

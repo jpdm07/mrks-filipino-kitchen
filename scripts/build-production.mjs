@@ -139,6 +139,9 @@ if (
 console.log("\n========== [build-production] prisma generate ==========\n");
 run("prisma generate", "node", ["scripts/prisma-generate.mjs"]);
 
+console.log("\n========== [build-production] catalog photos ==========\n");
+run("catalog photos", "npx", ["tsx", "scripts/assert-catalog-photos.ts"]);
+
 console.log("\n========== [build-production] next build ==========\n");
 run("next build", "npx", ["next", "build"]);
 
