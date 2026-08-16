@@ -37,64 +37,64 @@ export function todayYmdPickupTz(now: Date = new Date()): string {
 }
 
 /** Ready-to-send subject line. Pass in-stock item names when you have them. */
-export function suggestedSameDayTitle(
-  todayYmd: string,
-  itemNames: string[] = []
-): string {
-  const date = formatSameDayEmailDate(todayYmd);
+export function suggestedSameDayTitle(itemNames: string[] = []): string {
   const names = [
     ...new Set(itemNames.map((n) => n.trim()).filter(Boolean)),
   ];
   if (names.length === 1) {
-    return `${names[0]} is ready for same-day pickup (${date}) — Mr. K's Filipino Kitchen`;
+    return `${names[0]} is in stock for same-day pickup (limited quantity) — Mr. K's Filipino Kitchen`;
   }
   if (names.length === 2) {
-    return `${names[0]} & ${names[1]} — same-day pickup ${date} — Mr. K's Filipino Kitchen`;
+    return `${names[0]} & ${names[1]} in stock for same-day pickup (limited quantity) — Mr. K's Filipino Kitchen`;
   }
   if (names.length > 2) {
-    return `Same-day pickup ${date}: ${names[0]}, ${names[1]} & more — Mr. K's Filipino Kitchen`;
+    return `${names[0]}, ${names[1]} & more in stock for same-day pickup (limited quantity) — Mr. K's Filipino Kitchen`;
   }
-  return `Same-day pickup is available ${date} — Mr. K's Filipino Kitchen`;
+  return `Same-day pickup items are in stock (limited quantity) — Mr. K's Filipino Kitchen`;
 }
 
 export const SAME_DAY_EMAIL_TEMPLATES: SameDayEmailTemplate[] = [
   {
     id: "ready-today",
-    label: "Ready for pickup today",
-    blurb: "Warm, straightforward — use this most days.",
-    subject: "Same-day pickup is available today ({date}) — Mr. K's Filipino Kitchen",
+    label: "In stock now",
+    blurb: "What’s available for same-day pickup — use this most days.",
+    subject:
+      "Same-day pickup items are in stock (limited quantity) — Mr. K's Filipino Kitchen",
     intro:
-      "Hi — we have same-day pickup available today at Mr. K's Filipino Kitchen in Cypress. The items below are in stock now. Order on our website, choose your pickup time at checkout, and we'll have it ready when you arrive.",
+      "A quick update from Mr. K's Filipino Kitchen: the items below are in stock for same-day pickup. Quantities are limited. Order on the website if you'd like some — you'll choose your pickup time at checkout.",
     closing:
-      "Thank you for supporting our kitchen. See you at pickup.\n\nMr. K's Filipino Kitchen\nCypress, TX",
+      "Thank you for staying with us.\n\nMr. K's Filipino Kitchen\nCypress, TX",
   },
   {
     id: "limited",
-    label: "Limited quantity",
-    blurb: "Honest and calm when stock is low.",
-    subject: "A few same-day trays are ready — Mr. K's Filipino Kitchen",
+    label: "Going fast",
+    blurb: "When you want to stress that stock won’t last.",
+    subject:
+      "Limited same-day pickup stock — Mr. K's Filipino Kitchen",
     intro:
-      "We have a limited amount ready for same-day pickup today at Mr. K's in Cypress. If you'd like an order, please place it online soon — once these trays are spoken for, that window closes. Pickup times are listed with each item below.",
+      "We have a limited amount in stock for same-day pickup at Mr. K's Filipino Kitchen. The items below are available now. If you'd like an order, please place it on the website soon — once it's spoken for, it's gone.",
     closing:
       "Questions? Call or text 979-703-3827.\n\nSalamat,\nMr. K's Filipino Kitchen",
   },
   {
     id: "after-work",
-    label: "After-work pickup",
-    blurb: "For evening windows without sounding salesy.",
-    subject: "Same-day pickup this evening — Mr. K's Filipino Kitchen",
+    label: "After-work reminder",
+    blurb: "For people who might want dinner without cooking.",
+    subject:
+      "Same-day pickup is in stock (limited quantity) — Mr. K's Filipino Kitchen",
     intro:
-      "If you need dinner without the cooking tonight, same-day pickup is available at Mr. K's Filipino Kitchen. Place your order online and choose a pickup time that works after work. Details for what's in stock are below.",
+      "If you need dinner without the cooking, we have same-day pickup items in stock now — limited quantity. Order on the website and choose a pickup time at checkout.",
     closing:
       "We look forward to seeing you at pickup.\n\nMr. K's Filipino Kitchen · Cypress, TX\n979-703-3827",
   },
   {
     id: "family",
-    label: "For the family or a gathering",
-    blurb: "Sharing trays, still pickup-only.",
-    subject: "Same-day Filipino favorites, ready for pickup — Mr. K's",
+    label: "For sharing",
+    blurb: "Household or a small gathering, pickup only.",
+    subject:
+      "Same-day Filipino favorites in stock (limited quantity) — Mr. K's",
     intro:
-      "Same-day pickup is open today at Mr. K's Filipino Kitchen. The items below are in stock now — order online for the household or a small gathering, then choose your pickup window at checkout. This is pickup only at our Cypress kitchen.",
+      "Same-day pickup items are in stock at Mr. K's Filipino Kitchen, in limited quantities. Order online for the household or a small gathering. Pickup time is chosen at checkout — this is pickup only at our Cypress kitchen.",
     closing:
       "Thank you for letting us cook for you.\n\nMr. K's Filipino Kitchen",
   },
@@ -102,9 +102,10 @@ export const SAME_DAY_EMAIL_TEMPLATES: SameDayEmailTemplate[] = [
     id: "notice",
     label: "Short kitchen notice",
     blurb: "Plain and professional — no extra pitch.",
-    subject: "Same-day pickup notice — Mr. K's Filipino Kitchen (Cypress, TX)",
+    subject:
+      "Same-day pickup stock update — Mr. K's Filipino Kitchen",
     intro:
-      "This is a short notice that same-day pickup inventory is available today. Item details and pickup times are listed below. You can order at mrkskitchen.com and select your time at checkout.",
+      "This is a short notice that we have items in stock for same-day pickup, in limited quantities. Details are below. Order at mrkskitchen.com when you're ready.",
     closing:
       "Mr. K's Filipino Kitchen\nCypress, TX\n979-703-3827",
   },

@@ -63,11 +63,8 @@ function formatPickupWindow(labels: string[]): string {
   return `${sorted[0]} – ${sorted[sorted.length - 1]}`;
 }
 
-export function defaultSameDaySubject(
-  todayYmd: string,
-  itemNames: string[] = []
-): string {
-  return suggestedSameDayTitle(todayYmd, itemNames);
+export function defaultSameDaySubject(itemNames: string[] = []): string {
+  return suggestedSameDayTitle(itemNames);
 }
 
 export async function loadSameDaySubscriberEmailItems(): Promise<
@@ -170,7 +167,7 @@ ${img}
 ${desc}
 ${price}
 <p style="margin:0 0 8px;font-size:15px;font-weight:600;color:#1A1A1A;">${escapeHtml(item.availabilityLine)}</p>
-<p style="margin:0;font-size:14px;color:#444;"><strong>Pickup:</strong> ${escapeHtml(item.pickupDateLabel)} · ${escapeHtml(item.pickupWindowLabel)}</p>
+<p style="margin:0;font-size:14px;color:#444;">Same-day pickup · limited quantity</p>
 </div>
 </div>`;
     })
@@ -186,15 +183,13 @@ export function buildSameDaySubscriberEmailPlainText(params: {
   const lines = [
     params.introMessage,
     "",
-    "Available for same-day pickup today:",
+    "In stock for same-day pickup (limited quantity):",
     "",
   ];
   for (const item of params.items) {
     lines.push(item.displayName);
     lines.push(`  ${item.availabilityLine}`);
-    lines.push(
-      `  Pickup: ${item.pickupDateLabel} · ${item.pickupWindowLabel}`
-    );
+    lines.push(`  Same-day pickup · limited quantity`);
     if (item.priceLabel) lines.push(`  From ${item.priceLabel}`);
     lines.push("");
   }
@@ -262,7 +257,6 @@ export async function buildSameDaySubscriberEmailDraft(
 
   const subscriberCount = await prisma.subscriber.count();
   const suggested = suggestedSameDayTitle(
-    loaded.todayYmd,
     loaded.items.map((item) => item.displayName)
   );
   const subject = fillSameDayDateToken(
@@ -296,14 +290,4 @@ export async function buildSameDaySubscriberEmailDraft(
     text,
     orderUrl,
   };
-}
-
-export function sameDayMailSubjectWithTimestamp(subject: string): string {
-  return `${subject} · ${new Date().toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  })}`;
 }

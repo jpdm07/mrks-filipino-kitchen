@@ -9,7 +9,6 @@ import {
 import {
   buildSameDaySubscriberEmailDraft,
   composeSameDaySubscriberEmailHtml,
-  sameDayMailSubjectWithTimestamp,
 } from "@/lib/same-day-subscriber-email";
 
 export const maxDuration = 60;
@@ -83,7 +82,7 @@ export async function POST(req: NextRequest) {
   }
 
   const base = getPublicSiteOrigin();
-  const mailSubject = sameDayMailSubjectWithTimestamp(draft.subject);
+  const mailSubject = draft.subject;
   let sent = 0;
   let failed = 0;
   let lastError: string | undefined;

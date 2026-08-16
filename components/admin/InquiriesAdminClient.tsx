@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ADMIN_POLL_INTERVAL_MS } from "@/lib/admin-poll-interval";
-import { inquiryReplyDraftBody } from "@/lib/customer-mailto";
+import { inquiryAdminReplyDraftBody } from "@/lib/customer-mailto";
 import type { Inquiry } from "@prisma/client";
 import { Trash2 } from "lucide-react";
 
@@ -131,11 +131,7 @@ export function InquiriesAdminClient({
   const sendReply = async (row: InquiryRow, rawMessage?: string) => {
     const message = (
       rawMessage ??
-      replyDrafts[row.id] ??
-      inquiryReplyDraftBody({
-        customerName: row.name,
-        originalMessage: row.message,
-      })
+      replyDrafts[row.id] ?? inquiryAdminReplyDraftBody()
     ).trim();
     if (!message) {
       setReplyHint((prev) => ({
@@ -378,17 +374,14 @@ export function InquiriesAdminClient({
                       <label className="block text-sm">
                         <span className="font-semibold">Your reply</span>
                         <span className="mt-0.5 block text-xs text-[var(--text-muted)]">
-                          Type here, then Send to customer ({i.email}).
+                          Type here, then Send to customer ({i.email}). The
+                          email already starts with Hi {i.name.trim().split(/\s+/)[0] || "there"}.
                         </span>
                         <textarea
                           className="mt-2 w-full min-h-[120px] rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm"
                           placeholder="Type your reply…"
                           value={
-                            replyDrafts[i.id] ??
-                            inquiryReplyDraftBody({
-                              customerName: i.name,
-                              originalMessage: i.message,
-                            })
+                            replyDrafts[i.id] ?? inquiryAdminReplyDraftBody()
                           }
                           onChange={(e) =>
                             setReplyDrafts((prev) => ({
@@ -405,11 +398,7 @@ export function InquiriesAdminClient({
                           className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
                           onClick={() => {
                             const text =
-                              replyDrafts[i.id] ??
-                              inquiryReplyDraftBody({
-                                customerName: i.name,
-                                originalMessage: i.message,
-                              });
+                              replyDrafts[i.id] ?? inquiryAdminReplyDraftBody();
                             void sendReply(i, text);
                           }}
                         >

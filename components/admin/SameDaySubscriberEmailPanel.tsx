@@ -15,7 +15,6 @@ import {
   SAME_DAY_EMAIL_TEMPLATES,
   fillSameDayDateToken,
   suggestedSameDayTitle,
-  todayYmdPickupTz,
 } from "@/lib/same-day-subscriber-email-copy";
 
 type PreviewItem = {
@@ -46,9 +45,7 @@ export function SameDaySubscriberEmailPanel({
 }) {
   const [introMessage, setIntroMessage] = useState(DEFAULT_SAME_DAY_INTRO);
   const [closingMessage, setClosingMessage] = useState(DEFAULT_SAME_DAY_CLOSING);
-  const [subject, setSubject] = useState(() =>
-    suggestedSameDayTitle(todayYmdPickupTz())
-  );
+  const [subject, setSubject] = useState(() => suggestedSameDayTitle());
   const [templateId, setTemplateId] = useState<string | null>(
     DEFAULT_SAME_DAY_TEMPLATE_ID
   );
@@ -131,10 +128,7 @@ export function SameDaySubscriberEmailPanel({
         setPreviewHtml(data.html);
         if (!subjectEdited.current) {
           setSubject(
-            suggestedSameDayTitle(
-              data.todayYmd,
-              data.items.map((item) => item.displayName)
-            )
+            suggestedSameDayTitle(data.items.map((item) => item.displayName))
           );
         }
       } catch (e) {
@@ -250,7 +244,9 @@ export function SameDaySubscriberEmailPanel({
           Notify subscribers — same-day pickup
         </h2>
         <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Send this stock notice to one subscriber, a few, or everyone.
+          Lets people know what is in stock for same-day pickup, in limited
+          quantity — no dates or pickup times. Send to one subscriber, a few, or
+          everyone.
           {!hideSubscribersLink ? (
             <>
               {" "}
@@ -406,10 +402,7 @@ export function SameDaySubscriberEmailPanel({
           {preview.items.map((item) => (
             <li key={item.inventoryId}>
               <strong className="text-[var(--text)]">{item.displayName}</strong>
-              {" — "}
-              {item.pickupDateLabel
-                ? `${item.pickupDateLabel} · ${item.pickupWindowLabel}`
-                : item.pickupWindowLabel}
+              {" — same-day pickup · limited quantity"}
             </li>
           ))}
         </ul>

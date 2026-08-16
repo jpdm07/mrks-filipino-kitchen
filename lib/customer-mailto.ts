@@ -42,3 +42,8 @@ export function inquiryReplyDraftBody(params: {
   const quoted = params.originalMessage.trim().slice(0, 800);
   return `Hi ${name},\n\nThank you for writing to Mr. K's Filipino Kitchen.\n\n\n\n---\nTheir message:\n${quoted}`;
 }
+
+/** Admin send path already adds “Hi {name},” in the email — do not repeat it here. */
+export function inquiryAdminReplyDraftBody(): string {
+  return "Thank you for writing to Mr. K's Filipino Kitchen.\n\n";
+}

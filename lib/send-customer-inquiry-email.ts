@@ -19,6 +19,22 @@ function firstName(name: string): string {
   return part || "there";
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Drop a typed “Hi Name,” so it does not sit under the greeting the email already adds. */
+function stripLeadingInquiryGreeting(reply: string, name: string): string {
+  const first = firstName(name);
+  const full = name.trim();
+  const alts = [...new Set([full, first, "there"].filter((n) => n.length > 0))]
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegExp)
+    .join("|");
+  const re = new RegExp(`^(?:Hi\\s+(?:${alts})\\s*,\\s*(?:\\r?\\n)*)+`, "i");
+  return reply.replace(re, "").trimStart();
+}
+
 /** Lets Yahoo/Gmail see a real first message from the kitchen (not a Reply to a staff-only alert). */
 export async function sendCustomerInquiryReceivedEmail(params: {
   name: string;
@@ -101,11 +117,15 @@ export async function sendCustomerInquiryReplyEmail(params: {
   const hello = firstName(params.name);
   const topic = params.subject.trim() || "your inquiry";
   const subj = `Mr. K's Filipino Kitchen — ${topic}`.slice(0, 120);
+  const body = stripLeadingInquiryGreeting(reply, params.name);
+  if (!body) {
+    return { ok: false, error: "Reply message is required." };
+  }
 
   const text = [
     `Hi ${hello},`,
     "",
-    reply,
+    body,
     "",
     "— Mr. K's Filipino Kitchen",
     "Cypress, TX",
@@ -124,7 +144,7 @@ export async function sendCustomerInquiryReplyEmail(params: {
     ${buildEmailBrandBannerHtml({ variant: "gold", subtitle: "Message from the kitchen" })}
     <div style="background:#fff;padding:24px 28px;">
       <p style="margin:0 0 16px;">Hi ${escapeHtml(hello)},</p>
-      <p style="margin:0 0 16px;white-space:pre-wrap;">${escapeHtml(reply)}</p>
+      <p style="margin:0 0 16px;white-space:pre-wrap;">${escapeHtml(body)}</p>
       <p style="margin:0 0 16px;font-size:14px;color:#555;">— Mr. K&apos;s Filipino Kitchen · Cypress, TX<br/>979-703-3827</p>
       <div style="margin:0;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
         <p style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#64748b;">You wrote</p>
