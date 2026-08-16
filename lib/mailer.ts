@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { buildEmailBrandBannerHtml } from "@/lib/email-brand-header";
+import type { MailInlineImage } from "@/lib/email-inline-images";
 import {
   buildCustomerReplyFooterHtml,
   getReplyToEmail,
@@ -103,6 +104,7 @@ async function sendMailViaResend(
     text?: string;
     bcc?: string;
     replyTo?: string;
+    inlineImages?: MailInlineImage[];
   }
 ): Promise<MailSendResult> {
   const from = process.env.RESEND_FROM_EMAIL?.trim();
@@ -130,6 +132,14 @@ async function sendMailViaResend(
   if (bcc) body.bcc = [bcc];
   const rt = opts.replyTo?.trim();
   if (rt) body.reply_to = rt;
+  if (opts.inlineImages?.length) {
+    body.attachments = opts.inlineImages.map((img) => ({
+      filename: img.filename,
+      content: img.content.toString("base64"),
+      content_id: img.contentId,
+      content_type: img.contentType,
+    }));
+  }
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -164,6 +174,8 @@ export async function sendMail(opts: {
   bcc?: string;
   /** Overrides env EMAIL_REPLY_TO for this message only. */
   replyTo?: string;
+  /** Inline images referenced as cid:… in HTML (same-day item photos). */
+  inlineImages?: MailInlineImage[];
 }): Promise<MailSendResult> {
   const replyTo = (opts.replyTo?.trim() || getReplyToEmail()) ?? undefined;
   const htmlOut = withHtmlUniquenessStamp(opts.html);
@@ -196,6 +208,13 @@ export async function sendMail(opts: {
       headers: {
         "X-Entity-Ref-ID": `${Date.now()}-${Math.random().toString(36).slice(2, 10)}@mrkskitchen.com`,
       },
+      attachments: opts.inlineImages?.map((img) => ({
+        filename: img.filename,
+        content: img.content,
+        cid: img.contentId,
+        contentType: img.contentType,
+        contentDisposition: "inline" as const,
+      })),
     });
     return { ok: true };
   } catch (e) {

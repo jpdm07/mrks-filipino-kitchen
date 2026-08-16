@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Image from "next/image";
+import { MenuPhoto } from "@/components/menu/MenuPhoto";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type Props = {
@@ -42,11 +42,10 @@ export function MenuItemImageCarousel({
 
   return (
     <>
-      <Image
+      <MenuPhoto
         key={list[idx]}
         src={list[idx]}
         alt={`${alt} — photo ${idx + 1} of ${n}`}
-        fill
         className="object-cover transition duration-500 group-hover:scale-[1.03]"
         sizes={sizes}
         priority={idx === 0}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import type { MenuItemDTO } from "@/lib/menu-types";
 import { menuItemDisplayPhotos } from "@/lib/menu-types";
@@ -9,6 +8,7 @@ import { useCart } from "@/components/cart/CartContext";
 import { CartQuantityField } from "@/components/cart/CartQuantityField";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
 import { MenuItemImageCarousel } from "@/components/menu/MenuItemImageCarousel";
+import { MenuPhoto } from "@/components/menu/MenuPhoto";
 import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
 import { defaultGroupedVariantId } from "@/lib/menu-variant-defaults";
 import { LUMPIA_MENU_FROM_PRICE_USD, LUMPIA_CUSTOMER_SIZE_LABELS } from "@/lib/lumpia-cost-model";
@@ -376,10 +376,11 @@ export function GroupedMenuCard({ variants }: { variants: MenuItemDTO[] }) {
             sizes="(max-width:768px) 100vw, 33vw"
           />
         ) : (
-          <Image
-            src={displayPhotos[0] ?? photoLead?.photoUrl ?? ""}
+          <MenuPhoto
+            src={displayPhotos[0] ?? photoLead?.photoUrl}
+            menuItemId={photoLead?.id}
+            displayName={title}
             alt={`${title} Filipino dish in Cypress TX`}
-            fill
             className="object-cover transition duration-500 group-hover:scale-[1.03]"
             sizes="(max-width:768px) 100vw, 33vw"
           />

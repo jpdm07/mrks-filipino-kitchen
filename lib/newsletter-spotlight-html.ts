@@ -1,5 +1,6 @@
 import type { MenuItem } from "@prisma/client";
 import { parseMenuSizes } from "@/lib/menu-types";
+import { resolveEmailMenuPhotoUrl } from "@/lib/menu-photo-url";
 
 function escapeHtml(s: string): string {
   return s
@@ -20,9 +21,13 @@ export function buildNewsletterSpotlightHtml(items: MenuItem[]): string {
   return items
     .map((item) => {
       const price = spotlightPrice(item);
-      const photo = item.photoUrl?.trim();
+      const photo = resolveEmailMenuPhotoUrl({
+        photoUrl: item.photoUrl,
+        menuItemId: item.id,
+        displayName: item.name,
+      });
       const img = photo
-        ? `<img src="${escapeHtml(photo)}" alt="" width="100%" style="max-width:560px;border-radius:12px;display:block"/>`
+        ? `<img src="${escapeHtml(photo)}" alt="${escapeHtml(item.name)}" width="100%" style="max-width:560px;border-radius:12px;display:block"/>`
         : "";
       const soldNote = item.soldOut
         ? `<p style="margin:8px 0 0;font-size:14px;color:#92400e;">Temporarily sold out — you can still browse the rest of the menu.</p>`

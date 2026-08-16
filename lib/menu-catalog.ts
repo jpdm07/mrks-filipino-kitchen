@@ -38,9 +38,10 @@ export {
 } from "./pancit-limes";
 
 /**
- * Lumpia photo for menu cards (and anywhere that imports `LUMPIA_IMAGE`). File: `public/images/lumpia.png`.
+ * Lumpia photo for menu cards (and anywhere that imports `LUMPIA_IMAGE`).
+ * JPEG at `public/images/lumpia.jpg` (email-safe; PNG original also kept).
  */
-export const LUMPIA_IMAGE = "/images/lumpia.png";
+export const LUMPIA_IMAGE = "/images/lumpia.jpg";
 
 /**
  * Extra lumpia photos after `LUMPIA_IMAGE` (menu carousel). Add files under `public/images/` and list

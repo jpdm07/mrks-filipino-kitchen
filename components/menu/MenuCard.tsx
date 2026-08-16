@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { menuItemDisplayPhotos, type MenuItemDTO } from "@/lib/menu-types";
 import { useCart } from "@/components/cart/CartContext";
 import { CartQuantityField } from "@/components/cart/CartQuantityField";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
 import { MenuItemImageCarousel } from "@/components/menu/MenuItemImageCarousel";
+import { MenuPhoto } from "@/components/menu/MenuPhoto";
 import { splitMenuTakeoutLine } from "@/lib/menu-takeout-description-split";
 import { FlanWeekStockNote } from "@/components/menu/FlanWeekStockNote";
 
@@ -101,10 +101,11 @@ export function MenuCard({ item }: { item: MenuItemDTO }) {
             sizes="(max-width:768px) 100vw, 33vw"
           />
         ) : (
-          <Image
+          <MenuPhoto
             src={displayPhotos[0] ?? item.photoUrl}
+            menuItemId={item.id}
+            displayName={item.name}
             alt={`${item.name} Filipino food in Cypress TX`}
-            fill
             className="object-cover transition duration-500 group-hover:scale-[1.03]"
             sizes="(max-width:768px) 100vw, 33vw"
           />

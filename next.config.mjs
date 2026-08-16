@@ -24,7 +24,21 @@ const nextConfig = {
         hostname: "images.unsplash.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "mrkskitchen.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "www.mrkskitchen.com",
+        pathname: "/**",
+      },
     ],
+  },
+  outputFileTracingIncludes: {
+    "/api/admin/inventory/same-day-newsletter": ["./public/images/**"],
+    "/api/admin/newsletter": ["./public/images/**"],
   },
 };
 

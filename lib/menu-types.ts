@@ -1,3 +1,5 @@
+import { canonicalStoredPhotoSrc } from "@/lib/menu-photo-url";
+
 export type SizeOption = {
   key: string;
   label: string;
@@ -66,19 +68,16 @@ export function normalizePhotoGalleryUrls(urls: unknown): string[] {
 export function menuItemDisplayPhotos(
   item: Pick<MenuItemDTO, "photoUrl" | "photoGalleryUrls">
 ): string[] {
-  const primary = item.photoUrl.trim();
   const extras = normalizePhotoGalleryUrls(item.photoGalleryUrls);
   const seen = new Set<string>();
   const out: string[] = [];
-  if (primary) {
-    seen.add(primary);
-    out.push(primary);
-  }
-  for (const u of extras) {
-    if (!seen.has(u)) {
-      seen.add(u);
-      out.push(u);
-    }
-  }
+  const push = (raw: string) => {
+    const u = canonicalStoredPhotoSrc(raw);
+    if (!u || seen.has(u)) return;
+    seen.add(u);
+    out.push(u);
+  };
+  if (item.photoUrl.trim()) push(item.photoUrl);
+  for (const u of extras) push(u);
   return out;
 }

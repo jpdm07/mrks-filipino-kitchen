@@ -9,6 +9,7 @@ import {
   formatPickupYmdLong,
   getTodayInPickupTimezoneYMD,
 } from "@/lib/pickup-lead-time";
+import { resolveEmailMenuPhotoUrl } from "@/lib/menu-photo-url";
 import { getPublicSiteOrigin } from "@/lib/public-site-url";
 import { bannerInventoryRowsForSiteBanner } from "@/lib/same-day-pickup";
 import { sortPickupSlotLabels } from "@/lib/pickup-time-slots";
@@ -37,17 +38,6 @@ function escapeHtml(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-}
-
-function absolutePhotoUrl(
-  base: string,
-  photo: string | null | undefined
-): string | null {
-  const trimmed = photo?.trim();
-  if (!trimmed) return null;
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  const path = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
-  return `${base}${path}`;
 }
 
 function menuPriceLabel(item: MenuItem): string {
@@ -137,7 +127,12 @@ export async function loadSameDaySubscriberEmailItems(): Promise<
       menuItemId: inv.menuItemId,
       displayName,
       availabilityLine: resolvedInventoryBannerMessage(inv),
-      photoUrlAbsolute: absolutePhotoUrl(base, menu?.photoUrl),
+      photoUrlAbsolute: resolveEmailMenuPhotoUrl({
+        photoUrl: menu?.photoUrl,
+        menuItemId: inv.menuItemId,
+        displayName: displayName,
+        origin: base,
+      }),
       menuDescription: menu?.description ?? null,
       priceLabel: menu ? menuPriceLabel(menu) : null,
       pickupDateLabel,
@@ -152,7 +147,7 @@ export function buildSameDayPickupItemsHtml(items: SameDayEmailItem[]): string {
   return items
     .map((item) => {
       const img = item.photoUrlAbsolute
-        ? `<img src="${escapeHtml(item.photoUrlAbsolute)}" alt="${escapeHtml(item.displayName)}" width="100%" style="max-width:560px;border-radius:12px 12px 0 0;display:block;margin:0 auto;"/>`
+        ? `<img src="${escapeHtml(item.photoUrlAbsolute)}" alt="${escapeHtml(item.displayName)}" width="560" height="auto" border="0" style="max-width:560px;width:100%;height:auto;border-radius:12px 12px 0 0;display:block;margin:0 auto;border:0;outline:none;text-decoration:none;"/>`
         : "";
       const desc = item.menuDescription
         ? `<p style="margin:0 0 12px;font-size:15px;line-height:1.5;color:#444;">${escapeHtml(item.menuDescription)}</p>`

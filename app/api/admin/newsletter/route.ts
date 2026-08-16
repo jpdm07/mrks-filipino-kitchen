@@ -13,6 +13,8 @@ import {
   buildNewsletterSpotlightHtml,
   buildNewsletterSpotlightPlainText,
 } from "@/lib/newsletter-spotlight-html";
+import { prepareInlineMenuPhotos } from "@/lib/email-inline-images";
+import { resolveEmailMenuPhotoUrl } from "@/lib/menu-photo-url";
 
 /** Allow time to send many sequential emails (plan may cap lower on Hobby). */
 export const maxDuration = 60;
@@ -98,18 +100,32 @@ export async function POST(req: NextRequest) {
   let failed = 0;
   let lastError: string | undefined;
 
+  const photos = await prepareInlineMenuPhotos(
+    spotlightItems.map((item) => ({
+      id: `spot-${item.id}`,
+      url: resolveEmailMenuPhotoUrl({
+        photoUrl: item.photoUrl,
+        menuItemId: item.id,
+        displayName: item.name,
+      }),
+    }))
+  );
+
   for (const s of recipients.subscribers) {
     const unsub = `${base}/api/unsubscribe?email=${encodeURIComponent(s.email)}`;
-    const html = newsletterHtml({
-      message: message.replace(/\n/g, "<br/>"),
-      itemBlock: itemBlock || undefined,
-      unsubscribeUrl: unsub,
-    });
+    const html = photos.apply(
+      newsletterHtml({
+        message: message.replace(/\n/g, "<br/>"),
+        itemBlock: itemBlock || undefined,
+        unsubscribeUrl: unsub,
+      })
+    );
     const r = await sendMail({
       to: s.email,
       subject: mailSubject,
       html,
       text: textBody,
+      inlineImages: photos.inlineImages,
     });
     if (r.ok) sent++;
     else {

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import {
   ensureMenuSizes,
@@ -11,6 +10,7 @@ import { overlayPublicMenuItemFromCatalog } from "@/lib/menu-catalog-merge";
 import { FALLBACK_MENU } from "@/lib/static-menu-fallback";
 import { LUMPIA_MENU_FROM_PRICE_USD } from "@/lib/lumpia-cost-model";
 import { MenuPhotoComingSoonOverlay } from "@/components/menu/MenuPhotoComingSoonOverlay";
+import { MenuPhoto } from "@/components/menu/MenuPhoto";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
 export async function FeaturedItems() {
@@ -68,10 +68,11 @@ export async function FeaturedItems() {
               className="card-elevated group flex h-full min-h-0 flex-col overflow-hidden"
             >
               <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-[var(--bg-section)]">
-                <Image
+                <MenuPhoto
                   src={item.photoUrl}
+                  menuItemId={item.id}
+                  displayName={item.name}
                   alt={`${item.name} from Mr. K's Filipino Kitchen in Cypress TX`}
-                  fill
                   className="object-cover transition duration-500 group-hover:scale-[1.04]"
                   sizes="(max-width:768px) 100vw, 33vw"
                 />

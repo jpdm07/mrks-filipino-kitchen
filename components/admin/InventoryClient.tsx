@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { MenuItem } from "@prisma/client";
-import Image from "next/image";
+import { MenuPhoto } from "@/components/menu/MenuPhoto";
 
 export function InventoryClient({
   initialItems,
@@ -40,10 +40,11 @@ export function InventoryClient({
               <td className="px-3 py-2">
                 <div className="flex items-center gap-2">
                   <div className="relative h-10 w-10 overflow-hidden rounded">
-                    <Image
+                    <MenuPhoto
                       src={m.photoUrl}
+                      menuItemId={m.id}
+                      displayName={m.name}
                       alt={`${m.name} menu item image`}
-                      fill
                       className="object-cover"
                       sizes="40px"
                     />

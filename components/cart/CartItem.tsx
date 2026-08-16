@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import type { CartLine } from "@/lib/cart-types";
 import { CartQuantityField } from "@/components/cart/CartQuantityField";
+import { MenuPhoto } from "@/components/menu/MenuPhoto";
 import {
   cartLineBriefSizeDescription,
   includedDippingSauceCountLine,
@@ -44,10 +44,11 @@ export function CartItemRow({
         className="flex min-w-0 flex-1 gap-3 rounded-lg py-0.5 outline-none ring-[var(--primary)]/40 transition-colors hover:bg-[var(--primary)]/[0.04] focus-visible:ring-2"
       >
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-[var(--bg-section)]">
-          <Image
+          <MenuPhoto
             src={line.photoUrl}
+            menuItemId={line.menuItemId}
+            displayName={line.name}
             alt={`${line.name} order item photo`}
-            fill
             className="object-cover"
             sizes="64px"
           />

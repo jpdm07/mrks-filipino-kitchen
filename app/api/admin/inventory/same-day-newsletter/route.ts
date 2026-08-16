@@ -10,6 +10,7 @@ import {
   buildSameDaySubscriberEmailDraft,
   composeSameDaySubscriberEmailHtml,
 } from "@/lib/same-day-subscriber-email";
+import { prepareInlineMenuPhotos } from "@/lib/email-inline-images";
 
 export const maxDuration = 60;
 
@@ -87,19 +88,29 @@ export async function POST(req: NextRequest) {
   let failed = 0;
   let lastError: string | undefined;
 
+  const photos = await prepareInlineMenuPhotos(
+    draft.items.map((item) => ({
+      id: `item-${item.inventoryId}`,
+      url: item.photoUrlAbsolute,
+    }))
+  );
+
   for (const s of recipients.subscribers) {
     const unsub = `${base}/api/unsubscribe?email=${encodeURIComponent(s.email)}`;
-    const html = composeSameDaySubscriberEmailHtml({
-      introMessage: draft.introMessage,
-      items: draft.items,
-      closingMessage: draft.closingMessage,
-      unsubscribeUrl: unsub,
-    });
+    const html = photos.apply(
+      composeSameDaySubscriberEmailHtml({
+        introMessage: draft.introMessage,
+        items: draft.items,
+        closingMessage: draft.closingMessage,
+        unsubscribeUrl: unsub,
+      })
+    );
     const r = await sendMail({
       to: s.email,
       subject: mailSubject,
       html,
       text: draft.text,
+      inlineImages: photos.inlineImages,
     });
     if (r.ok) sent++;
     else {
