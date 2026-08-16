@@ -392,7 +392,11 @@ export async function isSameDayPickupDateForBannerCart(
   return slots.length > 0;
 }
 
-/** Banner rows that should appear on the site banner (stock + open slot today). */
+/**
+ * Banner rows for the public site strip: in-stock + a pickup window saved for today.
+ * Do not apply the 30-minute checkout lead here — that only hides bookable times,
+ * not the inventory announcement.
+ */
 export async function bannerInventoryRowsForSiteBanner(
   rows: InventoryItem[]
 ): Promise<InventoryItem[]> {
@@ -412,11 +416,7 @@ export async function bannerInventoryRowsForSiteBanner(
 
   const invWithSlotToday = new Set<number>();
   for (const slot of todaySlots) {
-    const available = applySameDayOrderLeadFilter(
-      [...activeLabelsFromSlotRow(slot as SlotRow)],
-      today
-    );
-    if (available.length > 0) {
+    if (activeLabelsFromSlotRow(slot as SlotRow).size > 0) {
       invWithSlotToday.add(slot.inventoryItemId);
     }
   }
