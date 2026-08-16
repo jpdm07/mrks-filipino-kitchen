@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import {
   inventoryBannerAdminWarning,
   resolvedInventoryBannerMessage,
@@ -18,6 +19,7 @@ import type { MenuItem } from "@prisma/client";
 import { InventoryClient } from "@/components/admin/InventoryClient";
 import { SameDaySubscriberEmailPanel } from "@/components/admin/SameDaySubscriberEmailPanel";
 import type { AdminSubscriberOption } from "@/components/admin/AdminSubscriberPicker";
+import { AdminSameDayDatePicker } from "@/components/admin/AdminSameDayDatePicker";
 
 type DeductionLog = {
   id: number;
@@ -101,13 +103,19 @@ export function InventoryAnnouncementsClient({
     closed: false,
   });
   const [slotForm, setSlotForm] = useState({
-    datesText: "",
+    datesYmd: [] as string[],
     startLabel: "11:00 AM",
     endLabel: "2:00 PM",
     maxOrders: 10,
     autoCloseWhenZero: true,
     mixedWindows: false,
   });
+  /** Which inventory cards are expanded (collapsed by default to reduce scrolling). */
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(() =>
+    initialInventory.length === 1 && initialInventory[0]
+      ? new Set([initialInventory[0].id])
+      : new Set()
+  );
   /** Open “Add item” by default when there is nothing to edit yet (shows quantity immediately). */
   const [adding, setAdding] = useState(() => initialInventory.length === 0);
   const [creating, setCreating] = useState(false);
@@ -248,7 +256,7 @@ export function InventoryAnnouncementsClient({
     const slots = row.pickupSlots ?? [];
     if (slots.length === 0) {
       setSlotForm({
-        datesText: "",
+        datesYmd: [],
         startLabel: "11:00 AM",
         endLabel: "2:00 PM",
         maxOrders: 10,
@@ -262,7 +270,7 @@ export function InventoryAnnouncementsClient({
           s.startLabel !== first.startLabel || s.endLabel !== first.endLabel
       );
       setSlotForm({
-        datesText: [...new Set(slots.map((s) => s.dateYmd))].join("\n"),
+        datesYmd: [...new Set(slots.map((s) => s.dateYmd))].sort(),
         startLabel: first.startLabel,
         endLabel: first.endLabel,
         maxOrders: first.maxOrders,
@@ -270,14 +278,28 @@ export function InventoryAnnouncementsClient({
         mixedWindows,
       });
     }
+    setExpandedIds((prev) => new Set(prev).add(row.id));
     setModalId(row.id);
   };
 
+  const toggleExpanded = (id: number) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const openSlots = async (row: InventoryRow) => {
-    const datesYmd = slotForm.datesText
-      .split(/[\n,]+/)
-      .map((s) => s.trim())
-      .filter((s) => /^\d{4}-\d{2}-\d{2}$/.test(s));
+    const datesYmd = slotForm.datesYmd.filter((s) =>
+      /^\d{4}-\d{2}-\d{2}$/.test(s)
+    );
+    if (datesYmd.length === 0) {
+      setToast("Select at least one date on the calendar.");
+      window.setTimeout(() => setToast(null), 4000);
+      return;
+    }
     const res = await fetch(`/api/admin/inventory/${row.id}/open-slots`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -413,6 +435,7 @@ export function InventoryAnnouncementsClient({
 
       const row = parsed as InventoryRow;
       setItems((p) => [...p, { ...row, deductionLogs: [], pickupSlots: [] }]);
+      setExpandedIds((prev) => new Set(prev).add(row.id));
       setNewItem({
         itemName: "",
         unitLabel: "dozen",
@@ -703,6 +726,27 @@ export function InventoryAnnouncementsClient({
           </div>
         ) : null}
 
+        {items.length > 1 ? (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="rounded border border-[var(--border)] px-3 py-1.5 text-xs font-semibold"
+              onClick={() =>
+                setExpandedIds(new Set(items.map((i) => i.id)))
+              }
+            >
+              Expand all
+            </button>
+            <button
+              type="button"
+              className="rounded border border-[var(--border)] px-3 py-1.5 text-xs font-semibold"
+              onClick={() => setExpandedIds(new Set())}
+            >
+              Collapse all
+            </button>
+          </div>
+        ) : null}
+
         {items.map((row) => {
           const r = mergeRow(row);
           const isLumpiaRow = isLumpiaPiecesDeductionMode(
@@ -720,12 +764,47 @@ export function InventoryAnnouncementsClient({
                 : null,
           });
           const warn = inventoryBannerAdminWarning(r);
+          const expanded = expandedIds.has(row.id);
+          const slotCount = row.pickupSlots?.length ?? 0;
 
           return (
             <div
               key={row.id}
-              className="grid gap-6 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)] p-5 lg:grid-cols-2"
+              className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--card)]"
             >
+              <button
+                type="button"
+                className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left sm:px-5"
+                onClick={() => toggleExpanded(row.id)}
+                aria-expanded={expanded}
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-[color:var(--primary)]">
+                    {r.itemName.trim() || "Untitled item"}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[var(--text-muted)] sm:text-sm">
+                    <span className="font-semibold tabular-nums text-[var(--text)]">
+                      {r.quantityInStock} {r.unitLabel}
+                    </span>
+                    {" · "}
+                    {r.isAvailable ? "Available" : "Hidden from ordering"}
+                    {" · "}
+                    {r.showBanner ? "On website banner" : "Banner off"}
+                    {slotCount > 0
+                      ? ` · ${slotCount} pickup date${slotCount === 1 ? "" : "s"}`
+                      : ""}
+                  </p>
+                </div>
+                <ChevronDown
+                  className={`mt-0.5 h-5 w-5 shrink-0 text-[var(--text-muted)] transition ${
+                    expanded ? "rotate-180" : ""
+                  }`}
+                  aria-hidden
+                />
+              </button>
+
+              {expanded ? (
+            <div className="grid gap-6 border-t border-[var(--border)] p-5 lg:grid-cols-2">
               <div className="space-y-3">
                 <div
                   id={`admin-inventory-qty-${row.id}`}
@@ -1157,13 +1236,15 @@ export function InventoryAnnouncementsClient({
                 </div>
               </div>
             </div>
+              ) : null}
+            </div>
           );
         })}
       </section>
 
       {modalId !== null ? (
         <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 p-4 sm:items-center">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-xl">
+          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-xl">
             <h3 className="font-bold text-lg text-[color:var(--primary)]">
               {modalId !== null &&
               items.find((x) => x.id === modalId)?.pickupSlots?.length
@@ -1172,9 +1253,8 @@ export function InventoryAnnouncementsClient({
             </h3>
             <p className="mt-2 text-sm text-[var(--text-muted)]">
               Same-day pickup only — does not change your Friday/Saturday advance
-              calendar. Dates and times below are what is already saved. Change
-              only what you need, then save. Removing a date from the list
-              removes that slot for customers.
+              calendar. Tap dates on the calendar, set the pickup window, then
+              save. Dates you unselect are removed for customers.
             </p>
             {slotForm.mixedWindows ? (
               <p className="mt-2 text-sm font-medium text-[var(--accent)]">
@@ -1182,50 +1262,73 @@ export function InventoryAnnouncementsClient({
                 the start/end times below to every date listed.
               </p>
             ) : null}
-            <label className="mt-4 block text-xs font-semibold">Dates</label>
-            <textarea
-              className="mt-1 w-full rounded border px-2 py-2 font-mono text-sm"
-              rows={4}
-              placeholder={"2026-05-10\n2026-05-11"}
-              value={slotForm.datesText}
-              onChange={(e) =>
-                setSlotForm((s) => ({ ...s, datesText: e.target.value }))
-              }
-            />
+            <label className="mt-4 block text-xs font-semibold">
+              Pickup dates
+            </label>
+            <div className="mt-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] p-3">
+              <AdminSameDayDatePicker
+                selectedYmds={slotForm.datesYmd}
+                onChange={(datesYmd) =>
+                  setSlotForm((s) => ({ ...s, datesYmd }))
+                }
+              />
+            </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
               <div>
-                <label className="text-xs font-semibold">Start</label>
-                <select
-                  className="mt-1 w-full rounded border px-2 py-2 text-sm"
-                  value={slotForm.startLabel}
-                  onChange={(e) =>
-                    setSlotForm((s) => ({ ...s, startLabel: e.target.value }))
-                  }
-                >
-                  {slotLabels.map((l) => (
-                    <option key={l} value={l}>
-                      {l}
-                    </option>
-                  ))}
-                </select>
+                <label className="text-xs font-semibold">Window starts</label>
+                <div className="mt-1 flex max-h-36 flex-wrap gap-1.5 overflow-y-auto rounded border border-[var(--border)] bg-[var(--bg)] p-2">
+                  {slotLabels.map((l) => {
+                    const on = slotForm.startLabel === l;
+                    return (
+                      <button
+                        key={`start-${l}`}
+                        type="button"
+                        onClick={() =>
+                          setSlotForm((s) => ({ ...s, startLabel: l }))
+                        }
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          on
+                            ? "bg-[color:var(--primary)] text-white"
+                            : "border border-[var(--border)] bg-[var(--card)] text-[var(--text)]"
+                        }`}
+                      >
+                        {l}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div>
-                <label className="text-xs font-semibold">End</label>
-                <select
-                  className="mt-1 w-full rounded border px-2 py-2 text-sm"
-                  value={slotForm.endLabel}
-                  onChange={(e) =>
-                    setSlotForm((s) => ({ ...s, endLabel: e.target.value }))
-                  }
-                >
-                  {slotLabels.map((l) => (
-                    <option key={l} value={l}>
-                      {l}
-                    </option>
-                  ))}
-                </select>
+                <label className="text-xs font-semibold">Window ends</label>
+                <div className="mt-1 flex max-h-36 flex-wrap gap-1.5 overflow-y-auto rounded border border-[var(--border)] bg-[var(--bg)] p-2">
+                  {slotLabels.map((l) => {
+                    const on = slotForm.endLabel === l;
+                    return (
+                      <button
+                        key={`end-${l}`}
+                        type="button"
+                        onClick={() =>
+                          setSlotForm((s) => ({ ...s, endLabel: l }))
+                        }
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          on
+                            ? "bg-[color:var(--primary)] text-white"
+                            : "border border-[var(--border)] bg-[var(--card)] text-[var(--text)]"
+                        }`}
+                      >
+                        {l}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
+            <p className="mt-2 text-xs text-[var(--text-muted)]">
+              Window:{" "}
+              <strong className="text-[var(--text)]">
+                {slotForm.startLabel} – {slotForm.endLabel}
+              </strong>
+            </p>
             <label className="mt-3 block text-xs font-semibold">
               Max orders this window
             </label>
