@@ -1,42 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
-
-const STORAGE_KEY = "mrks_store_notice_v1";
 
 export function StoreNoticeBanner({
   hasSameDayStock,
 }: {
   hasSameDayStock: boolean;
 }) {
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    try {
-      if (window.localStorage.getItem(STORAGE_KEY) !== "1") {
-        setShow(true);
-      }
-    } catch {
-      setShow(true);
-    }
-  }, []);
+  const [show, setShow] = useState(true);
 
   if (!show) return null;
-
-  const dismiss = () => {
-    setShow(false);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, "1");
-    } catch {
-      /* ignore */
-    }
-  };
 
   return (
     <div
       className="print:hidden relative z-40 w-full border-b-2 border-[var(--gold)] bg-[var(--primary)] text-white"
-      role="dialog"
+      role="region"
       aria-label="Ordering notes"
     >
       <div className="mx-auto flex max-w-5xl items-start gap-3 px-4 py-3 sm:py-3.5">
@@ -70,7 +49,7 @@ export function StoreNoticeBanner({
         </ul>
         <button
           type="button"
-          onClick={dismiss}
+          onClick={() => setShow(false)}
           className="shrink-0 rounded-md p-1.5 text-white/80 transition hover:bg-white/10 hover:text-white"
           aria-label="Dismiss ordering notes"
         >
